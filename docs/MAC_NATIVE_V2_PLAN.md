@@ -436,8 +436,14 @@ control, key-equivalent conflicts, and large-list performance.
 ### ADR-6 — Internationalization
 - String Catalogs (`.xcstrings`) with generated symbols (Xcode 26+); EN is the source language, pt-BR
   required.
-- A build-phase script and a unit test fail when a key lacks a `translated` pt-BR value, or when a key
-  is not referenced by code (orphan). Product names (agent CLIs) are not translated.
+- Keys are dotted identifiers (`sidebar.projects.title`) with an explicit `en` value, used as
+  `Text("key", bundle: .module)` / `String(localized: "key", bundle: .module)`. Non-translatable text
+  (product names, agent CLI names, user data) uses `Text(verbatim:)`.
+- `Scripts/check-strings.py` runs as the app's first build phase and in `Scripts/test.sh`. It fails on:
+  a key without a translated `en` and `pt-BR` value, an orphan key (never referenced by its module's
+  Swift sources), a dotted key used in code but missing from the catalog, and plain-text literals passed
+  to `Text`/`Label`/`Button`/`help`/… The app target sets `ENABLE_USER_SCRIPT_SANDBOXING = NO` because
+  the gate reads every catalog and Swift source.
 
 ### ADR-7 — Project structure and build
 - `AletheNative/` (self-contained; no symlinks or paths into `src-tauri/`):
@@ -623,8 +629,14 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   `theme[.bg]`. *Gotcha:* passing `CODE_SIGN_IDENTITY` on the `xcodebuild` command line also signs the
   package resource bundle, which then demands a team; the app target reads `ALETHE_SIGN_IDENTITY`
   instead.
-- [ ] **P0-4 (S) i18n pipeline.** `.xcstrings` in app and packages; build-phase + U test for missing
+- [x] **P0-4 (S) i18n pipeline.** `.xcstrings` in app and packages; build-phase + U test for missing
   pt-BR and orphan keys. *Accept:* adding an EN-only key fails the build.
+  *Done:* `Alethe/Localizable.xcstrings` + `Scripts/check-strings.py` as a build phase and in
+  `test.sh`. Verified with probes: an EN-only key fails the build (`** BUILD FAILED **`); an orphan
+  key, a missing key and a plain-text `Text("Hello there")` are reported; a complete key compiles into
+  `en.lproj`/`pt-BR.lproj` and renders "Boas-vindas" when launched with `-AppleLanguages (pt-BR)`.
+  Package-module catalogs are covered by the same checker and get validated when the first package
+  string lands (P1).
 - [ ] **P0-5 (M) libghostty from source.** `Vendor/ghostty/build.sh`: pinned revision, `zig` build to
   an xcframework, checksum verification; confirm `HOST_MANAGED` API and whether upstream Ghostty has it.
   *Accept:* reproducible build; checksum recorded.
