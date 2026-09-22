@@ -1,6 +1,6 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 0 complete (gate passed); Phase 1 next.** Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress.** Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -747,9 +747,19 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
 
 - [ ] **P1-1 (M) App shell.** Main window, `NavigationSplitView`, toolbar, standard menus, Settings
   scene, single-instance guard, state restoration. *Tests:* UI, HT.
-- [ ] **P1-2 (M) Model v1 + DocumentStore.** `Workspace`, `Group`, `Project`, `Pane`, `SubTab`,
+- [x] **P1-2 (M) Model v1 + DocumentStore.** `Workspace`, `Group`, `Project`, `Pane`, `SubTab`,
   `Preferences`; migrations chain; atomic debounced writes; backup before migrate. *Tests:* U, G
   (round-trip, corrupted file, concurrent save). *Parity:* data layer for SB/WS.
+  *Done:* `AletheFoundation.DocumentStore` (actor; `schemaVersion` + JSON-level migration chain;
+  `<name>.v<N>.bak` before migrating; unreadable files moved to `<name>.corrupt-<time>` and the app
+  starts fresh; files from a newer build are never written; debounced atomic writes ordered by a
+  caller-owned revision). `AletheModel`: typed `Identifier`s (nanoid strings, compatible with imported
+  ids), `WorkspaceDocument` v1 (groups with nesting and ordered project ids, ungrouped order, projects
+  → panes → tabs, workspace state), `PreferencesDocument` v1, pure `WorkspaceOperations` (keeps every
+  project placed exactly once; no group cycles; `repair()`), `DocumentModel` (`@Observable
+  @MainActor`). Tests: 7 store + 12 model (incl. corruption, newer-version protection, migration with
+  backup, debounce, out-of-order revisions, round-trip). Phase 1 runs in dependency order: P1-2, P1-3,
+  then P1-1.
 - [ ] **P1-3 (M) Profiles folder layout.** Default profile; paths service. *Parity:* SET-3 (base).
 - [ ] **P1-4 (M) Sidebar tree.** Groups (nested), projects, terminals; reorder; context menus; Finder
   drop and `NSOpenPanel` to add a project. *Tests:* U reorder math, UI drag, HT. *Parity:* SB-1, SB-3.
