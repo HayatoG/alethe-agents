@@ -468,6 +468,37 @@ control, key-equivalent conflicts, and large-list performance.
   `if #available(macOS 27, *)`, adopted after a P0 audit of the SDK diff.
 - `Scripts/build.sh`, `Scripts/test.sh` wrap `xcodebuild`; the suite runs from a clean checkout.
 
+### ADR-7a — macOS 27 APIs adopted (P0-7 audit of the Xcode 27 SDK)
+
+Many new APIs are annotated `@available(anyAppleOS 27, *)` rather than `macOS 27`; both forms were
+searched. Every adoption is behind `if #available(macOS 27, *)` (or `anyAppleOS 27`) with the macOS 26
+behavior as fallback — a 27-only API may improve a feature but never be required for it.
+
+| API (macOS 27) | Use in Alethe | Task | macOS 26 fallback |
+|---|---|---|---|
+| `reorderable()`, `reorderContainer(for:itemID:in:isEnabled:move:)`, `ReorderDifference` | Sidebar reorder across groups, tab/pane lists | P1-4, WS-5 | `onMove` + `Transferable` drop delegates |
+| `ToolbarItemVisibilityPriority(lowerThan:/higherThan:)`, `contentMarginsRemoved(_:)` | Dense toolbar: which pills overflow first; custom pill chrome | P1-1, UI-7 | default priorities; standard margins |
+| `View.alert(error:actions:)` | Surfacing process/agent errors from optional `Error` state | P1 onward | `alert(isPresented:)` + stored error |
+| `GeometryProxy.concentricCornerRadii`, `NSView.cornerConfiguration` / `NSViewCornerRadius.containerConcentric` | Panes and cards concentric with the window's glass corners | P1-6 | fixed `Metrics.Radius` |
+| `NSGlassEffectView.effectIsInteractive` | Interactive glass on HUD pills that host controls | P3 USE-1, P2 | non-interactive glass |
+| `NSToolbarItemGroup.role = .tabs`, `NSSegmentedControl.role` | Mode switchers (Home/Workspace, inspector modes) | P1-1 | plain segmented control |
+| `NotificationCenter.MainActorMessage` typed notifications (`NSWindow.DidBecomeKeyMessage`, `NSSplitView.DidResizeSubviewsMessage`, …) | Concurrency-safe window/split observation in the pane host | P1-6 | selector/closure observers |
+| Observation `withContinuousObservation(options:apply:)` | Bridging `@Observable` stores to AppKit views (pane host) | P1-6 | re-registering `withObservationTracking` |
+| `withTaskCancellationShield(operation:)` | Guaranteed PTY teardown / scrollback flush on cancellation | P2 TERM-10 | detached cleanup task |
+| System `FileDescriptor.pipe(options:)` (`O_NONBLOCK`, `O_CLOEXEC`) | Pipes for `git`/`gh`/agent CLI subprocesses | P3–P4 | `pipe()` + `fcntl` |
+| Foundation `ProgressManager` / `Subprogress` | Progress trees: agent installs, Merge Center stages, model downloads | P3–P4 | `Progress` |
+| `EnvironmentValues.systemPrefersReducedResourceUsage` | Resource supervisor: throttle polling/animation | P2 USE-3 | own policy only |
+| Speech `CaptureInputSequenceProvider`, `AnalyzerInputConverter` | Dictation: mic → SpeechTranscriber without manual AVAudioEngine | P3 PER-6 | AVAudioEngine tap + format conversion |
+| `NSStatusItem` expanded interface (`expandedInterfaceDelegate`) | Optional menu-bar agent monitor (post-v1 idea) | backlog | — |
+| `NSRefreshController` (`NSScrollView.refreshController`) | Pull-to-refresh on PR/session lists (touch/trackpad) | P4 PR-1 | refresh button only |
+| `NSScrollView.isTouchScrollingEnabled` and touch-gesture APIs | Verify terminal/list scrolling on touch-capable Macs | P2 | n/a |
+
+Not adopted: the new SwiftUI document model (Alethe is not document-based), `TabView` sidebar
+additions (the sidebar is a `NavigationSplitView` list), FoundationModels (no on-device agent in
+scope), WebKit JS-handle/DOM-snapshot APIs (revisit with BR-3 browser automation). Nothing new in
+CoreTransferable, ExtensionKit, UserNotifications or `NSTextInputClient`; there is no `Subprocess`
+module in the SDK (P3 wraps `Process`/`posix_spawn` itself).
+
 ### ADR-8 — Distribution
 - **No App Sandbox:** the app spawns arbitrary CLIs with `forkpty`, reads/writes `~/.claude`, `~/.codex`
   and arbitrary repos, and runs local servers (hooks, MCP, remote). Not a Mac App Store product.
@@ -689,8 +720,10 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   to the app's process only; never global keystrokes); (4) gaps for P2 TERM-3: the wrapper does not
   surface search totals/selection and the selected match is not visually distinct. Debug-only spike
   hooks (`-AletheSpikeScript/Dump/Command`) live in `Alethe/Spike/`.
-- [ ] **P0-7 (S) macOS 27 SDK audit.** List of APIs adopted behind `#available(macOS 27, *)`, recorded
+- [x] **P0-7 (S) macOS 27 SDK audit.** List of APIs adopted behind `#available(macOS 27, *)`, recorded
   in this doc (§5 ADR-7).
+  *Done:* ADR-7a — 16 APIs mapped to tasks with macOS 26 fallbacks; audit read the SDK's
+  `.swiftinterface`/header availability annotations (`macOS 27` and `anyAppleOS 27`).
 - [ ] **P0-8 (S) upstream-watch.** `Scripts/upstream-watch.sh` (§9). *Accept:* running it against
   `75083e2..origin/main` produces a report.
 - [ ] **P0-9 (M) Hit-target harness.** XCUITest helpers that click each control at its drawn frame and
