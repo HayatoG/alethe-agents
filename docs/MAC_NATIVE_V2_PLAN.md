@@ -335,7 +335,7 @@ Evidence is from `git log main..mac-native` and the old docs (`PLANO_MIGRACAO_MA
 |---|---|---|
 | Rust core + UniFFI (`ffi.rs`, `host.rs`, `core_events.rs`, `core_runtime.rs`, generated bindings) | **Discard** | Swift-only product; this layer caused the merge tax. |
 | Ghostty ObjC shim (849 LOC) + `AletheGhostty` (171) | **Rewrite in Swift**, keep the knowledge | Keep dead-key handling (UCKeyTranslate), clipboard callbacks, OPEN_URL, focus handling. Fix the global 60 Hz timer (use `NSView.displayLink` per surface), the global app/config, the missing theme/search, and test hooks mixed into the production API. |
-| libghostty binary (prebuilt `Lakr233/libghostty-spm` `storage.1.2.5`) | **Keep the API, replace the supply** | Its header exposes `GHOSTTY_SURFACE_IO_BACKEND_HOST_MANAGED`, `ghostty_surface_write_buffer`, `receive_buffer`/`receive_resize` callbacks and search actions. Build from a pinned source revision with a checksum (P0-5). |
+| libghostty binary (prebuilt `Lakr233/libghostty-spm` `storage.1.2.5`) | **Keep the API, replace the supply** | Its header exposes `GHOSTTY_SURFACE_IO_BACKEND_HOST_MANAGED`, `ghostty_surface_write_buffer`, `receive_buffer`/`receive_resize` callbacks and search actions. Built locally from pinned sources by `Vendor/ghostty/build.sh` (P0-5, done). |
 | `generate-themes.mjs` | **Discard as a generator; use once** | One-shot conversion (P0-3) of `theme.css` + `themes.ts` + `xtermThemes.ts` ANSI palettes into Swift; the output becomes hand-owned source. |
 | `generate-strings.mjs` | **Discard** | Strings are added with each feature into `.xcstrings`; no bulk import. |
 | `generate-migrations-bundle.mjs` + `LegacyMigration.swift` (JSC) | **Discard** | Replaced by a Swift `TauriImporter` for v9 only (P1-12). |
@@ -385,8 +385,9 @@ Evidence is from `git log main..mac-native` and the old docs (`PLANO_MIGRACAO_MA
   - IME/CJK via a real `NSTextInputClient`; ⌘F search via the header's search actions; links via
     OPEN_URL + hover.
   - Terminal theme: the Alethe theme's ANSI palette + font are written into a Ghostty config.
-- **Risk:** `HOST_MANAGED` comes from a third-party fork; P0-5 verifies it builds from source and
-  whether upstream Ghostty offers the same mode.
+- **Risk:** `HOST_MANAGED` is a patch maintained by `Lakr233/libghostty-spm` (MIT), not upstream
+  Ghostty. P0-5 builds it from pinned sources (libghostty-spm `b7f888e` + Ghostty `3c47ca1`); moving the
+  pin forward is a deliberate task that re-runs the P0-6 checks.
 
 ### ADR-3 — UI: SwiftUI shell + AppKit pane host
 
@@ -637,9 +638,21 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   `en.lproj`/`pt-BR.lproj` and renders "Boas-vindas" when launched with `-AppleLanguages (pt-BR)`.
   Package-module catalogs are covered by the same checker and get validated when the first package
   string lands (P1).
-- [ ] **P0-5 (M) libghostty from source.** `Vendor/ghostty/build.sh`: pinned revision, `zig` build to
+- [x] **P0-5 (M) libghostty from source.** `Vendor/ghostty/build.sh`: pinned revision, `zig` build to
   an xcframework, checksum verification; confirm `HOST_MANAGED` API and whether upstream Ghostty has it.
   *Accept:* reproducible build; checksum recorded.
+  *Done:* `HOST_MANAGED` is **not** in upstream Ghostty; it is `Patches/ghostty/0002-host-managed-io.patch`
+  of `Lakr233/libghostty-spm` (MIT, actively maintained, Zig 0.16 pipeline). `Vendor/ghostty/build.sh`
+  checks out libghostty-spm `b7f888e` and Ghostty `3c47ca1` (verified against libghostty-spm's
+  `Ghostty.ref`), runs its macOS build, verifies the header carries `HOST_MANAGED`, copies
+  `Vendor/GhosttyKit.xcframework` (universal arm64 + x86_64 `libghostty.a`, ~40 MB, gitignored) and
+  writes `Vendor/ghostty/BUILD_INFO`. Requires Zig 0.16.0 and the Xcode Metal Toolchain
+  (`xcodebuild -downloadComponent MetalToolchain`; the script checks both). Build time ≈ 5 min.
+  *Finding:* the output is not bit-reproducible (differs across builds even with `ZERO_AR_DATE`), so
+  inputs are pinned by commit and the recorded sha256 only identifies a build. Also found:
+  libghostty-spm ships a Swift wrapper (`GhosttyTerminal`: AppKit view, `NSTextInputClient`, key
+  routing via `performKeyEquivalent`, host-managed session bridge; ~8k LOC; depends on
+  `MSDisplayLink`); P0-6 evaluates adopting it against writing our own.
 - [ ] **P0-6 (L) Terminal spike.** `PTYHost` (`forkpty`, batching, ring buffer) + Swift Ghostty view in
   `HOST_MANAGED` mode, `displayLink` rendering, `NSTextInputClient`, search action, theme → config.
   *Gate:* input latency ≤ 1 frame at 120 Hz; `cat` of 100 MB within 1.25× of Ghostty.app; vim, htop,
@@ -887,7 +900,7 @@ self-contained layout (ADR-7) makes this lossless.
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| `HOST_MANAGED` exists only in a third-party libghostty fork | Terminal architecture | P0-5 builds from pinned source; P0-6 gate; SwiftTerm fallback behind `TerminalEngine` |
+| `HOST_MANAGED` exists only as a libghostty-spm patch | Terminal architecture | Built from pinned sources (P0-5); P0-6 gate; SwiftTerm fallback behind `TerminalEngine`; pin moves only with a re-run of the P0-6 checks |
 | Volume of the port (~290 commands) | Schedule | Vertical phases; matrix as control; upstream tests ported as golden files |
 | No Developer ID yet | No external distribution; Keychain prompts | Stable local identity; Keychain reads behind a dev flag; Phase 8 waits for the account (§11) |
 | Comment-preserving TOML editing without a mature Swift library | Corrupting `~/.codex/config.toml` | Minimal table-level editor; golden tests from `toml_edit` cases; backup before write |
