@@ -8,6 +8,6 @@ build/
 *.xcresult
 
 # libghostty build output and sources (Vendor/ghostty/build.sh)
-Vendor/GhosttyKit.xcframework/
+Vendor/GhosttyKit/
 Vendor/ghostty/.work/
 Vendor/ghostty/BUILD_INFO

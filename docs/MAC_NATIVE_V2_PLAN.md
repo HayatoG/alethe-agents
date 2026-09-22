@@ -362,7 +362,9 @@ Evidence is from `git log main..mac-native` and the old docs (`PLANO_MIGRACAO_MA
   toml_edit → a small comment-preserving TOML table editor with golden tests; sherpa-onnx → Apple
   SpeechAnalyzer (owner decision, §11); OAuth callbacks → `ASWebAuthenticationSession` or loopback
   `NWListener`.
-- **Third-party dependencies (allow-list):** libghostty, Sparkle. Anything else needs an ADR.
+- **Third-party dependencies (allow-list):** libghostty and libghostty-spm's `GhosttyKit` +
+  `GhosttyTerminal` (MIT, built from pinned sources by `Vendor/ghostty/build.sh`), its transitive
+  `MSDisplayLink` (MIT, pinned `exact: 2.2.0`), Sparkle. Anything else needs an ADR.
 
 ### ADR-2 — Terminal: libghostty (HOST_MANAGED) + Swift PTY host
 - **Options:**
@@ -371,8 +373,11 @@ Evidence is from `git log main..mac-native` and the old docs (`PLANO_MIGRACAO_MA
   - SwiftTerm: pure Swift, trivially host-fed, but a CPU/CoreText renderer and weaker throughput.
   - libghostty in `HOST_MANAGED` mode: Metal renderer, Ghostty's input/IME/search, and the host owns
     I/O.
-- **Decision:** libghostty `HOST_MANAGED` behind a `TerminalEngine` protocol; SwiftTerm is the fallback
-  if the P0 gate fails.
+- **Decision (confirmed by the P0-6 gate):** libghostty in `HOST_MANAGED` mode, driven through
+  libghostty-spm's `GhosttyTerminal` Swift wrapper (AppKit view, `NSTextInputClient`, key handling,
+  host-managed session bridge) — adopted instead of writing our own ~1k-LOC shim, since it passed every
+  gate. Alethe owns everything around it (`AletheTerminal`). SwiftTerm stays only as a documented
+  fallback.
 - **Design:**
   - `PTYHost` (actor): `forkpty` with a clean environment, login shell resolution, process group,
     `kqueue` `NOTE_EXIT`, a ring buffer (4 MiB) flushed to `scrollback/<id>.bin`, hibernation
@@ -491,7 +496,8 @@ control, key-equivalent conflicts, and large-list performance.
 - Never bind Esc, Shift+Tab, Option+arrows, or Ctrl+letter as global key equivalents. Esc closes an
   overlay only when the first responder is not a terminal.
 - No local `NSEvent` monitors in the terminal layer; the terminal view handles `keyDown`,
-  `performKeyEquivalent` and `NSTextInputClient` itself. Key routing is covered by UI tests (vim, Claude
+  `performKeyEquivalent` and `NSTextInputClient` itself. Ghostty's own keybinds are cleared
+  (`keybind = clear`): a bound chord is claimed by the view before the menu bar sees it. Key routing is covered by UI tests (vim, Claude
   Code Shift+Tab, ⌘W, ⌘F, dead keys, IME).
 
 ## 6. Interaction and motion guide
@@ -653,12 +659,36 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   libghostty-spm ships a Swift wrapper (`GhosttyTerminal`: AppKit view, `NSTextInputClient`, key
   routing via `performKeyEquivalent`, host-managed session bridge; ~8k LOC; depends on
   `MSDisplayLink`); P0-6 evaluates adopting it against writing our own.
-- [ ] **P0-6 (L) Terminal spike.** `PTYHost` (`forkpty`, batching, ring buffer) + Swift Ghostty view in
+- [x] **P0-6 (L) Terminal spike.** `PTYHost` (`forkpty`, batching, ring buffer) + Swift Ghostty view in
   `HOST_MANAGED` mode, `displayLink` rendering, `NSTextInputClient`, search action, theme → config.
   *Gate:* input latency ≤ 1 frame at 120 Hz; `cat` of 100 MB within 1.25× of Ghostty.app; vim, htop,
   Claude Code (Shift+Tab), dead keys (´ + e) and Japanese IME work; ⌘F finds text; no key stolen by the
   app. If any gate fails and cannot be fixed in the spike → switch `TerminalEngine` to SwiftTerm and
   record an ADR. *Tests:* P throughput, UI key-routing.
+  *Done — gate PASSED with libghostty (HOST_MANAGED) + libghostty-spm's `GhosttyTerminal` wrapper;
+  SwiftTerm fallback not needed.* Implemented `AletheTerminal`: `CAlethePTY` (C `forkpty` + exec —
+  only async-signal-safe calls after fork), `PTYProcess` (64 KiB batched reads on a private queue,
+  process-group signals, exit via `DispatchSource`), `ScrollbackRing` (4 MiB), `TerminalIOTap`,
+  `ShellLaunch` (login shell, `TERM=xterm-ghostty` + bundled terminfo), `TerminalAppearance` (theme →
+  Ghostty config), `TerminalPaneView`. Measured:
+  | Gate | Result |
+  |---|---|
+  | Throughput, `cat` 101 MB | Alethe (Release) 1.02 s / 0.91 s vs Ghostty.app 1.05 / 1.06 / 1.05 s |
+  | Input latency (Debug) | key → PTY write median 0.48 ms (p95 0.63); key → shell echo median 0.74 ms (p95 1.03) |
+  | Key routing | Shift+Tab → `ESC[Z`, Esc → `ESC`, ⌥← → `ESC b`, ^C, ⌘W closes the window (menu) |
+  | Dead keys (Brazilian - Pro) | `'`+`e` → é, `~`+`a` → ã |
+  | IME | marked text + commit → 日本語 |
+  | TUIs | vim (insert, Esc, `:wq` saved the file), htop (alternate screen, colors, `q`) |
+  | Search | `search:<text>` highlights every match, including a soft-wrapped one |
+  Findings: (1) the wrapper's default `TerminalTheme` renders after the terminal configuration and
+  overrode our colors → Alethe's theme is passed as the controller's `TerminalTheme` (regression
+  test); (2) Ghostty's default keybinds (⌘W/⌘T/⌘N/⌘K/⌘F/⌘±) are claimed in `performKeyEquivalent`
+  before the menu bar → `keybind = clear`, copy/paste/select-all go through the Edit menu and the
+  view's `copy:`/`paste:`/`selectAll:` (regression test); (3) synthetic `NSEvent`s do not compose
+  dead keys — hardware-faithful tests use `Scripts/dev/keypost.swift` (`CGEvent.postToPid`, delivered
+  to the app's process only; never global keystrokes); (4) gaps for P2 TERM-3: the wrapper does not
+  surface search totals/selection and the selected match is not visually distinct. Debug-only spike
+  hooks (`-AletheSpikeScript/Dump/Command`) live in `Alethe/Spike/`.
 - [ ] **P0-7 (S) macOS 27 SDK audit.** List of APIs adopted behind `#available(macOS 27, *)`, recorded
   in this doc (§5 ADR-7).
 - [ ] **P0-8 (S) upstream-watch.** `Scripts/upstream-watch.sh` (§9). *Accept:* running it against

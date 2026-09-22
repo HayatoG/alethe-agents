@@ -3,5 +3,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 Scripts/check-strings.py
+Vendor/ghostty/build.sh  # no-op once built
 swift test --package-path Packages/AletheKit --scratch-path build/AletheKit
 Scripts/build.sh Debug

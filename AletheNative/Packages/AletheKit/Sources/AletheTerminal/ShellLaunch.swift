@@ -1,0 +1,49 @@
+import Darwin
+import Foundation
+import GhosttyTerminal
+
+/// Builds the launch for the user's login shell (or a given command through it).
+public enum ShellLaunch {
+    /// The user's shell from the account database, falling back to zsh.
+    public static var userShell: String {
+        if let entry = getpwuid(getuid()), let shell = entry.pointee.pw_shell {
+            let path = String(cString: shell)
+            if !path.isEmpty { return path }
+        }
+        return "/bin/zsh"
+    }
+
+    /// Environment for terminal children: the app's own plus the terminal identity Ghostty's
+    /// terminfo describes.
+    public static func environment(base: [String: String] = ProcessInfo.processInfo.environment) -> [String: String] {
+        var env = base
+        env["TERM"] = "xterm-ghostty"
+        env["COLORTERM"] = "truecolor"
+        env["TERM_PROGRAM"] = "Alethe"
+        if let terminfo = GhosttyRuntimeResources.terminfoDirectoryURL?.path {
+            env["TERMINFO"] = terminfo
+        }
+        env["LANG"] = env["LANG"] ?? "en_US.UTF-8"
+        // Inherited from however the app was launched; meaningless inside our terminals.
+        for key in ["TERM_SESSION_ID", "ITERM_SESSION_ID", "GHOSTTY_RESOURCES_DIR", "XPC_SERVICE_NAME"] {
+            env.removeValue(forKey: key)
+        }
+        return env
+    }
+
+    /// Login shell (argv[0] prefixed with "-", the convention shells use to load the login profile),
+    /// optionally running `command` and exiting.
+    public static func loginShell(command: String? = nil, workingDirectory: String? = nil,
+                                  size: PTYSize = PTYSize(columns: 80, rows: 24)) -> PTYLaunch {
+        let shell = userShell
+        let name = "-" + (shell as NSString).lastPathComponent
+        let arguments = command.map { [name, "-c", $0] } ?? [name]
+        return PTYLaunch(
+            executable: shell,
+            arguments: arguments,
+            environment: environment(),
+            workingDirectory: workingDirectory ?? NSHomeDirectory(),
+            size: size
+        )
+    }
+}

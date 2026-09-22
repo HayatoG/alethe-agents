@@ -13,7 +13,7 @@
 # (two builds of the same inputs differ, even with ZERO_AR_DATE), so BUILD_INFO's sha256 identifies a
 # particular build, not the inputs. Output is gitignored (~40 MB). Requires the Metal Toolchain.
 #
-#   Vendor/ghostty/build.sh            build if missing
+#   Vendor/ghostty/build.sh            build Vendor/GhosttyKit (local package) if missing
 #   Vendor/ghostty/build.sh --force    rebuild
 set -euo pipefail
 
@@ -26,7 +26,8 @@ ZIG_VERSION="0.16.0"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENDOR="$(dirname "$HERE")"
 WORK="$HERE/.work"
-DEST="$VENDOR/GhosttyKit.xcframework"
+PACKAGE="$VENDOR/GhosttyKit"
+DEST="$PACKAGE/BinaryTarget/GhosttyKit.xcframework"
 
 if [[ -d "$DEST" && "${1:-}" != "--force" ]]; then
   echo "ghostty: already built at $DEST (use --force to rebuild)"
@@ -68,8 +69,14 @@ HEADER="$(find "$BUILT" -name ghostty.h | head -1)"
 grep -q "GHOSTTY_SURFACE_IO_BACKEND_HOST_MANAGED" "$HEADER" || {
   echo "ghostty: built header lacks HOST_MANAGED" >&2; exit 1; }
 
-rm -rf "$DEST"
+# Assemble a self-contained local SwiftPM package: libghostty + libghostty-spm's Swift wrapper
+# (GhosttyKit C shim and GhosttyTerminal: AppKit view, input/IME, host-managed session bridge).
+rm -rf "$PACKAGE"
+mkdir -p "$PACKAGE/Sources" "$PACKAGE/BinaryTarget"
 cp -R "$BUILT" "$DEST"
+cp -R "$WORK/libghostty-spm/Sources/GhosttyKit" "$WORK/libghostty-spm/Sources/GhosttyTerminal" "$PACKAGE/Sources/"
+cp "$WORK/libghostty-spm/LICENSE" "$PACKAGE/LICENSE"
+cp "$HERE/Package.swift.in" "$PACKAGE/Package.swift"
 ARCHIVE="$(find "$DEST" -name '*.a' | head -1)"
 cat > "$HERE/BUILD_INFO" <<INFO
 libghostty-spm: $LIBGHOSTTY_SPM_COMMIT
@@ -79,5 +86,5 @@ xcode:          $(xcodebuild -version | head -1)
 archive:        ${ARCHIVE#"$VENDOR/"}
 sha256:         $(shasum -a 256 "$ARCHIVE" | awk '{print $1}')
 INFO
-echo "ghostty: built $DEST"
+echo "ghostty: built $PACKAGE"
 cat "$HERE/BUILD_INFO"

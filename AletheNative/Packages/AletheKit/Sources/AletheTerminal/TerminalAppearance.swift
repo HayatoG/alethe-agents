@@ -1,0 +1,54 @@
+import AletheDesign
+import GhosttyTerminal
+
+/// Maps an Alethe theme onto Ghostty's terminal configuration.
+public enum TerminalAppearance {
+    public static let defaultFontSize: Float = 13
+
+    public static func configuration(for theme: Theme, fontSize: Float = defaultFontSize) -> TerminalConfiguration {
+        let palette = theme.terminal
+        var configuration = TerminalConfiguration()
+            .fontFamily(AletheFonts.terminalFamily)
+            .fontSize(fontSize)
+            // The wrapper's base config thickens glyphs; Ghostty.app does not by default.
+            .fontThicken(false)
+            .background(opaqueHex(palette.background, over: palette.background))
+            .foreground(opaqueHex(palette.foreground, over: palette.background))
+            .cursorColor(opaqueHex(palette.cursor, over: palette.background))
+            // Ghostty takes opaque colors: blend the translucent selection over the background.
+            .selectionBackground(opaqueHex(palette.selection, over: palette.background))
+            .windowPaddingX(8)
+            .windowPaddingY(6)
+            // ADR-10: no terminal-level shortcuts. Ghostty's defaults bind ⌘W, ⌘T, ⌘N, ⌘K, ⌘F, ⌘±…
+            // and the view claims any bound chord in performKeyEquivalent, before the menu bar
+            // sees it. App shortcuts live in the menus; copy/paste/select-all reach the view
+            // through the responder chain (its copy:/paste:/selectAll: actions).
+            .custom("keybind", "clear")
+        for (index, color) in palette.ansi.enumerated() {
+            configuration = configuration.palette(index, color: opaqueHex(color, over: palette.background))
+        }
+        return configuration
+    }
+
+    /// The Alethe theme as the controller's terminal theme. It must be the *theme* (not only the
+    /// terminal configuration): the controller renders its theme after the configuration, and the
+    /// wrapper's default theme would otherwise override every color. The same configuration serves
+    /// both appearances because Alethe themes are not tied to the system light/dark mode.
+    public static func terminalTheme(for theme: Theme, fontSize: Float = defaultFontSize) -> TerminalTheme {
+        let configuration = configuration(for: theme, fontSize: fontSize)
+        return TerminalTheme(light: configuration, dark: configuration)
+    }
+
+    /// `#rrggbb` of `color` composited over `background`.
+    static func opaqueHex(_ color: ThemeColor, over background: ThemeColor) -> String {
+        func channel(_ top: Double, _ bottom: Double) -> Int {
+            Int(((top * color.alpha + bottom * (1 - color.alpha)) * 255).rounded())
+        }
+        let rgb = [
+            channel(color.red, background.red),
+            channel(color.green, background.green),
+            channel(color.blue, background.blue),
+        ]
+        return "#" + rgb.map { String(format: "%02x", $0) }.joined()
+    }
+}
