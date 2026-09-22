@@ -40,10 +40,12 @@ path relative to the repository.
 1. **DO NOT stop or restart the app or the dev server** (`tauri dev` / Vite). Do not kill the
    process, do not run `npm run app` "just to test" if it is already running. Apply changes through
    **HMR** and trust the reload.
-2. **DO NOT commit / push / tag / release without explicit permission from the owner at that
-   moment.** Make changes **in the working tree only** and stop — committing is his call. When he
-   authorizes a commit, **DO NOT add a co-author** (`Co-Authored-By: Claude …`) or any tool
-   signature to the message — he is the only author.
+2. **Commits are allowed ONLY as checkpoints** (to avoid losing work) and **only on the
+   macOS-native migration branches** (e.g. `mac-native-v2`) — `main`, release branches and every
+   other branch are read-only: never modify, commit to, rebase, merge or open a PR against them.
+   **NEVER push / tag / release without explicit authorization from the owner at that moment.**
+   Commit messages carry **NO co-author** (`Co-Authored-By: Claude …`) or any tool signature — he
+   is the only author.
 3. **Strict design system — no gradients, nothing "vibecoded".** No generic template UI. Dashboards
    and widgets show **real data**, never placeholder/mock. Style through CSS Modules + tokens from
    `src/styles/theme.css`; **never** hardcode a color — use the variables (`--bg`, `--fg`,
@@ -56,6 +58,17 @@ path relative to the repository.
    [`docs/CHANGELOG.md`](docs/CHANGELOG.md) in the same task, under the **`[Unreleased]`** section
    (top of the file), with a short, objective, user-facing description. Never skip this step — the
    changelog is the source for release notes.
+6. **Task workflow order is fixed.** For every task, follow this order — never skip or
+   reorder steps: **1. Implement → 2. Test → 3. Validate → 4. Update docs + ai-memory →
+   5. Commit → 6. Start the next task.** One task per commit; the next task only starts after the
+   previous one is committed. Backlog runs (e.g. the native macOS plan,
+   [`docs/MAC_NATIVE_V2_PLAN.md`](docs/MAC_NATIVE_V2_PLAN.md)) process tasks one at a time this
+   way, ticking the task's checkbox in the same commit.
+7. **Docs and ai-memory are updated after every piece of work.** Whenever you do something —
+   implement, fix, decide, investigate, or change a plan — update the affected versioned docs in
+   the same task (plan/backlog checkboxes and parity matrix, architecture decisions, changelog,
+   feature docs) **and** record the outcome in ai-memory (decisions, state of the work, gotchas,
+   next steps) following the ai-memory skills. Work is not finished while either is stale.
 
 ## 4. Architecture at a glance
 
@@ -96,6 +109,8 @@ Versioned in this repo:
 - [`docs/PLUGINS.md`](docs/PLUGINS.md) — plugin system: manifest, capabilities, lifecycle, and how
   to add a bundled plugin.
 - [`docs/THEMES.md`](docs/THEMES.md) — adding a theme, as a plugin or as a built-in.
+- [`docs/MAC_NATIVE_V2_PLAN.md`](docs/MAC_NATIVE_V2_PLAN.md) — native macOS (Swift) rewrite: decisions,
+  phases/backlog, parity matrix, upstream tracking.
 - [`docs/DIAGNOSTICO_MATURIDADE_TECNICA.md`](docs/DIAGNOSTICO_MATURIDADE_TECNICA.md) — diagnostic of
   code organization, duplication, and performance, with prioritized recommendations.
 
