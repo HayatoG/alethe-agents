@@ -4,6 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CONFIGURATION="${1:-Debug}"
+SIGN_IDENTITY="$(Scripts/dev-signing.sh)"
 xcodebuild \
   -project AletheNative.xcodeproj \
   -scheme Alethe \
@@ -11,5 +12,6 @@ xcodebuild \
   -destination "platform=macOS,arch=$(uname -m)" \
   -derivedDataPath build/DerivedData \
   -quiet \
+  CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
   build
 echo "Built: $(pwd)/build/DerivedData/Build/Products/$CONFIGURATION/Alethe.app"

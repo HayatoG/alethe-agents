@@ -595,9 +595,16 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   their tasks begin; bundle id `com.kc1t.alethe.mac`, deployment target 26.0, string-catalog symbol
   generation on. Verified: 2 unit tests pass, the app launches a 900×532 "Alethe" window and quits.
   Finding for P0-2: ad-hoc signing (`CODE_SIGN_IDENTITY = -`) does not apply the hardened runtime.
-- [ ] **P0-2 (S) Stable dev signing.** Script to create/use one local identity; hardened runtime on
+- [x] **P0-2 (S) Stable dev signing.** Script to create/use one local identity; hardened runtime on
   (ad-hoc signing skips it — see P0-1). *Accept:* two consecutive builds keep the same designated
   requirement (`codesign -d -r-`) and `codesign -dv` shows the `runtime` flag.
+  *Done:* `Scripts/dev-signing.sh` resolves the identity (`Alethe Dev Signing`, overridable with
+  `ALETHE_SIGN_IDENTITY`; `--create` makes one; falls back to ad hoc with a warning) and `build.sh`
+  passes it to `xcodebuild`. Verified: `flags=0x10000(runtime)`, identical designated requirement across
+  rebuilds, `codesign --verify --strict` ok, app launches. *Gotcha:* a self-signed identity has no Team
+  ID, so hardened-runtime library validation rejects any separately signed dylib — Xcode's
+  `Alethe.debug.dylib` included. `ENABLE_DEBUG_DYLIB = NO` and all modules link statically; embedded
+  frameworks (e.g. Sparkle) must wait for Developer ID signing (Phase 8).
 - [ ] **P0-3 (M) Design tokens + themes.** One-shot conversion of `theme.css`, `themes.ts`,
   `xtermThemes.ts` into `AletheDesign` (16 themes, tokens, ANSI); `Typography`, `Metrics`, `Motion`.
   Conversion script is kept under `Scripts/oneshot/` for audit, not run in the build. *Accept:* every
