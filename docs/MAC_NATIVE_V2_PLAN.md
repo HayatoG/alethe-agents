@@ -724,8 +724,12 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   in this doc (§5 ADR-7).
   *Done:* ADR-7a — 16 APIs mapped to tasks with macOS 26 fallbacks; audit read the SDK's
   `.swiftinterface`/header availability annotations (`macOS 27` and `anyAppleOS 27`).
-- [ ] **P0-8 (S) upstream-watch.** `Scripts/upstream-watch.sh` (§9). *Accept:* running it against
+- [x] **P0-8 (S) upstream-watch.** `Scripts/upstream-watch.py` (§9). *Accept:* running it against
   `75083e2..origin/main` produces a report.
+  *Done:* reports commands, i18n keys, release sections/[Unreleased] bullets, new component dirs,
+  `types.ts` changes and schema bumps into `AletheNative/upstream-reports/<date>-<sha>.md`. Validated
+  on `v1.6.0..v1.7.0` (78 commits, 89 new commands, 851 new keys, 9 new component dirs, schema v7 → v9)
+  and on the live range (0 commits since the baseline).
 - [ ] **P0-9 (M) Hit-target harness.** XCUITest helpers that click each control at its drawn frame and
   assert the effect, at zoom 0.9/1.0/1.2. *Accept:* a deliberately broken `scaleEffect` fixture fails.
 
@@ -942,12 +946,12 @@ The native app shares no code with upstream, so "staying current" means **detect
 upstream changes, not merging them.
 
 1. `AletheNative/UPSTREAM_BASELINE` stores the last reviewed `origin/main` SHA.
-2. `Scripts/upstream-watch.sh` runs `git fetch` and diffs `baseline..origin/main` for: new or removed
+2. `Scripts/upstream-watch.py` runs `git fetch` and diffs `baseline..origin/main` for: new or removed
    `#[tauri::command]` names in `src-tauri/src/lib.rs`; new keys in `src/lib/i18n/messages/en.ts`; new
    `docs/CHANGELOG.md` sections; new directories under `src/components/`; new fields in
    `src/lib/types.ts` (`ProjectsFile`, `Project`, `Terminal`, `Preferences`); schema version bumps in
-   `projectsStore.migrations.ts`. It writes `AletheNative/upstream-reports/<date>.md` and appends
-   `Untriaged` rows to §8.
+   `projectsStore.migrations.ts`. It writes `AletheNative/upstream-reports/<date>-<sha>.md`; triage
+   moves each item into §8 by hand (the script never edits this plan).
 3. Cadence: at the start of every phase and weekly. Triage assigns each row a phase or "Won't port" and
    advances the baseline in its own commit.
 4. Importer compatibility: when upstream bumps the `projects.json` version, add a fixture and extend
