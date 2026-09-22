@@ -95,6 +95,18 @@ streaming through the Tauri events `pty://data/{id}` and `pty://exit/{id}`.
 - The Windows build requires `vcvars64`. The Rust toolchain on `C:` can be corrupted by Windows
   Defender — prefer building from `D:`.
 - Local data: `%APPDATA%/Alethe/` (profiles, `projects.json`, scrollback `*.bin`, `spawn.log`).
+- **Native macOS app (`AletheNative/`, branch `mac-native-v2`)** — see
+  [`docs/MAC_NATIVE_V2_PLAN.md`](docs/MAC_NATIVE_V2_PLAN.md):
+  - Build/test with `AletheNative/Scripts/build.sh`, `test.sh` (strings gate + unit tests + build) and
+    `uitest.sh` (hit-target harness). `Vendor/ghostty/build.sh` generates `Vendor/GhosttyKit`
+    (needs Zig 0.16 and `xcodebuild -downloadComponent MetalToolchain`).
+  - UI zoom scales metrics (`Metrics.scale`), never `scaleEffect`. After UI changes run `uitest.sh`.
+  - Never drive the app with global keystrokes (System Events): they land in whatever window has
+    focus. Use `AletheNative/Scripts/dev/keypost.swift` (posts to the app's process only) or the
+    debug spike hooks.
+  - Ghostty's keybinds are cleared (`keybind = clear`); app shortcuts live in the menus (ADR-10).
+  - Signing: never pass `CODE_SIGN_IDENTITY` to `xcodebuild`; the app reads `ALETHE_SIGN_IDENTITY`
+    (a self-signed identity also forbids separately signed dylibs: `ENABLE_DEBUG_DYLIB = NO`).
 
 ## 7. Going deeper
 

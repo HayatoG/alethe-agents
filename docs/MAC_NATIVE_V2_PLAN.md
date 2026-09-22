@@ -1,6 +1,6 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 0 in progress.** Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 0 complete (gate passed); Phase 1 next.** Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -297,7 +297,8 @@ Evidence is from `git log main..mac-native` and the old docs (`PLANO_MIGRACAO_MA
 
 **What went wrong, and the rule v2 adopts**
 1. `scaleEffect` zoom displaced AppKit hit-targets (`07406f2`) → zoom scales **font and metric tokens**
-   only; hit-target UI tests guard it (§7 P0-9).
+   only; hit-target UI tests guard it (§7 P0-9). On macOS 27 the displacement no longer reproduces
+   (P0-9 pins that); the rule stays.
 2. Global shortcuts stole terminal keys: Esc (`99fa717`), Shift+Tab (`8a4f067`) → app shortcuts only as
    ⌘ key equivalents (§6.3).
 3. ⌘W lost to the shim's local key monitor (`937d324`, a 35-file debugging commit) → no local event
@@ -730,8 +731,17 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   `types.ts` changes and schema bumps into `AletheNative/upstream-reports/<date>-<sha>.md`. Validated
   on `v1.6.0..v1.7.0` (78 commits, 89 new commands, 851 new keys, 9 new component dirs, schema v7 → v9)
   and on the live range (0 commits since the baseline).
-- [ ] **P0-9 (M) Hit-target harness.** XCUITest helpers that click each control at its drawn frame and
+- [x] **P0-9 (M) Hit-target harness.** XCUITest helpers that click each control at its drawn frame and
   assert the effect, at zoom 0.9/1.0/1.2. *Accept:* a deliberately broken `scaleEffect` fixture fails.
+  *Done:* `AletheUITests` target + shared `Alethe` scheme + `Scripts/uitest.sh`; debug fixture
+  `-AletheUITestFixture hit-targets` (toggle, button, segmented picker, text field, NSView-backed
+  button) clicked at the drawn (accessibility) frame at UI scale 0.9/1.0/1.2 — all land.
+  *Finding — acceptance adjusted:* on macOS 27 `scaleEffect` no longer displaces hit areas, not even
+  for an `NSButton` far from the transform anchor, so a `scaleEffect` fixture cannot fail; that fact is
+  pinned by `testScaleEffectHitTestingOnThisOS` (fails if the platform regresses). The harness's
+  sensitivity is proven instead with the first attempt's other real bug (lesson 4): an invisible
+  full-window view taking clicks is detected. Zoom still scales metrics, never `scaleEffect`. The UI
+  runner cannot take screenshots (no Screen Recording permission); use `screencapture -l` outside.
 
 ### Phase 1 — Usable vertical skeleton
 

@@ -20,9 +20,19 @@ private struct RootView: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        TerminalPane(launch: TerminalSpike.launch(), theme: theme)
-            .frame(minWidth: 800, minHeight: 500)
-            .background(theme[.bg])
+        Group {
+            #if DEBUG
+            if UserDefaults.standard.string(forKey: "AletheUITestFixture") == "hit-targets" {
+                HitTargetFixture()
+            } else {
+                TerminalPane(launch: TerminalSpike.launch(), theme: theme)
+            }
+            #else
+            TerminalPane(launch: TerminalSpike.launch(), theme: theme)
+            #endif
+        }
+        .frame(minWidth: 800, minHeight: 500)
+        .background(theme[.bg])
     }
 }
 
