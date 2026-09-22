@@ -472,9 +472,10 @@ control, key-equivalent conflicts, and large-list performance.
   delete without a capability).
 - Built-ins (Git Control, Todos + Pomodoro, Theme-pack) are registered statically and use only the
   public API (dogfooding).
-- Third-party loading: decided by the P4 spike. Recommendation: **ExtensionKit** app extensions
-  (out-of-process, sandboxed, remote UI via `EXHostViewController`, crash-isolated) over in-process
-  bundles (which require `disable-library-validation` and share the app's address space).
+- Third-party loading: **ExtensionKit** app extensions (owner decision, §11): out-of-process,
+  sandboxed, remote UI via `EXHostViewController`, crash-isolated. Rejected: in-process bundles (they
+  require `disable-library-validation` and share the app's address space and permissions). The P4
+  spike validates the flow end to end.
 
 ### ADR-10 — Keyboard routing
 - App shortcuts only through SwiftUI `Commands` / menu key equivalents using ⌘ (mapping in §6.3).
@@ -675,8 +676,7 @@ GIT-2 commit graph (L); GIT-3 incoming/outgoing; FS-1 file explorer with git bad
 pane (L); FS-2 → `NSOpenPanel`; GIT-4 worktrees (L); GIT-5 Merge Center (split into analyze, prepare,
 validate/health/contract, finalize/abort/cleanup: 4 × L); PR-1 Open PRs; PR-2 PR review + squash merge
 (L); PER-1 Todos plugin; PER-2 Pomodoro (upstream shape incl. `focusTodoId`); UI-1 theme-pack data
-plugin; SB-7 right sidebar; SB-8 view placement; ExtensionKit spike for third-party plugins (M, ADR
-update).
+plugin; SB-7 right sidebar; SB-8 view placement; ExtensionKit host + sample third-party extension (M).
 
 ### Phase 5 — Integrations
 EXT-1 MCP manager (config editors for Claude/Codex (TOML)/OpenCode/Cursor/Gemini, registry search,
@@ -863,8 +863,8 @@ self-contained layout (ADR-7) makes this lossless.
 ## 11. Owner decisions and open questions
 
 Resolved (2026-09-22):
-1. **Name:** the product stays **Alethe**. Bundle id defaults to `com.kc1t.alethe.mac` (distinct from the
-   Tauri app's `com.kc1t.alethe`, so the two never share a data directory); confirm before P0-1 ships.
+1. **Name:** the product stays **Alethe**. Bundle id **`com.kc1t.alethe.mac`** (distinct from the Tauri
+   app's `com.kc1t.alethe`, so the two never share a data directory).
 2. **Changelog:** `AletheNative/CHANGELOG.md` (the repository's `docs/CHANGELOG.md` stays the Tauri
    product's).
 3. **Dictation:** Apple on-device speech (`SpeechAnalyzer`/`SpeechTranscriber`); Parakeet is not ported.
@@ -873,11 +873,7 @@ Resolved (2026-09-22):
    (notarization, Sparkle, public DMG) waits for the account.
 7. **Remote control client:** reuse the upstream PWA, bundled as a resource.
 
-Still open:
-4. **Third-party plugins channel.** Built-in plugins (Git, Todos, Theme-pack) are unaffected. For plugins
-   written by other people: ExtensionKit (each plugin ships as an app extension inside its own signed
-   app; runs out of process and sandboxed, so a crash or malicious plugin cannot take down Alethe or read
-   everything; more setup for plugin authors) vs in-process bundles (a `.bundle` dropped in a folder and
-   loaded into Alethe; simplest for authors, but it runs with Alethe's full permissions and requires
-   disabling library validation). Recommendation: ExtensionKit; decided by the P4 spike unless the owner
-   chooses earlier.
+4. **Third-party plugins channel:** **ExtensionKit** (for now). Each third-party plugin ships as an app
+   extension inside its own signed app, runs out of process and sandboxed, and renders UI remotely.
+   Built-ins (Git, Todos, Theme-pack) stay in-process on the same `AlethePluginKit` API. The P4 spike
+   validates the ExtensionKit flow; in-process bundles are rejected unless the spike fails.
