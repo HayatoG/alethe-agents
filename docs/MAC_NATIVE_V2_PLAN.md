@@ -795,12 +795,15 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   descendants), `ColorSwatchPicker`, `ProjectColor.localizedName`. File menu: New Project… (⌘N), New
   Group… (⇧⌘N), Add Project Folder… (⌘O); context menus: Edit Project…, Edit Group…, New Project in
   Group…, New Subgroup…. 38 strings added (EN + pt-BR). Builds and passes the strings gate; the sheet
-  was checked visually. **Still to do before ticking:** (1) bug — the duplicate-folder check compares
-  the stored folder raw against `standardizedFileURL` (`/private/tmp` → `/tmp`), so duplicates slip
-  through; compare the standardized form on both sides in `ProjectEditor.problem` and in
-  `SidebarActions.addProjects`; (2) write `AletheUITests/EditorTests.swift` (create via ⌘N with
-  validation + duplicate message, edit group rename + ⌘Z, new group via ⇧⌘N); (3) run `test.sh` and
-  `uitest.sh`; (4) CHANGELOG entry; (5) commit as P1-5.
+  was checked visually. The duplicate-folder fix is applied (standardized paths compared on both
+  sides) and `AletheUITests/EditorTests.swift` exists (both in commit `8c6117a`). Last run:
+  `testNewProjectSheetValidatesAndCreates` passes; `testEditGroupRenamesIt` renames correctly but
+  fails at line 51 — after ⌘Z the row `sidebar.group.Clients` does not come back (check whether the
+  sheet's undo registration reaches the window's undo manager, since the sheet has its own
+  `\.undoManager`); `testNewGroupFromTheMenu` fails at line 64 — after Create on an empty workspace
+  the row `sidebar.group.Research` is not found (check that an empty group renders in the sidebar and
+  that the sheet's save reached the model). **Still to do before ticking:** fix those two, run
+  `test.sh` and `uitest.sh`, add the CHANGELOG entry, commit as P1-5.
 - [ ] **P1-6 (L) PaneHostView.** AppKit host with split layout (Auto), live resize, reorder, close,
   Motion springs, rubber-banding. *Tests:* U layout math (reuse GridMath), UI, HT. *Parity:* WS-1, WS-3
   (Auto).
