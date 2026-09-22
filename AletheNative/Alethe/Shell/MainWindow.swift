@@ -1,4 +1,5 @@
 import AletheDesign
+import AletheModel
 import SwiftUI
 
 struct MainWindow: View {
@@ -15,6 +16,29 @@ struct MainWindow: View {
             WorkspaceView()
         }
         .frame(minWidth: 800, minHeight: 500)
+        .sheet(item: editorRequest) { request in
+            if let workspace = environment.workspace {
+                editor(for: request, workspace: workspace)
+            }
+        }
+    }
+
+    private var editorRequest: Binding<EditorRequest?> {
+        Binding { environment.editorRequest } set: { environment.editorRequest = $0 }
+    }
+
+    @ViewBuilder
+    private func editor(for request: EditorRequest, workspace: WorkspaceModel) -> some View {
+        switch request {
+        case .newProject(let location):
+            ProjectEditor(workspace: workspace, editing: nil, initialLocation: location)
+        case .editProject(let id):
+            ProjectEditor(workspace: workspace, editing: id, initialLocation: .ungrouped)
+        case .newGroup(let parent):
+            GroupEditor(workspace: workspace, editing: nil, initialParent: parent)
+        case .editGroup(let id):
+            GroupEditor(workspace: workspace, editing: id, initialParent: nil)
+        }
     }
 
     /// Sidebar visibility survives relaunch (state restoration).

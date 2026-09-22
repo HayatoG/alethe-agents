@@ -1,6 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress.** Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4; P1-5 WIP (see its notes). Next:
+> finish P1-5, then P1-8 → P1-7 → P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -787,6 +788,19 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   delete group keeps projects, add-project panel; debug seed `-AletheUITestSeed sidebar`.
 - [ ] **P1-5 (M) New/edit project and group.** Name, color (tokens), folder, default cwd. *Parity:*
   SB-2 (basic), SB-3.
+  *In progress (WIP checkpoint, not validated):* `Alethe/Editors/` — `EditorRequest` (held by
+  `AppEnvironment.editorRequest`, presented as a sheet by `MainWindow`), `ProjectEditor` (folder field
+  + Choose…, name auto-filled from the folder, color swatches, group picker; validation: name, existing
+  folder, duplicate folder), `GroupEditor` (name, optional color, parent picker excluding itself and
+  descendants), `ColorSwatchPicker`, `ProjectColor.localizedName`. File menu: New Project… (⌘N), New
+  Group… (⇧⌘N), Add Project Folder… (⌘O); context menus: Edit Project…, Edit Group…, New Project in
+  Group…, New Subgroup…. 38 strings added (EN + pt-BR). Builds and passes the strings gate; the sheet
+  was checked visually. **Still to do before ticking:** (1) bug — the duplicate-folder check compares
+  the stored folder raw against `standardizedFileURL` (`/private/tmp` → `/tmp`), so duplicates slip
+  through; compare the standardized form on both sides in `ProjectEditor.problem` and in
+  `SidebarActions.addProjects`; (2) write `AletheUITests/EditorTests.swift` (create via ⌘N with
+  validation + duplicate message, edit group rename + ⌘Z, new group via ⇧⌘N); (3) run `test.sh` and
+  `uitest.sh`; (4) CHANGELOG entry; (5) commit as P1-5.
 - [ ] **P1-6 (L) PaneHostView.** AppKit host with split layout (Auto), live resize, reorder, close,
   Motion springs, rubber-banding. *Tests:* U layout math (reuse GridMath), UI, HT. *Parity:* WS-1, WS-3
   (Auto).

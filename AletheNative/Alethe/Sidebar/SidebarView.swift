@@ -45,8 +45,9 @@ struct SidebarView: View {
             return !added.isEmpty
         }
         .contextMenu {
+            Button("menu.file.newProject") { environment.editorRequest = .newProject(.ungrouped) }
             Button("sidebar.addProject") { actions.chooseFolders() }
-            Button("sidebar.newGroup") { actions.newGroup() }
+            Button("menu.file.newGroup") { environment.editorRequest = .newGroup(parent: nil) }
         }
         .safeAreaInset(edge: .bottom) {
             HStack {
@@ -116,7 +117,9 @@ private struct GroupRow: View {
                 return true
             }
             .contextMenu {
-                Button("sidebar.newSubgroup") { actions.newGroup(parent: group.id) }
+                Button("sidebar.editGroup") { environment.editorRequest = .editGroup(group.id) }
+                Button("sidebar.newProjectHere") { environment.editorRequest = .newProject(.group(group.id)) }
+                Button("sidebar.newSubgroup") { environment.editorRequest = .newGroup(parent: group.id) }
                 Divider()
                 Button("sidebar.deleteGroup") { actions.deleteGroup(group.id) }
             }
@@ -179,9 +182,11 @@ private struct ProjectRow: View {
 private struct ProjectContextMenu: View {
     let project: Project
     let actions: SidebarActions
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         let doc = actions.workspace.document
+        Button("sidebar.editProject") { environment.editorRequest = .editProject(project.id) }
         Button("sidebar.revealInFinder") { actions.revealInFinder(project) }
         Menu("sidebar.moveToGroup") {
             Button("sidebar.ungrouped") { actions.move(project.id, to: .ungrouped) }

@@ -46,7 +46,7 @@ struct SidebarActions {
     /// Adds each folder as a project (skipping folders already added); returns the new ids.
     @discardableResult
     func addProjects(folders: [URL], in location: ProjectLocation = .ungrouped) -> [ProjectID] {
-        let known = Set(workspace.document.projects.map(\.folder))
+        let known = Set(workspace.document.projects.map { URL(filePath: $0.folder).standardizedFileURL.path })
         let folders = folders.filter { url in
             var isDirectory: ObjCBool = false
             return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue
@@ -77,12 +77,6 @@ struct SidebarActions {
         panel.prompt = String(localized: "sidebar.addProject.prompt")
         guard panel.runModal() == .OK else { return }
         addProjects(folders: panel.urls)
-    }
-
-    func newGroup(parent: GroupID? = nil) {
-        workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newGroup")) {
-            _ = $0.addGroup(name: String(localized: "sidebar.group.defaultName"), parent: parent)
-        }
     }
 
     func drop(_ dropped: SidebarDrag.Dropped, onGroup target: GroupID) {

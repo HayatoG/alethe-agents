@@ -12,6 +12,8 @@ final class AppEnvironment {
     private(set) var workspace: WorkspaceModel?
     private(set) var preferences: PreferencesModel?
     private(set) var locations: DataLocations?
+    /// Sheet requested by a menu, the sidebar or the workspace.
+    var editorRequest: EditorRequest?
 
     var isLoaded: Bool { workspace != nil && preferences != nil }
 

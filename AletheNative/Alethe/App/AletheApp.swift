@@ -46,12 +46,16 @@ private struct FileCommands: Commands {
     let environment: AppEnvironment
 
     var body: some Commands {
-        CommandGroup(after: .newItem) {
+        CommandGroup(replacing: .newItem) {
+            Button("menu.file.newProject") { environment.editorRequest = .newProject(.ungrouped) }
+                .keyboardShortcut("n", modifiers: .command)
+                .disabled(environment.workspace == nil)
+            Button("menu.file.newGroup") { environment.editorRequest = .newGroup(parent: nil) }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+                .disabled(environment.workspace == nil)
+            Divider()
             Button("sidebar.addProject") { actions?.chooseFolders() }
                 .keyboardShortcut("o", modifiers: .command)
-                .disabled(environment.workspace == nil)
-            Button("sidebar.newGroup") { actions?.newGroup() }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
                 .disabled(environment.workspace == nil)
         }
     }
