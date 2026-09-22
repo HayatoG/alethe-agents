@@ -760,7 +760,10 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   @MainActor`). Tests: 7 store + 12 model (incl. corruption, newer-version protection, migration with
   backup, debounce, out-of-order revisions, round-trip). Phase 1 runs in dependency order: P1-2, P1-3,
   then P1-1.
-- [ ] **P1-3 (M) Profiles folder layout.** Default profile; paths service. *Parity:* SET-3 (base).
+- [x] **P1-3 (M) Profiles folder layout.** Default profile; paths service. *Parity:* SET-3 (base).
+  *Done:* `ProfileIndexDocument` (`profiles.json`: profiles, active id, built-in `default` profile
+  whose name is localized) and `DataLocations` (`profiles/<id>/{workspace,preferences}.json`,
+  `scrollback/`; ids sanitized so they cannot escape the folder). 5 tests.
 - [ ] **P1-4 (M) Sidebar tree.** Groups (nested), projects, terminals; reorder; context menus; Finder
   drop and `NSOpenPanel` to add a project. *Tests:* U reorder math, UI drag, HT. *Parity:* SB-1, SB-3.
 - [ ] **P1-5 (M) New/edit project and group.** Name, color (tokens), folder, default cwd. *Parity:*
