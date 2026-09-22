@@ -39,6 +39,29 @@ public final class DocumentModel<Document: VersionedDocument> {
     public func update(_ body: (inout Document) -> Void) {
         var next = document
         body(&next)
+        replace(with: next)
+    }
+
+    /// An undoable change: ⌘Z restores the document as it was before `body` (and ⇧⌘Z re-applies it).
+    public func update(undoManager: UndoManager?, actionName: String, _ body: (inout Document) -> Void) {
+        let before = document
+        update(body)
+        registerUndo(undoManager, restoring: before, actionName: actionName)
+    }
+
+    private func registerUndo(_ undoManager: UndoManager?, restoring snapshot: Document, actionName: String) {
+        guard let undoManager else { return }
+        let current = document
+        undoManager.registerUndo(withTarget: self) { model in
+            MainActor.assumeIsolated {
+                model.replace(with: snapshot)
+                model.registerUndo(undoManager, restoring: current, actionName: actionName)
+            }
+        }
+        undoManager.setActionName(actionName)
+    }
+
+    private func replace(with next: Document) {
         document = next
         revision += 1
         let snapshot = next

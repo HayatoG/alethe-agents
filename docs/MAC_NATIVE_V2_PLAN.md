@@ -772,8 +772,19 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   *Done:* `ProfileIndexDocument` (`profiles.json`: profiles, active id, built-in `default` profile
   whose name is localized) and `DataLocations` (`profiles/<id>/{workspace,preferences}.json`,
   `scrollback/`; ids sanitized so they cannot escape the folder). 5 tests.
-- [ ] **P1-4 (M) Sidebar tree.** Groups (nested), projects, terminals; reorder; context menus; Finder
+- [x] **P1-4 (M) Sidebar tree.** Groups (nested), projects, terminals; reorder; context menus; Finder
   drop and `NSOpenPanel` to add a project. *Tests:* U reorder math, UI drag, HT. *Parity:* SB-1, SB-3.
+  *Done:* `List(.sidebar)` tree with `DisclosureGroup` groups (collapse persisted), colored project
+  dots (theme `project*` tokens), terminal rows per project, selection → open/focus; File › Add
+  Project Folder… (⌘O, `NSOpenPanel`, multiple), New Group (⇧⌘N), Finder folder drop; context menus
+  (Show in Finder, Move to Group, Remove, New Subgroup, Delete Group); every structural change is
+  undoable (`DocumentModel.update(undoManager:actionName:)`, ⌘Z/⇧⌘Z) instead of confirmation
+  dialogs. Drag and drop uses the outline view's own mechanism (`.itemProvider` rows, `onMove`,
+  `onInsert`, row `onDrop`). *Finding:* XCUITest's synthesized drags never start a SwiftUI drag
+  session on macOS (no drop handler runs), while real mouse events work — drags are verified by
+  `Scripts/smoke/sidebar-drag.sh` (real events via `Scripts/dev/mousedrag.swift`, AX-located
+  rows, asserts `workspace.json`), run by `uitest.sh`. UI tests: tree nesting, Move to Group + undo,
+  delete group keeps projects, add-project panel; debug seed `-AletheUITestSeed sidebar`.
 - [ ] **P1-5 (M) New/edit project and group.** Name, color (tokens), folder, default cwd. *Parity:*
   SB-2 (basic), SB-3.
 - [ ] **P1-6 (L) PaneHostView.** AppKit host with split layout (Auto), live resize, reorder, close,

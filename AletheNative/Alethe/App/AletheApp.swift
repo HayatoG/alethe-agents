@@ -28,6 +28,7 @@ struct AletheApp: App {
         .windowToolbarStyle(.unified)
         .commands {
             SidebarCommands()
+            FileCommands(environment: environment)
             ViewCommands(environment: environment)
         }
 
@@ -37,6 +38,26 @@ struct AletheApp: App {
                 .environment(\.theme, environment.theme)
                 .environment(\.metrics, environment.metrics)
         }
+    }
+}
+
+/// File menu: adding projects and groups (undoable through the key window's undo manager).
+private struct FileCommands: Commands {
+    let environment: AppEnvironment
+
+    var body: some Commands {
+        CommandGroup(after: .newItem) {
+            Button("sidebar.addProject") { actions?.chooseFolders() }
+                .keyboardShortcut("o", modifiers: .command)
+                .disabled(environment.workspace == nil)
+            Button("sidebar.newGroup") { actions?.newGroup() }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+                .disabled(environment.workspace == nil)
+        }
+    }
+
+    @MainActor private var actions: SidebarActions? {
+        environment.workspace.map { SidebarActions(workspace: $0, undoManager: NSApp.keyWindow?.undoManager) }
     }
 }
 

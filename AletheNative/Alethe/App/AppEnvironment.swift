@@ -32,6 +32,11 @@ final class AppEnvironment {
         async let preferences = PreferencesModel.load(from: locations.preferences(profile))
         let (loadedWorkspace, loadedPreferences) = await (workspace, preferences)
         loadedWorkspace.update { $0.repair() }
+        #if DEBUG
+        if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
+            loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }
+        }
+        #endif
         self.profiles = profiles
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences

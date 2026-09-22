@@ -149,3 +149,20 @@ import Testing
         #expect(reloaded.document.projects.map(\.name) == ["Persisted"])
     }
 }
+
+@Suite struct UndoTests {
+    @MainActor @Test func undoAndRedoRestoreSnapshots() async {
+        let url = FileManager.default.temporaryDirectory.appending(path: "alethe-\(UUID().uuidString)/workspace.json")
+        let model = await WorkspaceModel.load(from: url)
+        let undo = UndoManager()
+        undo.groupsByEvent = false
+        undo.beginUndoGrouping()
+        model.update(undoManager: undo, actionName: "Add") { _ = $0.addProject(name: "A", folder: "/a") }
+        undo.endUndoGrouping()
+        #expect(model.document.projects.count == 1)
+        undo.undo()
+        #expect(model.document.projects.isEmpty)
+        undo.redo()
+        #expect(model.document.projects.map(\.name) == ["A"])
+    }
+}

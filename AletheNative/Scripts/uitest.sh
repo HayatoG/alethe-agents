@@ -17,3 +17,7 @@ xcodebuild \
   ALETHE_SIGN_IDENTITY="$SIGN_IDENTITY" \
   "$@" \
   test
+# Interactions XCUITest cannot synthesize (real mouse drags); skipped when running a subset.
+if [[ $# -eq 0 ]]; then
+  Scripts/smoke/sidebar-drag.sh
+fi
