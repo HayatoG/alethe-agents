@@ -12,6 +12,6 @@ xcodebuild \
   -destination "platform=macOS,arch=$(uname -m)" \
   -derivedDataPath build/DerivedData \
   -quiet \
-  CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
+  ALETHE_SIGN_IDENTITY="$SIGN_IDENTITY" \
   build
 echo "Built: $(pwd)/build/DerivedData/Build/Products/$CONFIGURATION/Alethe.app"

@@ -9,9 +9,15 @@ let package = Package(
     platforms: [.macOS(.v26)],
     products: [
         .library(name: "AletheFoundation", targets: ["AletheFoundation"]),
+        .library(name: "AletheDesign", targets: ["AletheDesign"]),
     ],
     targets: [
         .target(name: "AletheFoundation"),
+        .target(
+            name: "AletheDesign",
+            resources: [.copy("Resources/Themes"), .copy("Resources/Fonts")]
+        ),
         .testTarget(name: "AletheFoundationTests", dependencies: ["AletheFoundation"]),
+        .testTarget(name: "AletheDesignTests", dependencies: ["AletheDesign"]),
     ]
 )

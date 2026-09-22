@@ -423,8 +423,10 @@ control, key-equivalent conflicts, and large-list performance.
   plus a 16-color ANSI palette, cursor and selection), `Typography` (size → tracking/leading table,
   SF Pro for UI, the Alethe mono for terminals), `Metrics` (spacing/radius/sizes, all scaled by
   `uiScale`), `Motion` (named springs, §6.1), `Materials`.
-- Themes: 16 built-ins in Swift; the 4 theme-pack themes ship as a data plugin (JSON validated by a
-  schema test).
+- Themes: 16 built-ins stored as JSON resources in `AletheDesign` (every token resolved, no runtime
+  cascade), decoded into `Theme` and validated at load and by tests; the 4 theme-pack themes ship the
+  same JSON format as a data plugin (P4). Keeping hex values in data rather than Swift literals keeps
+  the color lint simple: only `ThemeColor` may build colors from channels.
 - Chrome (sidebar, toolbar, popovers) uses system materials/Liquid Glass tinted by the theme accent;
   content surfaces (panes, terminal, lists) use theme tokens. No gradients; a contrast test runs per
   theme.
@@ -605,11 +607,22 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   ID, so hardened-runtime library validation rejects any separately signed dylib — Xcode's
   `Alethe.debug.dylib` included. `ENABLE_DEBUG_DYLIB = NO` and all modules link statically; embedded
   frameworks (e.g. Sparkle) must wait for Developer ID signing (Phase 8).
-- [ ] **P0-3 (M) Design tokens + themes.** One-shot conversion of `theme.css`, `themes.ts`,
+- [x] **P0-3 (M) Design tokens + themes.** One-shot conversion of `theme.css`, `themes.ts`,
   `xtermThemes.ts` into `AletheDesign` (16 themes, tokens, ANSI); `Typography`, `Metrics`, `Motion`.
   Conversion script is kept under `Scripts/oneshot/` for audit, not run in the build. *Accept:* every
   upstream token has a Swift counterpart (U test with a token list); color lint test fails on a
   literal. *Parity:* UI-1 (data).
+  *Done:* `Scripts/oneshot/convert-themes.py` → 16 `Resources/Themes/*.json` (71 color tokens, 3
+  shadows, terminal palette with 16 ANSI colors; palettes that upstream leaves to xterm.js get its
+  Tango defaults) + `ThemeToken.swift`. `ThemeColor`, `Theme`, `ThemeCatalog` (picker order, default
+  `elite-indigo`, fallback `dark`), `Metrics` (UI scale 0.8–1.5 applied to space/radius/size/fonts),
+  `TextStyle` (system font), `AletheFonts` (bundled Caskaydia Cove Nerd Font Mono, family
+  `CaskaydiaCove Nerd Font Mono`), `Motion` (springs, projection, rubber-band, snap). Tests: 18
+  (completeness, WCAG AA text contrast per theme, round-trip, motion math, font registration, lint for
+  color literals and gradients — both verified to fail on a probe file). The app window paints
+  `theme[.bg]`. *Gotcha:* passing `CODE_SIGN_IDENTITY` on the `xcodebuild` command line also signs the
+  package resource bundle, which then demands a team; the app target reads `ALETHE_SIGN_IDENTITY`
+  instead.
 - [ ] **P0-4 (S) i18n pipeline.** `.xcstrings` in app and packages; build-phase + U test for missing
   pt-BR and orphan keys. *Accept:* adding an EN-only key fails the build.
 - [ ] **P0-5 (M) libghostty from source.** `Vendor/ghostty/build.sh`: pinned revision, `zig` build to

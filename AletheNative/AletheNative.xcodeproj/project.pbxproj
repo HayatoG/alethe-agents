@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A1E7000000000000000000B1 /* AletheFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = A1E7000000000000000000C1 /* AletheFoundation */; };
+		A1E7000000000000000000B2 /* AletheDesign in Frameworks */ = {isa = PBXBuildFile; productRef = A1E7000000000000000000C2 /* AletheDesign */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1E7000000000000000000B1 /* AletheFoundation in Frameworks */,
+				A1E7000000000000000000B2 /* AletheDesign in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = Alethe;
 			packageProductDependencies = (
 				A1E7000000000000000000C1 /* AletheFoundation */,
+				A1E7000000000000000000C2 /* AletheDesign */,
 			);
 			productName = Alethe;
 			productReference = A1E7000000000000000000D1 /* Alethe.app */;
@@ -138,6 +141,7 @@
 		A1E700000000000000000701 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALETHE_SIGN_IDENTITY = "-";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -167,6 +171,7 @@
 		A1E700000000000000000702 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALETHE_SIGN_IDENTITY = "-";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -189,7 +194,7 @@
 		A1E700000000000000000703 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "$(ALETHE_SIGN_IDENTITY)";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -213,7 +218,7 @@
 		A1E700000000000000000704 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "$(ALETHE_SIGN_IDENTITY)";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -269,6 +274,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
 			productName = AletheFoundation;
+		};
+		A1E7000000000000000000C2 /* AletheDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
+			productName = AletheDesign;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
