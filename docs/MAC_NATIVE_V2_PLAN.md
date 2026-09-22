@@ -360,7 +360,7 @@ Evidence is from `git log main..mac-native` and the old docs (`PLANO_MIGRACAO_MA
   `host_statistics64`; reqwest → `URLSession`; tiny_http/tungstenite → Network.framework
   (`NWListener`, WebSocket); zip → Apple Archive or `ditto`; qrcode → `CIQRCodeGenerator`;
   toml_edit → a small comment-preserving TOML table editor with golden tests; sherpa-onnx → Apple
-  SpeechAnalyzer (open question Q3); OAuth callbacks → `ASWebAuthenticationSession` or loopback
+  SpeechAnalyzer (owner decision, §11); OAuth callbacks → `ASWebAuthenticationSession` or loopback
   `NWListener`.
 - **Third-party dependencies (allow-list):** libghostty, Sparkle. Anything else needs an ADR.
 
@@ -577,7 +577,7 @@ plan's checkboxes, parity matrix (§8) and ADRs, `AletheNative/CHANGELOG.md`, fe
 the outcome in ai-memory (decisions, work state, gotchas, next steps). One task per
 commit; tick its checkbox in the same commit. Commits have no co-author or tool signature. No push,
 tag or release without the owner's explicit authorization at that moment. Every user-facing change
-updates `AletheNative/CHANGELOG.md` `[Unreleased]` (see Q2).
+updates `AletheNative/CHANGELOG.md` `[Unreleased]` (owner decision, §11).
 
 Sizes: **S** ≤ half a day, **M** 1–2 days, **L** 3–5 days (split anything larger).
 Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI test, **P** performance
@@ -667,7 +667,7 @@ Network.framework) (L); AG-9 model discovery; SE-1 remaining providers (OpenCode
 SE-3 history + recent chats; SE-4 cost (SQLite read of `opencode.db`, transcript pricing); SB-5 live
 chat titles + busy/done glyphs; USE-1 usage pills + AI Usage + Codex reset credit (L); USE-2 activity
 tracking; HOME-1…5 Home dashboard with real data (L); SET-9 notifications (UserNotifications) with
-completion detection; PER-6 dictation (L, engine per Q3).
+completion detection; PER-6 dictation with Apple SpeechAnalyzer (L).
 
 ### Phase 4 — Plugins, Git and review
 EXT-3 `AlethePluginKit` v1 (L) + plugin settings page; GIT-1 Git Control as a built-in plugin (L);
@@ -695,7 +695,7 @@ audit (L).
 ### Phase 7 — Peripherals
 PER-7 remote control: `NWListener` HTTP+WS server, pairing QR (`CIQRCodeGenerator`), read-only/shell
 input, device limits, Tailscale detection, the upstream PWA client bundled as a resource and adapted
-(3 × L); PER-3 Spotify (OAuth via loopback) (M); PER-4 Discord Rich Presence (IPC socket) (S); PER-5
+(3 × L; reuses the upstream PWA client); PER-3 Spotify (OAuth via loopback) (M); PER-4 Discord Rich Presence (IPC socket) (S); PER-5
 9router (M); SET-5 GitHub gist sync (M).
 
 ### Phase 8 — Release
@@ -815,7 +815,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | PER-3 | Spotify | P7 | Not started | |
 | PER-4 | Discord Rich Presence | P7 | Not started | |
 | PER-5 | 9router | P7 | Not started | |
-| PER-6 | Dictation | P3 | Not started | Engine per Q3 |
+| PER-6 | Dictation | P3 | Not started | Replaces Parakeet with Apple SpeechAnalyzer |
 | PER-7 | Remote control | P7 | Not started | |
 | EXP-1 | Agent Canvas POC + TokenHud | — | Won't port | Experimental upstream; revisit after v1 |
 | EXP-2 | Agent Sandbox | — | Won't port | Disabled upstream |
@@ -851,7 +851,7 @@ self-contained layout (ADR-7) makes this lossless.
 |---|---|---|
 | `HOST_MANAGED` exists only in a third-party libghostty fork | Terminal architecture | P0-5 builds from pinned source; P0-6 gate; SwiftTerm fallback behind `TerminalEngine` |
 | Volume of the port (~290 commands) | Schedule | Vertical phases; matrix as control; upstream tests ported as golden files |
-| No Developer ID yet | No external distribution; Keychain prompts | Stable local identity; Keychain reads behind a dev flag; Phase 8 blocked on Q6 |
+| No Developer ID yet | No external distribution; Keychain prompts | Stable local identity; Keychain reads behind a dev flag; Phase 8 waits for the account (§11) |
 | Comment-preserving TOML editing without a mature Swift library | Corrupting `~/.codex/config.toml` | Minimal table-level editor; golden tests from `toml_edit` cases; backup before write |
 | ExtensionKit distribution/UX for third parties | Plugin API scope | Spike in P4; built-ins do not depend on it |
 | Liquid Glass × custom themes | Legibility | Chrome tinted, content on tokens; per-theme contrast test; Reduce Transparency path |
@@ -860,14 +860,24 @@ self-contained layout (ADR-7) makes this lossless.
 | Upstream keeps moving fast | Parity gap | §9 watch + weekly triage |
 | Remote control exposes terminals on the network | Security | Pairing, read-only default, device limits, token expiry, LAN/Tailscale only, security review before release |
 
-## 11. Open questions for the owner
+## 11. Owner decisions and open questions
 
-1. **Name, bundle id and repository** of the Mac product (e.g. `com.kc1t.alethe.mac`?).
-2. **Changelog location:** proposed `AletheNative/CHANGELOG.md` (the repository's `docs/CHANGELOG.md` is
-   the Tauri product's). Confirm this exception to the house rule.
-3. **Dictation engine:** Apple SpeechAnalyzer (on-device, pure Swift, no model download) vs Parakeet via
-   Core ML (upstream parity, model download).
-4. **Third-party plugins:** ExtensionKit vs in-process bundles, and the signing/review policy for them.
-5. **License** of the Mac product (the Tauri app is AGPL-3.0).
-6. **Developer ID account:** when it will exist (blocks Phase 8 and external testing).
-7. **Remote control client:** reuse the upstream PWA as-is, or a native iOS companion later.
+Resolved (2026-09-22):
+1. **Name:** the product stays **Alethe**. Bundle id defaults to `com.kc1t.alethe.mac` (distinct from the
+   Tauri app's `com.kc1t.alethe`, so the two never share a data directory); confirm before P0-1 ships.
+2. **Changelog:** `AletheNative/CHANGELOG.md` (the repository's `docs/CHANGELOG.md` stays the Tauri
+   product's).
+3. **Dictation:** Apple on-device speech (`SpeechAnalyzer`/`SpeechTranscriber`); Parakeet is not ported.
+5. **License:** same as `main` — AGPL-3.0.
+6. **Developer ID:** not available yet. Phase 0–7 use the stable local signing identity; Phase 8
+   (notarization, Sparkle, public DMG) waits for the account.
+7. **Remote control client:** reuse the upstream PWA, bundled as a resource.
+
+Still open:
+4. **Third-party plugins channel.** Built-in plugins (Git, Todos, Theme-pack) are unaffected. For plugins
+   written by other people: ExtensionKit (each plugin ships as an app extension inside its own signed
+   app; runs out of process and sandboxed, so a crash or malicious plugin cannot take down Alethe or read
+   everything; more setup for plugin authors) vs in-process bundles (a `.bundle` dropped in a folder and
+   loaded into Alethe; simplest for authors, but it runs with Alethe's full permissions and requires
+   disabling library validation). Recommendation: ExtensionKit; decided by the P4 spike unless the owner
+   chooses earlier.
