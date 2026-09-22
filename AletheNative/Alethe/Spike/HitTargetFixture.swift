@@ -65,7 +65,7 @@ struct HitTargetFixture: View {
 
 /// A control that is an `NSView` for certain: the case `scaleEffect` breaks.
 private struct AppKitButton: NSViewRepresentable {
-    final class Coordinator: NSObject {
+    @MainActor final class Coordinator: NSObject {
         var clicks = 0
         @objc func clicked(_ sender: NSButton) {
             clicks += 1

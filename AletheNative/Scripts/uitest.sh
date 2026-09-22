@@ -6,6 +6,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 Vendor/ghostty/build.sh >/dev/null
 SIGN_IDENTITY="$(Scripts/dev-signing.sh)"
+# Each UI test launches the app against a throwaway /private/tmp/alethe-uitest-* data folder.
+trap 'rm -rf /private/tmp/alethe-uitest-*' EXIT
 xcodebuild \
   -project AletheNative.xcodeproj \
   -scheme Alethe \

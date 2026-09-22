@@ -11,10 +11,7 @@ final class HitTargetTests: XCTestCase {
     }
 
     private func launchFixture(scale: Double, extra: [String] = []) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["-AletheUITestFixture", "hit-targets", "-AletheUITestScale", "\(scale)"] + extra
-        app.launch()
-        return app
+        launchAlethe(arguments: ["-AletheUITestFixture", "hit-targets", "-AletheUITestScale", "\(scale)"] + extra).0
     }
 
     /// Clicks every fixture control and returns the ones whose click did not land.

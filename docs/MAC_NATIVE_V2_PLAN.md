@@ -745,8 +745,16 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
 
 ### Phase 1 — Usable vertical skeleton
 
-- [ ] **P1-1 (M) App shell.** Main window, `NavigationSplitView`, toolbar, standard menus, Settings
+- [x] **P1-1 (M) App shell.** Main window, `NavigationSplitView`, toolbar, standard menus, Settings
   scene, single-instance guard, state restoration. *Tests:* UI, HT.
+  *Done:* single `Window` scene (⌘N stays free for New Project) with `NavigationSplitView`, unified
+  toolbar, `SidebarCommands`, View › Zoom In/Out/Actual Size (metrics scale, persisted), `Settings`
+  scene (General: start agents unrestricted), `AppEnvironment` composition root loading the active
+  profile's documents, single-instance guard (activates the running copy), flush on quit
+  (`applicationShouldTerminate` → `.terminateLater`), sidebar visibility via `@SceneStorage`, theme
+  and `preferredColorScheme` from the active theme. Debug `-AletheDataRoot <path>` isolates data;
+  UI tests use `/private/tmp/alethe-uitest-*` (a sandboxed runner's container is not writable by the
+  app) and verify persistence by relaunching and reading the UI, never files. 4 UI tests.
 - [x] **P1-2 (M) Model v1 + DocumentStore.** `Workspace`, `Group`, `Project`, `Pane`, `SubTab`,
   `Preferences`; migrations chain; atomic debounced writes; backup before migrate. *Tests:* U, G
   (round-trip, corrupted file, concurrent save). *Parity:* data layer for SB/WS.
