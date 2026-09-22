@@ -1,6 +1,6 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **approved plan, not started.** Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 0 in progress.** Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -586,12 +586,18 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
 
 ### Phase 0 — Foundations and terminal spike (gate)
 
-- [ ] **P0-1 (S) Scaffold.** `AletheNative/` with Xcode project, `Packages/AletheKit` (empty targets),
-  app target, `Scripts/build.sh`/`test.sh`, `.gitignore` (xcuserdata, DerivedData, build outputs),
-  `CHANGELOG.md`, `UPSTREAM_BASELINE` = `75083e2`. *Accept:* `Scripts/test.sh` passes from a clean clone;
-  the app launches an empty window. *Tests:* U smoke.
-- [ ] **P0-2 (S) Stable dev signing.** Script to create/use one local identity; hardened runtime on.
-  *Accept:* two consecutive builds keep the same designated requirement (`codesign -d -r-`).
+- [x] **P0-1 (S) Scaffold.** `AletheNative/` with Xcode project, `Packages/AletheKit`, app target,
+  `Scripts/build.sh`/`test.sh`, `.gitignore` (xcuserdata, DerivedData, build outputs), `CHANGELOG.md`,
+  `UPSTREAM_BASELINE` = `75083e2`. *Accept:* `Scripts/test.sh` passes from a clean clone; the app
+  launches an empty window. *Tests:* U smoke.
+  *Done:* hand-written `project.pbxproj` (objectVersion 77, folder-synchronized `Alethe/` group, local
+  package reference); `AletheKit` starts with `AletheFoundation` (`AppIdentity`) and gains targets as
+  their tasks begin; bundle id `com.kc1t.alethe.mac`, deployment target 26.0, string-catalog symbol
+  generation on. Verified: 2 unit tests pass, the app launches a 900×532 "Alethe" window and quits.
+  Finding for P0-2: ad-hoc signing (`CODE_SIGN_IDENTITY = -`) does not apply the hardened runtime.
+- [ ] **P0-2 (S) Stable dev signing.** Script to create/use one local identity; hardened runtime on
+  (ad-hoc signing skips it — see P0-1). *Accept:* two consecutive builds keep the same designated
+  requirement (`codesign -d -r-`) and `codesign -dv` shows the `runtime` flag.
 - [ ] **P0-3 (M) Design tokens + themes.** One-shot conversion of `theme.css`, `themes.ts`,
   `xtermThemes.ts` into `AletheDesign` (16 themes, tokens, ANSI); `Typography`, `Metrics`, `Motion`.
   Conversion script is kept under `Scripts/oneshot/` for audit, not run in the build. *Accept:* every
