@@ -1,3 +1,4 @@
+import AletheAgents
 import AletheDesign
 import AletheFoundation
 import AletheModel
@@ -15,6 +16,9 @@ final class AppEnvironment {
     /// Sheet requested by a menu, the sidebar or the workspace.
     var editorRequest: EditorRequest?
 
+    /// Launcher lookups are cached across terminals; hits are re-checked on disk.
+    let launchers = LauncherCache()
+
     var isLoaded: Bool { workspace != nil && preferences != nil }
 
     var theme: Theme {
@@ -23,6 +27,11 @@ final class AppEnvironment {
 
     var metrics: Metrics {
         Metrics(scale: CGFloat(preferences?.document.uiScale ?? 1))
+    }
+
+    /// Builds agent commands with the user's CLI path overrides.
+    var agentLauncher: AgentLauncher {
+        AgentLauncher(launchers: launchers, overrides: preferences?.document.cliPaths ?? [:])
     }
 
     func load() async {

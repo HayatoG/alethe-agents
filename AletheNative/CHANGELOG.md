@@ -15,4 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - New Project (⌘N) and New Group (⇧⌘N) sheets, plus Edit Project… / Edit Group… in the sidebar
   context menu: name, color, folder and group (or parent group); missing or already-added folders
   are reported before saving, and every edit can be undone with ⌘Z.
+- Agent launching for Claude Code, Codex, OpenCode, Cursor and the shell: each CLI is found even
+  when Alethe is opened from Finder (PATH, Homebrew, npm, pnpm, bun, Volta, fnm, nvm, asdf, mise),
+  can be pointed at a custom path, and starts in unrestricted mode when requested.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5. Next:
-> P1-8 → P1-7 → P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8. Next:
+> P1-7 → P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -803,9 +803,19 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   (Auto).
 - [ ] **P1-7 (L) Terminal panes.** `PTYHost` + Ghostty engine productionized: spawn, resize, restart,
   kill, exit handling, theme and font from the app theme. *Parity:* TERM-1, TERM-7, TERM-8.
-- [ ] **P1-8 (M) AgentRegistry + launch.** Claude, Codex, OpenCode, Cursor, shell; launcher resolution
+- [x] **P1-8 (M) AgentRegistry + launch.** Claude, Codex, OpenCode, Cursor, shell; launcher resolution
   (PATH, Homebrew, npm/pnpm/volta/fnm/asdf/mise), unrestricted flags, cwd. *Tests:* U, G (ported from
   `cli_resolver.rs` and `sessionLaunch` tests). *Parity:* AG-1 (subset), AG-2, AG-4.
+  *Done:* new `AletheAgents` target (no Ghostty dependency): `AgentKind`/`AgentRegistry` (the only
+  agent list), `AgentArguments` (port of `buildAgentLaunch`), `LauncherResolver` + `LauncherCache`
+  (PATH, `~/.local/bin`, `~/.claude/local`, `~/.opencode/bin`, cargo, bun, npm-global,
+  `NPM_CONFIG_PREFIX`, Volta, pnpm, mise, asdf, nvm/fnm newest first, Homebrew; overrides; hits
+  re-checked on disk), `AgentLauncher` → `AgentCommand` (a `$SHELL -l -c` line that puts the CLI's
+  folder first on PATH so `#!/usr/bin/env node` finds its node, scrubbed editor/Claude variables).
+  `PreferencesDocument.cliPaths` holds overrides (Settings UI comes with AG-5/AG-6).
+  `AppEnvironment.agentLauncher` composes it; `AgentCommand.ptyLaunch(size:)` feeds P1-7. 27 tests,
+  including a real-shell quoting test; checked on this Mac with a minimal PATH (`claude --version`
+  ran through `zsh -l`).
 - [ ] **P1-9 (M) New-terminal sheet.** Agent picker, folder, restricted/unrestricted, prompt; ⌘T.
   *Parity:* AG-3 (basic).
 - [ ] **P1-10 (M) Session resume for Claude and Codex.** Snapshot sessions from `~/.claude/projects` and
@@ -922,9 +932,9 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SB-7 | Right sidebar | P4 | Not started | Inspector column |
 | SB-8 | View placement | P4 | Not started | |
 | AG-1 | 11 agent types | P1 (5), P3 | Not started | `wsl`: Won't port (Windows-only) |
-| AG-2 | Unrestricted flags | P1 | Not started | |
+| AG-2 | Unrestricted flags | P1 | Partial | Launch support done (P1-8); UI in P1-9 |
 | AG-3 | New-terminal modal | P1, P3 | Not started | |
-| AG-4 | Launcher resolution + override | P1 | Not started | macOS paths only |
+| AG-4 | Launcher resolution + override | P1 | Partial | Resolver + `cliPaths` done (P1-8); override UI pending |
 | AG-5 | Install/update/uninstall CLIs | P3 | Not started | |
 | AG-6 | Enable/disable agents | P3 | Not started | |
 | AG-7 | Claude ↔ Codex handoff | P3 | Not started | |

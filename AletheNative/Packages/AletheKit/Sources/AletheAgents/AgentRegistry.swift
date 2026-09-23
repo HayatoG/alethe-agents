@@ -1,0 +1,83 @@
+/// An agent type as stored in the workspace (`SubTab.agent`) and preferences. Unknown raw values
+/// survive a round trip so a document written by a newer build keeps its tabs.
+public struct AgentKind: RawRepresentable, Hashable, Sendable, Codable, CustomStringConvertible {
+    public let rawValue: String
+    public init(rawValue: String) { self.rawValue = rawValue }
+
+    public static let claude = AgentKind(rawValue: "claude")
+    public static let codex = AgentKind(rawValue: "codex")
+    public static let opencode = AgentKind(rawValue: "opencode")
+    public static let cursor = AgentKind(rawValue: "cursor")
+    public static let shell = AgentKind(rawValue: "shell")
+
+    public var description: String { rawValue }
+}
+
+/// How an agent's CLI is run. Upstream: `types.ts` (`AGENT_TYPE_LABELS`, `UNRESTRICTED_FLAG`,
+/// `BUILTIN_CLI_COMMANDS`).
+public struct AgentDescriptor: Hashable, Sendable, Identifiable {
+    public let kind: AgentKind
+    /// Product name; provider names are not translated.
+    public let displayName: String
+    /// Binary the launcher runs; nil for a plain shell.
+    public let cliCommand: String?
+    /// Flag that skips permission prompts, or nil when the CLI has none.
+    public let unrestrictedFlag: String?
+
+    public var id: AgentKind { kind }
+    public var isShell: Bool { cliCommand == nil }
+
+    public init(kind: AgentKind, displayName: String, cliCommand: String?, unrestrictedFlag: String?) {
+        self.kind = kind
+        self.displayName = displayName
+        self.cliCommand = cliCommand
+        self.unrestrictedFlag = unrestrictedFlag
+    }
+}
+
+/// The single source of which agents exist and how they launch (plan lesson 16: the spawn
+/// allow-list and the agent map must never disagree).
+public struct AgentRegistry: Sendable {
+    public let descriptors: [AgentDescriptor]
+
+    public init(descriptors: [AgentDescriptor]) {
+        self.descriptors = descriptors
+    }
+
+    /// Phase 1 agents; the rest of upstream's list arrives in Phase 3 (AG-1).
+    public static let builtin = AgentRegistry(descriptors: [
+        AgentDescriptor(kind: .claude, displayName: "Claude Code", cliCommand: "claude",
+                        unrestrictedFlag: "--dangerously-skip-permissions"),
+        AgentDescriptor(kind: .codex, displayName: "Codex", cliCommand: "codex",
+                        unrestrictedFlag: "--dangerously-bypass-approvals-and-sandbox"),
+        AgentDescriptor(kind: .opencode, displayName: "OpenCode", cliCommand: "opencode",
+                        unrestrictedFlag: "--dangerously-skip-permissions"),
+        // `cursor-agent`, not the bare `agent` alias, which collides with other vendors' CLIs.
+        AgentDescriptor(kind: .cursor, displayName: "Cursor", cliCommand: "cursor-agent", unrestrictedFlag: "--force"),
+        AgentDescriptor(kind: .shell, displayName: "Shell", cliCommand: nil, unrestrictedFlag: nil),
+    ])
+
+    public var kinds: [AgentKind] { descriptors.map(\.kind) }
+
+    public func descriptor(for kind: AgentKind) -> AgentDescriptor? {
+        descriptors.first { $0.kind == kind }
+    }
+
+    /// A free-form agent name (from a document or a backend) as a known kind; case-insensitive.
+    public func parse(_ raw: String?) -> AgentKind? {
+        let trimmed = (raw ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let exact = AgentKind(rawValue: trimmed)
+        if descriptor(for: exact) != nil { return exact }
+        let lowered = AgentKind(rawValue: trimmed.lowercased())
+        return descriptor(for: lowered) != nil ? lowered : nil
+    }
+
+    /// Agents offered for new terminals: `enabled` from preferences (nil = all), in registry order.
+    /// The shell is always offered.
+    public func enabledKinds(_ enabled: [String]?) -> [AgentKind] {
+        guard let enabled else { return kinds }
+        let allowed = Set(enabled.compactMap(parse))
+        return kinds.filter { $0 == .shell || allowed.contains($0) }
+    }
+}

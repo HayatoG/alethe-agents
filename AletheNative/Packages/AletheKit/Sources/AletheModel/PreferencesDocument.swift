@@ -21,15 +21,19 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var enabledAgents: [String]?
     /// Last choice in the new-terminal sheet.
     public var lastAgent: String?
+    /// Per-agent CLI path overrides, keyed by agent kind; unset agents are resolved automatically.
+    public var cliPaths: [String: String]?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
-                alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil) {
+                alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,
+                cliPaths: [String: String]? = nil) {
         self.schemaVersion = schemaVersion
         self.themeID = themeID
         self.uiScale = uiScale
         self.alwaysStartUnrestricted = alwaysStartUnrestricted
         self.enabledAgents = enabledAgents
         self.lastAgent = lastAgent
+        self.cliPaths = cliPaths
     }
 
     public mutating func zoom(by steps: Int) {
