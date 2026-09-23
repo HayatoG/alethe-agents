@@ -628,6 +628,26 @@ commit; tick its checkbox in the same commit. Commits have no co-author or tool 
 tag or release without the owner's explicit authorization at that moment. Every user-facing change
 updates `AletheNative/CHANGELOG.md` `[Unreleased]` (owner decision, §11).
 
+**Test cadence (owner decision, 2026-09-22):** per task, run only what the change touches — the
+affected package suites (`swift test --filter …`, all package tests are cheap), the affected UI test
+classes (`Scripts/uitest.sh -only-testing:AletheUITests/<Class>`), the strings gate and the app build
+when the project changes. Run the full suite (`Scripts/test.sh` + `Scripts/uitest.sh`, which includes
+the real-mouse smoke scripts) every 3 tasks, at the end of each phase, and when a change reaches
+widely shared code. Last full run: P1-6 (`07cf20f`).
+
+**UI-testing gotchas (learned in Phase 1):**
+- XCUITest `typeText` drops lowercase "c" under the owner's Brazilian - Pro layout (real key events
+  are fine) — tests avoid typing it.
+- XCUITest's synthesized drags never reach AppKit `mouseDragged` nor start SwiftUI drag sessions:
+  drags are covered by `Scripts/smoke/*.sh` with `Scripts/dev/mousedrag.swift` (real mouse events).
+- A plain `NSView` is invisible to accessibility: set `setAccessibilityElement(true)` + a role before
+  giving it an identifier.
+- Manual checks: launch the Debug app with `-AletheDataRoot <tmp> -AletheUITestSeed <seed>`
+  (`sidebar`, `terminals`, `panes`, `prompt`), drive it with `Scripts/dev/keypost.swift`, and capture
+  only its window (`screencapture -l <window id>`); never send global System Events keystrokes.
+- Localized strings with arguments: dotted key + positional placeholders (`%1$@`) through
+  `String(format:)`; the strings gate rejects interpolated keys.
+
 Sizes: **S** ≤ half a day, **M** 1–2 days, **L** 3–5 days (split anything larger).
 Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI test, **P** performance
 (XCTest metrics/signposts), **G** golden files ported from upstream tests.
