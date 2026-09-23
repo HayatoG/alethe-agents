@@ -158,6 +158,12 @@ struct SidebarActions {
         NSWorkspace.shared.activateFileViewerSelecting([URL(filePath: project.folder)])
     }
 
+    func closeTab(_ tab: TabID) {
+        workspace.update(undoManager: undoManager, actionName: String(localized: "undo.closeTerminal")) {
+            $0.closeTab(tab)
+        }
+    }
+
     func select(_ item: SidebarItem?) {
         workspace.update { doc in
             switch item {

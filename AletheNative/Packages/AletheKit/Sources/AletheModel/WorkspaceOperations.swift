@@ -156,6 +156,18 @@ extension WorkspaceDocument {
         }
     }
 
+    /// Removes a tab; a pane left without tabs is closed.
+    public mutating func closeTab(_ tabID: TabID) {
+        guard let (project, pane) = projects.lazy.flatMap({ project in project.panes.map { (project, $0) } })
+            .first(where: { $0.1.tabs.contains { $0.id == tabID } }) else { return }
+        if pane.tabs.count == 1 { return closePane(pane.id) }
+        updateProject(project.id) { project in
+            guard let index = project.panes.firstIndex(where: { $0.id == pane.id }) else { return }
+            project.panes[index].tabs.removeAll { $0.id == tabID }
+            if project.panes[index].activeTabID == tabID { project.panes[index].activeTabID = project.panes[index].tabs.first?.id }
+        }
+    }
+
     /// Swaps two panes of the same project (drag-to-reorder).
     public mutating func swapPanes(_ first: PaneID, _ second: PaneID) {
         guard let (project, _) = pane(first), pane(second)?.project.id == project.id else { return }

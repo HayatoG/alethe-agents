@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8. Next:
-> P1-7 → P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7. Next:
+> P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -801,8 +801,23 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
 - [ ] **P1-6 (L) PaneHostView.** AppKit host with split layout (Auto), live resize, reorder, close,
   Motion springs, rubber-banding. *Tests:* U layout math (reuse GridMath), UI, HT. *Parity:* WS-1, WS-3
   (Auto).
-- [ ] **P1-7 (L) Terminal panes.** `PTYHost` + Ghostty engine productionized: spawn, resize, restart,
+- [x] **P1-7 (L) Terminal panes.** `PTYHost` + Ghostty engine productionized: spawn, resize, restart,
   kill, exit handling, theme and font from the app theme. *Parity:* TERM-1, TERM-7, TERM-8.
+  *Done:* `Alethe/Terminals/` — `TerminalRegistry` (one live `TerminalPaneView` per tab, owned outside
+  the view tree so processes survive project switches; start via `AgentLauncher`, restart, close,
+  prune deleted tabs, terminate all on quit, live theme + font updates; font = 13 pt × `uiScale`),
+  `TerminalHost` (re-parents the registry's view; overlays for ended process → Restart, CLI not found
+  → Choose CLI… (validated with `LauncherResolver.path(_:matches:)`, saved to `cliPaths`), spawn
+  failure). `PTYProcess.terminate(grace:)` = SIGHUP to the group, SIGKILL after 2 s.
+  `WorkspaceView` shows the selected project's focused pane (splits: P1-6); "New Terminal" menu in
+  the project context menu and empty state (the full sheet is P1-9); tab rows get Restart / Close
+  Terminal (`WorkspaceDocument.closeTab`, undoable). Claude session ids are only resumed when their
+  transcript exists (`ClaudeTranscripts`), since a minted id with no message cannot be resumed.
+  Ghostty's own "Process exited. Press any key" line is suppressed (the session is not `finish`ed).
+  Localized strings with arguments use a dotted key + `String(format:)` with positional
+  placeholders (the strings gate rejects interpolated keys). *Tests:* `terminateKillsAChildThatIgnoresHangup`,
+  `closingTheLastTabClosesItsPane`, `ClaudeTranscriptsTests`, UI `TerminalTests.testShellLifecycle`;
+  checked visually with Claude Code (theme, trust prompt, exit overlay, no orphan processes).
 - [x] **P1-8 (M) AgentRegistry + launch.** Claude, Codex, OpenCode, Cursor, shell; launcher resolution
   (PATH, Homebrew, npm/pnpm/volta/fnm/asdf/mise), unrestricted flags, cwd. *Tests:* U, G (ported from
   `cli_resolver.rs` and `sessionLaunch` tests). *Parity:* AG-1 (subset), AG-2, AG-4.
@@ -912,14 +927,14 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-12 | Link viewer overlay | P2 | Not started | |
 | WS-13 | Empty workspace launcher | P2 | Not started | |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
-| TERM-1 | Real PTYs + process tree | P1 | Not started | PTYHost |
+| TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); process-tree info later |
 | TERM-2 | Sub-tabs lane | P2 | Not started | |
 | TERM-3 | Terminal search | P0 spike, P2 | Not started | Ghostty search actions |
 | TERM-4 | Smart copy/paste | P2 | Not started | |
 | TERM-5 | Prompt history | P2 | Not started | |
 | TERM-6 | Clickable links | P2 | Not started | |
-| TERM-7 | Terminal themes/font | P1 | Not started | |
-| TERM-8 | Restart / command-not-found overlays | P1 | Not started | |
+| TERM-7 | Terminal themes/font | P1 | Done | App theme + zoom-scaled font (P1-7) |
+| TERM-8 | Restart / command-not-found overlays | P1 | Done | Install button comes with AG-5 |
 | TERM-9 | Double ^C force-kill | P2 | Not started | |
 | TERM-10 | Scrollback persistence + reattach | P2 | Not started | |
 | TERM-11 | `alethe` CLI shim | P5 | Not started | |

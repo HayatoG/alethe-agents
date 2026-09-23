@@ -117,6 +117,17 @@ public final class PTYProcess: @unchecked Sendable {
         kill(-pid, signal)
     }
 
+    /// Hangs up the process group, then kills it if it is still alive after `grace` (agents that
+    /// trap SIGHUP to save state get that long).
+    public func terminate(grace: Duration = .seconds(2)) {
+        signal(SIGHUP)
+        let seconds = Double(grace.components.seconds) + Double(grace.components.attoseconds) / 1e18
+        queue.asyncAfter(deadline: .now() + seconds) { [weak self] in
+            guard let self, !self.exited else { return }
+            self.signal(SIGKILL)
+        }
+    }
+
     public var scrollbackContents: Data {
         queue.sync { scrollback.contents }
     }

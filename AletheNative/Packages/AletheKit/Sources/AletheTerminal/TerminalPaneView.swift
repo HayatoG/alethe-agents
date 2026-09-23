@@ -13,12 +13,11 @@ public final class TerminalPaneView: NSView {
     private let controller: TerminalController
     private let session: InMemoryTerminalSession
     private let process: PTYProcess
-    private let startedAt = Date()
     public let tap: TerminalIOTap
 
     public var onExit: ((Int32) -> Void)?
 
-    public init(launch: PTYLaunch, theme: Theme) throws {
+    public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize) throws {
         let process = try PTYProcess(launch)
         self.process = process
         let tap = TerminalIOTap()
@@ -37,7 +36,7 @@ public final class TerminalPaneView: NSView {
                 ))
             }
         )
-        controller = TerminalController(theme: TerminalAppearance.terminalTheme(for: theme))
+        controller = TerminalController(theme: TerminalAppearance.terminalTheme(for: theme, fontSize: fontSize))
         terminalView = TerminalView(frame: .zero)
         super.init(frame: .zero)
 
@@ -53,16 +52,13 @@ public final class TerminalPaneView: NSView {
         ])
 
         let session = session
-        let startedAt = startedAt
         process.onOutput = { data in
             tap.output(data)
             session.receive(data)
         }
+        // The session is deliberately not `finish`ed: Ghostty would print its own "Process exited.
+        // Press any key to close" line, and the app shows the ended state (with Restart) itself.
         process.onExit = { [weak self] code in
-            session.finish(
-                exitCode: UInt32(bitPattern: code),
-                runtimeMilliseconds: UInt64(Date().timeIntervalSince(startedAt) * 1000)
-            )
             Task { @MainActor in self?.onExit?(code) }
         }
         process.start()
@@ -80,8 +76,8 @@ public final class TerminalPaneView: NSView {
         window?.makeFirstResponder(terminalView)
     }
 
-    public func applyTheme(_ theme: Theme) {
-        _ = controller.setTheme(TerminalAppearance.terminalTheme(for: theme))
+    public func applyTheme(_ theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize) {
+        _ = controller.setTheme(TerminalAppearance.terminalTheme(for: theme, fontSize: fontSize))
     }
 
     /// Viewport text (visible rows), for tests and diagnostics.
@@ -111,7 +107,8 @@ public final class TerminalPaneView: NSView {
         terminalView.performBindingAction("end_search")
     }
 
+    /// Ends the process group: SIGHUP, then SIGKILL if it outlives the grace period.
     public func terminate() {
-        process.signal(SIGHUP)
+        process.terminate()
     }
 }

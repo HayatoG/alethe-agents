@@ -41,6 +41,26 @@ import Testing
         #expect(result.output.contains("/private/tmp"))
     }
 
+    @Test func terminateKillsAChildThatIgnoresHangup() async throws {
+        let process = try PTYProcess(PTYLaunch(
+            executable: "/bin/sh",
+            arguments: ["sh", "-c", "trap '' HUP; echo ready; while :; do sleep 1; done"],
+            environment: ["PATH": "/usr/bin:/bin"],
+            workingDirectory: nil,
+            size: PTYSize(columns: 80, rows: 24)
+        ))
+        let collected = Collected()
+        let code: Int32 = await withCheckedContinuation { continuation in
+            process.onOutput = { data in
+                collected.append(data)
+                if collected.string.contains("ready") { process.terminate(grace: .milliseconds(200)) }
+            }
+            process.onExit = { continuation.resume(returning: $0) }
+            process.start()
+        }
+        #expect(code == 128 + SIGKILL)
+    }
+
     @Test func forwardsInputToTheChild() async throws {
         let launch = PTYLaunch(
             executable: "/bin/sh",

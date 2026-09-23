@@ -18,4 +18,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Agent launching for Claude Code, Codex, OpenCode, Cursor and the shell: each CLI is found even
   when Alethe is opened from Finder (PATH, Homebrew, npm, pnpm, bun, Volta, fnm, nvm, asdf, mise),
   can be pointed at a custom path, and starts in unrestricted mode when requested.
+- Terminals: open Claude Code, Codex, OpenCode, Cursor or a shell in a project (New Terminal in
+  the project's menu), rendered with the app theme and following the UI zoom. Terminals keep running
+  while you switch projects; an ended process can be restarted, a missing CLI can be pointed at with
+  Choose CLI…, and terminals are closed from the sidebar (undoable).
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

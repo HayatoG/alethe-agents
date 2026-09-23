@@ -151,6 +151,8 @@ private struct ProjectRow: View {
                                 .foregroundStyle(theme[.textSecondary])
                         }
                         .tag(SidebarItem.tab(tab.id))
+                        .contextMenu { TabContextMenu(tab: tab, project: project, actions: actions) }
+                        .accessibilityIdentifier("sidebar.tab.\(tab.agent)")
                     }
                 } label: {
                     label
@@ -186,6 +188,8 @@ private struct ProjectContextMenu: View {
 
     var body: some View {
         let doc = actions.workspace.document
+        NewTerminalMenu(project: project)
+        Divider()
         Button("sidebar.editProject") { environment.editorRequest = .editProject(project.id) }
         Button("sidebar.revealInFinder") { actions.revealInFinder(project) }
         Menu("sidebar.moveToGroup") {
@@ -199,6 +203,19 @@ private struct ProjectContextMenu: View {
         }
         Divider()
         Button("sidebar.removeProject") { actions.remove(project.id) }
+    }
+}
+
+private struct TabContextMenu: View {
+    let tab: PaneTab
+    let project: Project
+    let actions: SidebarActions
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        Button("terminal.restart") { environment.terminals.restart(tab, in: project, environment: environment) }
+        Divider()
+        Button("terminal.close") { actions.closeTab(tab.id) }
     }
 }
 

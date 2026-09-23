@@ -13,6 +13,9 @@ enum TestSeeds {
             doc.addProject(name: "beta", folder: "/private/tmp", color: .blue, in: .group(work))
             doc.addProject(name: "client-site", folder: "/private/tmp", color: .teal, in: .group(clients))
             doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
+        case "terminals":
+            let project = doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
+            doc.addPane(to: project, tab: PaneTab(agent: "claude"))
         default:
             break
         }

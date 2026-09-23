@@ -2,6 +2,7 @@ import AletheAgents
 import AletheDesign
 import AletheFoundation
 import AletheModel
+import AletheTerminal
 import Foundation
 import Observation
 
@@ -18,11 +19,17 @@ final class AppEnvironment {
 
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()
+    let terminals = TerminalRegistry()
 
     var isLoaded: Bool { workspace != nil && preferences != nil }
 
     var theme: Theme {
         ThemeCatalog.builtin.resolved(id: preferences?.document.themeID ?? PreferencesDocument.defaultThemeID)
+    }
+
+    /// Terminal text follows the UI zoom.
+    var terminalFontSize: Float {
+        TerminalAppearance.defaultFontSize * Float(preferences?.document.uiScale ?? 1)
     }
 
     var metrics: Metrics {
@@ -55,6 +62,7 @@ final class AppEnvironment {
 
     /// Writes every pending change; called before the app quits.
     func flush() async {
+        terminals.terminateAll()
         await workspace?.flush()
         await preferences?.flush()
         await profiles?.flush()
