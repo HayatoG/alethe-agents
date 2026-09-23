@@ -20,4 +20,5 @@ xcodebuild \
 # Interactions XCUITest cannot synthesize (real mouse drags); skipped when running a subset.
 if [[ $# -eq 0 ]]; then
   Scripts/smoke/sidebar-drag.sh
+  Scripts/smoke/pane-drag.sh
 fi

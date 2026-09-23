@@ -61,6 +61,33 @@ import Testing
         #expect(code == 128 + SIGKILL)
     }
 
+    @Test func coalescedResizeAppliesOnlyTheLastSize() async throws {
+        let process = try PTYProcess(PTYLaunch(
+            executable: "/bin/sh",
+            arguments: ["sh", "-c", "trap 'stty size' WINCH; echo ready; read line"],
+            environment: ["PATH": "/usr/bin:/bin"],
+            workingDirectory: nil,
+            size: PTYSize(columns: 80, rows: 24)
+        ))
+        let collected = Collected()
+        let output: String = await withCheckedContinuation { continuation in
+            process.onOutput = { data in
+                collected.append(data)
+                if collected.string.contains("ready"), !collected.string.contains("sent") {
+                    collected.append(Data("sent".utf8))
+                    for columns in UInt16(81)...UInt16(90) {
+                        process.resizeCoalesced(PTYSize(columns: columns, rows: 24), quiet: .milliseconds(50))
+                    }
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { process.write(Data("\n".utf8)) }
+                }
+            }
+            process.onExit = { _ in continuation.resume(returning: collected.string) }
+            process.start()
+        }
+        #expect(output.contains("24 90"))
+        #expect(!output.contains("24 81"))
+    }
+
     @Test func forwardsInputToTheChild() async throws {
         let launch = PTYLaunch(
             executable: "/bin/sh",

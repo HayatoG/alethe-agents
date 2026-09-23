@@ -3,7 +3,7 @@ import AletheDesign
 import AletheModel
 import SwiftUI
 
-/// The workspace area: the selected project's focused pane (split layout arrives with P1-6).
+/// The workspace area: open projects as containers of panes (`PaneHost`), or the empty state.
 struct WorkspaceView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
@@ -29,28 +29,12 @@ struct WorkspaceView: View {
 
     @ViewBuilder
     private var content: some View {
-        if let project = selectedProject {
-            if let tab = visibleTab(in: project) {
-                TerminalHost(tab: tab, project: project)
-                    .id(tab.id)
-            } else {
-                projectEmptyState(project)
-            }
+        if let doc = environment.workspace?.document, !doc.workspace.openProjectIDs.isEmpty {
+            PaneHost(document: doc, terminalStates: environment.terminals.states,
+                     terminalGenerations: environment.terminals.generations)
         } else {
             emptyState
         }
-    }
-
-    private var selectedProject: Project? {
-        guard let doc = environment.workspace?.document, let id = doc.workspace.selectedProjectID else { return nil }
-        return doc.project(id)
-    }
-
-    /// The focused pane when it belongs to the project, else its first pane.
-    private func visibleTab(in project: Project) -> PaneTab? {
-        let focused = environment.workspace?.document.workspace.focusedPaneID
-        let pane = project.panes.first { $0.id == focused } ?? project.panes.first
-        return pane?.activeTab
     }
 
     private var allTabIDs: Set<TabID> {
@@ -59,21 +43,6 @@ struct WorkspaceView: View {
 
     private func applyAppearance() {
         environment.terminals.applyAppearance(theme: environment.theme, fontSize: environment.terminalFontSize)
-    }
-
-    private func projectEmptyState(_ project: Project) -> some View {
-        VStack(spacing: metrics.space(.l)) {
-            Text(verbatim: project.name)
-                .font(metrics.font(.title2))
-                .foregroundStyle(theme[.textPrimary])
-            Text("workspace.project.noTerminals")
-                .font(metrics.font(.body))
-                .foregroundStyle(theme[.textSecondary])
-            NewTerminalMenu(project: project)
-                .fixedSize()
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("workspace.project.empty")
     }
 
     private var emptyState: some View {

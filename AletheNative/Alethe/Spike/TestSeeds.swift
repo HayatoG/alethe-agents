@@ -16,6 +16,11 @@ enum TestSeeds {
         case "terminals":
             let project = doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
             doc.addPane(to: project, tab: PaneTab(agent: "claude"))
+        case "panes":
+            let api = doc.addProject(name: "api", folder: "/private/tmp", color: .orange)
+            let web = doc.addProject(name: "web", folder: "/private/tmp", color: .teal)
+            for title in ["one", "two", "three"] { doc.addPane(to: api, tab: PaneTab(agent: "shell", title: title)) }
+            doc.addPane(to: web, tab: PaneTab(agent: "shell", title: "four"))
         default:
             break
         }

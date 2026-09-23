@@ -28,7 +28,7 @@ public final class TerminalPaneView: NSView {
                 process.write(data)
             },
             resize: { viewport in
-                process.resize(PTYSize(
+                process.resizeCoalesced(PTYSize(
                     columns: viewport.columns,
                     rows: viewport.rows,
                     widthPixels: UInt16(clamping: viewport.widthPixels),

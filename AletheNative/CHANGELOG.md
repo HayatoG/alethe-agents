@@ -22,4 +22,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the project's menu), rendered with the app theme and following the UI zoom. Terminals keep running
   while you switch projects; an ended process can be restarted, a missing CLI can be pointed at with
   Choose CLI…, and terminals are closed from the sidebar (undoable).
+- Workspace panes: open projects sit side by side, each with its terminals in the Auto layout (one
+  fills the area, two side by side, more in rows of two). Drag the gaps to resize projects and splits
+  live, drag a pane's header onto another to swap them, and close panes or projects from their
+  headers (undoable). Sizes are remembered.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

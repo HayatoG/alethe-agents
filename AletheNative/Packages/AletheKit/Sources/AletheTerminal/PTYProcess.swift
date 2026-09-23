@@ -112,6 +112,24 @@ public final class PTYProcess: @unchecked Sendable {
         }
     }
 
+    private var pendingResize = 0
+
+    /// Applies only the last of a burst of sizes, once none arrived for `quiet`. A live split drag
+    /// or a spring animation changes the size every frame; each change is a SIGWINCH, and shells
+    /// redraw their prompt at every intermediate width, leaving fragments behind.
+    public func resizeCoalesced(_ size: PTYSize, quiet: Duration = .milliseconds(80)) {
+        let seconds = Double(quiet.components.seconds) + Double(quiet.components.attoseconds) / 1e18
+        queue.async { [weak self] in
+            guard let self else { return }
+            pendingResize += 1
+            let ticket = pendingResize
+            queue.asyncAfter(deadline: .now() + seconds) { [weak self] in
+                guard let self, ticket == pendingResize, !exited else { return }
+                _ = alethe_pty_resize(masterFD, size.columns, size.rows, size.widthPixels, size.heightPixels)
+            }
+        }
+    }
+
     /// Sends a signal to the child's whole process group (the shell and what it runs).
     public func signal(_ signal: Int32 = SIGHUP) {
         kill(-pid, signal)

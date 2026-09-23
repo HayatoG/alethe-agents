@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7. Next:
-> P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6. Next:
+> P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -798,9 +798,30 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   focus their first field on appear. *Tests:* `AletheUITests/EditorTests` (3). Lesson: XCUITest
   `typeText` drops lowercase "c" under the Brazilian - Pro layout — real CGEvents reach the field
   (checked with `Scripts/dev/keypost.swift`), so UI tests avoid typing it.
-- [ ] **P1-6 (L) PaneHostView.** AppKit host with split layout (Auto), live resize, reorder, close,
+- [x] **P1-6 (L) PaneHostView.** AppKit host with split layout (Auto), live resize, reorder, close,
   Motion springs, rubber-banding. *Tests:* U layout math (reuse GridMath), UI, HT. *Parity:* WS-1, WS-3
   (Auto).
+  *Done:* `AletheModel/WorkspaceLayout.swift` — `AutoLayout.rows` (upstream `PaneArea` Auto: 1 full,
+  2 side by side, then rows of two with an odd last pane spanning), `TrackMath` (weighted tracks,
+  boundary drag clamped at a minimum, rubber-band injected as a function so the model does not
+  depend on `AletheDesign`), `PaneGridGeometry` (pane frames + divider hit areas). App
+  `Workspace/PaneHost/`: `PaneHostView` (open projects as containers sized by `containerWeights`,
+  container dividers, click-to-focus through a local mouse monitor that lets the click through),
+  `ContainerView` (SwiftUI header, Auto grid from `gridWeights[project]`, live split drag with
+  rubber-band then a spring back on release, header drag-to-reorder with a lifted pane using the
+  theme's `lg` shadow, empty-project state), `PaneView` (header, re-parented registry terminal,
+  overlay only when needed), `DividerView`, `FrameAnimator` (critically damped `Motion.standard`
+  spring on `NSView.displayLink`, interruptible, skipped under Reduce Motion), `PaneHostContext`.
+  Close pane / close project are undoable; resizes and focus are not (as upstream).
+  `PTYProcess.resizeCoalesced` sends only the last size of a burst (80 ms quiet) so a live drag is
+  one SIGWINCH, not one per frame. *Tests:* `AutoLayoutTests`, `TrackMathTests`,
+  `PaneGridGeometryTests`, `coalescedResizeAppliesOnlyTheLastSize`, UI `PaneHostTests` (layout, close
+  + undo), `Scripts/smoke/pane-drag.sh` (real-mouse split resize, container resize, reorder — run by
+  `uitest.sh`; XCUITest's synthesized drags never reach AppKit `mouseDragged`).
+  *Follow-up (Phase 2, TERM):* zsh still leaves a `%`/prompt fragment after a resize because Ghostty
+  cannot clear the old prompt without its shell integration (OSC 133 marks). In `HOST_MANAGED` mode
+  Ghostty does not spawn the shell, so Alethe must inject the integration itself (ZDOTDIR for zsh,
+  equivalents for bash/fish).
 - [x] **P1-7 (L) Terminal panes.** `PTYHost` + Ghostty engine productionized: spawn, resize, restart,
   kill, exit handling, theme and font from the app theme. *Parity:* TERM-1, TERM-7, TERM-8.
   *Done:* `Alethe/Terminals/` — `TerminalRegistry` (one live `TerminalPaneView` per tab, owned outside
@@ -913,9 +934,9 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | HOME-3 | Activity graph / time analytics / usage strip | P3 | Not started | |
 | HOME-4 | Setup walkthrough | P3 | Not started | |
 | HOME-5 | Notifications list | P3 | Not started | |
-| WS-1 | Project containers | P1 | Not started | |
+| WS-1 | Project containers | P1 | Partial | Open many, resize, close (P1-6); collapse/fullscreen/reorder later |
 | WS-2 | Flat mode | P2 | Not started | |
-| WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Not started | |
+| WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto done (P1-6) |
 | WS-4 | Named project grids | P2 | Not started | |
 | WS-5 | Tabs, closed tabs, history | P2 | Not started | |
 | WS-6 | Markdown pane | P2 | Not started | |

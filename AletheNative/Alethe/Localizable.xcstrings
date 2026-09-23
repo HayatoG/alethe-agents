@@ -596,6 +596,40 @@
         }
       }
     },
+    "pane.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Terminal"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fechar terminal"
+          }
+        }
+      }
+    },
+    "pane.unrestricted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unrestricted: permission prompts are skipped"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem restrições: pedidos de permissão são ignorados"
+          }
+        }
+      }
+    },
     "settings.general.alwaysUnrestricted" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1055,6 +1089,23 @@
         }
       }
     },
+    "undo.closeProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fechar projeto"
+          }
+        }
+      }
+    },
     "undo.closeTerminal" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1187,6 +1238,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remover Projeto"
+          }
+        }
+      }
+    },
+    "workspace.container.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fechar projeto"
           }
         }
       }

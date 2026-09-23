@@ -6,20 +6,26 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// One tab's terminal, with the overlays for a process that ended or could not start.
-struct TerminalHost: View {
+/// What a pane shows over its terminal when the process ended or could not start; nothing while it
+/// runs. Hosted by `PaneView` only when needed, so it never sits over a live terminal.
+struct TerminalOverlay: View {
     let tab: PaneTab
     let project: Project
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
+    static func isNeeded(for state: TerminalRegistry.State?) -> Bool {
+        switch state {
+        case .running, nil: false
+        default: true
+        }
+    }
+
     var body: some View {
-        let terminals = environment.terminals
         ZStack {
-            theme[.bg]
-            TerminalViewSlot(view: terminals.view(for: tab.id), generation: terminals.generations[tab.id] ?? 0)
-            switch terminals.states[tab.id] {
+            Color.clear
+            switch environment.terminals.states[tab.id] {
             case .exited(let code):
                 overlay {
                     Text(verbatim: format("terminal.exited", Int(code)))
@@ -45,9 +51,6 @@ struct TerminalHost: View {
             case .running, nil:
                 EmptyView()
             }
-        }
-        .task(id: tab.id) {
-            terminals.ensureStarted(tab, in: project, environment: environment)
         }
     }
 
@@ -97,31 +100,4 @@ struct TerminalHost: View {
 /// A catalog string with `%1$@`-style placeholders filled in.
 private func format(_ key: String.LocalizationValue, _ arguments: any CVarArg...) -> String {
     String(format: String(localized: key), arguments: arguments)
-}
-
-/// Hosts a registry-owned terminal view; re-parents it when the tab or its process changes.
-private struct TerminalViewSlot: NSViewRepresentable {
-    let view: TerminalPaneView?
-    let generation: Int
-
-    func makeNSView(context: Context) -> NSView {
-        let container = NSView()
-        // A plain NSView is invisible to accessibility; the pane must be findable (VoiceOver, UI tests).
-        container.setAccessibilityElement(true)
-        container.setAccessibilityRole(.group)
-        container.setAccessibilityLabel(String(localized: "terminal.accessibilityLabel"))
-        container.setAccessibilityIdentifier("terminal.pane")
-        return container
-    }
-
-    func updateNSView(_ container: NSView, context: Context) {
-        guard container.subviews.first !== view else { return }
-        container.subviews.forEach { $0.removeFromSuperview() }
-        guard let view else { return }
-        view.removeFromSuperview()
-        view.frame = container.bounds
-        view.autoresizingMask = [.width, .height]
-        container.addSubview(view)
-        DispatchQueue.main.async { view.focus() }
-    }
 }

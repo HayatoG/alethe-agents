@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 public struct ThemeShadow: Hashable, Sendable, Codable {
@@ -33,6 +34,11 @@ public struct Theme: Identifiable, Hashable, Sendable, Codable {
 
     public subscript(token: ThemeToken) -> Color {
         (colors[token] ?? Self.missingTokenColor).color
+    }
+
+    /// The token for AppKit layers (borders, backgrounds of hosted NSViews).
+    public func nsColor(_ token: ThemeToken) -> NSColor {
+        (colors[token] ?? Self.missingTokenColor).nsColor
     }
 
     public func shadow(_ level: ShadowLevel) -> ThemeShadow {
