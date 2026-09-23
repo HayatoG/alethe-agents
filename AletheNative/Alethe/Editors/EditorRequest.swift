@@ -6,6 +6,8 @@ enum EditorRequest: Identifiable, Hashable {
     case editProject(ProjectID)
     case newGroup(parent: GroupID?)
     case editGroup(GroupID)
+    /// New terminal in a project (nil: the selected one).
+    case newTerminal(ProjectID?)
 
     var id: String {
         switch self {
@@ -13,6 +15,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .editProject(let id): "editProject:\(id)"
         case .newGroup: "newGroup"
         case .editGroup(let id): "editGroup:\(id)"
+        case .newTerminal: "newTerminal"
         }
     }
 }

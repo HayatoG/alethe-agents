@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6. Next:
-> P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6, P1-9. Next:
+> P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -852,8 +852,19 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   `AppEnvironment.agentLauncher` composes it; `AgentCommand.ptyLaunch(size:)` feeds P1-7. 27 tests,
   including a real-shell quoting test; checked on this Mac with a minimal PATH (`claude --version`
   ran through `zsh -l`).
-- [ ] **P1-9 (M) New-terminal sheet.** Agent picker, folder, restricted/unrestricted, prompt; ⌘T.
+- [x] **P1-9 (M) New-terminal sheet.** Agent picker, folder, restricted/unrestricted, prompt; ⌘T.
   *Parity:* AG-3 (basic).
+  *Done:* `Editors/NewTerminalSheet` (enabled agents as a radio group with agent colors, project
+  picker, folder with validation + Choose…, unrestricted toggle showing the real flag and defaulting
+  to `alwaysStartUnrestricted`, optional first prompt; `lastAgent` preselected). File › New
+  Terminal… (⌘T) and New Terminal… on projects and empty containers (replaces P1-7's quick submenu).
+  `AletheTerminal/PromptDelivery` ports upstream `sendInitialInput` + `deliverOpenCodePrompt`:
+  ready after ≥ 1.5 s (OpenCode 4 s) and 700 ms of quiet or 4 s; bracketed paste + Enter (+ a late
+  second Enter) for Claude/Codex/Cursor; OpenCode typed in 6-char chunks, confirmed on the rendered
+  screen (letters/digits match, retype only into an empty box), Enter resent only while the screen
+  is unchanged. The registry clears `initialPrompt` once sent so relaunch never resends it.
+  *Tests:* `PromptDeliveryTests` (virtual clock), UI `TerminalTests.testNewTerminalSheet`; checked
+  live: `/help` as first prompt opened Claude Code's help.
 - [ ] **P1-10 (M) Session resume for Claude and Codex.** Snapshot sessions from `~/.claude/projects` and
   `~/.codex/sessions`, bind to sub-tabs, resume on relaunch. *Tests:* G with fixture transcripts.
   *Parity:* SE-1 (subset).
@@ -969,7 +980,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SB-8 | View placement | P4 | Not started | |
 | AG-1 | 11 agent types | P1 (5), P3 | Not started | `wsl`: Won't port (Windows-only) |
 | AG-2 | Unrestricted flags | P1 | Partial | Launch support done (P1-8); UI in P1-9 |
-| AG-3 | New-terminal modal | P1, P3 | Not started | |
+| AG-3 | New-terminal modal | P1, P3 | Partial | Basic sheet + first prompt (P1-9); grid picker, 9router, planner, repeat last in P3 |
 | AG-4 | Launcher resolution + override | P1 | Partial | Resolver + `cliPaths` done (P1-8); override UI pending |
 | AG-5 | Install/update/uninstall CLIs | P3 | Not started | |
 | AG-6 | Enable/disable agents | P3 | Not started | |

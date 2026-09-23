@@ -26,4 +26,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   fills the area, two side by side, more in rows of two). Drag the gaps to resize projects and splits
   live, drag a pane's header onto another to swap them, and close panes or projects from their
   headers (undoable). Sizes are remembered.
+- New Terminal sheet (⌘T, or New Terminal… on a project): pick the agent, project and folder, start
+  unrestricted, and give it a first prompt that is typed in once the agent is ready. The last agent
+  used is preselected.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

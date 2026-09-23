@@ -58,6 +58,15 @@ final class TerminalRegistry {
         for view in views.values { view.applyTheme(theme, fontSize: fontSize) }
     }
 
+    /// Sends the tab's first prompt once, then forgets it so a relaunch does not send it again.
+    private func deliver(_ prompt: String, to view: TerminalPaneView, tab: TabID,
+                         style: PromptDelivery.Style, environment: AppEnvironment) {
+        Task { [weak environment] in
+            guard await view.deliverPrompt(prompt, style: style) else { return }
+            environment?.workspace?.update { $0.updateTab(tab) { $0.initialPrompt = nil } }
+        }
+    }
+
     private func start(_ tab: PaneTab, in project: Project, environment: AppEnvironment) {
         let kind = AgentKind(rawValue: tab.agent)
         var sessionID = tab.sessionID
@@ -80,6 +89,10 @@ final class TerminalRegistry {
             }
             views[tab.id] = view
             states[tab.id] = .running
+            if let prompt = tab.initialPrompt, kind != .shell {
+                deliver(prompt, to: view, tab: tab.id, style: kind == .opencode ? .typeAndConfirm : .paste,
+                        environment: environment)
+            }
             if command.createdSession, let session = command.sessionID {
                 // Not undoable: it records what the process is, not a user edit.
                 environment.workspace?.update { $0.updateTab(tab.id) { $0.sessionID = session } }

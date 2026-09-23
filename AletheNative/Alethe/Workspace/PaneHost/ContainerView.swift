@@ -259,7 +259,7 @@ private struct ProjectEmptyState: View {
             Text("workspace.project.noTerminals")
                 .font(metrics.font(.body))
                 .foregroundStyle(theme[.textSecondary])
-            NewTerminalMenu(project: project)
+            NewTerminalButton(project: project)
                 .fixedSize()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

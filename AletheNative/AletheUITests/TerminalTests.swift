@@ -16,8 +16,9 @@ final class TerminalTests: XCTestCase {
         let project = element(app, "sidebar.project.scratch")
         XCTAssertTrue(project.waitForExistence(timeout: 5))
         project.rightClick()
-        app.menuItems["New Terminal"].hover()
-        app.menuItems["Shell"].click()
+        app.outlines.menuItems["New Terminal…"].click()
+        app.radioButtons["Shell"].click()
+        app.buttons["editor.confirm"].click()
 
         let pane = element(app, "terminal.pane")
         XCTAssertTrue(pane.waitForExistence(timeout: 5))
@@ -38,6 +39,36 @@ final class TerminalTests: XCTestCase {
         XCTAssertTrue(element(app, "workspace.project.empty").waitForExistence(timeout: 5))
         app.typeKey("z", modifierFlags: .command)
         XCTAssertTrue(pane.waitForExistence(timeout: 5))
+        app.terminate()
+    }
+
+    /// ⌘T: folder validation, creation, and the last agent remembered for next time.
+    func testNewTerminalSheet() {
+        let (app, _) = launchAlethe(arguments: ["-AletheUITestSeed", "sidebar"])
+        XCTAssertTrue(element(app, "sidebar.project.scratch").waitForExistence(timeout: 5))
+        element(app, "sidebar.project.scratch").click()
+        app.typeKey("t", modifierFlags: .command)
+        let folder = app.textFields["newTerminal.folder"]
+        XCTAssertTrue(folder.waitForExistence(timeout: 5))
+        XCTAssertEqual(folder.value as? String, "/private/tmp", "starts in the project folder")
+        app.radioButtons["Shell"].click()
+        XCTAssertFalse(app.textViews["newTerminal.prompt"].exists, "a shell takes no prompt")
+
+        folder.click()
+        folder.typeKey("a", modifierFlags: .command)
+        folder.typeText("/nowhere/at/all")
+        XCTAssertTrue(app.staticTexts["editor.problem"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["editor.confirm"].isEnabled)
+        folder.typeKey("a", modifierFlags: .command)
+        folder.typeText("/usr")
+        XCTAssertTrue(eventually { app.buttons["editor.confirm"].isEnabled })
+        app.buttons["editor.confirm"].click()
+        XCTAssertTrue(element(app, "terminal.pane").waitForExistence(timeout: 5))
+
+        app.typeKey("t", modifierFlags: .command)
+        XCTAssertTrue(app.radioButtons["Shell"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.radioButtons["Shell"].value as? Int, 1, "the last agent is preselected")
+        app.typeKey(.escape, modifierFlags: [])
         app.terminate()
     }
 }

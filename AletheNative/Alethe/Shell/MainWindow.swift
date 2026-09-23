@@ -41,6 +41,9 @@ struct MainWindow: View {
             GroupEditor(workspace: workspace, undoManager: undoManager, editing: nil, initialParent: parent)
         case .editGroup(let id):
             GroupEditor(workspace: workspace, undoManager: undoManager, editing: id, initialParent: nil)
+        case .newTerminal(let project):
+            NewTerminalSheet(workspace: workspace, undoManager: undoManager,
+                             initialProject: project ?? workspace.document.workspace.selectedProjectID)
         }
     }
 

@@ -188,7 +188,7 @@ private struct ProjectContextMenu: View {
 
     var body: some View {
         let doc = actions.workspace.document
-        NewTerminalMenu(project: project)
+        NewTerminalButton(project: project)
         Divider()
         Button("sidebar.editProject") { environment.editorRequest = .editProject(project.id) }
         Button("sidebar.revealInFinder") { actions.revealInFinder(project) }

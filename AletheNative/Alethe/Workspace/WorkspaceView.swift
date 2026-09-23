@@ -1,4 +1,3 @@
-import AletheAgents
 import AletheDesign
 import AletheModel
 import SwiftUI
@@ -61,27 +60,13 @@ struct WorkspaceView: View {
     }
 }
 
-/// "New Terminal" with the enabled agents; the full sheet (prompt, folder, flags) is P1-9.
-struct NewTerminalMenu: View {
+/// Opens the new-terminal sheet for a project.
+struct NewTerminalButton: View {
     let project: Project
     @Environment(AppEnvironment.self) private var environment
-    @Environment(\.undoManager) private var undoManager
 
     var body: some View {
-        Menu("terminal.new") {
-            ForEach(AgentRegistry.builtin.enabledKinds(environment.preferences?.document.enabledAgents), id: \.self) { kind in
-                Button { open(kind) } label: { Text(verbatim: AgentLabels.name(for: kind.rawValue)) }
-                    .accessibilityIdentifier("terminal.new.\(kind.rawValue)")
-            }
-        }
-        .accessibilityIdentifier("terminal.new")
-    }
-
-    private func open(_ kind: AgentKind) {
-        let unrestricted = kind != .shell && (environment.preferences?.document.alwaysStartUnrestricted ?? false)
-        environment.workspace?.update(undoManager: undoManager, actionName: String(localized: "undo.newTerminal")) {
-            $0.addPane(to: project.id, tab: PaneTab(agent: kind.rawValue, unrestricted: unrestricted))
-        }
-        environment.preferences?.update { $0.lastAgent = kind.rawValue }
+        Button("terminal.new") { environment.editorRequest = .newTerminal(project.id) }
+            .accessibilityIdentifier("terminal.new")
     }
 }

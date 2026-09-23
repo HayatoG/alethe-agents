@@ -2,6 +2,7 @@ import AletheDesign
 import AppKit
 import Foundation
 import GhosttyTerminal
+import Synchronization
 
 /// A terminal pane: an app-owned PTY rendered by Ghostty in host-managed mode.
 ///
@@ -14,6 +15,7 @@ public final class TerminalPaneView: NSView {
     private let session: InMemoryTerminalSession
     private let process: PTYProcess
     public let tap: TerminalIOTap
+    private let activity = TerminalActivity()
 
     public var onExit: ((Int32) -> Void)?
 
@@ -52,13 +54,16 @@ public final class TerminalPaneView: NSView {
         ])
 
         let session = session
+        let activity = activity
         process.onOutput = { data in
+            activity.touch()
             tap.output(data)
             session.receive(data)
         }
         // The session is deliberately not `finish`ed: Ghostty would print its own "Process exited.
         // Press any key to close" line, and the app shows the ended state (with Restart) itself.
         process.onExit = { [weak self] code in
+            activity.finish()
             Task { @MainActor in self?.onExit?(code) }
         }
         process.start()
@@ -78,6 +83,27 @@ public final class TerminalPaneView: NSView {
 
     public func applyTheme(_ theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize) {
         _ = controller.setTheme(TerminalAppearance.terminalTheme(for: theme, fontSize: fontSize))
+    }
+
+    /// Types `prompt` into the agent once it is ready (see `PromptDelivery`). True once sent.
+    public func deliverPrompt(_ prompt: String, style: PromptDelivery.Style) async -> Bool {
+        let clock = ContinuousClock()
+        let origin = clock.now
+        let activity = activity
+        let process = process
+        let tap = tap
+        let io = PromptDelivery.IO(
+            now: { origin.duration(to: clock.now) },
+            sleep: { try? await Task.sleep(for: $0) },
+            quietFor: { activity.quietFor },
+            isRunning: { activity.isRunning },
+            readScreen: { [weak self] in await MainActor.run { self?.viewportText() ?? "" } },
+            write: { text in
+                let data = Data(text.utf8)
+                tap.input(data)
+                process.write(data)
+            })
+        return await PromptDelivery.deliver(prompt, style: style, io: io)
     }
 
     /// Viewport text (visible rows), for tests and diagnostics.
@@ -111,4 +137,14 @@ public final class TerminalPaneView: NSView {
     public func terminate() {
         process.terminate()
     }
+}
+
+/// When the process last wrote output, and whether it is still running (read from any thread).
+private final class TerminalActivity: Sendable {
+    private let state = Mutex<(last: ContinuousClock.Instant, running: Bool)>((ContinuousClock.now, true))
+
+    func touch() { state.withLock { $0.last = .now } }
+    func finish() { state.withLock { $0.running = false } }
+    var quietFor: Duration { state.withLock { $0.last.duration(to: .now) } }
+    var isRunning: Bool { state.withLock { $0.running } }
 }
