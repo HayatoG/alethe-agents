@@ -6,6 +6,9 @@ struct MainWindow: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
+    /// The window's undo manager: a sheet gets its own, so edits made there would not be undoable
+    /// from the main window once it closes.
+    @Environment(\.undoManager) private var undoManager
     @SceneStorage("main.columnVisibility") private var sidebarVisible = true
 
     var body: some View {
@@ -31,13 +34,13 @@ struct MainWindow: View {
     private func editor(for request: EditorRequest, workspace: WorkspaceModel) -> some View {
         switch request {
         case .newProject(let location):
-            ProjectEditor(workspace: workspace, editing: nil, initialLocation: location)
+            ProjectEditor(workspace: workspace, undoManager: undoManager, editing: nil, initialLocation: location)
         case .editProject(let id):
-            ProjectEditor(workspace: workspace, editing: id, initialLocation: .ungrouped)
+            ProjectEditor(workspace: workspace, undoManager: undoManager, editing: id, initialLocation: .ungrouped)
         case .newGroup(let parent):
-            GroupEditor(workspace: workspace, editing: nil, initialParent: parent)
+            GroupEditor(workspace: workspace, undoManager: undoManager, editing: nil, initialParent: parent)
         case .editGroup(let id):
-            GroupEditor(workspace: workspace, editing: id, initialParent: nil)
+            GroupEditor(workspace: workspace, undoManager: undoManager, editing: id, initialParent: nil)
         }
     }
 

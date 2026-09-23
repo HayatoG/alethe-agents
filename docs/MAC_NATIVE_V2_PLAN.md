@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4; P1-5 WIP (see its notes). Next:
-> finish P1-5, then P1-8 → P1-7 → P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5. Next:
+> P1-8 → P1-7 → P1-6 → P1-9 → P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -786,24 +786,18 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   `Scripts/smoke/sidebar-drag.sh` (real events via `Scripts/dev/mousedrag.swift`, AX-located
   rows, asserts `workspace.json`), run by `uitest.sh`. UI tests: tree nesting, Move to Group + undo,
   delete group keeps projects, add-project panel; debug seed `-AletheUITestSeed sidebar`.
-- [ ] **P1-5 (M) New/edit project and group.** Name, color (tokens), folder, default cwd. *Parity:*
+- [x] **P1-5 (M) New/edit project and group.** Name, color (tokens), folder, default cwd. *Parity:*
   SB-2 (basic), SB-3.
-  *In progress (WIP checkpoint, not validated):* `Alethe/Editors/` — `EditorRequest` (held by
-  `AppEnvironment.editorRequest`, presented as a sheet by `MainWindow`), `ProjectEditor` (folder field
-  + Choose…, name auto-filled from the folder, color swatches, group picker; validation: name, existing
-  folder, duplicate folder), `GroupEditor` (name, optional color, parent picker excluding itself and
-  descendants), `ColorSwatchPicker`, `ProjectColor.localizedName`. File menu: New Project… (⌘N), New
-  Group… (⇧⌘N), Add Project Folder… (⌘O); context menus: Edit Project…, Edit Group…, New Project in
-  Group…, New Subgroup…. 38 strings added (EN + pt-BR). Builds and passes the strings gate; the sheet
-  was checked visually. The duplicate-folder fix is applied (standardized paths compared on both
-  sides) and `AletheUITests/EditorTests.swift` exists (both in commit `8c6117a`). Last run:
-  `testNewProjectSheetValidatesAndCreates` passes; `testEditGroupRenamesIt` renames correctly but
-  fails at line 51 — after ⌘Z the row `sidebar.group.Clients` does not come back (check whether the
-  sheet's undo registration reaches the window's undo manager, since the sheet has its own
-  `\.undoManager`); `testNewGroupFromTheMenu` fails at line 64 — after Create on an empty workspace
-  the row `sidebar.group.Research` is not found (check that an empty group renders in the sidebar and
-  that the sheet's save reached the model). **Still to do before ticking:** fix those two, run
-  `test.sh` and `uitest.sh`, add the CHANGELOG entry, commit as P1-5.
+  *Done:* `Alethe/Editors/` — `EditorRequest` (held by `AppEnvironment.editorRequest`, presented as a
+  sheet by `MainWindow`), `ProjectEditor` (folder field + Choose…, name auto-filled from the folder,
+  color swatches, group picker; validation: name, existing folder, duplicate folder), `GroupEditor`
+  (name, optional color, parent picker excluding itself and descendants), `ColorSwatchPicker`. File
+  menu: New Project… (⌘N), New Group… (⇧⌘N), Add Project Folder… (⌘O); context menus: Edit Project…,
+  Edit Group…, New Project in Group…, New Subgroup…. Editors register undo on the **main window's**
+  undo manager (passed in by `MainWindow`; the sheet's own `\.undoManager` dies with the sheet) and
+  focus their first field on appear. *Tests:* `AletheUITests/EditorTests` (3). Lesson: XCUITest
+  `typeText` drops lowercase "c" under the Brazilian - Pro layout — real CGEvents reach the field
+  (checked with `Scripts/dev/keypost.swift`), so UI tests avoid typing it.
 - [ ] **P1-6 (L) PaneHostView.** AppKit host with split layout (Auto), live resize, reorder, close,
   Motion springs, rubber-banding. *Tests:* U layout math (reuse GridMath), UI, HT. *Parity:* WS-1, WS-3
   (Auto).

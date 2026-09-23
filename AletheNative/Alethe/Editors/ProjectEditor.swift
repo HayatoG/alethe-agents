@@ -6,10 +6,11 @@ import SwiftUI
 /// New Project / Edit Project sheet.
 struct ProjectEditor: View {
     let workspace: WorkspaceModel
+    let undoManager: UndoManager?
     let editing: ProjectID?
     let initialLocation: ProjectLocation
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.undoManager) private var undoManager
+    @FocusState private var focused: Bool
     @Environment(\.metrics) private var metrics
 
     @State private var name = ""
@@ -22,6 +23,7 @@ struct ProjectEditor: View {
         Form {
             TextField(text: $folder, prompt: Text(verbatim: "~/Projects/app")) { Text("editor.project.folder") }
                 .accessibilityIdentifier("editor.project.folder")
+                .focused($focused)
                 .onChange(of: folder) { _, value in
                     if !nameEdited, editing == nil { name = URL(filePath: expanded(value)).lastPathComponent }
                 }
@@ -58,7 +60,10 @@ struct ProjectEditor: View {
             }
         }
         .navigationTitle(Text(editing == nil ? "editor.project.newTitle" : "editor.project.editTitle"))
-        .onAppear(perform: loadInitial)
+        .onAppear {
+            focused = true
+            loadInitial()
+        }
     }
 
     /// Why the form cannot be saved yet, or nil.

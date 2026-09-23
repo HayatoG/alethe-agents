@@ -5,10 +5,11 @@ import SwiftUI
 /// New Group / Edit Group sheet.
 struct GroupEditor: View {
     let workspace: WorkspaceModel
+    let undoManager: UndoManager?
     let editing: GroupID?
     let initialParent: GroupID?
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.undoManager) private var undoManager
+    @FocusState private var focused: Bool
     @Environment(\.metrics) private var metrics
 
     @State private var name = ""
@@ -19,6 +20,7 @@ struct GroupEditor: View {
         Form {
             TextField(text: $name) { Text("editor.group.name") }
                 .accessibilityIdentifier("editor.group.name")
+                .focused($focused)
             LabeledContent("editor.color") { ColorSwatchPicker(selection: $color, allowsNone: true) }
             Picker(selection: $parent) {
                 Text("editor.group.topLevel").tag(GroupID?.none)
@@ -41,6 +43,7 @@ struct GroupEditor: View {
         }
         .navigationTitle(Text(editing == nil ? "editor.group.newTitle" : "editor.group.editTitle"))
         .onAppear {
+            focused = true
             parent = initialParent
             if let editing, let group = workspace.document.group(editing) {
                 name = group.name
