@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 complete** (P1-1…P1-13); P1-12 tests and the end-of-phase full run not run yet. Next:
-> run the owed tests, then break Phase 2 into numbered tasks. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete; P1-12 tests and its end-of-phase full run still
+> owed). Next: P2-1. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -965,14 +965,78 @@ Codex/OpenCode/Cursor/shell terminals in panes, quit and relaunch with everythin
 languages and all themes.
 
 ### Phase 2 — Terminal and workspace depth
-Tasks (each M unless noted), covering: TERM-2 sub-tab lanes; TERM-3 search UI (L); TERM-4 smart paste
-(images/files); TERM-5 prompt history; TERM-6 links (open in pane/browser); TERM-9 double ^C; TERM-10
-scrollback persistence + reattach (L); USE-3 hibernation, priorities and RAM control (L); WS-2 flat
-mode; WS-3 Spotlight/Sidebar/Custom grid + layout designer (L); WS-4 named grids; WS-5 tabs, closed
-tabs, history; WS-6 Markdown pane (live file watch); WS-7/WS-8 image/video panes (S each); WS-9 diff
-pane; WS-10 focus mode; WS-11 add content; WS-12 link viewer; WS-13 empty state; WS-14 disable/suspend;
-BR-1 web pane on WKWebView (L); BR-2 agent page offer; SET-10 Find/Jump (⌘K); SE-2 resume last session;
-SET-12 close confirmation. *Tests:* U + UI + HT per task; P for scrollback and hibernation.
+Order: terminal depth on the existing pane model first, then non-terminal pane kinds (one schema
+bump, P2-8), then workspace navigation and layouts, then lifecycle and resources. Each task adds its
+own `workspace.json` migration when it changes the shape. *Tests* list what the task must ship;
+they run per the test cadence above.
+
+- [ ] **P2-1 (M) Sub-tabs lane.** Tab strip on each pane: switch, new sub-tab (agent picker reusing the
+  New Terminal sheet), close (undoable), rename, reorder, show/hide the lane per pane; ⌃Tab / ⌃⇧Tab and
+  ⌘1…⌘9 inside the focused pane. *Tests:* U (tab operations), UI + HT (lane controls at three zoom
+  levels). *Parity:* TERM-2.
+- [ ] **P2-2 (S) Double ^C force-kill.** Two ⌃C within the upstream window kill the process tree; an
+  overlay offers restart. *Tests:* U (timing on a virtual clock), UI. *Parity:* TERM-9.
+- [ ] **P2-3 (S) Shell integration marks.** OSC 133 prompt marks for zsh/bash/fish (injected rc, no
+  user files touched) so resize reflows without the leftover prompt fragment and search/scroll can
+  jump by prompt. *Tests:* U (sequence parser), manual resize check. *Parity:* TERM-1 (follow-up).
+- [ ] **P2-4 (L) Terminal search.** ⌘F find bar on Ghostty search actions: next/previous, match count,
+  case toggle, highlight all, Esc closes. *Tests:* U, UI, HT. *Parity:* TERM-3.
+- [ ] **P2-5 (M) Smart copy/paste.** Paste images (saved to a temp file, path typed in), files from
+  Finder (quoted paths), large text with bracketed paste; copy on select optional. *Tests:* U (payload
+  mapping), UI. *Parity:* TERM-4.
+- [ ] **P2-6 (M) Prompt history.** Per-tab history of submitted prompts, ⌃↑/⌃↓ to recall, persisted per
+  profile with a cap. *Tests:* U (port of upstream cases), UI. *Parity:* TERM-5.
+- [ ] **P2-7 (L) Scrollback persistence + reattach.** Ring buffer flushed to `scrollback/<tab>.bin`
+  (bounded, debounced, atomic), replayed on relaunch before the resumed process draws; clear
+  scrollback action. *Tests:* U (file format, truncation), P (flush cost with 10 busy terminals).
+  *Parity:* TERM-10.
+- [ ] **P2-8 (M) Pane kinds + Add Content.** Model v2: `Pane.content` (terminal | markdown | image | video
+  | diff | web) with a migration from v1; Add Content sheet listing the kinds (unavailable kinds
+  hidden until their task lands). *Tests:* U (migration golden), UI. *Parity:* WS-11.
+- [ ] **P2-9 (M) Markdown pane.** Rendered view of a file with live reload (`DispatchSource` file
+  watch), edit/preview toggle, save. *Tests:* U (watcher), UI. *Parity:* WS-6.
+- [ ] **P2-10 (S) Image and video panes.** Image with fit/actual size; video on AVKit. *Tests:* UI.
+  *Parity:* WS-7, WS-8.
+- [ ] **P2-11 (M) Diff pane.** `git diff` for the project or one file, unified/split, refresh.
+  *Tests:* U (diff parser golden), UI. *Parity:* WS-9.
+- [ ] **P2-12 (L) Web pane.** WKWebView with tabs, address bar, back/forward/reload, resource modes,
+  persisted URL. *Tests:* U (URL normalization port), UI, HT. *Parity:* BR-1.
+- [ ] **P2-13 (M) Clickable links.** ⌘-click file/URL/image links in terminals: open in a pane of the
+  right kind, in the web pane or the default browser. *Tests:* U (link detection port), UI.
+  *Parity:* TERM-6.
+- [ ] **P2-14 (S) Link viewer overlay.** Quick preview of a clicked file or URL without adding a pane.
+  *Tests:* UI. *Parity:* WS-12.
+- [ ] **P2-15 (S) Agent page offer.** When an agent prints a local server URL, offer to open it in a web
+  pane. *Tests:* U (detection), UI. *Parity:* BR-2.
+- [ ] **P2-16 (M) Container controls.** Collapse, fullscreen and reorder of project containers; isolate
+  a pane. *Tests:* U, UI, HT; drag smoke script. *Parity:* WS-1.
+- [ ] **P2-17 (M) Workspace tabs and history.** Tabs of open workspaces, reopen closed tab (⇧⌘T), back
+  and forward (⌘[ / ⌘]). *Tests:* U (port of `workspaceNavigation` cases), UI. *Parity:* WS-5.
+- [ ] **P2-18 (M) Spotlight and Sidebar layouts.** Layout picker per project; Auto stays the default.
+  *Tests:* U (geometry), UI, HT. *Parity:* WS-3 (part).
+- [ ] **P2-19 (L) Custom grid + layout designer.** Cell merge/split, drag handles, per-scope layout
+  history. *Tests:* U (port of `gridLayout` cases), UI; drag smoke script. *Parity:* WS-3.
+- [ ] **P2-20 (M) Named project grids.** Several grids per project, switch and assign panes.
+  *Tests:* U, UI. *Parity:* WS-4.
+- [ ] **P2-21 (S) Flat mode and focus mode.** Flat workspace (no containers) and a focus overlay on one
+  pane. *Tests:* UI. *Parity:* WS-2, WS-10.
+- [ ] **P2-22 (S) Empty workspace launcher.** Quick actions when nothing is open. *Tests:* UI, HT.
+  *Parity:* WS-13.
+- [ ] **P2-23 (M) Disable and suspend.** Disable a terminal or project, suspend a group (SIGSTOP/SIGCONT),
+  shown in the sidebar. *Tests:* U, UI. *Parity:* WS-14, SB-3.
+- [ ] **P2-24 (L) Resources: hibernation, priorities, RAM.** Memory per process tree, idle hibernation
+  (scrollback kept, process resumed on focus), priorities, pressure handling, memory indicator.
+  *Tests:* U (policy), P (memory per hibernated terminal). *Parity:* USE-3.
+- [ ] **P2-25 (M) Find/Jump (⌘K).** Fuzzy search over projects, terminals and commands. *Tests:* U
+  (ranking port), UI, HT. *Parity:* SET-10.
+- [ ] **P2-26 (S) Resume last session and close confirmation.** Reopen the last workspace or start
+  clean; confirm quitting with running agents. *Tests:* UI. *Parity:* SE-2, SET-12.
+- [ ] **P2-27 (S) Visual style and motion.** Normal/clean style (sidebar Clean mode included) and the
+  motion preference, which also follows Reduce Motion. *Tests:* UI, HT. *Parity:* UI-2, UI-3, SB-1.
+- [ ] **P2-28 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+
+**Phase 2 exit criteria:** every terminal and workspace feature of the parity rows above works at
+parity, terminals survive relaunch with their scrollback, and idle terminals hibernate.
 
 ### Phase 3 — Agent ecosystem
 AG-1 remaining agents (copilot, antigravity, mimo, freebuff, kiro; wsl → not applicable); AG-5
