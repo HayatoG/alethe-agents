@@ -16,17 +16,30 @@ public final class TerminalPaneView: NSView {
     private let process: PTYProcess
     public let tap: TerminalIOTap
     private let activity = TerminalActivity()
+    private let forceKill = ForceKillState()
 
     public var onExit: ((Int32) -> Void)?
 
-    public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize) throws {
+    /// Whether the process ended through a double ⌃C, not by itself.
+    public var wasForceKilled: Bool { forceKill.triggered }
+
+    /// - Parameter forceKillNotice: line printed in the terminal when a double ⌃C kills the process.
+    public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize,
+                forceKillNotice: String = "Force kill: process terminated") throws {
         let process = try PTYProcess(launch)
         self.process = process
         let tap = TerminalIOTap()
         self.tap = tap
+        let forceKill = forceKill
+        let notice = Data("\r\n\u{1b}[33m[\(forceKillNotice)]\u{1b}[0m\r\n".utf8)
         session = InMemoryTerminalSession(
             write: { data in
                 tap.input(data)
+                if forceKill.register(data) {
+                    forceKill.session?.receive(notice)
+                    ProcessTree.kill(process.pid)
+                    return
+                }
                 process.write(data)
             },
             resize: { viewport in
@@ -42,6 +55,7 @@ public final class TerminalPaneView: NSView {
         terminalView = TerminalView(frame: .zero)
         super.init(frame: .zero)
 
+        forceKill.session = session
         terminalView.configuration = TerminalSurfaceOptions(backend: .inMemory(session))
         terminalView.controller = controller
         terminalView.translatesAutoresizingMaskIntoConstraints = false
@@ -137,6 +151,23 @@ public final class TerminalPaneView: NSView {
     public func terminate() {
         process.terminate()
     }
+}
+
+/// Double ⌃C state, shared with the session's write callback (any thread).
+private final class ForceKillState: @unchecked Sendable {
+    private let state = Mutex<(detector: DoubleInterrupt, triggered: Bool)>((DoubleInterrupt(), false))
+    /// Set once, right after the session exists; read by the write callback.
+    weak var session: InMemoryTerminalSession?
+
+    func register(_ input: Data) -> Bool {
+        state.withLock { state in
+            let fire = !state.triggered && state.detector.register(input, at: .now)
+            if fire { state.triggered = true }
+            return fire
+        }
+    }
+
+    var triggered: Bool { state.withLock { $0.triggered } }
 }
 
 /// When the process last wrote output, and whether it is still running (read from any thread).

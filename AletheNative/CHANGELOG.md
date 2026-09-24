@@ -43,4 +43,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   between them, adds one with + (or New Sub-tab… in the pane's or the sidebar's menu) and closes them,
   undoable with ⌘Z. The lane appears by itself when a terminal has more than one sub-tab and can be
   shown or hidden from the same menus.
+- Press ⌃C twice in quick succession to force-quit a stuck terminal: the program and everything it
+  started are killed, and the terminal offers to restart. A single ⌃C still reaches the program.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

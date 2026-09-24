@@ -32,6 +32,12 @@ struct TerminalOverlay: View {
                         .foregroundStyle(theme[.textPrimary])
                     restartButton
                 }
+            case .forceKilled:
+                overlay {
+                    Text("terminal.forceKilled.overlay")
+                        .foregroundStyle(theme[.textPrimary])
+                    restartButton
+                }
             case .notFound(let command):
                 overlay {
                     Text(verbatim: format("terminal.notFound", AgentLabels.name(for: tab.agent), command))

@@ -42,6 +42,33 @@ final class TerminalTests: XCTestCase {
         app.terminate()
     }
 
+    /// Two ⌃C in a row kill the shell and offer a restart (P2-2); one alone does not.
+    func testDoubleInterruptForceKills() {
+        let (app, _) = launchAlethe(arguments: ["-AletheUITestSeed", "sidebar"])
+        let project = element(app, "sidebar.project.scratch")
+        XCTAssertTrue(project.waitForExistence(timeout: 5))
+        project.rightClick()
+        app.outlines.menuItems["New Terminal…"].click()
+        app.radioButtons["Shell"].click()
+        app.buttons["editor.confirm"].click()
+        let pane = element(app, "terminal.pane")
+        XCTAssertTrue(pane.waitForExistence(timeout: 5))
+        pane.click()
+
+        pane.typeKey("c", modifierFlags: .control)
+        RunLoop.current.run(until: Date().addingTimeInterval(1.8))
+        pane.typeKey("c", modifierFlags: .control)
+        let overlay = element(app, "terminal.overlay")
+        XCTAssertFalse(eventually(timeout: 0.5) { overlay.exists }, "⌃C 1.8 s apart must not kill")
+
+        pane.typeKey("c", modifierFlags: .control)
+        XCTAssertTrue(overlay.waitForExistence(timeout: 5), "a double ⌃C must kill the shell")
+        XCTAssertTrue(app.staticTexts["Terminated with a double ⌃C."].exists)
+        element(app, "terminal.restart").click()
+        XCTAssertTrue(eventually { !overlay.exists })
+        app.terminate()
+    }
+
     /// ⌘T: folder validation, creation, and the last agent remembered for next time.
     func testNewTerminalSheet() {
         let (app, _) = launchAlethe(arguments: ["-AletheUITestSeed", "sidebar"])

@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1 and the Phase 1 full run,
-> none run since P1-11). Done: P2-1. Next: P2-2. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1, P2-2 and the Phase 1 full run,
+> none run since P1-11). Done: P2-1, P2-2. Next: P2-3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -988,8 +988,18 @@ they run per the test cadence above.
   (upstream has neither). No keyboard shortcut: upstream has none, and ⌃Tab / ⌘1…9 are taken (§6.3).
   *Tests (written, not run — owner decision 2026-09-24):* `SubTabOperationsTests` (8), UI
   `SubTabsTests` (switch/add/close/undo, lane visibility, HT at 90/100/120 %), seed `subtabs`.
-- [ ] **P2-2 (S) Double ^C force-kill.** Two ⌃C within the upstream window kill the process tree; an
+- [x] **P2-2 (S) Double ^C force-kill.** Two ⌃C within the upstream window kill the process tree; an
   overlay offers restart. *Tests:* U (timing on a virtual clock), UI. *Parity:* TERM-9.
+  *Done:* `AletheTerminal/ForceKill`: `DoubleInterrupt` (upstream 1.5 s window; the first ⌃C always
+  reaches the program, anything typed in between starts over; ETX or the kitty keyboard `CSI 99;5u`)
+  and `ProcessTree` (descendants from `sysctl(KERN_PROC_UID)`, SIGKILL children first, then the
+  group: agents start workers in their own process groups). `TerminalPaneView` checks keyboard input
+  before it reaches the PTY: the second ⌃C is swallowed, a yellow notice is printed (upstream's line,
+  localized) and the tree is killed. `TerminalRegistry` records `.forceKilled` (overlay "Terminated
+  with a double ⌃C." + Restart) and skips the early-exit fresh retry, which would otherwise relaunch
+  a resumed agent killed within 4 s. Mac mapping: ⌃C only; ⌘C stays Copy.
+  *Tests (written, not run — owner decision 2026-09-24):* `ForceKillTests` (7, one spawns a child that
+  leaves its process group), UI `TerminalTests.testDoubleInterruptForceKills`.
 - [ ] **P2-3 (S) Shell integration marks.** OSC 133 prompt marks for zsh/bash/fish (injected rc, no
   user files touched) so resize reflows without the leftover prompt fragment and search/scroll can
   jump by prompt. *Tests:* U (sequence parser), manual resize check. *Parity:* TERM-1 (follow-up).
@@ -1130,7 +1140,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-6 | Clickable links | P2 | Not started | |
 | TERM-7 | Terminal themes/font | P1 | Done | App theme + zoom-scaled font (P1-7) |
 | TERM-8 | Restart / command-not-found overlays | P1 | Done | Install button comes with AG-5 |
-| TERM-9 | Double ^C force-kill | P2 | Not started | |
+| TERM-9 | Double ^C force-kill | P2 | Done | P2-2; kills the whole process tree |
 | TERM-10 | Scrollback persistence + reattach | P2 | Not started | |
 | TERM-11 | `alethe` CLI shim | P5 | Not started | |
 | SB-1 | Project tree (Normal/Clean) | P1 | Partial | Tree, reorder, drag and drop, context menus (P1-4); Clean mode with UI-2 |

@@ -1973,6 +1973,40 @@
         }
       }
     },
+    "terminal.forceKilled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Force kill: process terminated"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerramento forçado: processo finalizado"
+          }
+        }
+      }
+    },
+    "terminal.forceKilled.overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminated with a double ⌃C."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerrado com ⌃C duplo."
+          }
+        }
+      }
+    },
     "terminal.new" : {
       "extractionState" : "manual",
       "localizations" : {

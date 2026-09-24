@@ -13,6 +13,8 @@ final class TerminalRegistry {
     enum State: Equatable {
         case running
         case exited(code: Int32)
+        /// Ended by a double ⌃C.
+        case forceKilled
         /// The agent's CLI was not found; `command` is the binary looked for.
         case notFound(command: String)
         case failed(message: String)
@@ -124,10 +126,12 @@ final class TerminalRegistry {
             let before = SessionResume.discoversNewSessions(kind) && command.sessionID == nil
                 ? Set(CodexSessions.snapshot(cwd: cwd).map(\.id)) : nil
             let view = try TerminalPaneView(launch: command.ptyLaunch(size: PTYSize(columns: 80, rows: 24)),
-                                            theme: environment.theme, fontSize: environment.terminalFontSize)
+                                            theme: environment.theme, fontSize: environment.terminalFontSize,
+                                            forceKillNotice: String(localized: "terminal.forceKilled"))
             view.onExit = { [weak self, weak view, weak environment] code in
                 guard let self, let view, self.views[tab.id] === view else { return }
-                if let launch = self.launches[tab.id], let environment,
+                // A double ⌃C is the user's choice, not a failed resume: show it ended.
+                if !view.wasForceKilled, let launch = self.launches[tab.id], let environment,
                    SessionResume.shouldRetryFresh(resumed: launch.resumed, elapsed: .now - launch.startedAt,
                                                   alreadyRetried: self.retriedFresh.contains(tab.id)) {
                     // The saved conversation is gone or unusable: start over without it.
@@ -135,7 +139,7 @@ final class TerminalRegistry {
                     self.restart(tab, in: project, environment: environment, fresh: true)
                     return
                 }
-                self.states[tab.id] = .exited(code: code)
+                self.states[tab.id] = view.wasForceKilled ? .forceKilled : .exited(code: code)
             }
             views[tab.id] = view
             states[tab.id] = .running
