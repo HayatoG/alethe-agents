@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6, P1-9, P1-10, P1-11. Next:
-> P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 complete** (P1-1…P1-13); P1-12 tests and the end-of-phase full run not run yet. Next:
+> run the owed tests, then break Phase 2 into numbered tasks. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -947,7 +947,18 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   anonymized v1/v2/v5/v7/v9/v10 fixtures (v9 import, idempotent re-import, existing folders, optional
   preferences, v7, v5 + v2, refused versions, hex color mapping, profile discovery); UI
   `TauriImportTests.testPreviewImportAndUndo` (`-AletheTauriProjectsFile` fixture).
-- [ ] **P1-13 (S) Changelog + phase review.** Update the parity matrix statuses; run upstream-watch.
+- [x] **P1-13 (S) Changelog + phase review.** Update the parity matrix statuses; run upstream-watch.
+  *Done:* `AletheNative/CHANGELOG.md` covers every Phase 1 task. Matrix (§8) updated: AG-2 Done, FS-2
+  Replaced; SB-1, SB-2, SB-3, AG-1, AG-4, SET-1, SET-3, SET-13 Partial; UI-2 and UI-3 (never scheduled
+  in a P1 task) moved to Phase 2. upstream-watch `75083e2..2f3e5ed`
+  (`upstream-reports/2026-09-24-2f3e5ed.md`): 4 commits, no new commands, i18n keys, persisted
+  fields or schema bump (still v9); the only user-facing change, the startup loading screen following
+  the theme, has no native counterpart (the app draws its themed window at launch). Baseline advanced
+  to `2f3e5ed`.
+  *Phase 1 exit check:* features for every criterion are in (folders as projects, sidebar, the five
+  agents in panes, restore on relaunch, both languages, all themes). **Tests not run** for P1-12 and
+  the end-of-phase full run (owner decision 2026-09-24: tests only on request); both are owed before
+  Phase 2 work starts.
 
 **Phase 1 exit criteria:** open existing folders as projects, organize them in the sidebar, run Claude/
 Codex/OpenCode/Cursor/shell terminals in panes, quit and relaunch with everything restored, in both
@@ -1044,18 +1055,18 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-9 | Double ^C force-kill | P2 | Not started | |
 | TERM-10 | Scrollback persistence + reattach | P2 | Not started | |
 | TERM-11 | `alethe` CLI shim | P5 | Not started | |
-| SB-1 | Project tree (Normal/Clean) | P1 | Not started | |
-| SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Not started | |
-| SB-3 | Groups (nested, suspend) | P1 | Not started | |
+| SB-1 | Project tree (Normal/Clean) | P1 | Partial | Tree, reorder, drag and drop, context menus (P1-4); Clean mode with UI-2 |
+| SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Partial | Name, color, folder, group (P1-5); clone, marker, git init, stack in P5 |
+| SB-3 | Groups (nested, suspend) | P1, P2 | Partial | Nested groups (P1-4/P1-5); suspend comes with WS-14 |
 | SB-4 | Export/import project config | P5 | Not started | |
 | SB-5 | Live chat title + busy/done glyph | P3 | Not started | |
 | SB-6 | Open in VS Code / Finder / browser | P5 | Not started | `NSWorkspace` |
 | SB-7 | Right sidebar | P4 | Not started | Inspector column |
 | SB-8 | View placement | P4 | Not started | |
-| AG-1 | 11 agent types | P1 (5), P3 | Not started | `wsl`: Won't port (Windows-only) |
-| AG-2 | Unrestricted flags | P1 | Partial | Launch support done (P1-8); UI in P1-9 |
+| AG-1 | 11 agent types | P1 (5), P3 | Partial | Claude, Codex, OpenCode, Cursor, shell (P1-8); `wsl`: Won't port (Windows-only) |
+| AG-2 | Unrestricted flags | P1 | Done | Launch support (P1-8); per-terminal toggle in the New Terminal sheet (P1-9) |
 | AG-3 | New-terminal modal | P1, P3 | Partial | Basic sheet + first prompt (P1-9); grid picker, 9router, planner, repeat last in P3 |
-| AG-4 | Launcher resolution + override | P1 | Partial | Resolver + `cliPaths` done (P1-8); override UI pending |
+| AG-4 | Launcher resolution + override | P1, P3 | Partial | Resolver + `cliPaths` (P1-8); Choose CLI… on a missing CLI (P1-7); Settings page with AG-5 |
 | AG-5 | Install/update/uninstall CLIs | P3 | Not started | |
 | AG-6 | Enable/disable agents | P3 | Not started | |
 | AG-7 | Claude ↔ Codex handoff | P3 | Not started | |
@@ -1073,7 +1084,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | PR-1 | Open PRs + send to Todo | P4 | Not started | `gh` CLI |
 | PR-2 | PR review + squash merge | P4 | Not started | |
 | FS-1 | File explorer + git badges | P4 | Not started | Quick Look |
-| FS-2 | Folder browser | P1 | Not started | Replaced by `NSOpenPanel` |
+| FS-2 | Folder browser | P1 | Replaced | `NSOpenPanel` + Finder drops (P1-4, P1-5) |
 | BR-1 | Web pane | P2 | Not started | WKWebView; CDP engine: Won't port |
 | BR-2 | Agent page offer | P2 | Not started | |
 | BR-3 | Playwright MCP browser session | P5 | Not started | |
@@ -1092,26 +1103,26 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | USE-3 | RAM control, hibernation, supervisor | P2 | Not started | |
 | USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |
 | UI-1 | Themes (16 + 4) | P0, P1, P4 | Partial | 16 built-ins + picker (P1-11); theme packs in P4 |
-| UI-2 | Visual style normal/clean | P1 | Not started | |
-| UI-3 | Motion preference | P1 | Not started | Also follows system Reduce Motion |
+| UI-2 | Visual style normal/clean | P2 | Not started | Moved from P1 at the Phase 1 review |
+| UI-3 | Motion preference | P2 | Not started | Also follows system Reduce Motion; moved from P1 at the Phase 1 review |
 | UI-4 | App icon themes | P5 | Not started | `NSApp.applicationIconImage` |
 | UI-5 | UI zoom | P1 | Done | Font + metric scale only; View menu + Settings (P1-11) |
 | UI-6 | Window opacity | — | Won't port | Win32-only upstream; Mac uses materials |
 | UI-7 | Toolbar configuration | P5 | Not started | Native toolbar customization |
 | UI-8 | i18n EN + pt-BR | P0, P1 | Done | String Catalogs (P0-4); language setting + relaunch (P1-11) |
-| SET-1 | Preferences | P1, ongoing | Not started | Settings scene |
+| SET-1 | Preferences | P1, ongoing | Partial | Settings scene with Appearance (P1-1, P1-11); other panes land with their features |
 | SET-2 | Feature toggles | P5 | Not started | |
-| SET-3 | Profiles | P1 (base), P5 | Not started | |
+| SET-3 | Profiles | P1 (base), P5 | Partial | Default profile + folder layout (P1-3); profile UI in P5 |
 | SET-4 | Backup/import/reset/logs | P5 | Not started | |
 | SET-5 | GitHub gist sync | P7 | Not started | |
 | SET-6 | Cloud sync | — | Won't port | Upstream server not shipped (localhost default); revisit if it ships |
-| SET-7 | Onboarding + welcome | P5 | Not started | Includes Tauri import (P1-12) |
+| SET-7 | Onboarding + welcome | P5 | Not started | Tauri import done as File menu item (P1-12); onboarding offers it in P5 |
 | SET-8 | Updater + What's New | P8 | Not started | Sparkle |
 | SET-9 | Notifications | P3 | Not started | |
 | SET-10 | Find/Jump | P2 | Not started | |
 | SET-11 | Audit center | P5 | Replaced | OSLog + diagnostic export |
 | SET-12 | Close confirmation | P2 | Not started | |
-| SET-13 | Keyboard shortcuts | P1, ongoing | Not started | §6.3 |
+| SET-13 | Keyboard shortcuts | P1, ongoing | Partial | ⌘N, ⇧⌘N, ⌘O, ⌘T, ⌘,, zoom, undo (P1-1…P1-9); §6.3 |
 | PER-1 | Todos | P4 | Not started | Built-in plugin |
 | PER-2 | Pomodoro | P4 | Not started | |
 | PER-3 | Spotify | P7 | Not started | |
