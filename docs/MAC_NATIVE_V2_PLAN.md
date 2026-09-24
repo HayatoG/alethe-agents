@@ -959,7 +959,7 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   the theme, has no native counterpart (the app draws its themed window at launch). Baseline advanced
   to `2f3e5ed`.
   *Phase 1 exit check:* features for every criterion are in (folders as projects, sidebar, the five
-  agents in panes, restore on relaunch, both languages, all themes). **Tests not run** for P1-12 and
+  agents in panes, restore on relaunch, both languages, all themes). Tests for P1-12 and
   the end-of-phase full run (owner decision 2026-09-24: tests only on request); both ran after P2-5
   and pass.
 
