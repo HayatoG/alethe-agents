@@ -58,3 +58,21 @@ import Testing
         #expect(Pane(content: .web(url: "x"), tabs: [PaneTab(agent: "shell")]).tabs.isEmpty)
     }
 }
+
+@Suite struct PaneContentForFileTests {
+    @Test func classifiesByExtensionLikeUpstream() {
+        #expect(PaneContent.forFile("/p/clip.MOV") == .video(path: "/p/clip.MOV"))
+        #expect(PaneContent.forFile("/p/shot.png") == .image(path: "/p/shot.png"))
+        #expect(PaneContent.forFile("/p/logo.svg") == .image(path: "/p/logo.svg"))
+        #expect(PaneContent.forFile("/p/README.md") == .markdown(path: "/p/README.md"))
+        #expect(PaneContent.forFile("/p/main.swift") == nil)
+        #expect(PaneContent.forFile("/p/noext") == nil)
+    }
+
+    @Test func dropsLineAndColumnSuffixes() {
+        #expect(PaneContent.forFile(" /p/docs/plan.md:12:4 ") == .markdown(path: "/p/docs/plan.md"))
+        #expect(PaneContent.forFile("/p/a.png:3") == .image(path: "/p/a.png"))
+        #expect(PaneContent.markdown(path: "/x.md").filePath == "/x.md")
+        #expect(PaneContent.terminal.filePath == nil)
+    }
+}

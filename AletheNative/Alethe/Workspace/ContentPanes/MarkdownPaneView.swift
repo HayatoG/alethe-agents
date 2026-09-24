@@ -5,8 +5,7 @@ import AppKit
 import SwiftUI
 
 /// A Markdown pane (upstream `MarkdownPane`): the file rendered, reloaded when it changes on disk,
-/// with refresh, copy source, edit / save / cancel, reveal in Finder and close in its header.
-/// Dragging the header reorders the pane, as with terminals.
+/// with refresh, copy source and edit / save / cancel added to the shared file-pane header.
 struct MarkdownPaneView: View {
     let file: MarkdownFile
     let isFocused: Bool
@@ -18,9 +17,8 @@ struct MarkdownPaneView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .frame(height: metrics.size(28))
-            Rectangle().fill(theme[.borderSubtle]).frame(height: 1)
+            ContentPaneHeader(symbol: "doc.richtext", url: file.url, isFocused: isFocused,
+                              onClose: onClose, onDrag: onDrag) { actions }
             content
         }
         .background(theme[.bg])
@@ -28,65 +26,28 @@ struct MarkdownPaneView: View {
         .accessibilityIdentifier("markdown.pane")
     }
 
-    // MARK: - Header
+    // MARK: - Header actions
 
-    private var header: some View {
-        HStack(spacing: metrics.space(.s)) {
-            Image(systemName: "doc.richtext")
-                .font(metrics.font(.caption))
-                .foregroundStyle(theme[.textSecondary])
-            Text(verbatim: file.name)
-                .font(metrics.font(.footnote).weight(.medium))
-                .foregroundStyle(theme[isFocused ? .textPrimary : .textSecondary])
-                .lineLimit(1)
-                .help(Text(verbatim: file.path))
-            if file.hasUnsavedChanges {
-                Circle().fill(theme[.statusWaiting]).frame(width: metrics.size(6), height: metrics.size(6))
-                    .accessibilityLabel(Text("markdown.unsaved"))
-            }
-            Spacer(minLength: 0)
-            if file.isEditing {
-                headerButton("checkmark", label: "markdown.save", id: "markdown.save") { file.save() }
-                    .keyboardShortcut("s", modifiers: .command)
-                headerButton("xmark.circle", label: "markdown.cancelEdit", id: "markdown.cancelEdit") { file.cancelEditing() }
-            } else {
-                headerButton("arrow.clockwise", label: "markdown.refresh", id: "markdown.refresh") { file.reload() }
-                headerButton(copied ? "checkmark" : "doc.on.doc", label: copied ? "markdown.copied" : "markdown.copySource",
-                             id: "markdown.copy") { copySource() }
-                headerButton("pencil", label: "markdown.edit", id: "markdown.edit") { file.beginEditing() }
-                    .disabled(file.loadError != nil)
-            }
-            headerButton("folder", label: "markdown.revealInFinder", id: "markdown.reveal") {
-                NSWorkspace.shared.activateFileViewerSelecting([file.url])
-            }
-            headerButton("xmark", label: "markdown.close", id: "pane.close", action: onClose)
+    @ViewBuilder
+    private var actions: some View {
+        if file.hasUnsavedChanges {
+            Circle().fill(theme[.statusWaiting]).frame(width: metrics.size(6), height: metrics.size(6))
+                .accessibilityLabel(Text("markdown.unsaved"))
         }
-        .padding(.horizontal, metrics.space(.m))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme[isFocused ? .bgElevated : .bgSunken])
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 4, coordinateSpace: .global)
-                .onChanged { onDrag($0.translation) }
-                .onEnded { _ in onDrag(nil) }
-        )
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("pane.header.\(file.name)")
-    }
-
-    private func headerButton(_ symbol: String, label: LocalizedStringKey, id: String,
-                              action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(metrics.font(.caption).weight(.semibold))
-                .frame(width: metrics.size(18), height: metrics.size(18))
-                .contentShape(Rectangle())
+        Spacer(minLength: 0)
+        if file.isEditing {
+            ContentPaneButton(symbol: "checkmark", label: "markdown.save", id: "markdown.save") { file.save() }
+                .keyboardShortcut("s", modifiers: .command)
+            ContentPaneButton(symbol: "xmark.circle", label: "markdown.cancelEdit", id: "markdown.cancelEdit") {
+                file.cancelEditing()
+            }
+        } else {
+            ContentPaneButton(symbol: "arrow.clockwise", label: "markdown.refresh", id: "markdown.refresh") { file.reload() }
+            ContentPaneButton(symbol: copied ? "checkmark" : "doc.on.doc",
+                              label: copied ? "markdown.copied" : "markdown.copySource", id: "markdown.copy") { copySource() }
+            ContentPaneButton(symbol: "pencil", label: "markdown.edit", id: "markdown.edit") { file.beginEditing() }
+                .disabled(file.loadError != nil)
         }
-        .buttonStyle(.borderless)
-        .foregroundStyle(theme[.textTertiary])
-        .help(Text(label))
-        .accessibilityLabel(Text(label))
-        .accessibilityIdentifier(id)
     }
 
     // MARK: - Content

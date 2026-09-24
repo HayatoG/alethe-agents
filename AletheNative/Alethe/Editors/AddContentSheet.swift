@@ -39,6 +39,18 @@ struct AddContentSheet: View {
             guard panel.runModal() == .OK, let url = panel.url else { return nil }
             return .markdown(path: url.path)
         },
+        Option(kind: .image, title: "addContent.media", detail: "addContent.media.detail",
+               symbol: "photo.on.rectangle") { project in
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = true
+            panel.canChooseDirectories = false
+            panel.allowsMultipleSelection = false
+            panel.message = String(localized: "addContent.media.picker")
+            panel.allowedContentTypes = [.image, .movie]
+            panel.directoryURL = URL(filePath: project.folder, directoryHint: .isDirectory)
+            guard panel.runModal() == .OK, let url = panel.url else { return nil }
+            return PaneContent.forFile(url.path) ?? .image(path: url.path)
+        },
     ]
 
     private var target: Project? {

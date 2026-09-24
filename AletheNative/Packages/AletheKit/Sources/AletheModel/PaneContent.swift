@@ -28,6 +28,28 @@ public enum PaneContent: Hashable, Sendable {
     }
 
     public var isTerminal: Bool { self == .terminal }
+
+    /// The file this pane shows, for file-backed kinds.
+    public var filePath: String? {
+        switch self {
+        case .markdown(let path), .image(let path), .video(let path): path
+        default: nil
+        }
+    }
+
+    /// The pane for a file, by extension (upstream `classifyPaneKind` in `terminalFactory.ts`); a
+    /// trailing `:line[:column]` (as agents print paths) is dropped. nil for any other file, which
+    /// upstream opens as a plain `file` pane the native app does not have yet.
+    public static func forFile(_ rawPath: String) -> PaneContent? {
+        let path = rawPath.trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(of: #":\d+(:\d+)?$"#, with: "", options: .regularExpression)
+        switch (path as NSString).pathExtension.lowercased() {
+        case "mp4", "m4v", "mov", "avi", "mkv", "webm", "ogv": return .video(path: path)
+        case "png", "jpg", "jpeg", "gif", "webp", "bmp", "avif", "ico", "svg": return .image(path: path)
+        case "md", "markdown", "mdx": return .markdown(path: path)
+        default: return nil
+        }
+    }
 }
 
 extension PaneContent: Codable {

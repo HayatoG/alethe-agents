@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-9 (P2-1…P2-5 tested; P2-6…P2-9
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-10 (P2-1…P2-5 tested; P2-6…P2-10
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-10. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-11. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1131,8 +1131,20 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* `MarkdownBlocksTests` (5),
   `MarkdownFileTests` (4, incl. atomic replace twice), UI `MarkdownPaneTests` (render/edit/save/close
   + undo; HT at 90/100/120 %), seed `markdown`. Package, app and UI-test targets compile.
-- [ ] **P2-10 (S) Image and video panes.** Image with fit/actual size; video on AVKit. *Tests:* UI.
+- [x] **P2-10 (S) Image and video panes.** Image with fit/actual size; video on AVKit. *Tests:* UI.
   *Parity:* WS-7, WS-8.
+  *Done:* `PaneContent.forFile` ports upstream `classifyPaneKind` (video/image/Markdown extensions,
+  `:line[:col]` suffix dropped; nil for other files) and `filePath`. `ContentPanes/ContentPaneHeader`
+  is now shared by every file pane (icon, name, the pane's actions, Show in Finder, Close,
+  drag-to-reorder); the Markdown pane moved onto it. `MediaPaneViews`: `ImagePaneView` (fitted, or
+  actual size with scrolling; `ImageFile` rereads the bytes when the file changes, NSImage's URL
+  cache would show the old one) and `VideoPaneView` (AVKit `VideoPlayer` with system controls; the
+  `AVPlayer` lives in `ContentPaneRegistry`, so layout changes never restart playback, and it is
+  paused when the pane goes). Add Content gains "Image or Video" (images and movies, kind by
+  extension).
+  *Tests (written, not run — owner decision 2026-09-24):* `PaneContentForFileTests` (2), UI
+  `MediaPaneTests` (fit/actual/close, HT at 90/100/120 %), seed `media`. No UI test for video (no
+  movie fixture); compiled.
 - [ ] **P2-11 (M) Diff pane.** `git diff` for the project or one file, unified/split, refresh.
   *Tests:* U (diff parser golden), UI. *Parity:* WS-9.
 - [ ] **P2-12 (L) Web pane.** WKWebView with tabs, address bar, back/forward/reload, resource modes,
@@ -1236,8 +1248,8 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-4 | Named project grids | P2 | Not started | |
 | WS-5 | Tabs, closed tabs, history | P2 | Not started | |
 | WS-6 | Markdown pane | P2 | Done | P2-9; Mermaid as code (ADR-11) |
-| WS-7 | Image pane | P2 | Not started | |
-| WS-8 | Video pane | P2 | Not started | AVKit |
+| WS-7 | Image pane | P2 | Done | P2-10 |
+| WS-8 | Video pane | P2 | Done | P2-10; AVKit |
 | WS-9 | Diff pane | P2 | Not started | |
 | WS-10 | Focus mode | P2 | Not started | |
 | WS-11 | Add content | P2 | Partial | Sheet + model v2 (P2-8), Markdown (P2-9); website with BR-1 |

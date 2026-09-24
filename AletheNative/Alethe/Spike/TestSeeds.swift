@@ -1,5 +1,6 @@
 #if DEBUG
 import AletheModel
+import AppKit
 import Foundation
 
 /// Sample workspaces for UI tests (`-AletheUITestSeed <name>`); applied only to an empty workspace.
@@ -33,6 +34,18 @@ enum TestSeeds {
             try? Data("# Seeded\n\n- [x] done\n\n| a | b |\n|---|---|\n| 1 | 2 |\n".utf8).write(to: file)
             let project = doc.addProject(name: "docs", folder: root, color: .teal)
             doc.addPane(to: project, content: .markdown(path: file.path))
+        case "media":
+            // A 64×64 PNG inside the throwaway data root.
+            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+            let file = URL(filePath: root).appending(path: "shot.png")
+            try? FileManager.default.createDirectory(atPath: root, withIntermediateDirectories: true)
+            if let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 64, pixelsHigh: 64, bitsPerSample: 8,
+                                          samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                          colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) {
+                try? rep.representation(using: .png, properties: [:])?.write(to: file)
+            }
+            let project = doc.addProject(name: "media", folder: root, color: .orange)
+            doc.addPane(to: project, content: .image(path: file.path))
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"

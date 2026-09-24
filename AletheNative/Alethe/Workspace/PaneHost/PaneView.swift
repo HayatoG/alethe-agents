@@ -121,6 +121,16 @@ final class PaneView: NSView {
             let file = context.environment.contentPanes.markdown(for: pane.id, path: path)
             view = context.hosted(MarkdownPaneView(file: file, isFocused: focused,
                                                    onClose: { context.closePane(pane.id) }, onDrag: onDrag))
+        case .image(let path):
+            setAccessibilityIdentifier("pane.\((path as NSString).lastPathComponent)")
+            let file = context.environment.contentPanes.image(for: pane.id, path: path)
+            view = context.hosted(ImagePaneView(file: file, isFocused: focused,
+                                                onClose: { context.closePane(pane.id) }, onDrag: onDrag))
+        case .video(let path):
+            setAccessibilityIdentifier("pane.\((path as NSString).lastPathComponent)")
+            let player = context.environment.contentPanes.player(for: pane.id, path: path)
+            view = context.hosted(VideoPaneView(url: URL(filePath: path), player: player, isFocused: focused,
+                                                onClose: { context.closePane(pane.id) }, onDrag: onDrag))
         default:
             // Kinds whose pane task has not landed yet are never created (Add Content hides them).
             view = AnyView(EmptyView())
