@@ -927,9 +927,26 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   90 %, 100 % and 120 % (zoom in/out/reset, a theme tile, the language picker and its restart note).
   Checked live: launched in pt-BR the whole Settings window is Portuguese; Restart Now reopened the
   app with the data root kept and the language back to System.
-- [ ] **P1-12 (M) TauriImporter.** Read-only import of `projects.json` v9 (groups, projects, terminals,
+- [x] **P1-12 (M) TauriImporter.** Read-only import of `projects.json` v9 (groups, projects, terminals,
   core preferences), summary sheet. *Tests:* G with anonymized fixtures, including the v2–v8 shapes the
   upstream migration accepts (import requires v9; older files show a clear message).
+  *Done:* `AletheModel/TauriImport` reads v2–v9, not only v9: the imported fields (group tree, project,
+  terminal and sub-tab basics, theme/zoom/language/agents) kept their shape across the upstream v2 → v9
+  migrations, which only added fields the importer ignores. v1 shows "older" and anything above v9
+  shows "newer". Groups are recreated parents first (same name under the same parent is reused, parent
+  cycles become top-level); projects follow the sidebar order (`projectIds`, then `ungroupedOrder`),
+  take their folder from `defaultCwd` or the first absolute terminal/tab cwd, and map hex colors to the
+  nearest of the ten accents. Skipped and listed: archived projects, projects with no folder or already
+  in the workspace, non-terminal panes, agents the native app does not run. Preferences (optional):
+  theme, interface size, enabled agents, always unrestricted, CLI paths that exist on this Mac, and the
+  language (app-wide, offers a restart). `TauriDataLocation` finds the Tauri profiles
+  (`profiles.json` + `profiles/<id>/projects.json`, active first). File › Import from Alethe (Tauri)…
+  (`Editors/TauriImportSheet`) previews a dry run on copies of the documents, then imports as one
+  undoable change; the Tauri files are never written.
+  *Tests (written, not run yet — owner decision 2026-09-24, run on request):* `TauriImportTests` with
+  anonymized v1/v2/v5/v7/v9/v10 fixtures (v9 import, idempotent re-import, existing folders, optional
+  preferences, v7, v5 + v2, refused versions, hex color mapping, profile discovery); UI
+  `TauriImportTests.testPreviewImportAndUndo` (`-AletheTauriProjectsFile` fixture).
 - [ ] **P1-13 (S) Changelog + phase review.** Update the parity matrix statuses; run upstream-watch.
 
 **Phase 1 exit criteria:** open existing folders as projects, organize them in the sidebar, run Claude/

@@ -1,0 +1,314 @@
+{
+  "version": 9,
+  "groups": [
+    {
+      "id": "g-work",
+      "name": "Work",
+      "color": "#a78bfa",
+      "collapsed": false,
+      "projectIds": [
+        "p-api"
+      ],
+      "parentGroupId": null,
+      "createdAt": 1750000000000,
+      "gridLayoutHistory": []
+    },
+    {
+      "id": "g-clients",
+      "name": "Clients",
+      "color": "#f59e0b",
+      "collapsed": true,
+      "projectIds": [
+        "p-site",
+        "p-old"
+      ],
+      "parentGroupId": "g-work",
+      "createdAt": 1750000000001,
+      "gridLayoutHistory": []
+    }
+  ],
+  "ungroupedOrder": [
+    "p-notes",
+    "p-win"
+  ],
+  "projects": [
+    {
+      "id": "p-api",
+      "name": "api",
+      "color": "#6ea8ff",
+      "groupId": "g-work",
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1750000000000,
+      "defaultCwd": "/Users/example/code/api/",
+      "orphanWorktrees": [],
+      "grids": [
+        {
+          "id": "grid-1",
+          "name": "Main"
+        }
+      ],
+      "activeGridId": "grid-1",
+      "terminals": [
+        {
+          "id": "t-1",
+          "name": "Terminal",
+          "cwd": "/Users/example/code/api",
+          "tabs": [
+            {
+              "id": "s-1",
+              "type": "claude",
+              "name": "Claude",
+              "cwd": "/Users/example/code/api",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000,
+              "sessionId": "11111111-2222-4333-8444-555555555555",
+              "extraArgs": [
+                "--dangerously-skip-permissions"
+              ]
+            },
+            {
+              "id": "s-2",
+              "type": "shell",
+              "name": "web",
+              "cwd": "/Users/example/code/api/web",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "s-2",
+          "disabled": false,
+          "laneVisible": null,
+          "kind": "terminal",
+          "remoteShared": true
+        },
+        {
+          "id": "t-2",
+          "name": "Terminal",
+          "cwd": "/Users/example/code/api",
+          "tabs": [
+            {
+              "id": "s-3",
+              "type": "codex",
+              "name": "Codex",
+              "cwd": "/Users/example/code/api",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000,
+              "sessionId": "0199aaaa-bbbb-7ccc-8ddd-eeeeeeeeeeee"
+            }
+          ],
+          "activeTabId": "s-3",
+          "disabled": false,
+          "laneVisible": null
+        },
+        {
+          "id": "t-3",
+          "name": "Terminal",
+          "cwd": "/Users/example/code/api",
+          "tabs": [],
+          "activeTabId": "",
+          "disabled": false,
+          "laneVisible": null,
+          "kind": "markdown",
+          "filePath": "/Users/example/code/api/README.md"
+        },
+        {
+          "id": "t-4",
+          "name": "Terminal",
+          "cwd": "/Users/example/code/api",
+          "tabs": [
+            {
+              "id": "s-4",
+              "type": "kiro",
+              "name": "Kiro",
+              "cwd": "/Users/example/code/api",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            },
+            {
+              "id": "s-5",
+              "type": "opencode",
+              "name": "Opencode",
+              "cwd": "/Users/example/code/api",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "s-4",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    },
+    {
+      "id": "p-site",
+      "name": "client-site",
+      "color": "#ec4899",
+      "groupId": "g-clients",
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1750000000002,
+      "terminals": [
+        {
+          "id": "t-5",
+          "name": "Terminal",
+          "cwd": "/Users/example/clients/site",
+          "tabs": [
+            {
+              "id": "s-6",
+              "type": "cursor",
+              "name": "Cursor",
+              "cwd": "/Users/example/clients/site",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "s-6",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    },
+    {
+      "id": "p-old",
+      "name": "old-site",
+      "color": "#94a3b8",
+      "groupId": "g-clients",
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1750000000003,
+      "archived": true,
+      "terminals": [
+        {
+          "id": "t-6",
+          "name": "Terminal",
+          "cwd": "/Users/example/clients/old",
+          "tabs": [
+            {
+              "id": "s-7",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/Users/example/clients/old",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "s-7",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    },
+    {
+      "id": "p-notes",
+      "name": "notes",
+      "color": "#34d399",
+      "groupId": null,
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1750000000004,
+      "terminals": [
+        {
+          "id": "t-7",
+          "name": "Terminal",
+          "cwd": "/Users/example/notes",
+          "tabs": [
+            {
+              "id": "s-8",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/Users/example/notes",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "s-8",
+          "disabled": false,
+          "laneVisible": null
+        },
+        {
+          "id": "t-8",
+          "name": "Terminal",
+          "cwd": "/Users/example/notes",
+          "tabs": [],
+          "activeTabId": "",
+          "disabled": false,
+          "laneVisible": null,
+          "kind": "web",
+          "url": "https://example.com"
+        }
+      ]
+    },
+    {
+      "id": "p-win",
+      "name": "windows-only",
+      "color": "#ef4444",
+      "groupId": null,
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1750000000005,
+      "terminals": [
+        {
+          "id": "t-9",
+          "name": "Terminal",
+          "cwd": "C:\\Users\\example\\repo",
+          "tabs": [
+            {
+              "id": "s-9",
+              "type": "wsl",
+              "name": "Wsl",
+              "cwd": "C:\\Users\\example\\repo",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "s-9",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    }
+  ],
+  "todos": [],
+  "activeProjectId": "p-api",
+  "workspace": {
+    "containers": [
+      {
+        "projectId": "p-api",
+        "paneIds": [
+          "t-1",
+          "t-2"
+        ],
+        "size": 0,
+        "internalLayout": "auto",
+        "collapsed": false,
+        "gridId": "grid-1"
+      }
+    ],
+    "tabs": [],
+    "closedTabs": [],
+    "history": [],
+    "activeTabId": null
+  },
+  "preferences": {
+    "language": "pt-BR",
+    "uiTheme": "nord",
+    "uiZoom": 1.24,
+    "alwaysStartUnrestricted": true,
+    "enabledAgents": {
+      "claude": true,
+      "codex": false,
+      "opencode": true,
+      "cursor": true,
+      "shell": true,
+      "kiro": true
+    },
+    "visualStyle": "normal"
+  },
+  "cliPaths": {
+    "claude": "/usr/bin/true",
+    "codex": "C:\\Tools\\codex.exe",
+    "kiro": "/usr/bin/true",
+    "opencode": "/nonexistent/opencode"
+  }
+}

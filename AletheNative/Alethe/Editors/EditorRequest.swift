@@ -8,6 +8,8 @@ enum EditorRequest: Identifiable, Hashable {
     case editGroup(GroupID)
     /// New terminal in a project (nil: the selected one).
     case newTerminal(ProjectID?)
+    /// Import from the Tauri app's data.
+    case importTauri
 
     var id: String {
         switch self {
@@ -16,6 +18,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .newGroup: "newGroup"
         case .editGroup(let id): "editGroup:\(id)"
         case .newTerminal: "newTerminal"
+        case .importTauri: "importTauri"
         }
     }
 }

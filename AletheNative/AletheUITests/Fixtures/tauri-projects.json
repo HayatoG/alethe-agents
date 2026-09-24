@@ -1,0 +1,133 @@
+{
+  "version": 9,
+  "groups": [
+    {
+      "id": "g1",
+      "name": "Imported group",
+      "color": "#a78bfa",
+      "collapsed": false,
+      "projectIds": [
+        "p1"
+      ],
+      "parentGroupId": null,
+      "createdAt": 1
+    },
+    {
+      "id": "g2",
+      "name": "Nested group",
+      "color": "#f59e0b",
+      "collapsed": false,
+      "projectIds": [
+        "p2"
+      ],
+      "parentGroupId": "g1",
+      "createdAt": 2
+    }
+  ],
+  "ungroupedOrder": [
+    "p3"
+  ],
+  "projects": [
+    {
+      "id": "p1",
+      "name": "imported-tmp",
+      "color": "#6ea8ff",
+      "groupId": "g1",
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1,
+      "terminals": [
+        {
+          "id": "t1",
+          "name": "T",
+          "cwd": "/private/tmp",
+          "tabs": [
+            {
+              "id": "s1",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/private/tmp",
+              "ptyId": null
+            }
+          ],
+          "activeTabId": "s1",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "imported-usr",
+      "color": "#ec4899",
+      "groupId": "g2",
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 2,
+      "terminals": [
+        {
+          "id": "t2",
+          "name": "T",
+          "cwd": "/usr",
+          "tabs": [
+            {
+              "id": "s2",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/usr",
+              "ptyId": null
+            }
+          ],
+          "activeTabId": "s2",
+          "disabled": false,
+          "laneVisible": null
+        },
+        {
+          "id": "t3",
+          "name": "T",
+          "cwd": "/usr",
+          "tabs": [],
+          "activeTabId": "",
+          "disabled": false,
+          "laneVisible": null,
+          "kind": "markdown"
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "imported-var",
+      "color": "#34d399",
+      "groupId": null,
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 3,
+      "terminals": [
+        {
+          "id": "t4",
+          "name": "T",
+          "cwd": "/var",
+          "tabs": [
+            {
+              "id": "s3",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/var",
+              "ptyId": null
+            }
+          ],
+          "activeTabId": "s3",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    }
+  ],
+  "workspace": {
+    "containers": []
+  },
+  "preferences": {
+    "uiTheme": "nord"
+  },
+  "cliPaths": {}
+}

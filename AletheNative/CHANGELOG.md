@@ -35,4 +35,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Settings › Appearance: choose among the 16 built-in themes (applied at once, terminals included),
   set the interface size, and switch the language between English and Português (Brasil) or follow
   the system; a language change offers to restart Alethe.
+- File › Import from Alethe (Tauri)…: bring groups, projects and their terminals (and, optionally,
+  theme, interface size, enabled agents, CLI paths and language) over from the Windows/Tauri app's data.
+  A summary shows what will be added and what is left out before importing, the import can be undone
+  with ⌘Z, and the Tauri app's files are only read.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

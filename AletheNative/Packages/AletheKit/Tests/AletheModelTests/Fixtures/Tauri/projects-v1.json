@@ -1,0 +1,11 @@
+{
+  "projects": [
+    {
+      "id": "p1",
+      "name": "ancient",
+      "terminals": [],
+      "activeTerminalIds": []
+    }
+  ],
+  "activeProjectId": "p1"
+}

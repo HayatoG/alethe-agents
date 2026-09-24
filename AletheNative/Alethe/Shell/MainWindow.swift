@@ -44,6 +44,8 @@ struct MainWindow: View {
         case .newTerminal(let project):
             NewTerminalSheet(workspace: workspace, undoManager: undoManager,
                              initialProject: project ?? workspace.document.workspace.selectedProjectID)
+        case .importTauri:
+            TauriImportSheet(workspace: workspace, undoManager: undoManager)
         }
     }
 

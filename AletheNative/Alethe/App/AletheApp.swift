@@ -61,6 +61,8 @@ private struct FileCommands: Commands {
             Button("sidebar.addProject") { actions?.chooseFolders() }
                 .keyboardShortcut("o", modifiers: .command)
                 .disabled(environment.workspace == nil)
+            Button("menu.file.importTauri") { environment.editorRequest = .importTauri }
+                .disabled(environment.workspace == nil)
         }
     }
 

@@ -38,7 +38,7 @@ let package = Package(
         .testTarget(name: "AletheFoundationTests", dependencies: ["AletheFoundation"]),
         .testTarget(name: "AletheDesignTests", dependencies: ["AletheDesign"]),
         .testTarget(name: "AletheTerminalTests", dependencies: ["AletheTerminal"]),
-        .testTarget(name: "AletheModelTests", dependencies: ["AletheModel"]),
+        .testTarget(name: "AletheModelTests", dependencies: ["AletheModel"], resources: [.copy("Fixtures")]),
         .testTarget(name: "AletheAgentsTests", dependencies: ["AletheAgents"]),
     ]
 )

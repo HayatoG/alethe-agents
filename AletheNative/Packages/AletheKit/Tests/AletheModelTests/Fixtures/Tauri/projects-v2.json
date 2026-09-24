@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "groups": [
+    {
+      "id": "g1",
+      "name": "Old group",
+      "color": "#f97316",
+      "collapsed": false,
+      "projectIds": [
+        "p1"
+      ],
+      "createdAt": 1720000000000
+    }
+  ],
+  "ungroupedOrder": [],
+  "projects": [
+    {
+      "id": "p1",
+      "name": "first",
+      "color": "#3b82f6",
+      "groupId": "g1",
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1720000000000,
+      "terminals": [
+        {
+          "id": "t1",
+          "name": "Terminal",
+          "cwd": "/Users/example/first",
+          "tabs": [
+            {
+              "id": "a1",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/Users/example/first",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "a1",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    }
+  ],
+  "activeProjectId": "p1",
+  "preferences": {}
+}

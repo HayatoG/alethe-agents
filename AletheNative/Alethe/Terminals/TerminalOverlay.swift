@@ -98,6 +98,6 @@ struct TerminalOverlay: View {
 }
 
 /// A catalog string with `%1$@`-style placeholders filled in.
-private func format(_ key: String.LocalizationValue, _ arguments: any CVarArg...) -> String {
+func format(_ key: String.LocalizationValue, _ arguments: any CVarArg...) -> String {
     String(format: String(localized: key), arguments: arguments)
 }

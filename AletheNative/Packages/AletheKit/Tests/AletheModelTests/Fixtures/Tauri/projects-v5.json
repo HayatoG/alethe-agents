@@ -1,0 +1,51 @@
+{
+  "version": 5,
+  "groups": [],
+  "ungroupedOrder": [
+    "p1"
+  ],
+  "projects": [
+    {
+      "id": "p1",
+      "name": "legacy",
+      "color": "#22d3ee",
+      "groupId": null,
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1730000000000,
+      "worktreeMode": "gitWorktree",
+      "validationCommands": [],
+      "gsdWatcherEnabled": false,
+      "conflictAgentProvider": "claude",
+      "terminals": [
+        {
+          "id": "t1",
+          "name": "Terminal",
+          "cwd": "/Users/example/legacy",
+          "tabs": [
+            {
+              "id": "a1",
+              "type": "claude",
+              "name": "Claude",
+              "cwd": "/Users/example/legacy",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "a1",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    }
+  ],
+  "todos": [],
+  "activeProjectId": "p1",
+  "workspace": {
+    "containers": []
+  },
+  "preferences": {
+    "uiTheme": "dracula"
+  },
+  "cliPaths": {}
+}

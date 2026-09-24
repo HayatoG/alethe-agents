@@ -1,0 +1,137 @@
+{
+  "version": 7,
+  "groups": [
+    {
+      "id": "g1",
+      "name": "Personal",
+      "color": "#6ea8ff",
+      "collapsed": false,
+      "projectIds": [
+        "p1"
+      ],
+      "parentGroupId": null,
+      "createdAt": 1740000000000,
+      "gridLayoutHistory": []
+    }
+  ],
+  "ungroupedOrder": [
+    "p2",
+    "p3"
+  ],
+  "projects": [
+    {
+      "id": "p1",
+      "name": "dotfiles",
+      "color": "#a78bfa",
+      "groupId": "g1",
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1740000000000,
+      "gridLayoutHistory": [],
+      "worktreeMode": "gitWorktree",
+      "validationCommands": [],
+      "gsdWatcherEnabled": false,
+      "conflictAgentProvider": "claude",
+      "orphanWorktrees": [],
+      "iconUrl": null,
+      "terminals": [
+        {
+          "id": "t1",
+          "name": "Terminal",
+          "cwd": "/Users/example/dotfiles",
+          "tabs": [
+            {
+              "id": "a1",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/Users/example/dotfiles",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "a1",
+          "disabled": false,
+          "laneVisible": null
+        },
+        {
+          "id": "t2",
+          "name": "Terminal",
+          "cwd": "/Users/example/dotfiles",
+          "tabs": [
+            {
+              "id": "a2",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/Users/example/dotfiles",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "a2",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "empty",
+      "color": "#ef4444",
+      "groupId": null,
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1740000000001,
+      "gridLayoutHistory": [],
+      "terminals": []
+    },
+    {
+      "id": "p3",
+      "name": "blog",
+      "color": "#6ea8ff",
+      "groupId": null,
+      "layoutMode": "auto",
+      "collapsed": false,
+      "createdAt": 1740000000002,
+      "gridLayoutHistory": [],
+      "terminals": [
+        {
+          "id": "t3",
+          "name": "Terminal",
+          "cwd": "/Users/example/blog",
+          "tabs": [
+            {
+              "id": "a3",
+              "type": "shell",
+              "name": "Shell",
+              "cwd": "/Users/example/blog",
+              "ptyId": null,
+              "lastUsedAt": 1758000000000
+            }
+          ],
+          "activeTabId": "a3",
+          "disabled": false,
+          "laneVisible": null
+        }
+      ]
+    }
+  ],
+  "todos": [],
+  "activeProjectId": "p1",
+  "workspace": {
+    "containers": [],
+    "tabs": [],
+    "history": []
+  },
+  "preferences": {
+    "language": "en",
+    "uiTheme": "vscode",
+    "uiZoom": 0.9,
+    "enabledAgents": {
+      "antigravity": true,
+      "claude": true,
+      "codex": false,
+      "shell": true
+    }
+  },
+  "cliPaths": {}
+}
