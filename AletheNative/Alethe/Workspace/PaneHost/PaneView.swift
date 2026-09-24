@@ -43,9 +43,18 @@ final class PaneView: NSView {
 
     private var headerHeight: CGFloat = 28
     private var laneWidth: CGFloat = 36
+    /// A file or page pane (Markdown…): one SwiftUI view in place of header, lane and terminal.
+    private var contentHost: NSHostingView<AnyView>?
 
     func configure(pane: Pane, project: Project, focused: Bool, dropTarget: Bool, context: PaneHostContext,
                    onDrag: @escaping (CGSize?) -> Void) {
+        if !pane.content.isTerminal {
+            configureContent(pane: pane, focused: focused, dropTarget: dropTarget, context: context, onDrag: onDrag)
+            return
+        }
+        contentHost?.removeFromSuperview()
+        contentHost = nil
+        header.isHidden = false
         guard let tab = pane.activeTab else { return }
         self.context = context
         let environment = context.environment
@@ -86,6 +95,43 @@ final class PaneView: NSView {
         }
         // A sub-tab switch in the focused pane hands the keyboard to the newly shown terminal.
         if switched && focused { DispatchQueue.main.async { [weak self] in self?.focusTerminal() } }
+        needsLayout = true
+    }
+
+    private func configureContent(pane: Pane, focused: Bool, dropTarget: Bool, context: PaneHostContext,
+                                  onDrag: @escaping (CGSize?) -> Void) {
+        self.context = context
+        tabID = nil
+        header.isHidden = true
+        attachTerminal(nil)
+        followSearch(of: nil)
+        lane?.removeFromSuperview()
+        lane = nil
+        overlay?.removeFromSuperview()
+        overlay = nil
+        layer?.cornerRadius = context.metrics.radius(.md)
+        layer?.borderWidth = dropTarget ? 2 : 1
+        layer?.borderColor = context.theme.nsColor(dropTarget || focused ? .accent : .border).cgColor
+        layer?.backgroundColor = context.theme.nsColor(.bg).cgColor
+
+        let view: AnyView
+        switch pane.content {
+        case .markdown(let path):
+            setAccessibilityIdentifier("pane.\((path as NSString).lastPathComponent)")
+            let file = context.environment.contentPanes.markdown(for: pane.id, path: path)
+            view = context.hosted(MarkdownPaneView(file: file, isFocused: focused,
+                                                   onClose: { context.closePane(pane.id) }, onDrag: onDrag))
+        default:
+            // Kinds whose pane task has not landed yet are never created (Add Content hides them).
+            view = AnyView(EmptyView())
+        }
+        if let contentHost {
+            contentHost.rootView = view
+        } else {
+            let host = NSHostingView(rootView: view)
+            addSubview(host)
+            contentHost = host
+        }
         needsLayout = true
     }
 
@@ -174,6 +220,10 @@ final class PaneView: NSView {
 
     override func layout() {
         super.layout()
+        if let contentHost {
+            contentHost.frame = bounds
+            return
+        }
         header.frame = CGRect(x: 0, y: 0, width: bounds.width, height: headerHeight)
         let body = CGRect(x: 0, y: headerHeight, width: bounds.width, height: max(0, bounds.height - headerHeight))
         let leading = lane == nil ? 0 : min(laneWidth, body.width)

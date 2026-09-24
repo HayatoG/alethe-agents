@@ -25,6 +25,14 @@ enum TestSeeds {
             let project = doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
             let pane = doc.addPane(to: project, tab: PaneTab(agent: "shell", title: "one"))
             if let pane { doc.addTab(PaneTab(agent: "shell", title: "two"), to: pane) }
+        case "markdown":
+            // A README inside the throwaway data root, so the test never touches real files.
+            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+            let file = URL(filePath: root).appending(path: "README.md")
+            try? FileManager.default.createDirectory(atPath: root, withIntermediateDirectories: true)
+            try? Data("# Seeded\n\n- [x] done\n\n| a | b |\n|---|---|\n| 1 | 2 |\n".utf8).write(to: file)
+            let project = doc.addProject(name: "docs", folder: root, color: .teal)
+            doc.addPane(to: project, content: .markdown(path: file.path))
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"

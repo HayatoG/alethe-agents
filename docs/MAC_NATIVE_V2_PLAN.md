@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-8 (P2-1…P2-5 tested; P2-6…P2-8
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-9 (P2-1…P2-5 tested; P2-6…P2-9
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-9. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-10. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -367,7 +367,8 @@ Evidence is from `git log main..mac-native` and the old docs (`PLANO_MIGRACAO_MA
   `NWListener`.
 - **Third-party dependencies (allow-list):** libghostty and libghostty-spm's `GhosttyKit` +
   `GhosttyTerminal` (MIT, built from pinned sources by `Vendor/ghostty/build.sh`), its transitive
-  `MSDisplayLink` (MIT, pinned `exact: 2.2.0`), Sparkle. Anything else needs an ADR.
+  `MSDisplayLink` (MIT, pinned `exact: 2.2.0`), Sparkle, Apple's `swift-markdown` + `swift-cmark`
+  (Apache-2.0, pinned `exact: 0.9.0`, ADR-11). Anything else needs an ADR.
 
 ### ADR-2 — Terminal: libghostty (HOST_MANAGED) + Swift PTY host
 - **Options:**
@@ -533,6 +534,17 @@ module in the SDK (P3 wraps `Process`/`posix_spawn` itself).
   `performKeyEquivalent` and `NSTextInputClient` itself. Ghostty's own keybinds are cleared
   (`keybind = clear`): a bound chord is claimed by the view before the menu bar sees it. Key routing is covered by UI tests (vim, Claude
   Code Shift+Tab, ⌘W, ⌘F, dead keys, IME).
+
+### ADR-11 — Markdown rendering: swift-markdown (owner decision, 2026-09-24)
+- **Context:** the Markdown pane (WS-6, P2-9) renders READMEs and plans with GFM (tables, task
+  lists, strikethrough) like upstream's react-markdown + remark-gfm, plus Mermaid diagrams.
+- **Options:** (a) Apple's `swift-markdown` (cmark-gfm) parsed into blocks laid out in SwiftUI;
+  (b) a small in-app GFM parser, no dependency; (c) a WKWebView with bundled marked.js + mermaid.js.
+- **Decision:** (a). A spec-compliant parser maintained by Apple, no JavaScript in the app, theme
+  tokens and text selection native. `AletheDocuments` owns the dependency; the rest of the app sees
+  `MarkdownBlock`. Pinned `exact: 0.9.0` (its `swift-cmark` resolves to 0.9.0, in `Package.resolved`).
+- **Consequences:** Mermaid blocks show as code until a web-based renderer exists (P2-12 brings
+  WKWebView; revisit then). Raw HTML shows as source, as upstream (no rehype-raw).
 
 ## 6. Interaction and motion guide
 
@@ -1101,8 +1113,24 @@ they run per the test cadence above.
   work yet.
   *Tests (written, not run — owner decision 2026-09-24):* `PaneContentTests` (3: round trip, v1
   golden migration through `DocumentStore`, content panes). UI test comes with P2-9, the first option.
-- [ ] **P2-9 (M) Markdown pane.** Rendered view of a file with live reload (`DispatchSource` file
+- [x] **P2-9 (M) Markdown pane.** Rendered view of a file with live reload (`DispatchSource` file
   watch), edit/preview toggle, save. *Tests:* U (watcher), UI. *Parity:* WS-6.
+  *Done:* new `AletheDocuments` target (ADR-11). `MarkdownBlocks` turns swift-markdown's tree into
+  blocks (headings, paragraphs, standalone images, code, quotes, ordered/unordered/task lists, GFM
+  tables with alignment, rules, raw HTML as source) with inline `AttributedString` (emphasis, strong,
+  code, strikethrough, links); relative links and images resolve against the file's folder.
+  `FileWatcher` (`DispatchSource`, coalesced, reopens after an atomic replace or delete).
+  `MarkdownFile` (observable): parse off the main actor, reload on change but never over a draft,
+  edit/save (atomic) /cancel. App: `Workspace/ContentPanes/` (`MarkdownBlocksView` with theme
+  tokens and selectable text, `MarkdownPaneView` with header Reload / Copy Source / Edit / Save ⌘S /
+  Cancel / Show in Finder / Close and drag-to-reorder, `ContentPaneRegistry` keeping one model per
+  pane, pruned when panes go). `PaneView` hosts any non-terminal pane as one SwiftUI view.
+  Add Content gains "README or Markdown" (file panel at the project folder), which enables ⇧⌘A.
+  *Deviations:* Mermaid shows as a code block (ADR-11). Content panes are not listed in the sidebar
+  yet (it lists terminal tabs); upstream lists them — with WS-11's remaining kinds.
+  *Tests (written, not run — owner decision 2026-09-24):* `MarkdownBlocksTests` (5),
+  `MarkdownFileTests` (4, incl. atomic replace twice), UI `MarkdownPaneTests` (render/edit/save/close
+  + undo; HT at 90/100/120 %), seed `markdown`. Package, app and UI-test targets compile.
 - [ ] **P2-10 (S) Image and video panes.** Image with fit/actual size; video on AVKit. *Tests:* UI.
   *Parity:* WS-7, WS-8.
 - [ ] **P2-11 (M) Diff pane.** `git diff` for the project or one file, unified/split, refresh.
@@ -1207,12 +1235,12 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto done (P1-6) |
 | WS-4 | Named project grids | P2 | Not started | |
 | WS-5 | Tabs, closed tabs, history | P2 | Not started | |
-| WS-6 | Markdown pane | P2 | Not started | |
+| WS-6 | Markdown pane | P2 | Done | P2-9; Mermaid as code (ADR-11) |
 | WS-7 | Image pane | P2 | Not started | |
 | WS-8 | Video pane | P2 | Not started | AVKit |
 | WS-9 | Diff pane | P2 | Not started | |
 | WS-10 | Focus mode | P2 | Not started | |
-| WS-11 | Add content | P2 | In progress | Sheet + model v2 (P2-8); options land with each pane kind |
+| WS-11 | Add content | P2 | Partial | Sheet + model v2 (P2-8), Markdown (P2-9); website with BR-1 |
 | WS-12 | Link viewer overlay | P2 | Not started | |
 | WS-13 | Empty workspace launcher | P2 | Not started | |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |

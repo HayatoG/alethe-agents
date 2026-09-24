@@ -1,6 +1,8 @@
 import AletheDesign
 import AletheModel
+import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Add Content (⇧⌘A; upstream `AddContentModal`): puts a file or page pane beside a project's
 /// terminals. Only kinds the app can already show are offered; each pane task adds its option.
@@ -23,8 +25,21 @@ struct AddContentSheet: View {
         var id: PaneContent.Kind { kind }
     }
 
-    /// Filled as pane kinds land (P2-9 onward).
-    static let options: [Option] = []
+    /// One entry per pane kind the app can show (a kind's task adds it).
+    static let options: [Option] = [
+        Option(kind: .markdown, title: "addContent.markdown", detail: "addContent.markdown.detail",
+               symbol: "doc.richtext") { project in
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = true
+            panel.canChooseDirectories = false
+            panel.allowsMultipleSelection = false
+            panel.message = String(localized: "addContent.markdown.picker")
+            panel.allowedContentTypes = ["md", "markdown", "mdx"].compactMap { UTType(filenameExtension: $0) }
+            panel.directoryURL = URL(filePath: project.folder, directoryHint: .isDirectory)
+            guard panel.runModal() == .OK, let url = panel.url else { return nil }
+            return .markdown(path: url.path)
+        },
+    ]
 
     private var target: Project? {
         project.flatMap { workspace.document.project($0) } ?? workspace.document.projects.first

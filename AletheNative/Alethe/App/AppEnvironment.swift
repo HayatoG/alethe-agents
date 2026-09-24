@@ -21,6 +21,8 @@ final class AppEnvironment {
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()
     let terminals = TerminalRegistry()
+    /// Models of open Markdown (and later other file) panes.
+    let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
     let launchLanguage = LanguageSetting().current()
 

@@ -22,6 +22,7 @@ struct WorkspaceView: View {
             #endif
         }
         .onChange(of: allTabIDs) { _, tabs in environment.terminals.prune(keeping: tabs) }
+        .onChange(of: allPaneIDs) { _, panes in environment.contentPanes.prune(keeping: panes) }
         .onChange(of: environment.theme) { _, _ in applyAppearance() }
         .onChange(of: environment.terminalFontSize) { _, _ in applyAppearance() }
     }
@@ -38,6 +39,10 @@ struct WorkspaceView: View {
 
     private var allTabIDs: Set<TabID> {
         Set(environment.workspace?.document.projects.flatMap { $0.panes.flatMap { $0.tabs.map(\.id) } } ?? [])
+    }
+
+    private var allPaneIDs: Set<PaneID> {
+        Set(environment.workspace?.document.projects.flatMap { $0.panes.map(\.id) } ?? [])
     }
 
     private func applyAppearance() {

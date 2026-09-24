@@ -58,4 +58,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Terminal output survives quitting: when Alethe reopens, each terminal shows what it had on screen
   above the new session. Terminal › Clear Scrollback (⌥⌘K) erases it; restarting a terminal starts it
   clean, and closing it deletes what was saved.
+- Markdown panes: File › Add Content… (⇧⌘A) › README or Markdown shows a Markdown file beside your
+  terminals, with tables, task lists and code blocks, and reloads it whenever an agent or editor
+  changes it. Edit it in place and save with ⌘S, copy its source or show it in Finder.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
