@@ -13,7 +13,8 @@
 # (two builds of the same inputs differ, even with ZERO_AR_DATE), so BUILD_INFO's sha256 identifies a
 # particular build, not the inputs. Output is gitignored (~40 MB). Requires the Metal Toolchain.
 #
-#   Vendor/ghostty/build.sh            build Vendor/GhosttyKit (local package) if missing
+#   Vendor/ghostty/build.sh            build Vendor/GhosttyKit (local package) if missing; apply
+#                                      new wrapper patches to an existing one
 #   Vendor/ghostty/build.sh --force    rebuild
 set -euo pipefail
 
@@ -29,7 +30,22 @@ WORK="$HERE/.work"
 PACKAGE="$VENDOR/GhosttyKit"
 DEST="$PACKAGE/BinaryTarget/GhosttyKit.xcframework"
 
+# Alethe's own changes to libghostty-spm's Swift wrapper (patches/*.patch, relative to the package
+# root). Idempotent: a patch already in place is skipped, so an existing build picks up new ones.
+apply_wrapper_patches() {
+  local patch
+  for patch in "$HERE"/patches/*.patch; do
+    [[ -e "$patch" ]] || continue
+    if patch -d "$PACKAGE" -p1 -R -s -f --dry-run < "$patch" >/dev/null 2>&1; then
+      continue
+    fi
+    patch -d "$PACKAGE" -p1 -s -f < "$patch" || { echo "ghostty: $(basename "$patch") does not apply" >&2; exit 1; }
+    echo "ghostty: applied $(basename "$patch")"
+  done
+}
+
 if [[ -d "$DEST" && "${1:-}" != "--force" ]]; then
+  apply_wrapper_patches
   echo "ghostty: already built at $DEST (use --force to rebuild)"
   exit 0
 fi
@@ -77,6 +93,7 @@ cp -R "$BUILT" "$DEST"
 cp -R "$WORK/libghostty-spm/Sources/GhosttyKit" "$WORK/libghostty-spm/Sources/GhosttyTerminal" "$PACKAGE/Sources/"
 cp "$WORK/libghostty-spm/LICENSE" "$PACKAGE/LICENSE"
 cp "$HERE/Package.swift.in" "$PACKAGE/Package.swift"
+apply_wrapper_patches
 ARCHIVE="$(find "$DEST" -name '*.a' | head -1)"
 cat > "$HERE/BUILD_INFO" <<INFO
 libghostty-spm: $LIBGHOSTTY_SPM_COMMIT

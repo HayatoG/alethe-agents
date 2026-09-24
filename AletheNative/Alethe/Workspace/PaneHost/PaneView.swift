@@ -2,6 +2,7 @@ import AletheDesign
 import AletheModel
 import AletheTerminal
 import AppKit
+import Observation
 import SwiftUI
 
 /// One pane: a header, the sub-tabs lane when shown, and the active tab's terminal (owned by
@@ -15,6 +16,10 @@ final class PaneView: NSView {
     private var lane: NSHostingView<AnyView>?
     private let content = NSView()
     private var overlay: NSHostingView<AnyView>?
+    private var findBar: NSHostingView<AnyView>?
+    /// The terminal whose find bar this pane follows (the active tab's).
+    private weak var searchedTerminal: TerminalPaneView?
+    private var context: PaneHostContext?
 
     init(paneID: PaneID) {
         self.paneID = paneID
@@ -42,6 +47,7 @@ final class PaneView: NSView {
     func configure(pane: Pane, project: Project, focused: Bool, dropTarget: Bool, context: PaneHostContext,
                    onDrag: @escaping (CGSize?) -> Void) {
         guard let tab = pane.activeTab else { return }
+        self.context = context
         let environment = context.environment
         headerHeight = context.metrics.size(28)
         laneWidth = context.metrics.size(36)
@@ -63,6 +69,7 @@ final class PaneView: NSView {
         setAccessibilityIdentifier("pane.\(tab.title ?? tab.agent)")
         environment.terminals.ensureStarted(tab, in: project, environment: environment)
         attachTerminal(environment.terminals.view(for: tab.id))
+        followSearch(of: environment.terminals.view(for: tab.id))
 
         if TerminalOverlay.isNeeded(for: environment.terminals.states[tab.id]) {
             let root = context.hosted(TerminalOverlay(tab: tab, project: project))
@@ -103,6 +110,49 @@ final class PaneView: NSView {
         }
     }
 
+    // MARK: - Find bar
+
+    private func followSearch(of terminal: TerminalPaneView?) {
+        guard terminal !== searchedTerminal else {
+            updateFindBar()
+            return
+        }
+        searchedTerminal = terminal
+        if let terminal { observeSearch(terminal) }
+        updateFindBar()
+    }
+
+    /// Shows or hides the find bar whenever the terminal's search opens or closes (⌘F from the menu,
+    /// or Ghostty's own `start_search` / `end_search`).
+    private func observeSearch(_ terminal: TerminalPaneView) {
+        withObservationTracking {
+            _ = terminal.search.isPresented
+        } onChange: { [weak self, weak terminal] in
+            Task { @MainActor in
+                guard let self, let terminal, terminal === self.searchedTerminal else { return }
+                self.updateFindBar()
+                self.observeSearch(terminal)
+            }
+        }
+    }
+
+    private func updateFindBar() {
+        guard let terminal = searchedTerminal, terminal.search.isPresented, let context else {
+            findBar?.removeFromSuperview()
+            findBar = nil
+            return
+        }
+        let root = context.hosted(TerminalFindBar(terminal: terminal))
+        if let findBar {
+            findBar.rootView = root
+        } else {
+            let bar = NSHostingView(rootView: root)
+            addSubview(bar, positioned: .above, relativeTo: content)
+            findBar = bar
+        }
+        needsLayout = true
+    }
+
     func focusTerminal() {
         (content.subviews.first as? TerminalPaneView)?.focus()
     }
@@ -125,5 +175,12 @@ final class PaneView: NSView {
         lane?.frame = CGRect(x: 0, y: body.minY, width: leading, height: body.height)
         content.frame = CGRect(x: leading, y: body.minY, width: body.width - leading, height: body.height)
         overlay?.frame = content.frame
+        if let findBar {
+            let inset = context?.metrics.space(.m) ?? 8
+            let size = findBar.fittingSize
+            let width = min(size.width, max(0, content.frame.width - inset * 2))
+            findBar.frame = CGRect(x: content.frame.maxX - width - inset, y: content.frame.minY + inset,
+                                   width: width, height: size.height)
+        }
     }
 }

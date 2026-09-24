@@ -48,4 +48,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Shell terminals (zsh, and bash from Homebrew) mark each prompt, so Terminal › Previous Prompt (⌘↑)
   and Next Prompt (⌘↓) jump between commands and the prompt redraws cleanly after a resize. Your
   shell's startup files are used as before and are never modified.
+- Find in the terminal (⌘F): matches are highlighted as you type, the bar shows which match you
+  are on out of how many, ↩ / ⇧↩ or ⌘G / ⇧⌘G move between them, ⌘E searches the selected text and
+  Esc closes the bar.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

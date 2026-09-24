@@ -80,11 +80,11 @@ private struct SpikeScript {
             case "ime-commit":
                 pane.terminalView.insertText(argument, replacementRange: NSRange(location: NSNotFound, length: 0))
             case "search":
-                pane.search(argument)
+                pane.updateSearch(argument)
             case "search-next":
                 pane.searchNext()
             case "search-end":
-                pane.endSearch()
+                pane.closeSearch()
             case "dump":
                 try? (pane.viewportText() ?? "").write(toFile: argument, atomically: true, encoding: .utf8)
             case "latency":

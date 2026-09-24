@@ -17,6 +17,8 @@ public final class TerminalPaneView: NSView {
     public let tap: TerminalIOTap
     private let activity = TerminalActivity()
     private let forceKill = ForceKillState()
+    /// Find bar state (⌘F).
+    public let search = TerminalSearch()
 
     public var onExit: ((Int32) -> Void)?
 
@@ -57,6 +59,7 @@ public final class TerminalPaneView: NSView {
 
         forceKill.session = session
         terminalView.configuration = TerminalSurfaceOptions(backend: .inMemory(session))
+        terminalView.delegate = self
         terminalView.controller = controller
         terminalView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(terminalView)
@@ -129,14 +132,32 @@ public final class TerminalPaneView: NSView {
     /// (`ShellIntegration`) or an agent that emits them.
     @discardableResult
     public func jumpToPrompt(_ delta: Int) -> Bool {
-        terminalView.performBindingAction("jump_to_prompt:\(delta)")
+        terminalView.jumpToPrompt(by: Int16(clamping: delta))
     }
 
     // MARK: - Search (Ghostty binding actions)
 
-    @discardableResult
-    public func search(_ text: String) -> Bool {
-        terminalView.performBindingAction("search:\(text)")
+    /// Opens the find bar (or focuses it again), searching `needle` when given.
+    public func showSearch(needle: String? = nil) {
+        search.isPresented = true
+        search.focusRequest += 1
+        if let needle, !needle.isEmpty { updateSearch(needle) }
+    }
+
+    /// Searches as the user types; an empty needle clears the matches but keeps the bar.
+    public func updateSearch(_ text: String) {
+        let needle = TerminalSearch.bindingNeedle(text)
+        search.needle = needle
+        if needle.isEmpty {
+            search.total = nil
+            search.selected = nil
+        }
+        terminalView.performBindingAction("search:\(needle)")
+    }
+
+    /// Searches the terminal's selection (⌘E); Ghostty reports it back as a search request.
+    public func searchSelection() {
+        terminalView.performBindingAction("search_selection")
     }
 
     @discardableResult
@@ -149,14 +170,41 @@ public final class TerminalPaneView: NSView {
         terminalView.performBindingAction("navigate_search:previous")
     }
 
-    @discardableResult
-    public func endSearch() -> Bool {
+    /// Closes the find bar, clears the highlights and gives the keyboard back to the terminal.
+    public func closeSearch() {
         terminalView.performBindingAction("end_search")
+        resetSearch()
+        focus()
+    }
+
+    private func resetSearch() {
+        search.isPresented = false
+        search.needle = ""
+        search.total = nil
+        search.selected = nil
     }
 
     /// Ends the process group: SIGHUP, then SIGKILL if it outlives the grace period.
     public func terminate() {
         process.terminate()
+    }
+}
+
+extension TerminalPaneView: TerminalSurfaceSearchDelegate {
+    public func terminalDidRequestSearch(needle: String) {
+        showSearch(needle: needle)
+    }
+
+    public func terminalDidEndSearch() {
+        resetSearch()
+    }
+
+    public func terminalDidUpdateSearchTotal(_ total: Int?) {
+        search.total = total
+    }
+
+    public func terminalDidUpdateSearchSelected(_ selected: Int?) {
+        search.selected = selected
     }
 }
 

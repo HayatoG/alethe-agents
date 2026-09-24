@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1…P2-3 and the Phase 1 full run,
-> none run since P1-11). Done: P2-1…P2-3. Next: P2-4. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1…P2-4 and the Phase 1 full run,
+> none run since P1-11). Done: P2-1…P2-4. Next: P2-5. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1015,8 +1015,22 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* `ShellIntegrationTests` (5, one runs an
   interactive zsh and checks OSC 133 A and D). The manual resize check (prompt fragment gone) is owed
   with the other tests.
-- [ ] **P2-4 (L) Terminal search.** ⌘F find bar on Ghostty search actions: next/previous, match count,
+- [x] **P2-4 (L) Terminal search.** ⌘F find bar on Ghostty search actions: next/previous, match count,
   case toggle, highlight all, Esc closes. *Tests:* U, UI, HT. *Parity:* TERM-3.
+  *Done:* GhosttyKit's wrapper drops Ghostty's search actions, so `Vendor/ghostty/patches/
+  0001-search-delegate.patch` adds `TerminalSurfaceSearchDelegate` (start/end search, total,
+  selected); `build.sh` applies `patches/*.patch` idempotently, on a fresh build and to an existing
+  package. `AletheTerminal/TerminalSearch` (observable state + "n of m" status) and
+  `TerminalPaneView` as the delegate: `showSearch`, `updateSearch` (`search:`), next/previous
+  (`navigate_search`), `searchSelection`, `closeSearch` (`end_search`, focus back to the terminal).
+  `Terminals/TerminalFindBar` sits over the terminal's top trailing corner (search as you type, ↩ / ⇧↩,
+  Esc, count, buttons); `PaneView` follows the active tab's search through observation, so Ghostty's
+  own ⌘F (`start_search`) opens the same bar. Terminal menu: Find… ⌘F, Find Next ⌘G, Find Previous
+  ⇧⌘G, Use Selection for Find ⌘E.
+  *Deviation:* no case toggle: Ghostty's search is always case-insensitive and has no option for it.
+  Highlight all comes from Ghostty.
+  *Tests (written, not run — owner decision 2026-09-24):* `TerminalSearchTests` (2), UI
+  `TerminalSearchTests` (find/count/next/Esc; HT at 90/100/120 %).
 - [ ] **P2-5 (M) Smart copy/paste.** Paste images (saved to a temp file, path typed in), files from
   Finder (quoted paths), large text with bracketed paste; copy on select optional. *Tests:* U (payload
   mapping), UI. *Parity:* TERM-4.
@@ -1146,7 +1160,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
 | TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); shell integration marks (P2-3); process-tree kill (P2-2); process-tree info later |
 | TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |
-| TERM-3 | Terminal search | P0 spike, P2 | Not started | Ghostty search actions |
+| TERM-3 | Terminal search | P0 spike, P2 | Done | P2-4; Ghostty search is case-insensitive only |
 | TERM-4 | Smart copy/paste | P2 | Not started | |
 | TERM-5 | Prompt history | P2 | Not started | |
 | TERM-6 | Clickable links | P2 | Not started | |
