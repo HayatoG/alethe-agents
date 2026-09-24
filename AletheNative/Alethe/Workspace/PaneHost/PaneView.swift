@@ -17,6 +17,9 @@ final class PaneView: NSView {
     private let content = NSView()
     private var overlay: NSHostingView<AnyView>?
     private var findBar: NSHostingView<AnyView>?
+    private var offerBar: NSHostingView<AnyView>?
+    /// The project whose terminal this pane shows (for the page offer's "Open in Pane").
+    private var projectID: ProjectID?
     /// The terminal whose find bar this pane follows (the active tab's).
     private weak var searchedTerminal: TerminalPaneView?
     private var context: PaneHostContext?
@@ -80,6 +83,8 @@ final class PaneView: NSView {
         environment.terminals.ensureStarted(tab, in: project, environment: environment)
         attachTerminal(environment.terminals.view(for: tab.id))
         followSearch(of: environment.terminals.view(for: tab.id))
+        projectID = project.id
+        observeOffer(for: tab.id)
 
         if TerminalOverlay.isNeeded(for: environment.terminals.states[tab.id]) {
             let root = context.hosted(TerminalOverlay(tab: tab, project: project))
@@ -106,6 +111,9 @@ final class PaneView: NSView {
         header.isHidden = true
         attachTerminal(nil)
         followSearch(of: nil)
+        offerObservation += 1
+        offerBar?.removeFromSuperview()
+        offerBar = nil
         lane?.removeFromSuperview()
         lane = nil
         overlay?.removeFromSuperview()
@@ -186,6 +194,60 @@ final class PaneView: NSView {
         }
     }
 
+    // MARK: - Page offer
+
+    private var offerObservation = 0
+
+    /// Shows the page offer of the visible tab, and follows it as it appears or goes.
+    private func observeOffer(for tab: TabID) {
+        offerObservation += 1
+        let generation = offerObservation
+        updateOfferBar(for: tab)
+        watchOffer(tab, generation)
+    }
+
+    private func watchOffer(_ tab: TabID, _ generation: Int) {
+        guard let terminals = context?.environment.terminals else { return }
+        withObservationTracking {
+            _ = terminals.pageOffers[tab]
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                guard let self, generation == self.offerObservation else { return }
+                self.updateOfferBar(for: tab)
+                self.watchOffer(tab, generation)
+            }
+        }
+    }
+
+    private func updateOfferBar(for tab: TabID) {
+        guard let context, let url = context.environment.terminals.pageOffers[tab], let projectID else {
+            offerBar?.removeFromSuperview()
+            offerBar = nil
+            needsLayout = true
+            return
+        }
+        let environment = context.environment
+        let root = context.hosted(PageOfferBar(
+            url: url,
+            onOpenInPane: {
+                environment.terminals.dismissPageOffer(for: tab)
+                environment.open(.web(url: url.absoluteString, options: WebPaneOptions()), in: projectID)
+            },
+            onOpenInBrowser: {
+                environment.terminals.dismissPageOffer(for: tab)
+                NSWorkspace.shared.open(url)
+            },
+            onDismiss: { environment.terminals.dismissPageOffer(for: tab) }))
+        if let offerBar {
+            offerBar.rootView = root
+        } else {
+            let bar = NSHostingView(rootView: root)
+            addSubview(bar, positioned: .above, relativeTo: content)
+            offerBar = bar
+        }
+        needsLayout = true
+    }
+
     // MARK: - Find bar
 
     private func followSearch(of terminal: TerminalPaneView?) {
@@ -260,6 +322,10 @@ final class PaneView: NSView {
         lane?.frame = CGRect(x: 0, y: body.minY, width: leading, height: body.height)
         content.frame = CGRect(x: leading, y: body.minY, width: body.width - leading, height: body.height)
         overlay?.frame = content.frame
+        if let offerBar {
+            let height = offerBar.fittingSize.height
+            offerBar.frame = CGRect(x: content.frame.minX, y: content.frame.minY, width: content.frame.width, height: height)
+        }
         if let findBar {
             let inset = context?.metrics.space(.m) ?? 8
             let size = findBar.fittingSize

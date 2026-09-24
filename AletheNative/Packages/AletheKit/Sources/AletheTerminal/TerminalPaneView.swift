@@ -28,6 +28,12 @@ public final class TerminalPaneView: NSView {
     /// A ⌘-clicked link, as Ghostty detected it (URL, path or OSC 8 target). Once set, Ghostty no
     /// longer opens URLs itself.
     public var onOpenLink: ((String) -> Void)?
+    /// A local development server address printed in the output, reported once per address.
+    public var onLocalServer: ((URL) -> Void)? {
+        get { servers.onFound }
+        set { servers.onFound = newValue }
+    }
+    private let servers = LocalServerState()
     /// The shell's current folder, from OSC 7 (shell integration); nil until it reports one.
     public private(set) var reportedDirectory: String?
 
@@ -97,8 +103,10 @@ public final class TerminalPaneView: NSView {
             session.receive(restored + ScrollbackFile.replayReset)
             scrollback?.append(ScrollbackFile.replayReset)
         }
+        let servers = servers
         process.onOutput = { data in
             activity.touch()
+            servers.scan(data)
             tap.output(data)
             scrollback?.append(data)
             session.receive(data)
@@ -318,6 +326,20 @@ extension TerminalPaneView: TerminalSurfaceSearchDelegate {
 
     public func terminalDidUpdateSearchSelected(_ selected: Int?) {
         search.selected = selected
+    }
+}
+
+/// Local server detection on the PTY's output queue; findings are reported on the main actor.
+private final class LocalServerState: @unchecked Sendable {
+    private let detector = Mutex(LocalServerDetector())
+    @MainActor var onFound: ((URL) -> Void)?
+
+    init() {}
+
+    func scan(_ data: Data) {
+        let found = detector.withLock { $0.scan(data) }
+        guard !found.isEmpty else { return }
+        Task { @MainActor [weak self] in found.forEach { self?.onFound?($0) } }
     }
 }
 

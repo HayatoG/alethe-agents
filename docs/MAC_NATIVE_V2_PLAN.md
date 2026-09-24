@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-14 (P2-1…P2-5 tested; P2-6…P2-14
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-15 (P2-1…P2-5 tested; P2-6…P2-15
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14). Next: P2-15. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14). Next: P2-16. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1206,8 +1206,19 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* UI `LinkPreviewTests` (Markdown preview
   renders, Esc closes) through a debug-only `-AletheUITestPreview` launch argument, since a link's
   position in the terminal is not reachable from XCUITest. Compiled.
-- [ ] **P2-15 (S) Agent page offer.** When an agent prints a local server URL, offer to open it in a web
+- [x] **P2-15 (S) Agent page offer.** When an agent prints a local server URL, offer to open it in a web
   pane. *Tests:* U (detection), UI. *Parity:* BR-2.
+  *Done:* Upstream offers pages an agent opens in its shared CDP browser, which the native app does
+  not have (CDP: Won't port); the native offer comes from the terminal instead.
+  `AletheTerminal/LocalServerDetector` scans output for local server addresses (localhost,
+  127.0.0.1, 0.0.0.0 and [::] mapped to localhost, a port), ignoring escape sequences, catching an
+  address split across chunks, reporting each once. `TerminalPaneView.onLocalServer` (scan on the
+  PTY queue, report on the main actor); `TerminalRegistry.pageOffers` holds one offer per tab until
+  taken or dismissed. `Terminals/PageOfferBar` over the terminal's top: "localhost:5173 is ready" —
+  Open in Pane (web pane in the project) / Open in Browser / dismiss; `PaneView` follows the visible
+  tab's offer through observation.
+  *Tests (written, not run — owner decision 2026-09-24):* `LocalServerDetectorTests` (5), UI
+  `PageOfferTests` (offer → web pane; dismissed once per address). Compiled.
 - [ ] **P2-16 (M) Container controls.** Collapse, fullscreen and reorder of project containers; isolate
   a pane. *Tests:* U, UI, HT; drag smoke script. *Parity:* WS-1.
 - [ ] **P2-17 (M) Workspace tabs and history.** Tabs of open workspaces, reopen closed tab (⇧⌘T), back
@@ -1350,7 +1361,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | FS-1 | File explorer + git badges | P4 | Not started | Quick Look |
 | FS-2 | Folder browser | P1 | Replaced | `NSOpenPanel` + Finder drops (P1-4, P1-5) |
 | BR-1 | Web pane | P2 | Done | P2-12, WKWebView (private); CDP engine: Won't port |
-| BR-2 | Agent page offer | P2 | Not started | |
+| BR-2 | Agent page offer | P2 | Done | P2-15; from terminal output (no shared CDP browser) |
 | BR-3 | Playwright MCP browser session | P5 | Not started | |
 | EXT-1 | MCP manager | P5 | Not started | |
 | EXT-2 | Skills browser | P5 | Not started | |

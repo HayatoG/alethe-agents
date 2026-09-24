@@ -21,6 +21,8 @@ final class TerminalRegistry {
     }
 
     private(set) var states: [TabID: State] = [:]
+    /// A local page a tab's output announced, offered until opened or dismissed.
+    private(set) var pageOffers: [TabID: URL] = [:]
     /// Bumped whenever a tab gets a new view (start, restart) so hosts swap it in.
     private(set) var generations: [TabID: Int] = [:]
     @ObservationIgnored private var views: [TabID: TerminalPaneView] = [:]
@@ -60,6 +62,7 @@ final class TerminalRegistry {
     /// goes too unless `keepScrollback` (quitting).
     func close(_ tab: TabID, keepScrollback: Bool = false) {
         let view = views.removeValue(forKey: tab)
+        pageOffers.removeValue(forKey: tab)
         if let file = scrollbacks.removeValue(forKey: tab) {
             if keepScrollback { file.flush() } else { file.delete() }
         }
@@ -70,6 +73,10 @@ final class TerminalRegistry {
         launches.removeValue(forKey: tab)
         retriedFresh.remove(tab)
         claims.release(owner: tab.rawValue)
+    }
+
+    func dismissPageOffer(for tab: TabID) {
+        pageOffers.removeValue(forKey: tab)
     }
 
     /// Closes terminals whose tabs no longer exist.
@@ -152,6 +159,7 @@ final class TerminalRegistry {
                 guard let environment, let view else { return }
                 environment.openTerminalLink(link, from: view, tab: tab, project: project)
             }
+            view.onLocalServer = { [weak self] url in self?.pageOffers[tab.id] = url }
             view.onPromptHistoryChange = { [weak environment] entries in
                 environment?.promptHistory?.update { $0.histories[tab.id.rawValue] = entries }
             }

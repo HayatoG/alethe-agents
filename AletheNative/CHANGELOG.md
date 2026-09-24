@@ -75,4 +75,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - ⇧⌘-click a terminal link for all its actions — open in a pane or the browser, show in Finder, copy
   — or Preview it: Markdown, images, videos, pages and text files open in a quick sheet that Esc
   closes, without adding a pane.
+- When a terminal prints a local server address (a dev server saying `Local: http://localhost:5173`),
+  a bar above it offers to open the page in a pane beside it or in your browser, once per address.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
