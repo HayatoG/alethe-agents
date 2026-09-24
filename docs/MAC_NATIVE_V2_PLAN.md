@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-10 (P2-1…P2-5 tested; P2-6…P2-10
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-11 (P2-1…P2-5 tested; P2-6…P2-11
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-11. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-12. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1145,8 +1145,20 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* `PaneContentForFileTests` (2), UI
   `MediaPaneTests` (fit/actual/close, HT at 90/100/120 %), seed `media`. No UI test for video (no
   movie fixture); compiled.
-- [ ] **P2-11 (M) Diff pane.** `git diff` for the project or one file, unified/split, refresh.
+- [x] **P2-11 (M) Diff pane.** `git diff` for the project or one file, unified/split, refresh.
   *Tests:* U (diff parser golden), UI. *Parity:* WS-9.
+  *Done:* `PaneContent.diff(path:staged:)` (upstream `terminal.staged`; stored only when true).
+  `AletheDocuments/GitDiff`: `GitDiff.run` (upstream `git_diff`: `git diff [--staged] [-- path]`, no
+  color/pager/external diff, pipe drained before waiting, 2 MiB cap, binary and not-a-repository
+  errors) and `DiffParser` (files, headers incl. renames, hunks with old/new line numbers, "\ No
+  newline" notes; `split` pairs removals with the additions after them). `ContentPanes/DiffPaneView`
+  + `DiffModel`: file and hunk headers, colored lines with both line numbers, unified or side by side
+  (not persisted), working tree / staged toggle (persisted in the pane, not undoable), reload.
+  Add Content gains "Git Changes" (the whole project, working tree).
+  *Deviation:* side-by-side is native (upstream only shows the unified text).
+  *Tests (written, not run — owner decision 2026-09-24):* `DiffParserTests` (3), `GitDiffTests` (real
+  git in a temporary repository), UI `DiffPaneTests` (layouts, staged, close; HT at 90/100/120 %),
+  seed `diff`. Compiled.
 - [ ] **P2-12 (L) Web pane.** WKWebView with tabs, address bar, back/forward/reload, resource modes,
   persisted URL. *Tests:* U (URL normalization port), UI, HT. *Parity:* BR-1.
 - [ ] **P2-13 (M) Clickable links.** ⌘-click file/URL/image links in terminals: open in a pane of the
@@ -1250,7 +1262,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-6 | Markdown pane | P2 | Done | P2-9; Mermaid as code (ADR-11) |
 | WS-7 | Image pane | P2 | Done | P2-10 |
 | WS-8 | Video pane | P2 | Done | P2-10; AVKit |
-| WS-9 | Diff pane | P2 | Not started | |
+| WS-9 | Diff pane | P2 | Done | P2-11; side by side added |
 | WS-10 | Focus mode | P2 | Not started | |
 | WS-11 | Add content | P2 | Partial | Sheet + model v2 (P2-8), Markdown (P2-9); website with BR-1 |
 | WS-12 | Link viewer overlay | P2 | Not started | |

@@ -57,6 +57,11 @@ struct PaneHostContext {
         workspace?.update { $0.setLaneVisible(visible, for: pane) }
     }
 
+    /// What a file pane shows changed (a diff's staged toggle): a view setting, not undoable.
+    func setContent(_ content: PaneContent, for pane: PaneID) {
+        workspace?.update { $0.updatePane(pane) { $0.content = content } }
+    }
+
     func swapPanes(_ first: PaneID, _ second: PaneID) {
         workspace?.update(undoManager: undoManager(), actionName: String(localized: "undo.move")) {
             $0.swapPanes(first, second)

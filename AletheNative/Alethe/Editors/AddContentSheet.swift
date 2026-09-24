@@ -51,6 +51,9 @@ struct AddContentSheet: View {
             guard panel.runModal() == .OK, let url = panel.url else { return nil }
             return PaneContent.forFile(url.path) ?? .image(path: url.path)
         },
+        Option(kind: .diff, title: "addContent.diff", detail: "addContent.diff.detail", symbol: "plusminus") { _ in
+            .diff(path: nil, staged: false)
+        },
     ]
 
     private var target: Project? {

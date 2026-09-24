@@ -11,6 +11,17 @@ final class ContentPaneRegistry {
     private var markdown: [PaneID: MarkdownFile] = [:]
     private var images: [PaneID: ImageFile] = [:]
     private var players: [PaneID: (path: String, player: AVPlayer)] = [:]
+    private var diffs: [PaneID: DiffModel] = [:]
+
+    func diff(for pane: PaneID, folder: String, path: String?, staged: Bool) -> DiffModel {
+        if let model = diffs[pane], model.folder == folder, model.path == path {
+            model.setStaged(staged)
+            return model
+        }
+        let model = DiffModel(folder: folder, path: path, staged: staged)
+        diffs[pane] = model
+        return model
+    }
 
     func image(for pane: PaneID, path: String) -> ImageFile {
         if let file = images[pane], file.url.path == URL(filePath: path).path { return file }
@@ -46,6 +57,7 @@ final class ContentPaneRegistry {
             file.close()
             images.removeValue(forKey: pane)
         }
+        for pane in diffs.keys where !panes.contains(pane) { diffs.removeValue(forKey: pane) }
         for (pane, entry) in players where !panes.contains(pane) {
             entry.player.pause()
             players.removeValue(forKey: pane)

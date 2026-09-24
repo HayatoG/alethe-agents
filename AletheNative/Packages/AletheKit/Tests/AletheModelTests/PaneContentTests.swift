@@ -7,7 +7,7 @@ import Testing
     @Test func everyKindRoundTrips() throws {
         let contents: [PaneContent] = [
             .terminal, .markdown(path: "/p/README.md"), .image(path: "/p/a.png"), .video(path: "/p/v.mov"),
-            .diff(path: nil), .diff(path: "src/a.swift"), .web(url: "http://localhost:3000"),
+            .diff(path: nil, staged: false), .diff(path: "src/a.swift", staged: true), .web(url: "http://localhost:3000"),
         ]
         for content in contents {
             let data = try JSONEncoder().encode(content)

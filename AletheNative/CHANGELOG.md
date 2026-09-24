@@ -63,4 +63,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   changes it. Edit it in place and save with ⌘S, copy its source or show it in Finder.
 - Image and video panes: Add Content › Image or Video shows a picture (fitted or at actual size,
   refreshed when the file changes) or plays a video with the system player, beside your terminals.
+- Diff panes: Add Content › Git Changes shows a project's uncommitted changes with line numbers,
+  unified or side by side, for the working tree or what is staged.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

@@ -46,6 +46,24 @@ enum TestSeeds {
             }
             let project = doc.addProject(name: "media", folder: root, color: .orange)
             doc.addPane(to: project, content: .image(path: file.path))
+        case "diff":
+            // A throwaway repository with one uncommitted change.
+            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+            let repo = URL(filePath: root).appending(path: "repo")
+            try? FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
+            let file = repo.appending(path: "notes.txt")
+            try? Data("alpha\nbeta\n".utf8).write(to: file)
+            for arguments in [["init", "-q"], ["add", "."], ["commit", "-q", "-m", "seed"]] {
+                let git = Process()
+                git.executableURL = URL(filePath: "/usr/bin/git")
+                git.arguments = ["-C", repo.path, "-c", "user.name=seed", "-c", "user.email=seed@local",
+                                 "-c", "commit.gpgsign=false"] + arguments
+                try? git.run()
+                git.waitUntilExit()
+            }
+            try? Data("alpha\nbeta two\ngamma\n".utf8).write(to: file)
+            let project = doc.addProject(name: "repo", folder: repo.path, color: .green)
+            doc.addPane(to: project, content: .diff(path: nil, staged: false))
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"
