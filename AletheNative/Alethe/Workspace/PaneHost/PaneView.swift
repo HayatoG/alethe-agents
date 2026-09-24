@@ -118,20 +118,25 @@ final class PaneView: NSView {
             return
         }
         searchedTerminal = terminal
-        if let terminal { observeSearch(terminal) }
+        searchObservation += 1
+        observeSearch(searchObservation)
         updateFindBar()
     }
 
+    /// Bumped when the pane starts following another terminal, so an older observation stops.
+    private var searchObservation = 0
+
     /// Shows or hides the find bar whenever the terminal's search opens or closes (⌘F from the menu,
     /// or Ghostty's own `start_search` / `end_search`).
-    private func observeSearch(_ terminal: TerminalPaneView) {
+    private func observeSearch(_ generation: Int) {
+        guard let terminal = searchedTerminal else { return }
         withObservationTracking {
             _ = terminal.search.isPresented
-        } onChange: { [weak self, weak terminal] in
+        } onChange: { [weak self] in
             Task { @MainActor in
-                guard let self, let terminal, terminal === self.searchedTerminal else { return }
+                guard let self, generation == self.searchObservation else { return }
                 self.updateFindBar()
-                self.observeSearch(terminal)
+                self.observeSearch(generation)
             }
         }
     }

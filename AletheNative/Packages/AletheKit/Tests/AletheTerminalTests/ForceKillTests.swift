@@ -9,29 +9,29 @@ import Testing
 
     @Test func secondInterruptWithinTheWindowKills() {
         var detector = DoubleInterrupt()
-        #expect(!detector.register(ctrlC, at: start), "the first ⌃C reaches the program")
-        #expect(detector.register(ctrlC, at: start + .milliseconds(1400)))
+        do { let fired = detector.register(ctrlC, at: start); #expect(!fired, "the first ⌃C reaches the program") }
+        do { let fired = detector.register(ctrlC, at: start + .milliseconds(1400)); #expect(fired) }
     }
 
     @Test func slowInterruptsNeverKill() {
         var detector = DoubleInterrupt()
-        #expect(!detector.register(ctrlC, at: start))
-        #expect(!detector.register(ctrlC, at: start + .milliseconds(1500)))
-        #expect(!detector.register(ctrlC, at: start + .milliseconds(3100)))
+        do { let fired = detector.register(ctrlC, at: start); #expect(!fired) }
+        do { let fired = detector.register(ctrlC, at: start + .milliseconds(1500)); #expect(!fired) }
+        do { let fired = detector.register(ctrlC, at: start + .milliseconds(3100)); #expect(!fired) }
     }
 
     @Test func typingInBetweenStartsOver() {
         var detector = DoubleInterrupt()
-        #expect(!detector.register(ctrlC, at: start))
-        #expect(!detector.register(Data("x".utf8), at: start + .milliseconds(100)))
-        #expect(!detector.register(ctrlC, at: start + .milliseconds(200)))
+        do { let fired = detector.register(ctrlC, at: start); #expect(!fired) }
+        do { let fired = detector.register(Data("x".utf8), at: start + .milliseconds(100)); #expect(!fired) }
+        do { let fired = detector.register(ctrlC, at: start + .milliseconds(200)); #expect(!fired) }
     }
 
     @Test func aKillResetsTheCount() {
         var detector = DoubleInterrupt()
         _ = detector.register(ctrlC, at: start)
-        #expect(detector.register(ctrlC, at: start + .milliseconds(100)))
-        #expect(!detector.register(ctrlC, at: start + .milliseconds(200)))
+        do { let fired = detector.register(ctrlC, at: start + .milliseconds(100)); #expect(fired) }
+        do { let fired = detector.register(ctrlC, at: start + .milliseconds(200)); #expect(!fired) }
     }
 
     @Test func recognizesKittyKeyboardInterrupts() {

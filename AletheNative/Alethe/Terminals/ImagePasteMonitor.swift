@@ -12,14 +12,14 @@ enum ImagePasteMonitor {
     static func install() {
         guard monitor == nil else { return }
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                  event.charactersIgnoringModifiers == "v" else { return event }
+            let responder = event.window?.firstResponder as? NSView
             // Local monitors run on the main thread.
-            MainActor.assumeIsolated {
-                guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-                      event.charactersIgnoringModifiers == "v",
-                      let terminal = (event.window?.firstResponder as? NSView)?.enclosingTerminal,
-                      terminal.pasteImageIfNeeded() else { return event }
-                return nil
+            let handled = MainActor.assumeIsolated {
+                responder?.enclosingTerminal?.pasteImageIfNeeded() ?? false
             }
+            return handled ? nil : event
         }
     }
 }

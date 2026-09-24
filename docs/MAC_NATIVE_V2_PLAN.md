@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1…P2-5 and the Phase 1 full run,
-> none run since P1-11). Done: P2-1…P2-5. Next: P2-6. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-5, tests run and passing; manual
+> checks owed: prompt redraw after resize (P2-3), image paste and drops (P2-5). Next: P2-6. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -633,7 +633,10 @@ affected package suites (`swift test --filter …`, all package tests are cheap)
 classes (`Scripts/uitest.sh -only-testing:AletheUITests/<Class>`), the strings gate and the app build
 when the project changes. Run the full suite (`Scripts/test.sh` + `Scripts/uitest.sh`, which includes
 the real-mouse smoke scripts) every 3 tasks, at the end of each phase, and when a change reaches
-widely shared code. Last full run: P1-10 (`3479868`): 120 package tests, 18 UI tests, both smoke scripts.
+widely shared code. Last full run: after P2-5 (2026-09-24, also the Phase 1 end-of-phase run): 159
+package tests, 27 UI tests, both smoke scripts, all passing. `AppearanceTests
+.testAppearanceControlsReceiveClicksAtThreeZoomLevels` failed once in the full run (the theme picker
+did not appear after clicking the Appearance tab) and passed on a rerun: flaky, not a regression.
 
 **UI-testing gotchas (learned in Phase 1):**
 - XCUITest `typeText` drops lowercase "c" under the owner's Brazilian - Pro layout (real key events
@@ -943,7 +946,7 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   (`profiles.json` + `profiles/<id>/projects.json`, active first). File › Import from Alethe (Tauri)…
   (`Editors/TauriImportSheet`) previews a dry run on copies of the documents, then imports as one
   undoable change; the Tauri files are never written.
-  *Tests (written, not run yet — owner decision 2026-09-24, run on request):* `TauriImportTests` with
+  *Tests (run and passing in the full run after P2-5):* `TauriImportTests` with
   anonymized v1/v2/v5/v7/v9/v10 fixtures (v9 import, idempotent re-import, existing folders, optional
   preferences, v7, v5 + v2, refused versions, hex color mapping, profile discovery); UI
   `TauriImportTests.testPreviewImportAndUndo` (`-AletheTauriProjectsFile` fixture).
@@ -957,8 +960,8 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   to `2f3e5ed`.
   *Phase 1 exit check:* features for every criterion are in (folders as projects, sidebar, the five
   agents in panes, restore on relaunch, both languages, all themes). **Tests not run** for P1-12 and
-  the end-of-phase full run (owner decision 2026-09-24: tests only on request); both are owed before
-  Phase 2 work starts.
+  the end-of-phase full run (owner decision 2026-09-24: tests only on request); both ran after P2-5
+  and pass.
 
 **Phase 1 exit criteria:** open existing folders as projects, organize them in the sidebar, run Claude/
 Codex/OpenCode/Cursor/shell terminals in panes, quit and relaunch with everything restored, in both
@@ -986,7 +989,7 @@ they run per the test cadence above.
   pane's active tab). Selecting a tab in the sidebar now shows it in its pane.
   *Deviations from upstream:* close does not ask first (it is undoable with ⌘Z); no rename or reorder
   (upstream has neither). No keyboard shortcut: upstream has none, and ⌃Tab / ⌘1…9 are taken (§6.3).
-  *Tests (written, not run — owner decision 2026-09-24):* `SubTabOperationsTests` (8), UI
+  *Tests (written 2026-09-24, run and passing in the full run after P2-5):* `SubTabOperationsTests` (8), UI
   `SubTabsTests` (switch/add/close/undo, lane visibility, HT at 90/100/120 %), seed `subtabs`.
 - [x] **P2-2 (S) Double ^C force-kill.** Two ⌃C within the upstream window kill the process tree; an
   overlay offers restart. *Tests:* U (timing on a virtual clock), UI. *Parity:* TERM-9.
@@ -998,7 +1001,7 @@ they run per the test cadence above.
   localized) and the tree is killed. `TerminalRegistry` records `.forceKilled` (overlay "Terminated
   with a double ⌃C." + Restart) and skips the early-exit fresh retry, which would otherwise relaunch
   a resumed agent killed within 4 s. Mac mapping: ⌃C only; ⌘C stays Copy.
-  *Tests (written, not run — owner decision 2026-09-24):* `ForceKillTests` (7, one spawns a child that
+  *Tests (written 2026-09-24, run and passing in the full run after P2-5):* `ForceKillTests` (7, one spawns a child that
   leaves its process group), UI `TerminalTests.testDoubleInterruptForceKills`.
 - [x] **P2-3 (S) Shell integration marks.** OSC 133 prompt marks for zsh/bash/fish (injected rc, no
   user files touched) so resize reflows without the leftover prompt fragment and search/scroll can
@@ -1012,7 +1015,7 @@ they run per the test cadence above.
   terminal (`jump_to_prompt`; `AppEnvironment.focusedTerminal`, reused by P2-4).
   *Deviations:* no fish (GhosttyKit bundles no fish integration; Ghostty's own is GPL) and no
   macOS `/bin/bash` 3.2 (Ghostty skips it too). No sequence parser was needed: Ghostty parses the marks.
-  *Tests (written, not run — owner decision 2026-09-24):* `ShellIntegrationTests` (5, one runs an
+  *Tests (written 2026-09-24, run and passing in the full run after P2-5):* `ShellIntegrationTests` (5, one runs an
   interactive zsh and checks OSC 133 A and D). The manual resize check (prompt fragment gone) is owed
   with the other tests.
 - [x] **P2-4 (L) Terminal search.** ⌘F find bar on Ghostty search actions: next/previous, match count,
@@ -1029,7 +1032,7 @@ they run per the test cadence above.
   ⇧⌘G, Use Selection for Find ⌘E.
   *Deviation:* no case toggle: Ghostty's search is always case-insensitive and has no option for it.
   Highlight all comes from Ghostty.
-  *Tests (written, not run — owner decision 2026-09-24):* `TerminalSearchTests` (2), UI
+  *Tests (written 2026-09-24, run and passing in the full run after P2-5):* `TerminalSearchTests` (2), UI
   `TerminalSearchTests` (find/count/next/Esc; HT at 90/100/120 %).
 - [x] **P2-5 (M) Smart copy/paste.** Paste images (saved to a temp file, path typed in), files from
   Finder (quoted paths), large text with bracketed paste; copy on select optional. *Tests:* U (payload
@@ -1047,7 +1050,7 @@ they run per the test cadence above.
   Terminal use; upstream quotes for Windows). Edit › Paste clicked with the mouse still pastes text
   only (the monitor sees ⌘V). No copy on select (upstream has none; Ghostty's option can come with
   terminal settings).
-  *Tests (written, not run — owner decision 2026-09-24):* `SmartPasteTests` (5). No UI test: the
+  *Tests (written 2026-09-24, run and passing in the full run after P2-5):* `SmartPasteTests` (5). No UI test: the
   terminal's text is not readable through accessibility; image paste and drops are owed as a manual
   check.
 - [ ] **P2-6 (M) Prompt history.** Per-tab history of submitted prompts, ⌃↑/⌃↓ to recall, persisted per

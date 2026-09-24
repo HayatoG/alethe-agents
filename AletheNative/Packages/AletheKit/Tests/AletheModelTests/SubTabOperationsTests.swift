@@ -18,7 +18,8 @@ import Testing
         doc.workspace.focusedPaneID = nil
         doc.close(project)
         let added = PaneTab(agent: "codex")
-        #expect(doc.addTab(added, to: pane))
+        let wasAdded = doc.addTab(added, to: pane)
+        #expect(wasAdded)
         #expect(doc.pane(pane)?.pane.tabs.map(\.id) == tabs + [added.id])
         #expect(doc.pane(pane)?.pane.activeTabID == added.id)
         #expect(doc.workspace.focusedPaneID == pane)
@@ -28,7 +29,8 @@ import Testing
     @Test func addingToAMissingPaneDoesNothing() {
         var (doc, _, _, _) = sample(tabs: 1)
         let before = doc
-        #expect(!doc.addTab(PaneTab(agent: "shell"), to: .make()))
+        let wasAdded = doc.addTab(PaneTab(agent: "shell"), to: .make())
+        #expect(!wasAdded)
         #expect(doc == before)
     }
 
