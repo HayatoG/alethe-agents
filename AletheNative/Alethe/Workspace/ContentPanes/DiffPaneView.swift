@@ -67,7 +67,7 @@ struct DiffPaneView: View {
     var body: some View {
         VStack(spacing: 0) {
             ContentPaneHeader(symbol: "plusminus", url: url, isFocused: isFocused, onClose: onClose, onDrag: onDrag) {
-                Text(model.staged ? "diff.staged" : "diff.unstaged")
+                Text(model.staged ? LocalizedStringKey("diff.staged") : "diff.unstaged")
                     .font(metrics.font(.caption))
                     .foregroundStyle(theme[.textTertiary])
                 Spacer(minLength: 0)

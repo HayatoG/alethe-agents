@@ -78,6 +78,23 @@ struct PaneHostContext {
         }
     }
 
+    /// Layout changes (order, collapse, fullscreen, isolation) are view settings: not undoable.
+    func moveContainer(_ project: ProjectID, to index: Int) {
+        workspace?.update { $0.moveContainer(project, to: index) }
+    }
+
+    func setCollapsed(_ project: ProjectID, _ collapsed: Bool) {
+        workspace?.update { $0.setCollapsed(project, collapsed) }
+    }
+
+    func setFullscreen(_ project: ProjectID?) {
+        workspace?.update { $0.setFullscreen(project) }
+    }
+
+    func isolate(_ pane: PaneID?) {
+        workspace?.update { $0.isolate(pane) }
+    }
+
     /// Resizes are committed once, on release; not undoable (like upstream).
     func setContainerWeights(_ weights: [Double]) {
         workspace?.update { $0.workspace.containerWeights = weights }

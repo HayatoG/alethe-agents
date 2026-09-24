@@ -64,11 +64,14 @@ final class PaneView: NSView {
         let environment = context.environment
         headerHeight = context.metrics.size(28)
         laneWidth = context.metrics.size(36)
+        let isIsolated = context.workspace?.document.workspace.isolatedPaneID == pane.id
         header.rootView = context.hosted(PaneHeader(
             tab: tab, isFocused: focused, isLaneVisible: pane.isLaneVisible, canHideLane: pane.tabs.count == 1,
+            isIsolated: isIsolated,
             onClose: { context.closePane(pane.id) },
             onNewSubTab: { context.newSubTab(in: pane.id) },
             onToggleLane: { context.setLaneVisible(!pane.isLaneVisible, for: pane.id) },
+            onToggleIsolation: { context.isolate(isIsolated ? nil : pane.id) },
             onDrag: onDrag))
         configureLane(pane: pane, project: project, focused: focused, context: context)
 

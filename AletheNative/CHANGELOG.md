@@ -77,4 +77,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   closes, without adding a pane.
 - When a terminal prints a local server address (a dev server saying `Local: http://localhost:5173`),
   a bar above it offers to open the page in a pane beside it or in your browser, once per address.
+- Project containers can be collapsed to a narrow strip, shown alone (⌥⌘↩ or the header button) and
+  reordered by dragging their header; a single pane can be shown alone from its menu or with ⇧⌘↩.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

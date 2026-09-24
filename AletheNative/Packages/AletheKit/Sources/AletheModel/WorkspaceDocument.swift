@@ -126,15 +126,38 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
     public var gridWeights: [String: GridWeights]
     public var focusedPaneID: PaneID?
     public var selectedProjectID: ProjectID?
+    /// Open containers folded to a narrow strip (upstream `container.collapsed`).
+    public var collapsedProjectIDs: [ProjectID]
+    /// The one container shown, filling the workspace (upstream `fullscreenContainerId`).
+    public var fullscreenProjectID: ProjectID?
+    /// The one pane shown, filling its fullscreen container (upstream `isolatedPaneId`).
+    public var isolatedPaneID: PaneID?
 
     public init(openProjectIDs: [ProjectID] = [], containerWeights: [Double] = [],
                 gridWeights: [String: GridWeights] = [:], focusedPaneID: PaneID? = nil,
-                selectedProjectID: ProjectID? = nil) {
+                selectedProjectID: ProjectID? = nil, collapsedProjectIDs: [ProjectID] = [],
+                fullscreenProjectID: ProjectID? = nil, isolatedPaneID: PaneID? = nil) {
         self.openProjectIDs = openProjectIDs
         self.containerWeights = containerWeights
         self.gridWeights = gridWeights
         self.focusedPaneID = focusedPaneID
         self.selectedProjectID = selectedProjectID
+        self.collapsedProjectIDs = collapsedProjectIDs
+        self.fullscreenProjectID = fullscreenProjectID
+        self.isolatedPaneID = isolatedPaneID
+    }
+
+    /// Fields added after v2 (P2-16) are optional in the file: older files decode unchanged.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        openProjectIDs = try container.decode([ProjectID].self, forKey: .openProjectIDs)
+        containerWeights = try container.decode([Double].self, forKey: .containerWeights)
+        gridWeights = try container.decode([String: GridWeights].self, forKey: .gridWeights)
+        focusedPaneID = try container.decodeIfPresent(PaneID.self, forKey: .focusedPaneID)
+        selectedProjectID = try container.decodeIfPresent(ProjectID.self, forKey: .selectedProjectID)
+        collapsedProjectIDs = try container.decodeIfPresent([ProjectID].self, forKey: .collapsedProjectIDs) ?? []
+        fullscreenProjectID = try container.decodeIfPresent(ProjectID.self, forKey: .fullscreenProjectID)
+        isolatedPaneID = try container.decodeIfPresent(PaneID.self, forKey: .isolatedPaneID)
     }
 }
 

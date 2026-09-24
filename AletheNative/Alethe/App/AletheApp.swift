@@ -75,9 +75,13 @@ private struct FileCommands: Commands {
     }
 }
 
-/// View menu additions: UI zoom. Font and metric scale only — never `scaleEffect` (plan lesson 1).
+/// View menu additions: UI zoom (font and metric scale only — never `scaleEffect`, plan lesson 1),
+/// and showing one pane or one project alone.
 private struct ViewCommands: Commands {
     let environment: AppEnvironment
+
+    @MainActor private var isolated: Bool { environment.workspace?.document.workspace.isolatedPaneID != nil }
+    @MainActor private var fullscreen: Bool { environment.workspace?.document.workspace.fullscreenProjectID != nil }
 
     var body: some Commands {
         CommandGroup(after: .toolbar) {
@@ -87,6 +91,17 @@ private struct ViewCommands: Commands {
                 .keyboardShortcut("-", modifiers: .command)
             Button("menu.view.actualSize") { environment.preferences?.update { $0.uiScale = 1 } }
                 .keyboardShortcut("0", modifiers: .command)
+            Divider()
+            Button(isolated ? LocalizedStringKey("menu.view.showAllPanes") : "menu.view.showPaneAlone") {
+                environment.workspace?.update { $0.isolate(isolated ? nil : $0.workspace.focusedPaneID) }
+            }
+            .keyboardShortcut(.return, modifiers: [.command, .shift])
+            .disabled(environment.workspace?.document.workspace.focusedPaneID == nil && !isolated)
+            Button(fullscreen ? LocalizedStringKey("menu.view.showAllProjects") : "menu.view.showProjectAlone") {
+                environment.workspace?.update { $0.setFullscreen(fullscreen ? nil : $0.workspace.selectedProjectID) }
+            }
+            .keyboardShortcut(.return, modifiers: [.command, .option])
+            .disabled(environment.workspace?.document.workspace.selectedProjectID == nil && !fullscreen)
             Divider()
         }
     }

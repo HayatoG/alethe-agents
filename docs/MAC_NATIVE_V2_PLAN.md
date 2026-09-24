@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-15 (P2-1…P2-5 tested; P2-6…P2-15
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-16 (P2-1…P2-5 tested; P2-6…P2-16
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14). Next: P2-16. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-17. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1219,8 +1219,24 @@ they run per the test cadence above.
   tab's offer through observation.
   *Tests (written, not run — owner decision 2026-09-24):* `LocalServerDetectorTests` (5), UI
   `PageOfferTests` (offer → web pane; dismissed once per address). Compiled.
-- [ ] **P2-16 (M) Container controls.** Collapse, fullscreen and reorder of project containers; isolate
+- [x] **P2-16 (M) Container controls.** Collapse, fullscreen and reorder of project containers; isolate
   a pane. *Tests:* U, UI, HT; drag smoke script. *Parity:* WS-1.
+  *Done:* `WorkspaceState` gains `collapsedProjectIDs`, `fullscreenProjectID`, `isolatedPaneID`
+  (upstream `container.collapsed`, `fullscreenContainerId`, `isolatedPaneId`), decoded with defaults
+  so v2 files load unchanged (no schema bump). Operations: `moveContainer` (its width moves with it),
+  `setCollapsed`, `setFullscreen`, `isolate` (also shows the pane's project alone); closing a pane or
+  project and `repair` clear stale state. `PaneHostView`: only the fullscreen container when set;
+  collapsed containers are a 40 pt strip and the width is shared by the expanded ones (dividers only
+  between expanded neighbors; collapsed ones keep their stored weight); dragging a container header
+  (or strip) moves it, placed on release. `ContainerView`: collapsed strip
+  (`CollapsedContainerStrip`: color, vertical name, click to expand), isolated pane filling the area.
+  `ContainerHeader`: Collapse / Show This Project Alone ↔ Show All / Close. Pane header menu: Show
+  This Pane Alone ↔ Show All Panes. View menu: Show Pane Alone ⇧⌘↩, Show Project Alone ⌥⌘↩. Not
+  undoable (layout, like resizing).
+  *Tests (written, not run — owner decision 2026-09-24):* `ContainerOperationsTests` (5), UI
+  `ContainerControlsTests` (collapse/expand, project alone, pane alone, ⇧⌘↩). Owed: HT for the new
+  header buttons at three zoom levels and a container-reorder case in `Scripts/smoke/pane-drag.sh`.
+  Compiled.
 - [ ] **P2-17 (M) Workspace tabs and history.** Tabs of open workspaces, reopen closed tab (⇧⌘T), back
   and forward (⌘[ / ⌘]). *Tests:* U (port of `workspaceNavigation` cases), UI. *Parity:* WS-5.
 - [ ] **P2-18 (M) Spotlight and Sidebar layouts.** Layout picker per project; Auto stays the default.
@@ -1305,7 +1321,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | HOME-3 | Activity graph / time analytics / usage strip | P3 | Not started | |
 | HOME-4 | Setup walkthrough | P3 | Not started | |
 | HOME-5 | Notifications list | P3 | Not started | |
-| WS-1 | Project containers | P1 | Partial | Open many, resize, close (P1-6); collapse/fullscreen/reorder later |
+| WS-1 | Project containers | P1, P2 | Done | Open, resize, close (P1-6); collapse, fullscreen, reorder, isolate (P2-16) |
 | WS-2 | Flat mode | P2 | Not started | |
 | WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto done (P1-6) |
 | WS-4 | Named project grids | P2 | Not started | |

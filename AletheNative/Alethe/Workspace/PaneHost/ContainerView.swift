@@ -33,6 +33,13 @@ final class ContainerView: NSView {
     private var lastProject: Project?
     private var lastFocused: PaneID?
     private var lastSelected = false
+    private var isCollapsed = false
+    private var isFullscreen = false
+    /// The one pane laid out (isolated); nil: all of them.
+    private var isolatedPane: PaneID?
+    private var onHeaderDrag: (CGSize?) -> Void = { _ in }
+    /// The narrow strip shown instead of header and panes while collapsed.
+    private var strip: NSHostingView<AnyView>?
 
     init(projectID: ProjectID) {
         self.projectID = projectID
@@ -50,16 +57,25 @@ final class ContainerView: NSView {
     var paneViews: [PaneView] { order.compactMap { panes[$0] } }
 
     func configure(project: Project, isSelected: Bool, focusedPane: PaneID?, weights: GridWeights,
-                   context: PaneHostContext) {
+                   isCollapsed: Bool, isFullscreen: Bool, isolatedPane: PaneID?,
+                   context: PaneHostContext, onHeaderDrag: @escaping (CGSize?) -> Void) {
         self.context = context
         lastProject = project
         lastFocused = focusedPane
         lastSelected = isSelected
+        self.isCollapsed = isCollapsed
+        self.isFullscreen = isFullscreen
+        self.isolatedPane = project.panes.contains { $0.id == isolatedPane } ? isolatedPane : nil
+        self.onHeaderDrag = onHeaderDrag
         if liveColumns == nil, liveRows == nil { self.weights = weights }
         setAccessibilityIdentifier("container.\(project.name)")
-        header.rootView = context.hosted(ContainerHeader(project: project, isSelected: isSelected) {
-            context.closeContainer(project.id)
-        })
+        header.rootView = context.hosted(ContainerHeader(
+            project: project, isSelected: isSelected, isFullscreen: isFullscreen,
+            onCollapse: { context.setCollapsed(project.id, true) },
+            onFullscreen: { context.setFullscreen(isFullscreen ? nil : project.id) },
+            onClose: { context.closeContainer(project.id) },
+            onDrag: onHeaderDrag))
+        configureStrip(project: project, context: context)
 
         let ids = project.panes.map(\.id)
         if ids != order { animateNextLayout = !order.isEmpty }
@@ -117,17 +133,53 @@ final class ContainerView: NSView {
 
     override func layout() {
         super.layout()
+        strip?.frame = bounds
+        header.isHidden = isCollapsed
+        emptyState?.isHidden = isCollapsed
         header.frame = CGRect(x: 0, y: 0, width: bounds.width, height: headerHeight)
         emptyState?.frame = paneArea
-        let geometry = geometry()
         let animated = animateNextLayout
         animateNextLayout = false
+        if isCollapsed {
+            panes.values.forEach { $0.isHidden = true }
+            dividers.values.forEach { $0.isHidden = true }
+            return
+        }
+        if let isolatedPane {
+            for (id, view) in panes {
+                view.isHidden = id != isolatedPane
+                if id == isolatedPane { animator.set(view, frame: paneArea.integral, animated: animated) }
+            }
+            dividers.values.forEach { $0.isHidden = true }
+            return
+        }
+        panes.values.forEach { $0.isHidden = false }
+        dividers.values.forEach { $0.isHidden = false }
+        let geometry = geometry()
         for (index, id) in order.enumerated() {
             guard let view = panes[id], geometry.paneFrames.indices.contains(index) else { continue }
             if reorder?.pane == id { continue }
             animator.set(view, frame: geometry.paneFrames[index].integral, animated: animated)
         }
         layoutDividers(geometry)
+    }
+
+    private func configureStrip(project: Project, context: PaneHostContext) {
+        guard isCollapsed else {
+            strip?.removeFromSuperview()
+            strip = nil
+            return
+        }
+        let root = context.hosted(CollapsedContainerStrip(project: project, isSelected: lastSelected,
+                                                          onExpand: { context.setCollapsed(project.id, false) },
+                                                          onDrag: onHeaderDrag))
+        if let strip {
+            strip.rootView = root
+        } else {
+            let view = NSHostingView(rootView: root)
+            addSubview(view, positioned: .above, relativeTo: nil)
+            strip = view
+        }
     }
 
     // MARK: - Split resizing
@@ -232,7 +284,9 @@ final class ContainerView: NSView {
 
     private func refreshPanes() {
         guard let project = lastProject, let context else { return }
-        configure(project: project, isSelected: lastSelected, focusedPane: lastFocused, weights: weights, context: context)
+        configure(project: project, isSelected: lastSelected, focusedPane: lastFocused, weights: weights,
+                  isCollapsed: isCollapsed, isFullscreen: isFullscreen, isolatedPane: isolatedPane,
+                  context: context, onHeaderDrag: onHeaderDrag)
     }
 
     /// A lifted pane casts the theme's large shadow (unclipped while it floats).

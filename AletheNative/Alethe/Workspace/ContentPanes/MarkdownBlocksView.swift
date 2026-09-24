@@ -111,7 +111,7 @@ private struct MarkdownBlockView: View {
         if let checkbox {
             Image(systemName: checkbox ? "checkmark.square.fill" : "square")
                 .foregroundStyle(theme[checkbox ? .accent : .textTertiary])
-                .accessibilityLabel(Text(checkbox ? "markdown.task.done" : "markdown.task.open"))
+                .accessibilityLabel(Text(checkbox ? LocalizedStringKey("markdown.task.done") : "markdown.task.open"))
         } else if ordered {
             Text(verbatim: "\(number).")
                 .font(metrics.font(.body).monospacedDigit())

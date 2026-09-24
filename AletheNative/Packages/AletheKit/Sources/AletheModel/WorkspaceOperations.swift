@@ -113,6 +113,7 @@ extension WorkspaceDocument {
     public mutating func removeProject(_ id: ProjectID) {
         detach(id)
         projects.removeAll { $0.id == id }
+        forgetContainer(id)
         workspace.openProjectIDs.removeAll { $0 == id }
         workspace.gridWeights.removeValue(forKey: id.rawValue)
         if workspace.selectedProjectID == id { workspace.selectedProjectID = nil }
@@ -161,6 +162,7 @@ extension WorkspaceDocument {
 
     public mutating func closePane(_ paneID: PaneID) {
         guard let (project, _) = pane(paneID) else { return }
+        if workspace.isolatedPaneID == paneID { workspace.isolatedPaneID = nil }
         updateProject(project.id) { $0.panes.removeAll { $0.id == paneID } }
         workspace.gridWeights.removeValue(forKey: project.id.rawValue)
         if workspace.focusedPaneID == paneID {
@@ -267,6 +269,7 @@ extension WorkspaceDocument {
     }
 
     public mutating func close(_ id: ProjectID) {
+        forgetContainer(id)
         workspace.openProjectIDs.removeAll { $0 == id }
         normalizeContainerWeights()
         if workspace.selectedProjectID == id { workspace.selectedProjectID = workspace.openProjectIDs.last }
@@ -288,7 +291,70 @@ extension WorkspaceDocument {
         workspace.openProjectIDs = workspace.openProjectIDs.filter { known.contains($0) }
         if let selected = workspace.selectedProjectID, !known.contains(selected) { workspace.selectedProjectID = nil }
         if let focused = workspace.focusedPaneID, pane(focused) == nil { workspace.focusedPaneID = nil }
+        let open = Set(workspace.openProjectIDs)
+        workspace.collapsedProjectIDs = workspace.collapsedProjectIDs.filter { open.contains($0) }
+        if let fullscreen = workspace.fullscreenProjectID, !open.contains(fullscreen) { workspace.fullscreenProjectID = nil }
+        if let isolated = workspace.isolatedPaneID,
+           pane(isolated)?.project.id != workspace.fullscreenProjectID || workspace.fullscreenProjectID == nil {
+            workspace.isolatedPaneID = nil
+        }
         normalizeContainerWeights()
+    }
+
+    // MARK: - Containers
+
+    /// Moves an open container to `index` among the open ones; its width moves with it.
+    public mutating func moveContainer(_ id: ProjectID, to index: Int) {
+        guard let from = workspace.openProjectIDs.firstIndex(of: id) else { return }
+        let to = max(0, min(index, workspace.openProjectIDs.count - 1))
+        guard from != to else { return }
+        workspace.openProjectIDs.insert(workspace.openProjectIDs.remove(at: from), at: to)
+        if workspace.containerWeights.count == workspace.openProjectIDs.count {
+            workspace.containerWeights.insert(workspace.containerWeights.remove(at: from), at: to)
+        }
+    }
+
+    public mutating func setCollapsed(_ id: ProjectID, _ collapsed: Bool) {
+        workspace.collapsedProjectIDs.removeAll { $0 == id }
+        guard collapsed, workspace.openProjectIDs.contains(id) else { return }
+        workspace.collapsedProjectIDs.append(id)
+        if workspace.fullscreenProjectID == id {
+            workspace.fullscreenProjectID = nil
+            workspace.isolatedPaneID = nil
+        }
+    }
+
+    /// Shows one container alone (nil: all again).
+    public mutating func setFullscreen(_ id: ProjectID?) {
+        workspace.isolatedPaneID = nil
+        guard let id, workspace.openProjectIDs.contains(id) else {
+            workspace.fullscreenProjectID = nil
+            return
+        }
+        workspace.fullscreenProjectID = id
+        workspace.collapsedProjectIDs.removeAll { $0 == id }
+        workspace.selectedProjectID = id
+    }
+
+    /// Shows one pane alone, its container alone too (nil: everything again).
+    public mutating func isolate(_ paneID: PaneID?) {
+        guard let paneID, let (project, _) = pane(paneID) else {
+            workspace.isolatedPaneID = nil
+            workspace.fullscreenProjectID = nil
+            return
+        }
+        open(project.id)
+        setFullscreen(project.id)
+        workspace.isolatedPaneID = paneID
+        workspace.focusedPaneID = paneID
+    }
+
+    private mutating func forgetContainer(_ id: ProjectID) {
+        workspace.collapsedProjectIDs.removeAll { $0 == id }
+        if workspace.fullscreenProjectID == id {
+            workspace.fullscreenProjectID = nil
+            workspace.isolatedPaneID = nil
+        }
     }
 
     // MARK: - Helpers
