@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6, P1-9. Next:
-> P1-10 → P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6, P1-9, P1-10. Next:
+> P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -885,9 +885,28 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   is unchanged. The registry clears `initialPrompt` once sent so relaunch never resends it.
   *Tests:* `PromptDeliveryTests` (virtual clock), UI `TerminalTests.testNewTerminalSheet`; checked
   live: `/help` as first prompt opened Claude Code's help.
-- [ ] **P1-10 (M) Session resume for Claude and Codex.** Snapshot sessions from `~/.claude/projects` and
+- [x] **P1-10 (M) Session resume for Claude and Codex.** Snapshot sessions from `~/.claude/projects` and
   `~/.codex/sessions`, bind to sub-tabs, resume on relaunch. *Tests:* G with fixture transcripts.
   *Parity:* SE-1 (subset).
+  *Done:* `AletheAgents/SessionDiscovery` ports `snapshot_claude_sessions` (cwd folder encoding, exact
+  then case-insensitive match) and `snapshot_codex_sessions` (recursive walk, first-line
+  `session_meta` only, cwd compared after resolving symlinks so `/tmp` ≡ `/private/tmp`), plus
+  `SessionClaims` (port of `sessionDiscovery.ts`: one owner tab per conversation, discovery binds only
+  the single new unclaimed session). `SessionResume` holds the decisions: Claude resumes only with a
+  transcript, Codex only while its rollout for that folder exists, others are trusted; a resumed
+  agent exiting within 4 s is relaunched once without the id; new Codex sessions are polled every
+  3 s ×10, then 15 s. `TerminalRegistry` snapshots Codex before the spawn, skips ids held by another
+  tab, persists whatever id the process ends up with (minted, resumed, discovered or dropped) on the
+  tab, and cancels discovery on close/restart. Also scrubs the parent Claude Code session variables
+  (`CLAUDE_CODE_CHILD_SESSION` turns transcript saving off, which silently broke resume when Alethe
+  was started from a Claude terminal).
+  *Tests:* `SessionDiscoveryTests` (fixture homes: Claude folders, Codex rollouts with a 100 KB
+  `session_meta`, symlinked cwd; claim ports of the upstream cases; retry window; poll schedule with a
+  fake sleep; cancellation), UI `TerminalTests`. Checked live: relaunch ran `claude --resume <id>` and
+  restored the conversation; a resume that fails exited in ~2 s and fell back to a fresh
+  `--session-id`, saved on the tab. Codex not checked live (CLI not installed on this Mac).
+  *Not ported yet:* Codex "active writer" conflict detection, session titles, hook-driven Claude id
+  changes (`/clear`, `/resume` inside the CLI; AG-8).
 - [ ] **P1-11 (M) Themes + zoom + language in Settings.** Theme picker, UI zoom via `uiScale`, EN/pt-BR.
   *Tests:* HT at three zoom levels. *Parity:* UI-1, UI-5, UI-8.
 - [ ] **P1-12 (M) TauriImporter.** Read-only import of `projects.json` v9 (groups, projects, terminals,
@@ -1007,7 +1026,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | AG-7 | Claude ↔ Codex handoff | P3 | Not started | |
 | AG-8 | Agent hook bridge | P3 | Not started | |
 | AG-9 | Model discovery | P3 | Not started | |
-| SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Not started | |
+| SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Partial | Claude + Codex (P1-10); OpenCode, Antigravity, Cursor in P3 |
 | SE-2 | Resume last session | P2 | Not started | |
 | SE-3 | Claude history + recent chats | P3 | Not started | |
 | SE-4 | Session/transcript cost | P3 | Not started | |

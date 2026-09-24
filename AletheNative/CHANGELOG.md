@@ -29,4 +29,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - New Terminal sheet (⌘T, or New Terminal… on a project): pick the agent, project and folder, start
   unrestricted, and give it a first prompt that is typed in once the agent is ready. The last agent
   used is preselected.
+- Claude Code and Codex terminals resume their own conversation when Alethe is reopened. A new
+  Codex conversation is linked to its terminal as soon as Codex saves it, two terminals never take
+  the same conversation, and one that can no longer be resumed opens a fresh session instead.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

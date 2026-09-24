@@ -56,13 +56,17 @@ public struct AgentLauncher: Sendable {
     }
 
     /// Variables a terminal child must not inherit from however Alethe itself was started: editor
-    /// hooks (VS Code, git askpass) and a parent Claude Code session.
+    /// hooks (VS Code, git askpass) and a parent Claude Code session. `CLAUDE_CODE_CHILD_SESSION`
+    /// matters most: with it, Claude Code stops saving transcripts, so its sessions cannot be resumed.
     public static let scrubbedVariables = [
         "EDITOR", "VISUAL", "TERM_PROGRAM_VERSION",
         "VSCODE_CWD", "VSCODE_IPC_HOOK", "VSCODE_IPC_HOOK_CLI", "VSCODE_GIT_ASKPASS_NODE",
         "VSCODE_GIT_ASKPASS_EXTRA_ARGS", "VSCODE_GIT_ASKPASS_MAIN", "VSCODE_GIT_IPC_HANDLE",
         "GIT_ASKPASS", "ELECTRON_RUN_AS_NODE",
-        "CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDECODE_PARENT_PID",
+        "CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDECODE_PARENT_PID", "CLAUDE_PID",
+        "CLAUDE_CODE_CHILD_SESSION", "CLAUDE_CODE_SESSION_ID", "CLAUDE_CODE_BRIDGE_SESSION_ID",
+        "CLAUDE_CODE_SESSION_ATTENDED", "CLAUDE_CODE_MESSAGING_SOCKET", "CLAUDE_CODE_MESSAGING_TOKEN",
+        "CLAUDE_CODE_EXECPATH",
     ]
 
     public func command(for request: AgentLaunchRequest,

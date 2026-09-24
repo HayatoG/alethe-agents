@@ -103,6 +103,8 @@ import Testing
         #expect(command.workingDirectory == "/src/app")
         #expect(command.sessionID == "s-1" && command.createdSession)
         #expect(command.environment["CLAUDECODE"] == .some(nil))
+        // With it Claude Code stops saving transcripts, and nothing could be resumed.
+        #expect(command.environment["CLAUDE_CODE_CHILD_SESSION"] == .some(nil))
     }
 
     @Test func unrestrictedFlagIsNotRepeated() throws {
