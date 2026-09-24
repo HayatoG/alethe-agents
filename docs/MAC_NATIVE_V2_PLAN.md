@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete; P1-12 tests and its end-of-phase full run still
-> owed). Next: P2-1. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1 and the Phase 1 full run,
+> none run since P1-11). Done: P2-1. Next: P2-2. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -970,10 +970,24 @@ bump, P2-8), then workspace navigation and layouts, then lifecycle and resources
 own `workspace.json` migration when it changes the shape. *Tests* list what the task must ship;
 they run per the test cadence above.
 
-- [ ] **P2-1 (M) Sub-tabs lane.** Tab strip on each pane: switch, new sub-tab (agent picker reusing the
-  New Terminal sheet), close (undoable), rename, reorder, show/hide the lane per pane; ⌃Tab / ⌃⇧Tab and
-  ⌘1…⌘9 inside the focused pane. *Tests:* U (tab operations), UI + HT (lane controls at three zoom
-  levels). *Parity:* TERM-2.
+- [x] **P2-1 (M) Sub-tabs lane.** Vertical lane on each pane (upstream `SubTabsLane`): switch, new
+  sub-tab (agent picker reusing the New Terminal sheet), close (undoable), show/hide the lane per pane.
+  *Tests:* U (tab operations), UI + HT (lane controls at three zoom levels). *Parity:* TERM-2.
+  *Done:* `Pane.laneVisible` (optional, so v1 files decode unchanged: no migration) and
+  `isLaneVisible` (upstream rule: always shown with several tabs). `WorkspaceOperations` gains
+  `addTab`, `activateTab`, `tab(_:from:)`, `setLaneVisible`, `updatePane`, `paneHolding`; `closeTab`
+  now shows the next tab, or the previous one when the last closes (upstream `closeSubTab`).
+  `Workspace/PaneHost/SubTabsLane` (36 pt, `shapeTabsLane*` tokens): agent icon per tab, accent bar on
+  the active one (muted when the pane is unfocused), close on hover when there is more than one tab,
+  context menu Restart / Close, + at the bottom. `PaneView` lays it out left of the terminal, starts a
+  tab's process when it is first shown and hands focus to the new terminal on a switch. The pane
+  header's context menu and the sidebar tab menu add New Sub-tab… and Show/Hide Sub-tabs;
+  `NewTerminalSheet(targetPane:)` is upstream's `NewSubTabModal` (no project picker, folder of the
+  pane's active tab). Selecting a tab in the sidebar now shows it in its pane.
+  *Deviations from upstream:* close does not ask first (it is undoable with ⌘Z); no rename or reorder
+  (upstream has neither). No keyboard shortcut: upstream has none, and ⌃Tab / ⌘1…9 are taken (§6.3).
+  *Tests (written, not run — owner decision 2026-09-24):* `SubTabOperationsTests` (8), UI
+  `SubTabsTests` (switch/add/close/undo, lane visibility, HT at 90/100/120 %), seed `subtabs`.
 - [ ] **P2-2 (S) Double ^C force-kill.** Two ⌃C within the upstream window kill the process tree; an
   overlay offers restart. *Tests:* U (timing on a virtual clock), UI. *Parity:* TERM-9.
 - [ ] **P2-3 (S) Shell integration marks.** OSC 133 prompt marks for zsh/bash/fish (injected rc, no
@@ -1109,7 +1123,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-13 | Empty workspace launcher | P2 | Not started | |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
 | TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); process-tree info later |
-| TERM-2 | Sub-tabs lane | P2 | Not started | |
+| TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |
 | TERM-3 | Terminal search | P0 spike, P2 | Not started | Ghostty search actions |
 | TERM-4 | Smart copy/paste | P2 | Not started | |
 | TERM-5 | Prompt history | P2 | Not started | |

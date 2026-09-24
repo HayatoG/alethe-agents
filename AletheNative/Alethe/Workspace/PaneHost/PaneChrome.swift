@@ -38,11 +38,17 @@ struct ContainerHeader: View {
     }
 }
 
-/// Title bar of a pane: agent, title, close. Dragging it reorders the pane.
+/// Title bar of a pane: agent, title, close. Dragging it reorders the pane; its context menu adds a
+/// sub-tab and shows or hides the sub-tabs lane.
 struct PaneHeader: View {
     let tab: PaneTab
     let isFocused: Bool
+    let isLaneVisible: Bool
+    /// The lane can only be hidden while the pane has a single tab.
+    let canHideLane: Bool
     let onClose: () -> Void
+    let onNewSubTab: () -> Void
+    let onToggleLane: () -> Void
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
     @Environment(\.theme) private var theme
@@ -84,6 +90,13 @@ struct PaneHeader: View {
                 .onChanged { onDrag($0.translation) }
                 .onEnded { _ in onDrag(nil) }
         )
+        .contextMenu {
+            Button("subtabs.newEllipsis", action: onNewSubTab)
+            Button(isLaneVisible ? LocalizedStringKey("subtabs.hideLane") : "subtabs.showLane", action: onToggleLane)
+                .disabled(isLaneVisible && !canHideLane)
+            Divider()
+            Button("pane.close", action: onClose)
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("pane.header.\(tab.title ?? tab.agent)")
     }

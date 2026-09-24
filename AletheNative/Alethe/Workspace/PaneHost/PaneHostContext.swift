@@ -34,6 +34,29 @@ struct PaneHostContext {
         }
     }
 
+    func closeTab(_ tab: TabID) {
+        workspace?.update(undoManager: undoManager(), actionName: String(localized: "undo.closeTerminal")) {
+            $0.closeTab(tab)
+        }
+    }
+
+    /// Switching sub-tabs is navigation, not an edit: not undoable.
+    func activateTab(_ tab: TabID) {
+        workspace?.update { $0.activateTab(tab) }
+    }
+
+    func newSubTab(in pane: PaneID) {
+        environment.editorRequest = .newSubTab(pane)
+    }
+
+    func restart(_ tab: PaneTab, in project: Project) {
+        environment.terminals.restart(tab, in: project, environment: environment)
+    }
+
+    func setLaneVisible(_ visible: Bool, for pane: PaneID) {
+        workspace?.update { $0.setLaneVisible(visible, for: pane) }
+    }
+
     func swapPanes(_ first: PaneID, _ second: PaneID) {
         workspace?.update(undoManager: undoManager(), actionName: String(localized: "undo.move")) {
             $0.swapPanes(first, second)

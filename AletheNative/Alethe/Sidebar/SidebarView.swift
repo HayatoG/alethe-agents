@@ -214,6 +214,14 @@ private struct TabContextMenu: View {
 
     var body: some View {
         Button("terminal.restart") { environment.terminals.restart(tab, in: project, environment: environment) }
+        if let pane = actions.workspace.document.paneHolding(tab.id)?.pane {
+            Divider()
+            Button("subtabs.newEllipsis") { environment.editorRequest = .newSubTab(pane.id) }
+            Button(pane.isLaneVisible ? LocalizedStringKey("subtabs.hideLane") : "subtabs.showLane") {
+                actions.setLaneVisible(!pane.isLaneVisible, for: pane.id)
+            }
+            .disabled(pane.tabs.count > 1)
+        }
         Divider()
         Button("terminal.close") { actions.closeTab(tab.id) }
     }

@@ -5,11 +5,14 @@ import AppKit
 import SwiftUI
 
 /// New Terminal sheet (⌘T): agent, project, folder, unrestricted mode and an optional first prompt.
-/// Upstream: `NewTerminalModal` (basic form; grid picker, 9router and planner come later).
+/// Upstream: `NewTerminalModal` (basic form; grid picker, 9router and planner come later). With a
+/// `targetPane` it is upstream's `NewSubTabModal`: the tab joins that pane, in the folder of the
+/// pane's active tab.
 struct NewTerminalSheet: View {
     let workspace: WorkspaceModel
     let undoManager: UndoManager?
     let initialProject: ProjectID?
+    var targetPane: PaneID?
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
@@ -41,12 +44,14 @@ struct NewTerminalSheet: View {
                 .pickerStyle(.radioGroup)
                 .accessibilityIdentifier("newTerminal.agent")
 
-            Picker(selection: $projectID) {
-                ForEach(workspace.document.projects) { project in
-                    Text(verbatim: project.name).tag(ProjectID?.some(project.id))
-                }
-            } label: { Text("newTerminal.project") }
-                .onChange(of: projectID) { _, _ in folder = project?.folder ?? "" }
+            if targetPane == nil {
+                Picker(selection: $projectID) {
+                    ForEach(workspace.document.projects) { project in
+                        Text(verbatim: project.name).tag(ProjectID?.some(project.id))
+                    }
+                } label: { Text("newTerminal.project") }
+                    .onChange(of: projectID) { _, _ in folder = project?.folder ?? "" }
+            }
 
             LabeledContent("newTerminal.folder") {
                 HStack {
@@ -92,12 +97,12 @@ struct NewTerminalSheet: View {
                 Button("editor.cancel") { dismiss() }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("newTerminal.create") { create() }
+                Button(targetPane == nil ? LocalizedStringKey("newTerminal.create") : "newSubTab.add") { create() }
                     .disabled(problem != nil)
                     .accessibilityIdentifier("editor.confirm")
             }
         }
-        .navigationTitle(Text("newTerminal.title"))
+        .navigationTitle(Text(targetPane == nil ? LocalizedStringKey("newTerminal.title") : "newSubTab.title"))
         .onAppear(perform: loadInitial)
         .onChange(of: agent) { _, _ in unrestricted = startsUnrestricted }
     }
@@ -108,6 +113,7 @@ struct NewTerminalSheet: View {
 
     private var problem: LocalizedStringKey? {
         guard project != nil else { return "newTerminal.problem.project" }
+        if let targetPane, workspace.document.pane(targetPane) == nil { return "newSubTab.problem.pane" }
         var isDirectory: ObjCBool = false
         let path = expanded(folder)
         if path.isEmpty || !FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) || !isDirectory.boolValue {
@@ -121,6 +127,9 @@ struct NewTerminalSheet: View {
         agent = last.flatMap { agents.contains($0) ? $0 : nil } ?? (agents.contains(.claude) ? .claude : agents.first ?? .shell)
         projectID = initialProject.flatMap { workspace.document.project($0)?.id } ?? workspace.document.projects.first?.id
         folder = project?.folder ?? ""
+        if let targetPane, let found = workspace.document.pane(targetPane) {
+            folder = found.pane.activeTab?.workingDirectory ?? found.project.folder
+        }
         unrestricted = startsUnrestricted
     }
 
@@ -147,8 +156,14 @@ struct NewTerminalSheet: View {
             unrestricted: descriptor?.unrestrictedFlag != nil && unrestricted,
             initialPrompt: descriptor?.isShell == false && !text.isEmpty ? text : nil
         )
-        workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newTerminal")) {
-            $0.addPane(to: project.id, tab: tab)
+        if let targetPane {
+            workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newSubTab")) {
+                $0.addTab(tab, to: targetPane)
+            }
+        } else {
+            workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newTerminal")) {
+                $0.addPane(to: project.id, tab: tab)
+            }
         }
         environment.preferences?.update { $0.lastAgent = agent.rawValue }
         dismiss()

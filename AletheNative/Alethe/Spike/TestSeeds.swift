@@ -21,6 +21,10 @@ enum TestSeeds {
             let web = doc.addProject(name: "web", folder: "/private/tmp", color: .teal)
             for title in ["one", "two", "three"] { doc.addPane(to: api, tab: PaneTab(agent: "shell", title: title)) }
             doc.addPane(to: web, tab: PaneTab(agent: "shell", title: "four"))
+        case "subtabs":
+            let project = doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
+            let pane = doc.addPane(to: project, tab: PaneTab(agent: "shell", title: "one"))
+            if let pane { doc.addTab(PaneTab(agent: "shell", title: "two"), to: pane) }
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"

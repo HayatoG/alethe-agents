@@ -63,16 +63,22 @@ public struct Pane: Codable, Hashable, Sendable, Identifiable {
     public var id: PaneID
     public var tabs: [PaneTab]
     public var activeTabID: TabID?
+    /// The sub-tabs lane shown with a single tab (upstream `laneVisible`); nil means hidden. With
+    /// several tabs the lane is always shown.
+    public var laneVisible: Bool?
 
-    public init(id: PaneID = .make(), tabs: [PaneTab], activeTabID: TabID? = nil) {
+    public init(id: PaneID = .make(), tabs: [PaneTab], activeTabID: TabID? = nil, laneVisible: Bool? = nil) {
         self.id = id
         self.tabs = tabs
         self.activeTabID = activeTabID ?? tabs.first?.id
+        self.laneVisible = laneVisible
     }
 
     public var activeTab: PaneTab? {
         tabs.first { $0.id == activeTabID } ?? tabs.first
     }
+
+    public var isLaneVisible: Bool { tabs.count > 1 || laneVisible == true }
 }
 
 public struct Project: Codable, Hashable, Sendable, Identifiable {

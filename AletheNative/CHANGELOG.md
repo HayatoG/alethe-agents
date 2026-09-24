@@ -39,4 +39,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   theme, interface size, enabled agents, CLI paths and language) over from the Windows/Tauri app's data.
   A summary shows what will be added and what is left out before importing, the import can be undone
   with ⌘Z, and the Tauri app's files are only read.
+- Sub-tabs: a terminal can hold several agents or shells. A lane on the pane's left edge switches
+  between them, adds one with + (or New Sub-tab… in the pane's or the sidebar's menu) and closes them,
+  undoable with ⌘Z. The lane appears by itself when a terminal has more than one sub-tab and can be
+  shown or hidden from the same menus.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

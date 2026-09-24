@@ -1,0 +1,128 @@
+import AletheDesign
+import AletheModel
+import SwiftUI
+
+/// Vertical strip of a pane's sub-tabs (upstream `SubTabsLane`): one agent icon per tab, the active
+/// one marked by an accent bar, a close button on hover when there is more than one tab, and + to add.
+/// Closing is undoable (⌘Z), so it does not ask first as upstream does.
+struct SubTabsLane: View {
+    let pane: Pane
+    let isFocused: Bool
+    let onActivate: (TabID) -> Void
+    let onClose: (TabID) -> Void
+    let onRestart: (PaneTab) -> Void
+    let onAdd: () -> Void
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(spacing: metrics.space(.xs)) {
+            ScrollView(.vertical) {
+                VStack(spacing: metrics.space(.xs)) {
+                    ForEach(pane.tabs) { tab in
+                        SubTabItem(tab: tab, isActive: tab.id == pane.activeTab?.id, isFocused: isFocused,
+                                   canClose: pane.tabs.count > 1,
+                                   onActivate: { onActivate(tab.id) }, onClose: { onClose(tab.id) },
+                                   onRestart: { onRestart(tab) })
+                            .transition(.scale(scale: 0.85).combined(with: .opacity))
+                    }
+                }
+                .padding(.vertical, metrics.space(.s))
+                .animation(Motion.animation(Motion.quick, reduceMotion: reduceMotion), value: pane.tabs.map(\.id))
+            }
+            .scrollIndicators(.never)
+            .frame(maxHeight: .infinity, alignment: .top)
+
+            Button(action: onAdd) {
+                Image(systemName: "plus")
+                    .font(metrics.font(.caption).weight(.semibold))
+                    .frame(width: metrics.size(26), height: metrics.size(26))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(theme[.textTertiary])
+            .help(Text("subtabs.new"))
+            .accessibilityLabel(Text("subtabs.new"))
+            .accessibilityIdentifier("subtabs.new")
+            .padding(.bottom, metrics.space(.s))
+        }
+        .frame(width: metrics.size(36))
+        .frame(maxHeight: .infinity)
+        .background(theme[.shapeTabsLaneBg])
+        .overlay(alignment: .trailing) {
+            Rectangle().fill(theme[.shapeTabsLaneBorder]).frame(width: 1)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("subtabs.lane")
+    }
+}
+
+private struct SubTabItem: View {
+    let tab: PaneTab
+    let isActive: Bool
+    let isFocused: Bool
+    let canClose: Bool
+    let onActivate: () -> Void
+    let onClose: () -> Void
+    let onRestart: () -> Void
+    @State private var isHovered = false
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    private var name: String { tab.title ?? AgentLabels.name(for: tab.agent) }
+
+    var body: some View {
+        Button(action: onActivate) {
+            Image(systemName: tab.agent == "shell" ? "terminal" : "sparkles")
+                .font(metrics.font(.footnote))
+                .foregroundStyle(theme[isActive ? AgentTokens.accent(for: tab.agent) : .textSecondary])
+                .frame(width: metrics.size(26), height: metrics.size(26))
+                .background(
+                    RoundedRectangle(cornerRadius: metrics.radius(.sm) * 1.5)
+                        .fill(theme[isActive ? .panelHover : .shapeTabsLaneBg])
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .leading) {
+            if isActive {
+                // Accent bar on the lane's leading edge (upstream `.active::before`).
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(theme[isFocused ? .accent : .borderStrong])
+                    .frame(width: 2, height: metrics.size(16))
+                    .offset(x: -metrics.space(.xs) - 1)
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if canClose && isHovered {
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: metrics.size(7), weight: .bold))
+                        .frame(width: metrics.size(12), height: metrics.size(12))
+                        .background(Circle().fill(theme[.bgElevated]))
+                        .overlay(Circle().strokeBorder(theme[.border]))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(theme[.textSecondary])
+                .offset(x: metrics.size(3), y: -metrics.size(3))
+                .help(Text("subtabs.close"))
+                .accessibilityLabel(Text("subtabs.close"))
+                .accessibilityIdentifier("subtabs.close")
+            }
+        }
+        .onHover { isHovered = $0 }
+        .help(Text(verbatim: name))
+        .contextMenu {
+            Button("terminal.restart", action: onRestart)
+            if canClose {
+                Divider()
+                Button("subtabs.close", action: onClose)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(verbatim: name))
+        .accessibilityAddTraits(isActive ? .isSelected : [])
+        .accessibilityIdentifier("subtab.\(tab.title ?? tab.agent)")
+    }
+}

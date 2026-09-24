@@ -156,15 +156,67 @@ extension WorkspaceDocument {
         }
     }
 
-    /// Removes a tab; a pane left without tabs is closed.
+    /// The pane holding a tab.
+    public func paneHolding(_ tabID: TabID) -> (project: Project, pane: Pane)? {
+        for project in projects {
+            if let pane = project.panes.first(where: { $0.tabs.contains { $0.id == tabID } }) { return (project, pane) }
+        }
+        return nil
+    }
+
+    /// Removes a tab; a pane left without tabs is closed. Closing the active tab shows the next one,
+    /// or the previous one when it was last (upstream `closeSubTab`).
     public mutating func closeTab(_ tabID: TabID) {
-        guard let (project, pane) = projects.lazy.flatMap({ project in project.panes.map { (project, $0) } })
-            .first(where: { $0.1.tabs.contains { $0.id == tabID } }) else { return }
+        guard let (_, pane) = paneHolding(tabID) else { return }
         if pane.tabs.count == 1 { return closePane(pane.id) }
-        updateProject(project.id) { project in
-            guard let index = project.panes.firstIndex(where: { $0.id == pane.id }) else { return }
-            project.panes[index].tabs.removeAll { $0.id == tabID }
-            if project.panes[index].activeTabID == tabID { project.panes[index].activeTabID = project.panes[index].tabs.first?.id }
+        updatePane(pane.id) { pane in
+            guard let index = pane.tabs.firstIndex(where: { $0.id == tabID }) else { return }
+            let wasActive = pane.activeTab?.id == tabID
+            pane.tabs.remove(at: index)
+            if wasActive { pane.activeTabID = pane.tabs[min(index, pane.tabs.count - 1)].id }
+        }
+    }
+
+    /// Adds a sub-tab to a pane, shows it and focuses the pane.
+    @discardableResult
+    public mutating func addTab(_ tab: PaneTab, to paneID: PaneID) -> Bool {
+        guard let (project, _) = pane(paneID) else { return false }
+        updatePane(paneID) { pane in
+            pane.tabs.append(tab)
+            pane.activeTabID = tab.id
+        }
+        open(project.id)
+        workspace.focusedPaneID = paneID
+        return true
+    }
+
+    /// Shows a sub-tab in its pane and focuses the pane.
+    public mutating func activateTab(_ tabID: TabID) {
+        guard let (project, pane) = paneHolding(tabID) else { return }
+        if pane.activeTab?.id != tabID { updatePane(pane.id) { $0.activeTabID = tabID } }
+        workspace.focusedPaneID = pane.id
+        workspace.selectedProjectID = project.id
+    }
+
+    /// The tab `offset` places after the active one, wrapping around.
+    public func tab(_ offset: Int, from paneID: PaneID) -> TabID? {
+        guard let (_, pane) = pane(paneID), !pane.tabs.isEmpty else { return nil }
+        let current = pane.tabs.firstIndex { $0.id == pane.activeTab?.id } ?? 0
+        let count = pane.tabs.count
+        return pane.tabs[((current + offset) % count + count) % count].id
+    }
+
+    public mutating func setLaneVisible(_ visible: Bool, for paneID: PaneID) {
+        updatePane(paneID) { $0.laneVisible = visible ? true : nil }
+    }
+
+    public mutating func updatePane(_ paneID: PaneID, _ body: (inout Pane) -> Void) {
+        for p in projects.indices {
+            if let q = projects[p].panes.firstIndex(where: { $0.id == paneID }) {
+                body(&projects[p].panes[q])
+                projects[p].panes[q].id = paneID
+                return
+            }
         }
     }
 

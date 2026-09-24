@@ -164,17 +164,19 @@ struct SidebarActions {
         }
     }
 
+    func setLaneVisible(_ visible: Bool, for pane: PaneID) {
+        workspace.update { $0.setLaneVisible(visible, for: pane) }
+    }
+
     func select(_ item: SidebarItem?) {
         workspace.update { doc in
             switch item {
             case .project(let id):
                 doc.open(id)
             case .tab(let tabID):
-                for project in doc.projects {
-                    if let pane = project.panes.first(where: { $0.tabs.contains { $0.id == tabID } }) {
-                        doc.open(project.id)
-                        doc.workspace.focusedPaneID = pane.id
-                    }
+                if let project = doc.paneHolding(tabID)?.project {
+                    doc.open(project.id)
+                    doc.activateTab(tabID)
                 }
             case .group, .none:
                 break
