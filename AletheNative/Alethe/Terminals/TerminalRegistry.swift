@@ -127,7 +127,11 @@ final class TerminalRegistry {
                 ? Set(CodexSessions.snapshot(cwd: cwd).map(\.id)) : nil
             let view = try TerminalPaneView(launch: command.ptyLaunch(size: PTYSize(columns: 80, rows: 24)),
                                             theme: environment.theme, fontSize: environment.terminalFontSize,
-                                            forceKillNotice: String(localized: "terminal.forceKilled"))
+                                            forceKillNotice: String(localized: "terminal.forceKilled"),
+                                            promptHistory: environment.promptHistory?.document.histories[tab.id.rawValue] ?? [])
+            view.onPromptHistoryChange = { [weak environment] entries in
+                environment?.promptHistory?.update { $0.histories[tab.id.rawValue] = entries }
+            }
             view.onExit = { [weak self, weak view, weak environment] code in
                 guard let self, let view, self.views[tab.id] === view else { return }
                 // A double ⌃C is the user's choice, not a failed resume: show it ended.

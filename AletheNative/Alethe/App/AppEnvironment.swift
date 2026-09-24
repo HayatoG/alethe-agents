@@ -13,6 +13,7 @@ final class AppEnvironment {
     private(set) var profiles: DocumentModel<ProfileIndexDocument>?
     private(set) var workspace: WorkspaceModel?
     private(set) var preferences: PreferencesModel?
+    private(set) var promptHistory: PromptHistoryModel?
     private(set) var locations: DataLocations?
     /// Sheet requested by a menu, the sidebar or the workspace.
     var editorRequest: EditorRequest?
@@ -50,8 +51,13 @@ final class AppEnvironment {
         let profile = profiles.document.activeProfile.id
         async let workspace = WorkspaceModel.load(from: locations.workspace(profile))
         async let preferences = PreferencesModel.load(from: locations.preferences(profile))
-        let (loadedWorkspace, loadedPreferences) = await (workspace, preferences)
+        async let promptHistory = PromptHistoryModel.load(from: locations.promptHistory(profile))
+        let (loadedWorkspace, loadedPreferences, loadedHistory) = await (workspace, preferences, promptHistory)
         loadedWorkspace.update { $0.repair() }
+        let tabs = Set(loadedWorkspace.document.projects.flatMap(\.panes).flatMap(\.tabs).map(\.id))
+        if loadedHistory.document.histories.keys.contains(where: { !tabs.contains(TabID(rawValue: $0)) }) {
+            loadedHistory.update { $0.prune(keeping: tabs) }
+        }
         #if DEBUG
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
             loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }
@@ -60,6 +66,7 @@ final class AppEnvironment {
         self.profiles = profiles
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences
+        self.promptHistory = loadedHistory
     }
 
     /// Writes every pending change; called before the app quits.
@@ -67,6 +74,7 @@ final class AppEnvironment {
         terminals.terminateAll()
         await workspace?.flush()
         await preferences?.flush()
+        await promptHistory?.flush()
         await profiles?.flush()
     }
 

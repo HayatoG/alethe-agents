@@ -53,4 +53,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Esc closes the bar.
 - Paste a screenshot or a copied image into a terminal with ⌘V: it is saved as a PNG and its path is
   typed in, ready for an agent to open. Files and images dragged onto a terminal paste as their paths.
+- Prompt history per terminal: ⌥⌘↑ / ⌥⌘↓ (Terminal › Older / Newer Prompt from History) bring back
+  what you sent before, and each terminal remembers its last 50 prompts across relaunches.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

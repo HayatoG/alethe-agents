@@ -52,6 +52,7 @@ public struct ProfileIndexDocument: VersionedDocument, Hashable {
 ///     <root>/profiles.json
 ///     <root>/profiles/<profile id>/workspace.json
 ///     <root>/profiles/<profile id>/preferences.json
+///     <root>/profiles/<profile id>/prompt-history.json
 ///     <root>/profiles/<profile id>/scrollback/<tab id>.bin
 ///
 /// `root` is `~/Library/Application Support/com.kc1t.alethe.mac` in the app and a temporary
@@ -76,6 +77,7 @@ public struct DataLocations: Sendable, Hashable {
 
     public func workspace(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "workspace.json") }
     public func preferences(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "preferences.json") }
+    public func promptHistory(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "prompt-history.json") }
     public func scrollback(_ id: ProfileID) -> URL {
         profileDirectory(id).appending(path: "scrollback", directoryHint: .isDirectory)
     }

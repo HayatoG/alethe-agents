@@ -93,3 +93,12 @@ import Testing
         #expect(decoded.pane(pane)?.pane.laneVisible == nil)
     }
 }
+
+@Suite struct PromptHistoryDocumentTests {
+    @Test func pruneKeepsOnlyExistingTabs() {
+        let kept = TabID.make(), gone = TabID.make()
+        var doc = PromptHistoryDocument(histories: [kept.rawValue: ["a"], gone.rawValue: ["b"]])
+        doc.prune(keeping: [kept])
+        #expect(doc.histories == [kept.rawValue: ["a"]])
+    }
+}

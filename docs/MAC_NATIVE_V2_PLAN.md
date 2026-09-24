@@ -1,7 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-5, tests run and passing; manual
-> checks owed: prompt redraw after resize (P2-3), image paste and drops (P2-5). Next: P2-6. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-6 (P2-1…P2-5 tested; P2-6 compiled,
+> tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and drops (P2-5),
+> prompt recall (P2-6). Next: P2-7. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -609,12 +610,13 @@ Principles from the apple-design guidance, translated to SwiftUI/AppKit.
 | Ctrl+1…9 | ⌘1…9 | Jump to project N |
 | Alt+← / Alt+→ | ⌘[ / ⌘] | History back/forward |
 | Ctrl+Tab / Ctrl+Shift+Tab | ⌃Tab / ⌃⇧Tab | Cycle workspace tabs (Mac-standard; delivered to terminal when it has focus and no tab exists) |
-| Shift+Tab, Ctrl+PgUp/PgDn | ⌥⌘↑ / ⌥⌘↓ | Cycle terminals (Shift+Tab is left to the terminal) |
+| Shift+Tab, Ctrl+PgUp/PgDn | ⌥⌘← / ⌥⌘→ | Cycle terminals (Shift+Tab is left to the terminal; ⌥⌘↑/↓ went to prompt history in P2-6) |
 | Ctrl+B | ⌃⌘S | Toggle sidebar (standard) |
 | Ctrl + / − / 0 | ⌘+ / ⌘− / ⌘0 | UI zoom |
 | Ctrl+E | ⌘E is "Use Selection for Find" on Mac → dictation uses Fn-Fn / ⌥⌘D | Dictation |
 | Ctrl+Enter (git) | ⌘↩ | Commit |
-| Ctrl+↑/↓ (prompt history) | ⌥⌘↑/↓ inside the prompt | Prompt history — final binding decided in P2 with UI tests |
+| Ctrl+↑/↓ (prompt history) | ⌥⌘↑ / ⌥⌘↓ | Prompt history (P2-6; ⌃↑/⌃↓ belong to Mission Control) |
+| — | ⌘↑ / ⌘↓ | Previous / next prompt mark (P2-3) |
 | — | ⌘F / ⌘G / ⇧⌘G | Terminal search |
 | — | ⌘, | Settings |
 
@@ -1053,8 +1055,21 @@ they run per the test cadence above.
   *Tests (written 2026-09-24, run and passing in the full run after P2-5):* `SmartPasteTests` (5). No UI test: the
   terminal's text is not readable through accessibility; image paste and drops are owed as a manual
   check.
-- [ ] **P2-6 (M) Prompt history.** Per-tab history of submitted prompts, ⌃↑/⌃↓ to recall, persisted per
+- [x] **P2-6 (M) Prompt history.** Per-tab history of submitted prompts, ⌃↑/⌃↓ to recall, persisted per
   profile with a cap. *Tests:* U (port of upstream cases), UI. *Parity:* TERM-5.
+  *Done:* `AletheTerminal/PromptHistory` ports `applyPromptHistoryInput` + `navigateHistory` (lines of
+  2+ characters, no consecutive duplicates, last 50, pastes over 4 KiB never kept, ⌃U and backspace
+  followed; recall writes ⌃U + the entry; past the newest comes an empty line), reusing the first
+  attempt's port with two fixes: `"\r\n"` is one Swift `Character`, and escape sequences (arrow keys,
+  Ghostty's bracketed-paste markers) are skipped instead of landing in the line as `[A`.
+  `TerminalPaneView` records keyboard input on the session's write path and exposes `recallPrompt`;
+  `AletheModel/PromptHistoryDocument` persists every tab's history in the profile's
+  `prompt-history.json` (debounced atomic `DocumentModel`, pruned of closed tabs at load).
+  Terminal menu: Older / Newer Prompt from History, ⌥⌘↑ / ⌥⌘↓.
+  *Deviation:* ⌃↑/⌃↓ are Mission Control and App Exposé on macOS; the binding is ⌥⌘↑/⌥⌘↓ (§6.3).
+  *Tests (written, not run — owner decision 2026-09-24):* `PromptHistoryTests` (7),
+  `PromptHistoryDocumentTests` (1); package and app build compile. No UI test: the terminal's text is
+  not readable through accessibility.
 - [ ] **P2-7 (L) Scrollback persistence + reattach.** Ring buffer flushed to `scrollback/<tab>.bin`
   (bounded, debounced, atomic), replayed on relaunch before the resumed process draws; clear
   scrollback action. *Tests:* U (file format, truncation), P (flush cost with 10 busy terminals).
@@ -1181,7 +1196,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |
 | TERM-3 | Terminal search | P0 spike, P2 | Done | P2-4; Ghostty search is case-insensitive only |
 | TERM-4 | Smart copy/paste | P2 | Done | P2-5; paths backslash-escaped (macOS convention) |
-| TERM-5 | Prompt history | P2 | Not started | |
+| TERM-5 | Prompt history | P2 | Done | P2-6; ⌥⌘↑/⌥⌘↓ |
 | TERM-6 | Clickable links | P2 | Not started | |
 | TERM-7 | Terminal themes/font | P1 | Done | App theme + zoom-scaled font (P1-7) |
 | TERM-8 | Restart / command-not-found overlays | P1 | Done | Install button comes with AG-5 |

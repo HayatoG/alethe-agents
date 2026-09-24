@@ -21,6 +21,13 @@ struct TerminalCommands: Commands {
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(focusedTerminal == nil)
             Divider()
+            Button("menu.terminal.olderPrompt") { focusedTerminal?.recallPrompt(.older) }
+                .keyboardShortcut(.upArrow, modifiers: [.command, .option])
+                .disabled(focusedTerminal == nil)
+            Button("menu.terminal.newerPrompt") { focusedTerminal?.recallPrompt(.newer) }
+                .keyboardShortcut(.downArrow, modifiers: [.command, .option])
+                .disabled(focusedTerminal == nil)
+            Divider()
             Button("menu.terminal.previousPrompt") { focusedTerminal?.jumpToPrompt(-1) }
                 .keyboardShortcut(.upArrow, modifiers: .command)
                 .disabled(focusedTerminal == nil)

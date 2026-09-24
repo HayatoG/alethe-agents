@@ -1259,6 +1259,23 @@
         }
       }
     },
+    "menu.terminal.newerPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Newer Prompt from History"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prompt mais recente do histórico"
+          }
+        }
+      }
+    },
     "menu.terminal.nextPrompt" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1272,6 +1289,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Próximo prompt"
+          }
+        }
+      }
+    },
+    "menu.terminal.olderPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Older Prompt from History"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prompt mais antigo do histórico"
           }
         }
       }

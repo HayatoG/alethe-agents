@@ -19,6 +19,10 @@ public final class TerminalPaneView: NSView {
     private let forceKill = ForceKillState()
     /// Find bar state (⌘F).
     public let search = TerminalSearch()
+    private let history: PromptHistoryState
+
+    /// Called on the main actor with the new entries whenever a submitted prompt changes the history.
+    public var onPromptHistoryChange: (([String]) -> Void)?
 
     public var onExit: ((Int32) -> Void)?
 
@@ -27,16 +31,19 @@ public final class TerminalPaneView: NSView {
 
     /// - Parameter forceKillNotice: line printed in the terminal when a double ⌃C kills the process.
     public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize,
-                forceKillNotice: String = "Force kill: process terminated") throws {
+                forceKillNotice: String = "Force kill: process terminated", promptHistory: [String] = []) throws {
         let process = try PTYProcess(launch)
         self.process = process
         let tap = TerminalIOTap()
         self.tap = tap
+        let history = PromptHistoryState(PromptHistory(entries: promptHistory))
+        self.history = history
         let forceKill = forceKill
         let notice = Data("\r\n\u{1b}[33m[\(forceKillNotice)]\u{1b}[0m\r\n".utf8)
         session = InMemoryTerminalSession(
             write: { data in
                 tap.input(data)
+                history.record(data)
                 if forceKill.register(data) {
                     forceKill.session?.receive(notice)
                     ProcessTree.kill(process.pid)
@@ -58,6 +65,7 @@ public final class TerminalPaneView: NSView {
         super.init(frame: .zero)
 
         forceKill.session = session
+        history.onChange = { [weak self] entries in self?.onPromptHistoryChange?(entries) }
         terminalView.configuration = TerminalSurfaceOptions(backend: .inMemory(session))
         terminalView.delegate = self
         registerForDraggedTypes([.fileURL] + SmartPaste.imageTypes)
@@ -191,6 +199,19 @@ public final class TerminalPaneView: NSView {
         terminalView.jumpToPrompt(by: Int16(clamping: delta))
     }
 
+    // MARK: - Prompt history
+
+    /// Replaces the line being typed with an older or newer submitted prompt (upstream ⌃↑ / ⌃↓).
+    /// False when the tab has no history yet.
+    @discardableResult
+    public func recallPrompt(_ direction: PromptHistory.Direction) -> Bool {
+        guard let entry = history.recall(direction) else { return false }
+        let data = Data(PromptHistory.recallInput(entry).utf8)
+        tap.input(data)
+        process.write(data)
+        return true
+    }
+
     // MARK: - Search (Ghostty binding actions)
 
     /// Opens the find bar (or focuses it again), searching `needle` when given.
@@ -261,6 +282,26 @@ extension TerminalPaneView: TerminalSurfaceSearchDelegate {
 
     public func terminalDidUpdateSearchSelected(_ selected: Int?) {
         search.selected = selected
+    }
+}
+
+/// Prompt history shared with the session's write callback (any thread).
+private final class PromptHistoryState: @unchecked Sendable {
+    private let state: Mutex<PromptHistory>
+    /// Set once after init, read on the main actor.
+    @MainActor var onChange: (([String]) -> Void)?
+
+    init(_ history: PromptHistory) { state = Mutex(history) }
+
+    func record(_ input: Data) {
+        guard let text = String(data: input, encoding: .utf8) else { return }
+        let changed: [String]? = state.withLock { $0.record(text) ? $0.entries : nil }
+        guard let changed else { return }
+        Task { @MainActor [weak self] in self?.onChange?(changed) }
+    }
+
+    func recall(_ direction: PromptHistory.Direction) -> String? {
+        state.withLock { $0.recall(direction) }
     }
 }
 
