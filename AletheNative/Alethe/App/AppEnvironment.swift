@@ -58,6 +58,7 @@ final class AppEnvironment {
         if loadedHistory.document.histories.keys.contains(where: { !tabs.contains(TabID(rawValue: $0)) }) {
             loadedHistory.update { $0.prune(keeping: tabs) }
         }
+        Self.removeOrphanScrollback(in: locations.scrollback(profile), keeping: tabs)
         #if DEBUG
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
             loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }
@@ -67,6 +68,21 @@ final class AppEnvironment {
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences
         self.promptHistory = loadedHistory
+    }
+
+    /// The saved output of a terminal tab (`scrollback/<tab>.bin` in the active profile).
+    func scrollbackFile(for tab: TabID) -> ScrollbackFile? {
+        guard let locations, let profile = profiles?.document.activeProfile.id else { return nil }
+        return ScrollbackFile(url: locations.scrollback(profile).appending(path: "\(tab.rawValue).bin"))
+    }
+
+    /// Scrollback of tabs that no longer exist (closed while the app was not running, or by undo).
+    private static func removeOrphanScrollback(in directory: URL, keeping tabs: Set<TabID>) {
+        let names = Set(tabs.map { "\($0.rawValue).bin" })
+        let files = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
+        for file in files where file.pathExtension == "bin" && !names.contains(file.lastPathComponent) {
+            try? FileManager.default.removeItem(at: file)
+        }
     }
 
     /// Writes every pending change; called before the app quits.

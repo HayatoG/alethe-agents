@@ -20,6 +20,8 @@ public final class TerminalPaneView: NSView {
     /// Find bar state (⌘F).
     public let search = TerminalSearch()
     private let history: PromptHistoryState
+    /// Where this terminal's output is kept across relaunches; nil for throwaway terminals.
+    public let scrollback: ScrollbackFile?
 
     /// Called on the main actor with the new entries whenever a submitted prompt changes the history.
     public var onPromptHistoryChange: (([String]) -> Void)?
@@ -31,13 +33,15 @@ public final class TerminalPaneView: NSView {
 
     /// - Parameter forceKillNotice: line printed in the terminal when a double ⌃C kills the process.
     public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize,
-                forceKillNotice: String = "Force kill: process terminated", promptHistory: [String] = []) throws {
+                forceKillNotice: String = "Force kill: process terminated", promptHistory: [String] = [],
+                scrollback: ScrollbackFile? = nil) throws {
         let process = try PTYProcess(launch)
         self.process = process
         let tap = TerminalIOTap()
         self.tap = tap
         let history = PromptHistoryState(PromptHistory(entries: promptHistory))
         self.history = history
+        self.scrollback = scrollback
         let forceKill = forceKill
         let notice = Data("\r\n\u{1b}[33m[\(forceKillNotice)]\u{1b}[0m\r\n".utf8)
         session = InMemoryTerminalSession(
@@ -82,9 +86,16 @@ public final class TerminalPaneView: NSView {
 
         let session = session
         let activity = activity
+        // The previous run's output first, then a reset of the modes it left on, then the new
+        // process (upstream `attach_pty` replay). The session buffers it until the view attaches.
+        if let restored = scrollback?.load(), !restored.isEmpty {
+            session.receive(restored + ScrollbackFile.replayReset)
+            scrollback?.append(ScrollbackFile.replayReset)
+        }
         process.onOutput = { data in
             activity.touch()
             tap.output(data)
+            scrollback?.append(data)
             session.receive(data)
         }
         // The session is deliberately not `finish`ed: Ghostty would print its own "Process exited.
@@ -197,6 +208,12 @@ public final class TerminalPaneView: NSView {
     @discardableResult
     public func jumpToPrompt(_ delta: Int) -> Bool {
         terminalView.jumpToPrompt(by: Int16(clamping: delta))
+    }
+
+    /// Clears the screen and scrollback, on screen and on disk (Terminal › Clear Scrollback).
+    public func clearScrollback() {
+        terminalView.performBindingAction("clear_screen")
+        scrollback?.clear()
     }
 
     // MARK: - Prompt history

@@ -55,4 +55,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   typed in, ready for an agent to open. Files and images dragged onto a terminal paste as their paths.
 - Prompt history per terminal: ⌥⌘↑ / ⌥⌘↓ (Terminal › Older / Newer Prompt from History) bring back
   what you sent before, and each terminal remembers its last 50 prompts across relaunches.
+- Terminal output survives quitting: when Alethe reopens, each terminal shows what it had on screen
+  above the new session. Terminal › Clear Scrollback (⌥⌘K) erases it; restarting a terminal starts it
+  clean, and closing it deletes what was saved.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

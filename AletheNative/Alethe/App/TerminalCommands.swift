@@ -20,6 +20,9 @@ struct TerminalCommands: Commands {
             Button("menu.terminal.useSelection") { focusedTerminal?.searchSelection() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(focusedTerminal == nil)
+            Button("menu.terminal.clearScrollback") { focusedTerminal?.clearScrollback() }
+                .keyboardShortcut("k", modifiers: [.command, .option])
+                .disabled(focusedTerminal == nil)
             Divider()
             Button("menu.terminal.olderPrompt") { focusedTerminal?.recallPrompt(.older) }
                 .keyboardShortcut(.upArrow, modifiers: [.command, .option])

@@ -1208,6 +1208,23 @@
         }
       }
     },
+    "menu.terminal.clearScrollback" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Scrollback"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar rolagem"
+          }
+        }
+      }
+    },
     "menu.terminal.find" : {
       "extractionState" : "manual",
       "localizations" : {

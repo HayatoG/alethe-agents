@@ -29,6 +29,9 @@ final class TerminalRegistry {
     @ObservationIgnored private var launches: [TabID: (startedAt: ContinuousClock.Instant, resumed: Bool)] = [:]
     /// Tabs that already fell back to a fresh session once; a second quick exit is shown, not retried.
     @ObservationIgnored private var retriedFresh: Set<TabID> = []
+    /// One saved-output file per tab, shared by every process the tab runs, so clearing, loading and
+    /// appending stay in order on its queue.
+    @ObservationIgnored private var scrollbacks: [TabID: ScrollbackFile] = [:]
     /// Discovery of a new Codex session, per tab, until its id is found.
     @ObservationIgnored private var discoveries: [TabID: Task<Void, Never>] = [:]
 
@@ -47,13 +50,20 @@ final class TerminalRegistry {
 
     private func restart(_ tab: PaneTab, in project: Project, environment: AppEnvironment, fresh: Bool) {
         views.removeValue(forKey: tab.id)?.terminate()
+        // A restart starts clean, like upstream's `restart_pty`.
+        scrollback(for: tab.id, environment: environment)?.clear()
         environment.launchers.invalidate()
         start(tab, in: project, environment: environment, fresh: fresh)
     }
 
-    /// Ends the tab's process and forgets it (the tab was closed or deleted).
-    func close(_ tab: TabID) {
-        views.removeValue(forKey: tab)?.terminate()
+    /// Ends the tab's process and forgets it (the tab was closed or deleted); its saved scrollback
+    /// goes too unless `keepScrollback` (quitting).
+    func close(_ tab: TabID, keepScrollback: Bool = false) {
+        let view = views.removeValue(forKey: tab)
+        if let file = scrollbacks.removeValue(forKey: tab) {
+            if keepScrollback { file.flush() } else { file.delete() }
+        }
+        view?.terminate()
         states.removeValue(forKey: tab)
         generations.removeValue(forKey: tab)
         discoveries.removeValue(forKey: tab)?.cancel()
@@ -67,12 +77,20 @@ final class TerminalRegistry {
         for tab in Set(states.keys).subtracting(tabs) { close(tab) }
     }
 
+    /// Quitting: every process ends, every scrollback is written for the next launch.
     func terminateAll() {
-        for tab in Array(states.keys) { close(tab) }
+        for tab in Array(states.keys) { close(tab, keepScrollback: true) }
     }
 
     func applyAppearance(theme: Theme, fontSize: Float) {
         for view in views.values { view.applyTheme(theme, fontSize: fontSize) }
+    }
+
+    private func scrollback(for tab: TabID, environment: AppEnvironment) -> ScrollbackFile? {
+        if let file = scrollbacks[tab] { return file }
+        let file = environment.scrollbackFile(for: tab)
+        scrollbacks[tab] = file
+        return file
     }
 
     /// Sends the tab's first prompt once, then forgets it so a relaunch does not send it again.
@@ -128,7 +146,8 @@ final class TerminalRegistry {
             let view = try TerminalPaneView(launch: command.ptyLaunch(size: PTYSize(columns: 80, rows: 24)),
                                             theme: environment.theme, fontSize: environment.terminalFontSize,
                                             forceKillNotice: String(localized: "terminal.forceKilled"),
-                                            promptHistory: environment.promptHistory?.document.histories[tab.id.rawValue] ?? [])
+                                            promptHistory: environment.promptHistory?.document.histories[tab.id.rawValue] ?? [],
+                                            scrollback: scrollback(for: tab.id, environment: environment))
             view.onPromptHistoryChange = { [weak environment] entries in
                 environment?.promptHistory?.update { $0.histories[tab.id.rawValue] = entries }
             }

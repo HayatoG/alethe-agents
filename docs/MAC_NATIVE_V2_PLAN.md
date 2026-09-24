@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-6 (P2-1…P2-5 tested; P2-6 compiled,
-> tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and drops (P2-5),
-> prompt recall (P2-6). Next: P2-7. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-7 (P2-1…P2-5 tested; P2-6…P2-7
+> compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-8. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1070,10 +1070,25 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* `PromptHistoryTests` (7),
   `PromptHistoryDocumentTests` (1); package and app build compile. No UI test: the terminal's text is
   not readable through accessibility.
-- [ ] **P2-7 (L) Scrollback persistence + reattach.** Ring buffer flushed to `scrollback/<tab>.bin`
+- [x] **P2-7 (L) Scrollback persistence + reattach.** Ring buffer flushed to `scrollback/<tab>.bin`
   (bounded, debounced, atomic), replayed on relaunch before the resumed process draws; clear
   scrollback action. *Tests:* U (file format, truncation), P (flush cost with 10 busy terminals).
   *Parity:* TERM-10.
+  *Done:* `AletheTerminal/ScrollbackFile` follows upstream `pty.rs`: 4 MiB per terminal, output
+  appended in 250 ms batches on a private serial queue, the file compacted to its last 4 MiB once it
+  passes 8 MiB (appends stay appends; only compaction rewrites, atomically), `load` returns the tail.
+  `TerminalPaneView(scrollback:)` replays the saved output into the session before the new process
+  starts, then `replayReset` (leave the alternate screen, mouse reporting and bracketed paste off,
+  cursor shown, colors reset) so a dead TUI's modes do not leak into the new process; every output
+  chunk is appended. `TerminalRegistry` keeps one file per tab (ordering on one queue): restart clears
+  it (upstream `restart_pty`), closing the tab deletes it, quitting flushes it. `AppEnvironment`
+  removes files of tabs that no longer exist at launch. Terminal › Clear Scrollback ⌥⌘K (Ghostty
+  `clear_screen` + the file).
+  *Limits:* GhosttyKit buffers at most 1 MiB for a surface not yet attached, so a replay shows the last
+  1 MiB of the saved 4 MiB. ⌘K stays free for Find/Jump (P2-25).
+  *Tests (written, not run — owner decision 2026-09-24):* `ScrollbackFileTests` (4), P
+  `ScrollbackFilePerformanceTests.testTenBusyTerminalsFlushCost` (10 terminals × 1 MiB). Manual check
+  owed: quit with output on screen, relaunch, output is back above the new prompt.
 - [ ] **P2-8 (M) Pane kinds + Add Content.** Model v2: `Pane.content` (terminal | markdown | image | video
   | diff | web) with a migration from v1; Add Content sheet listing the kinds (unavailable kinds
   hidden until their task lands). *Tests:* U (migration golden), UI. *Parity:* WS-11.
@@ -1201,7 +1216,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-7 | Terminal themes/font | P1 | Done | App theme + zoom-scaled font (P1-7) |
 | TERM-8 | Restart / command-not-found overlays | P1 | Done | Install button comes with AG-5 |
 | TERM-9 | Double ^C force-kill | P2 | Done | P2-2; kills the whole process tree |
-| TERM-10 | Scrollback persistence + reattach | P2 | Not started | |
+| TERM-10 | Scrollback persistence + reattach | P2 | Done | P2-7; replay limited to the last 1 MiB by GhosttyKit |
 | TERM-11 | `alethe` CLI shim | P5 | Not started | |
 | SB-1 | Project tree (Normal/Clean) | P1 | Partial | Tree, reorder, drag and drop, context menus (P1-4); Clean mode with UI-2 |
 | SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Partial | Name, color, folder, group (P1-5); clone, marker, git init, stack in P5 |
