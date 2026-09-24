@@ -69,4 +69,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   building on localhost, docs, anything over http(s) — with back, forward, reload and an address bar.
   Pages are private (nothing is kept after closing) and, while hidden, are released to save memory
   unless you choose to keep them loaded.
+- ⌘-click a link in a terminal: Markdown, images and videos open as panes beside it, other files in
+  their app, folders in Finder, web addresses in your browser — or in a web pane with ⌥⌘-click.
+  Relative paths follow the shell's current folder, and `file.swift:42` style locations work.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

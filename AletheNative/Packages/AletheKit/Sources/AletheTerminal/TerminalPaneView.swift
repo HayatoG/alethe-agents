@@ -25,6 +25,11 @@ public final class TerminalPaneView: NSView {
 
     /// Called on the main actor with the new entries whenever a submitted prompt changes the history.
     public var onPromptHistoryChange: (([String]) -> Void)?
+    /// A ⌘-clicked link, as Ghostty detected it (URL, path or OSC 8 target). Once set, Ghostty no
+    /// longer opens URLs itself.
+    public var onOpenLink: ((String) -> Void)?
+    /// The shell's current folder, from OSC 7 (shell integration); nil until it reports one.
+    public private(set) var reportedDirectory: String?
 
     public var onExit: ((Int32) -> Void)?
 
@@ -281,6 +286,20 @@ public final class TerminalPaneView: NSView {
     /// Ends the process group: SIGHUP, then SIGKILL if it outlives the grace period.
     public func terminate() {
         process.terminate()
+    }
+}
+
+extension TerminalPaneView: TerminalSurfaceOpenURLDelegate, TerminalSurfacePwdDelegate {
+    public func terminalDidRequestOpenURL(_ url: String, kind: TerminalOpenURLKind) {
+        if let onOpenLink {
+            onOpenLink(url)
+        } else if let target = URL(string: url) {
+            NSWorkspace.shared.open(target)
+        }
+    }
+
+    public func terminalDidChangeWorkingDirectory(_ path: String) {
+        reportedDirectory = TerminalLink.workingDirectory(fromReported: path) ?? reportedDirectory
     }
 }
 

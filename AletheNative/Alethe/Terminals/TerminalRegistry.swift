@@ -148,6 +148,10 @@ final class TerminalRegistry {
                                             forceKillNotice: String(localized: "terminal.forceKilled"),
                                             promptHistory: environment.promptHistory?.document.histories[tab.id.rawValue] ?? [],
                                             scrollback: scrollback(for: tab.id, environment: environment))
+            view.onOpenLink = { [weak environment, weak view] link in
+                guard let environment, let view else { return }
+                environment.openTerminalLink(link, from: view, tab: tab, project: project)
+            }
             view.onPromptHistoryChange = { [weak environment] entries in
                 environment?.promptHistory?.update { $0.histories[tab.id.rawValue] = entries }
             }

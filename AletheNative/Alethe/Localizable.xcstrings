@@ -3843,6 +3843,23 @@
         }
       }
     },
+    "undo.openLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Link"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir link"
+          }
+        }
+      }
+    },
     "undo.removeProject" : {
       "extractionState" : "manual",
       "localizations" : {
