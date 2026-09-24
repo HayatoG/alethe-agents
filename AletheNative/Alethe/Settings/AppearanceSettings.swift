@@ -1,0 +1,157 @@
+import AletheDesign
+import AletheFoundation
+import AletheModel
+import SwiftUI
+
+/// Settings › Appearance: theme, UI zoom and interface language.
+struct AppearanceSettings: View {
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.metrics) private var metrics
+    @State private var language = LanguageSetting().current()
+
+    private var uiScale: Double { environment.preferences?.document.uiScale ?? 1 }
+
+    var body: some View {
+        Form {
+            Section {
+                ThemeGrid()
+            } header: {
+                Text("settings.appearance.theme")
+            }
+
+            Section {
+                LabeledContent {
+                    HStack(spacing: metrics.space(.m)) {
+                        Text(verbatim: uiScale.formatted(.percent.precision(.fractionLength(0))))
+                            .monospacedDigit()
+                            // A new identity per value: SwiftUI keeps a changed Text's accessibility
+                            // value stale, so VoiceOver and UI tests would read the old percentage.
+                            .id(uiScale)
+                            .accessibilityIdentifier("settings.zoom.value")
+                        HStack(spacing: metrics.space(.xs)) {
+                            Button {
+                                environment.preferences?.update { $0.zoom(by: -1) }
+                            } label: {
+                                Label {
+                                    Text("menu.view.zoomOut")
+                                } icon: {
+                                    // Same box for both glyphs: "minus" is shorter and the button would shrink.
+                                    Image(systemName: "minus").frame(width: metrics.size(12), height: metrics.size(12))
+                                }
+                            }
+                            .disabled(uiScale <= PreferencesDocument.uiScaleRange.lowerBound)
+                            .accessibilityIdentifier("settings.zoom.out")
+                            Button {
+                                environment.preferences?.update { $0.zoom(by: 1) }
+                            } label: {
+                                Label {
+                                    Text("menu.view.zoomIn")
+                                } icon: {
+                                    Image(systemName: "plus").frame(width: metrics.size(12), height: metrics.size(12))
+                                }
+                            }
+                            .disabled(uiScale >= PreferencesDocument.uiScaleRange.upperBound)
+                            .accessibilityIdentifier("settings.zoom.in")
+                        }
+                        .labelStyle(.iconOnly)
+                        Button("menu.view.actualSize") {
+                            environment.preferences?.update { $0.uiScale = 1 }
+                        }
+                        .disabled(uiScale == 1)
+                        .accessibilityIdentifier("settings.zoom.reset")
+                    }
+                } label: {
+                    Text("settings.appearance.zoom")
+                    Text("settings.appearance.zoom.help")
+                }
+            }
+            .disabled(environment.preferences == nil)
+
+            Section {
+                Picker(selection: $language) {
+                    Text("settings.appearance.language.system").tag(AppLanguage.system)
+                    ForEach(AppLanguage.allCases.filter { $0 != .system }, id: \.self) { language in
+                        Text(verbatim: language.nativeName ?? language.rawValue).tag(language)
+                    }
+                } label: {
+                    Text("settings.appearance.language")
+                    Text("settings.appearance.language.help")
+                }
+                .accessibilityIdentifier("settings.language")
+
+                if language != environment.launchLanguage {
+                    HStack {
+                        Text("settings.appearance.language.restartNote")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("settings.appearance.language.restart") { AppRelaunch.relaunch() }
+                            .accessibilityIdentifier("settings.language.restart")
+                    }
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("settings.language.restartNote")
+                }
+            }
+        }
+        .formStyle(.grouped)
+        // Sized to its content: the Settings window grows instead of hiding controls in a scroll view.
+        .scrollDisabled(true)
+        .fixedSize(horizontal: false, vertical: true)
+        .onChange(of: language) { _, language in LanguageSetting().set(language) }
+    }
+}
+
+/// The built-in themes as swatch tiles, in the Tauri app's picker order. Selecting one applies it
+/// everywhere at once, terminals included.
+private struct ThemeGrid: View {
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    private var themes: [Theme] {
+        ThemeCatalog.builtinOrder.compactMap { ThemeCatalog.builtin.theme(id: $0) }
+    }
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: metrics.size(100)), spacing: metrics.space(.l))],
+                  spacing: metrics.space(.l)) {
+            ForEach(themes) { option in
+                tile(option)
+            }
+        }
+        .padding(.vertical, metrics.space(.xs))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings.theme")
+    }
+
+    private func tile(_ option: Theme) -> some View {
+        let isSelected = option.id == theme.id
+        return Button {
+            environment.preferences?.update { $0.themeID = option.id }
+        } label: {
+            VStack(spacing: metrics.space(.xs)) {
+                HStack(spacing: 0) {
+                    ForEach(Array(option.swatch.enumerated()), id: \.offset) { _, color in
+                        Rectangle().fill(color.color)
+                    }
+                }
+                .frame(height: metrics.size(34))
+                .clipShape(RoundedRectangle(cornerRadius: metrics.radius(.md)))
+                .overlay {
+                    RoundedRectangle(cornerRadius: metrics.radius(.md))
+                        .strokeBorder(isSelected ? theme[.accent] : theme[.borderSubtle], lineWidth: isSelected ? 2 : 1)
+                }
+                option.localizedName
+                    .font(metrics.font(.footnote))
+                    .foregroundStyle(isSelected ? theme[.textPrimary] : theme[.textSecondary])
+                    .lineLimit(1)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+        .help(option.localizedSummary ?? option.localizedName)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityValue(Text(verbatim: isSelected ? "1" : "0"))
+        .accessibilityIdentifier("settings.theme.\(option.id)")
+    }
+}

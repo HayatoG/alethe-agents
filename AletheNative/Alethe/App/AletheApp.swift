@@ -37,6 +37,7 @@ struct AletheApp: App {
                 .environment(environment)
                 .environment(\.theme, environment.theme)
                 .environment(\.metrics, environment.metrics)
+                .preferredColorScheme(environment.theme.isLight ? .light : .dark)
         }
     }
 }

@@ -42,6 +42,8 @@ final class AppShellTests: XCTestCase {
         let (app, root) = launchAlethe()
         XCTAssertTrue(app.descendants(matching: .any)["workspace.empty"].waitForExistence(timeout: 5))
         app.typeKey(",", modifierFlags: .command)
+        // Settings reopens on the last tab used (kept in the app's defaults, across test runs).
+        app.toolbars.buttons["General"].firstMatch.click()
         let toggle = app.descendants(matching: .any)["settings.alwaysUnrestricted"].firstMatch
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         XCTAssertEqual(toggle.value as? Int, 0, "type=\(toggle.elementType.rawValue) value=\(String(describing: toggle.value))")
@@ -54,6 +56,7 @@ final class AppShellTests: XCTestCase {
         let (relaunched, _) = launchAlethe(dataRoot: root)
         XCTAssertTrue(relaunched.descendants(matching: .any)["workspace.empty"].waitForExistence(timeout: 5))
         relaunched.typeKey(",", modifierFlags: .command)
+        relaunched.toolbars.buttons["General"].firstMatch.click()
         let again = relaunched.descendants(matching: .any)["settings.alwaysUnrestricted"].firstMatch
         XCTAssertTrue(again.waitForExistence(timeout: 10), "settings did not open after relaunch")
         XCTAssertEqual(again.value as? Int, 1)

@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6, P1-9, P1-10. Next:
-> P1-11 → P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 1 in progress** — done: P1-2, P1-3, P1-1, P1-4, P1-5, P1-8, P1-7, P1-6, P1-9, P1-10, P1-11. Next:
+> P1-12 → P1-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -647,6 +647,10 @@ widely shared code. Last full run: P1-10 (`3479868`): 120 package tests, 18 UI t
   only its window (`screencapture -l <window id>`); never send global System Events keystrokes.
 - Localized strings with arguments: dotted key + positional placeholders (`%1$@`) through
   `String(format:)`; the strings gate rejects interpolated keys.
+- A SwiftUI `Text` whose string changes keeps its old accessibility value, so tests (and VoiceOver)
+  read stale text; give it `.id(value)`. Check a screenshot before blaming a "missed" click.
+- The Settings window reopens on the last tab used, stored in the app's real defaults and shared by
+  every test run: tests select their tab explicitly.
 
 Sizes: **S** ≤ half a day, **M** 1–2 days, **L** 3–5 days (split anything larger).
 Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI test, **P** performance
@@ -907,8 +911,22 @@ Test kinds: **U** unit (Swift Testing), **UI** XCUITest, **HT** hit-target UI te
   `--session-id`, saved on the tab. Codex not checked live (CLI not installed on this Mac).
   *Not ported yet:* Codex "active writer" conflict detection, session titles, hook-driven Claude id
   changes (`/clear`, `/resume` inside the CLI; AG-8).
-- [ ] **P1-11 (M) Themes + zoom + language in Settings.** Theme picker, UI zoom via `uiScale`, EN/pt-BR.
+- [x] **P1-11 (M) Themes + zoom + language in Settings.** Theme picker, UI zoom via `uiScale`, EN/pt-BR.
   *Tests:* HT at three zoom levels. *Parity:* UI-1, UI-5, UI-8.
+  *Done:* Settings › Appearance (`Settings/AppearanceSettings`): the 16 built-in themes as swatch
+  tiles in upstream picker order with upstream names/descriptions (`ThemeLabels`, tooltip = summary),
+  applied live to every window and terminal; interface size with − / + / Actual Size (same rounding
+  and 80–150 % bounds as the View menu); language System / English / Português (Brasil). Language is
+  the app's own `AppleLanguages` default (`AletheFoundation/AppLanguage`: the key System Settings ›
+  Language & Region › Applications writes too), so it applies at launch: Settings shows "Applies
+  after restarting" + Restart Now (`App/AppRelaunch`: a helper shell waits for the app to quit and
+  flush, then reopens it with the same arguments minus `-AppleLanguages`/`-AppleLocale`). Not in
+  preferences.json: the language is app-wide, not per profile. Settings also follows the theme's
+  light/dark scheme.
+  *Tests:* `AppLanguageTests` (3); UI `AppearanceTests`: theme applies and survives a relaunch; HT at
+  90 %, 100 % and 120 % (zoom in/out/reset, a theme tile, the language picker and its restart note).
+  Checked live: launched in pt-BR the whole Settings window is Portuguese; Restart Now reopened the
+  app with the data root kept and the language back to System.
 - [ ] **P1-12 (M) TauriImporter.** Read-only import of `projects.json` v9 (groups, projects, terminals,
   core preferences), summary sheet. *Tests:* G with anonymized fixtures, including the v2–v8 shapes the
   upstream migration accepts (import requires v9; older files show a clear message).
@@ -1056,14 +1074,14 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | USE-2 | Activity tracking | P3 | Not started | |
 | USE-3 | RAM control, hibernation, supervisor | P2 | Not started | |
 | USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |
-| UI-1 | Themes (16 + 4) | P0, P1, P4 | Not started | |
+| UI-1 | Themes (16 + 4) | P0, P1, P4 | Partial | 16 built-ins + picker (P1-11); theme packs in P4 |
 | UI-2 | Visual style normal/clean | P1 | Not started | |
 | UI-3 | Motion preference | P1 | Not started | Also follows system Reduce Motion |
 | UI-4 | App icon themes | P5 | Not started | `NSApp.applicationIconImage` |
-| UI-5 | UI zoom | P1 | Not started | Font + metric scale only |
+| UI-5 | UI zoom | P1 | Done | Font + metric scale only; View menu + Settings (P1-11) |
 | UI-6 | Window opacity | — | Won't port | Win32-only upstream; Mac uses materials |
 | UI-7 | Toolbar configuration | P5 | Not started | Native toolbar customization |
-| UI-8 | i18n EN + pt-BR | P0, P1 | Not started | |
+| UI-8 | i18n EN + pt-BR | P0, P1 | Done | String Catalogs (P0-4); language setting + relaunch (P1-11) |
 | SET-1 | Preferences | P1, ongoing | Not started | Settings scene |
 | SET-2 | Feature toggles | P5 | Not started | |
 | SET-3 | Profiles | P1 (base), P5 | Not started | |

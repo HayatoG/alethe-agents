@@ -2,15 +2,18 @@ import AletheDesign
 import AletheModel
 import SwiftUI
 
-/// The standard Settings window (⌘,). Appearance and language arrive with P1-11.
+/// The standard Settings window (⌘,).
 struct SettingsView: View {
     var body: some View {
         TabView {
             Tab("settings.general.tab", systemImage: "gearshape") {
                 GeneralSettings()
             }
+            Tab("settings.appearance.tab", systemImage: "paintpalette") {
+                AppearanceSettings()
+            }
         }
-        .frame(width: 520)
+        .frame(width: 560)
         .scenePadding()
     }
 }
