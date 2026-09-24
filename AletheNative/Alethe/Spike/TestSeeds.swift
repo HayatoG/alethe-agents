@@ -64,6 +64,10 @@ enum TestSeeds {
             try? Data("alpha\nbeta two\ngamma\n".utf8).write(to: file)
             let project = doc.addProject(name: "repo", folder: repo.path, color: .green)
             doc.addPane(to: project, content: .diff(path: nil, staged: false))
+        case "web":
+            // Port 9 (discard) is closed on a Mac: the page fails fast without touching the network.
+            let project = doc.addProject(name: "site", folder: "/private/tmp", color: .blue)
+            doc.addPane(to: project, content: .web(url: "http://127.0.0.1:9/", options: WebPaneOptions()))
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"

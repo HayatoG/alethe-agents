@@ -11,7 +11,7 @@ public enum PaneContent: Hashable, Sendable {
     /// `git diff` of the project, or of one file when `path` is set; `staged` shows the index
     /// (`--staged`) instead of the working tree.
     case diff(path: String?, staged: Bool)
-    case web(url: String)
+    case web(url: String, options: WebPaneOptions)
 
     public enum Kind: String, Codable, CaseIterable, Sendable {
         case terminal, markdown, image, video, diff, web
@@ -54,7 +54,7 @@ public enum PaneContent: Hashable, Sendable {
 }
 
 extension PaneContent: Codable {
-    private enum CodingKeys: String, CodingKey { case kind, path, url, staged }
+    private enum CodingKeys: String, CodingKey { case kind, path, url, staged, options }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -65,7 +65,9 @@ extension PaneContent: Codable {
         case .image: self = .image(path: path ?? "")
         case .video: self = .video(path: path ?? "")
         case .diff: self = .diff(path: path, staged: try container.decodeIfPresent(Bool.self, forKey: .staged) ?? false)
-        case .web: self = .web(url: try container.decodeIfPresent(String.self, forKey: .url) ?? "")
+        case .web:
+            self = .web(url: try container.decodeIfPresent(String.self, forKey: .url) ?? "",
+                        options: try container.decodeIfPresent(WebPaneOptions.self, forKey: .options) ?? WebPaneOptions())
         }
     }
 
@@ -79,8 +81,9 @@ extension PaneContent: Codable {
         case .diff(let path, let staged):
             try container.encodeIfPresent(path, forKey: .path)
             if staged { try container.encode(true, forKey: .staged) }
-        case .web(let url):
+        case .web(let url, let options):
             try container.encode(url, forKey: .url)
+            if options != WebPaneOptions() { try container.encode(options, forKey: .options) }
         }
     }
 }

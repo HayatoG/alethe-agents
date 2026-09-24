@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-11 (P2-1…P2-5 tested; P2-6…P2-11
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-12 (P2-1…P2-5 tested; P2-6…P2-12
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-12. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1159,8 +1159,24 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* `DiffParserTests` (3), `GitDiffTests` (real
   git in a temporary repository), UI `DiffPaneTests` (layouts, staged, close; HT at 90/100/120 %),
   seed `diff`. Compiled.
-- [ ] **P2-12 (L) Web pane.** WKWebView with tabs, address bar, back/forward/reload, resource modes,
+- [x] **P2-12 (L) Web pane.** WKWebView with tabs, address bar, back/forward/reload, resource modes,
   persisted URL. *Tests:* U (URL normalization port), UI, HT. *Parity:* BR-1.
+  *Done:* `AletheModel/WebPane`: `WebAddress.normalize` (port of `normalizeBrowserUrl`),
+  `WebResourceMode` with `hiddenEvictionDelay` (port of `browserHiddenEvictionDelay`: 1 s, 30 s,
+  never; 0 under memory pressure) and `WebPaneOptions` (mode, JavaScript, zoom; upstream
+  `BrowserPaneConfig` without the CDP engine), stored in `PaneContent.web(url:options:)` only when not
+  default. App: `ContentPanes/WebPageModel` (a private WKWebView on a non-persistent data store,
+  KVO-observed title / loading / back / forward, failures kept for an overlay, `target=_blank`
+  opened in place, non-web schemes handed to the system; released after the mode's delay once hidden,
+  recreated on the last address when shown) and `WebPaneView` (back, forward, reload/stop, address
+  field with validation, Private badge, options menu: JavaScript, zoom, While Hidden mode; Open in
+  Browser, Close; toolbar drag reorders). `ContentPaneRegistry` keeps the pages and releases hidden
+  ones on a system memory-pressure event; the address a page settles on is persisted. Add Content
+  gains "Website" (address prompt, localhost:3000 prefilled).
+  *Deviation:* no tabs inside a web pane: upstream has none either (one page per pane).
+  *Tests (written, not run — owner decision 2026-09-24):* `WebPaneTests` (5: URL and policy ports,
+  options decoding), UI `WebPaneTests` (failure overlay, refused address, options, close; HT at
+  90/100/120 %), seed `web` (closed local port, no network). Compiled.
 - [ ] **P2-13 (M) Clickable links.** ⌘-click file/URL/image links in terminals: open in a pane of the
   right kind, in the web pane or the default browser. *Tests:* U (link detection port), UI.
   *Parity:* TERM-6.
@@ -1264,7 +1280,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-8 | Video pane | P2 | Done | P2-10; AVKit |
 | WS-9 | Diff pane | P2 | Done | P2-11; side by side added |
 | WS-10 | Focus mode | P2 | Not started | |
-| WS-11 | Add content | P2 | Partial | Sheet + model v2 (P2-8), Markdown (P2-9); website with BR-1 |
+| WS-11 | Add content | P2 | Done | Markdown (P2-9), image/video (P2-10), Git changes (P2-11), website (P2-12); orchestration with ORC-1 |
 | WS-12 | Link viewer overlay | P2 | Not started | |
 | WS-13 | Empty workspace launcher | P2 | Not started | |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
@@ -1309,7 +1325,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | PR-2 | PR review + squash merge | P4 | Not started | |
 | FS-1 | File explorer + git badges | P4 | Not started | Quick Look |
 | FS-2 | Folder browser | P1 | Replaced | `NSOpenPanel` + Finder drops (P1-4, P1-5) |
-| BR-1 | Web pane | P2 | Not started | WKWebView; CDP engine: Won't port |
+| BR-1 | Web pane | P2 | Done | P2-12, WKWebView (private); CDP engine: Won't port |
 | BR-2 | Agent page offer | P2 | Not started | |
 | BR-3 | Playwright MCP browser session | P5 | Not started | |
 | EXT-1 | MCP manager | P5 | Not started | |

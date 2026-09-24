@@ -139,6 +139,18 @@ final class PaneView: NSView {
                 model: model, isFocused: focused,
                 onStagedChange: { context.setContent(.diff(path: path, staged: $0), for: pane.id) },
                 onClose: { context.closePane(pane.id) }, onDrag: onDrag))
+        case .web(let url, let options):
+            setAccessibilityIdentifier("pane.web")
+            let page = context.environment.contentPanes.page(for: pane.id, url: url, options: options)
+            page.onAddressChange = { [weak page] address in
+                context.setContent(.web(url: address.absoluteString, options: page?.options ?? options), for: pane.id)
+            }
+            view = context.hosted(WebPaneView(
+                page: page, isFocused: focused,
+                onOptionsChange: { [weak page] in
+                    context.setContent(.web(url: page?.url?.absoluteString ?? url, options: $0), for: pane.id)
+                },
+                onClose: { context.closePane(pane.id) }, onDrag: onDrag))
         default:
             // Kinds whose pane task has not landed yet are never created (Add Content hides them).
             view = AnyView(EmptyView())

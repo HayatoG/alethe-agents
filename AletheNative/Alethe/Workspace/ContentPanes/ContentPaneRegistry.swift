@@ -1,6 +1,7 @@
 import AletheDocuments
 import AletheModel
 import AVFoundation
+import Foundation
 import Observation
 
 /// Open file-backed panes (Markdown, image, video), one model per pane, kept while the pane exists so a
@@ -12,6 +13,30 @@ final class ContentPaneRegistry {
     private var images: [PaneID: ImageFile] = [:]
     private var players: [PaneID: (path: String, player: AVPlayer)] = [:]
     private var diffs: [PaneID: DiffModel] = [:]
+    private var pages: [PaneID: WebPageModel] = [:]
+    private var memoryPressure: (any DispatchSourceMemoryPressure)?
+
+    func page(for pane: PaneID, url: String, options: WebPaneOptions) -> WebPageModel {
+        if let page = pages[pane] {
+            if page.options != options { page.setOptions(options) }
+            return page
+        }
+        watchMemoryPressure()
+        let page = WebPageModel(url: WebAddress.normalize(url), options: options)
+        pages[pane] = page
+        return page
+    }
+
+    /// The system asks for memory back: hidden pages are released at once (upstream pressure rule).
+    private func watchMemoryPressure() {
+        guard memoryPressure == nil else { return }
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
+        source.setEventHandler { [weak self] in
+            MainActor.assumeIsolated { self?.pages.values.forEach { $0.relieveMemory() } }
+        }
+        source.resume()
+        memoryPressure = source
+    }
 
     func diff(for pane: PaneID, folder: String, path: String?, staged: Bool) -> DiffModel {
         if let model = diffs[pane], model.folder == folder, model.path == path {
@@ -58,6 +83,10 @@ final class ContentPaneRegistry {
             images.removeValue(forKey: pane)
         }
         for pane in diffs.keys where !panes.contains(pane) { diffs.removeValue(forKey: pane) }
+        for (pane, page) in pages where !panes.contains(pane) {
+            page.release()
+            pages.removeValue(forKey: pane)
+        }
         for (pane, entry) in players where !panes.contains(pane) {
             entry.player.pause()
             players.removeValue(forKey: pane)

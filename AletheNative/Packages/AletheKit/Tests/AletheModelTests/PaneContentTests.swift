@@ -7,7 +7,8 @@ import Testing
     @Test func everyKindRoundTrips() throws {
         let contents: [PaneContent] = [
             .terminal, .markdown(path: "/p/README.md"), .image(path: "/p/a.png"), .video(path: "/p/v.mov"),
-            .diff(path: nil, staged: false), .diff(path: "src/a.swift", staged: true), .web(url: "http://localhost:3000"),
+            .diff(path: nil, staged: false), .diff(path: "src/a.swift", staged: true), .web(url: "http://localhost:3000", options: WebPaneOptions()),
+            .web(url: "https://a.dev/", options: WebPaneOptions(resourceMode: .keepAlive, javascriptEnabled: false, zoom: 1.25)),
         ]
         for content in contents {
             let data = try JSONEncoder().encode(content)
@@ -55,7 +56,7 @@ import Testing
         #expect(!added)
         #expect(doc.pane(pane!)?.pane.tabs.isEmpty == true)
         #expect(doc.pane(pane!)?.pane.isLaneVisible == false)
-        #expect(Pane(content: .web(url: "x"), tabs: [PaneTab(agent: "shell")]).tabs.isEmpty)
+        #expect(Pane(content: .web(url: "x", options: WebPaneOptions()), tabs: [PaneTab(agent: "shell")]).tabs.isEmpty)
     }
 }
 

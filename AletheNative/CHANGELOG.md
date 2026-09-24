@@ -65,4 +65,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   refreshed when the file changes) or plays a video with the system player, beside your terminals.
 - Diff panes: Add Content › Git Changes shows a project's uncommitted changes with line numbers,
   unified or side by side, for the working tree or what is staged.
+- Web panes: Add Content › Website shows a live page beside your terminals — the app an agent is
+  building on localhost, docs, anything over http(s) — with back, forward, reload and an address bar.
+  Pages are private (nothing is kept after closing) and, while hidden, are released to save memory
+  unless you choose to keep them loaded.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

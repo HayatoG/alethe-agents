@@ -51,6 +51,22 @@ struct AddContentSheet: View {
             guard panel.runModal() == .OK, let url = panel.url else { return nil }
             return PaneContent.forFile(url.path) ?? .image(path: url.path)
         },
+        Option(kind: .web, title: "addContent.web", detail: "addContent.web.detail", symbol: "globe") { _ in
+            let alert = NSAlert()
+            alert.messageText = String(localized: "addContent.web.prompt")
+            alert.informativeText = String(localized: "addContent.web.hint")
+            let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
+            field.placeholderString = "http://localhost:3000"
+            field.stringValue = "http://localhost:3000"
+            field.setAccessibilityIdentifier("addContent.web.address")
+            alert.accessoryView = field
+            alert.addButton(withTitle: String(localized: "addContent.web.add"))
+            alert.addButton(withTitle: String(localized: "editor.cancel"))
+            alert.window.initialFirstResponder = field
+            guard alert.runModal() == .alertFirstButtonReturn,
+                  let url = WebAddress.normalize(field.stringValue) else { return nil }
+            return .web(url: url.absoluteString, options: WebPaneOptions())
+        },
         Option(kind: .diff, title: "addContent.diff", detail: "addContent.diff.detail", symbol: "plusminus") { _ in
             .diff(path: nil, staged: false)
         },
