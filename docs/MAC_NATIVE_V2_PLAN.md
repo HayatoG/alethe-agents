@@ -633,7 +633,7 @@ affected package suites (`swift test --filter …`, all package tests are cheap)
 classes (`Scripts/uitest.sh -only-testing:AletheUITests/<Class>`), the strings gate and the app build
 when the project changes. Run the full suite (`Scripts/test.sh` + `Scripts/uitest.sh`, which includes
 the real-mouse smoke scripts) every 3 tasks, at the end of each phase, and when a change reaches
-widely shared code. Last full run: P1-6 (`07cf20f`).
+widely shared code. Last full run: P1-10 (`3479868`): 120 package tests, 18 UI tests, both smoke scripts.
 
 **UI-testing gotchas (learned in Phase 1):**
 - XCUITest `typeText` drops lowercase "c" under the owner's Brazilian - Pro layout (real key events
