@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-13 (P2-1…P2-5 tested; P2-6…P2-13
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-14 (P2-1…P2-5 tested; P2-6…P2-14
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13). Next: P2-14. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14). Next: P2-15. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1189,13 +1189,23 @@ they run per the test cadence above.
   open as panes of the project (an existing pane on the same file is focused instead, adding one is
   undoable), other files in their default app, folders in Finder, pages in the default browser, or
   in a web pane with ⌥⌘-click; a missing path beeps.
-  *Deviations:* no link actions menu (upstream's right-click menu: copy, open in editor/explorer);
-  the line number is not passed to an editor yet (SB-6, "open in VS Code").
+  *Deviations:* the line number is not passed to an editor yet (SB-6, "open in VS Code"). The link
+  actions menu came with P2-14.
   *Tests (written, not run — owner decision 2026-09-24):* `TerminalLinkTests` (4). No UI test: a
   link's position in the terminal is not exposed to accessibility; ⌘-click and ⌥⌘-click are owed as
   a manual check. Compiled.
-- [ ] **P2-14 (S) Link viewer overlay.** Quick preview of a clicked file or URL without adding a pane.
+- [x] **P2-14 (S) Link viewer overlay.** Quick preview of a clicked file or URL without adding a pane.
   *Tests:* UI. *Parity:* WS-12.
+  *Done:* ⇧⌘-click on a terminal link opens the link actions menu (upstream's, native `NSMenu` at the
+  mouse): Open in Browser / Open in Pane / Preview / Open with Default App / Show in Finder / Copy
+  Link, per link kind ("Not found" when it resolves to nothing). Preview is
+  `Terminals/LinkPreviewSheet` (upstream `LinkViewerOverlay`): Markdown rendered, images, videos,
+  pages in a private throwaway web view, other files as text (first 512 KB, binary refused); Open and
+  Close (Esc). `EditorRequest.previewLink`.
+  *Deviation:* a sheet over the window instead of a custom overlay (the Mac idiom; same content).
+  *Tests (written, not run — owner decision 2026-09-24):* UI `LinkPreviewTests` (Markdown preview
+  renders, Esc closes) through a debug-only `-AletheUITestPreview` launch argument, since a link's
+  position in the terminal is not reachable from XCUITest. Compiled.
 - [ ] **P2-15 (S) Agent page offer.** When an agent prints a local server URL, offer to open it in a web
   pane. *Tests:* U (detection), UI. *Parity:* BR-2.
 - [ ] **P2-16 (M) Container controls.** Collapse, fullscreen and reorder of project containers; isolate
@@ -1295,7 +1305,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-9 | Diff pane | P2 | Done | P2-11; side by side added |
 | WS-10 | Focus mode | P2 | Not started | |
 | WS-11 | Add content | P2 | Done | Markdown (P2-9), image/video (P2-10), Git changes (P2-11), website (P2-12); orchestration with ORC-1 |
-| WS-12 | Link viewer overlay | P2 | Not started | |
+| WS-12 | Link viewer overlay | P2 | Done | P2-14; sheet + link actions menu (⇧⌘-click) |
 | WS-13 | Empty workspace launcher | P2 | Not started | |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
 | TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); shell integration marks (P2-3); process-tree kill (P2-2); process-tree info later |
@@ -1303,7 +1313,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-3 | Terminal search | P0 spike, P2 | Done | P2-4; Ghostty search is case-insensitive only |
 | TERM-4 | Smart copy/paste | P2 | Done | P2-5; paths backslash-escaped (macOS convention) |
 | TERM-5 | Prompt history | P2 | Done | P2-6; ⌥⌘↑/⌥⌘↓ |
-| TERM-6 | Clickable links | P2 | Done | P2-13; link actions menu not ported |
+| TERM-6 | Clickable links | P2 | Done | P2-13; actions menu P2-14 |
 | TERM-7 | Terminal themes/font | P1 | Done | App theme + zoom-scaled font (P1-7) |
 | TERM-8 | Restart / command-not-found overlays | P1 | Done | Install button comes with AG-5 |
 | TERM-9 | Double ^C force-kill | P2 | Done | P2-2; kills the whole process tree |

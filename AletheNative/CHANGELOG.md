@@ -72,4 +72,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - ⌘-click a link in a terminal: Markdown, images and videos open as panes beside it, other files in
   their app, folders in Finder, web addresses in your browser — or in a web pane with ⌥⌘-click.
   Relative paths follow the shell's current folder, and `file.swift:42` style locations work.
+- ⇧⌘-click a terminal link for all its actions — open in a pane or the browser, show in Finder, copy
+  — or Preview it: Markdown, images, videos, pages and text files open in a quick sheet that Esc
+  closes, without adding a pane.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

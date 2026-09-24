@@ -50,6 +50,8 @@ struct MainWindow: View {
         case .addContent(let project):
             AddContentSheet(workspace: workspace, undoManager: undoManager,
                             project: project ?? workspace.document.workspace.selectedProjectID)
+        case .previewLink(let target):
+            LinkPreviewSheet(target: target)
         case .importTauri:
             TauriImportSheet(workspace: workspace, undoManager: undoManager)
         }

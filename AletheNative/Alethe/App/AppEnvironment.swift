@@ -65,6 +65,10 @@ final class AppEnvironment {
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
             loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }
         }
+        // `-AletheUITestPreview <file name in the data root>`: opens the link preview at launch.
+        if let name = UserDefaults.standard.string(forKey: "AletheUITestPreview") {
+            editorRequest = .previewLink(.file(locations.root.appending(path: name).path))
+        }
         #endif
         self.profiles = profiles
         self.workspace = loadedWorkspace
