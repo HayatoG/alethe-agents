@@ -32,7 +32,7 @@ public enum ShellLaunch {
     }
 
     /// Login shell (argv[0] prefixed with "-", the convention shells use to load the login profile),
-    /// optionally running `command` and exiting. `environmentChanges` sets (non-nil) or removes (nil)
+    /// optionally running `command` and exiting. An interactive shell gets `ShellIntegration`. `environmentChanges` sets (non-nil) or removes (nil)
     /// variables on top of `environment()`.
     public static func loginShell(command: String? = nil, workingDirectory: String? = nil,
                                   size: PTYSize = PTYSize(columns: 80, rows: 24),
@@ -42,12 +42,14 @@ public enum ShellLaunch {
         for (key, value) in environmentChanges { env[key] = value }
         let name = "-" + (shell as NSString).lastPathComponent
         let arguments = command.map { [name, "-c", $0] } ?? [name]
-        return PTYLaunch(
+        let launch = PTYLaunch(
             executable: shell,
             arguments: arguments,
             environment: env,
             workingDirectory: workingDirectory ?? NSHomeDirectory(),
             size: size
         )
+        // Prompt marks only matter to an interactive shell; agents run through `-c`.
+        return command == nil ? ShellIntegration.apply(to: launch) : launch
     }
 }

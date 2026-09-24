@@ -45,4 +45,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   shown or hidden from the same menus.
 - Press ⌃C twice in quick succession to force-quit a stuck terminal: the program and everything it
   started are killed, and the terminal offers to restart. A single ⌃C still reaches the program.
+- Shell terminals (zsh, and bash from Homebrew) mark each prompt, so Terminal › Previous Prompt (⌘↑)
+  and Next Prompt (⌘↓) jump between commands and the prompt redraws cleanly after a resize. Your
+  shell's startup files are used as before and are never modified.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

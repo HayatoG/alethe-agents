@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1, P2-2 and the Phase 1 full run,
-> none run since P1-11). Done: P2-1, P2-2. Next: P2-3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1…P2-3 and the Phase 1 full run,
+> none run since P1-11). Done: P2-1…P2-3. Next: P2-4. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1000,9 +1000,21 @@ they run per the test cadence above.
   a resumed agent killed within 4 s. Mac mapping: ⌃C only; ⌘C stays Copy.
   *Tests (written, not run — owner decision 2026-09-24):* `ForceKillTests` (7, one spawns a child that
   leaves its process group), UI `TerminalTests.testDoubleInterruptForceKills`.
-- [ ] **P2-3 (S) Shell integration marks.** OSC 133 prompt marks for zsh/bash/fish (injected rc, no
+- [x] **P2-3 (S) Shell integration marks.** OSC 133 prompt marks for zsh/bash/fish (injected rc, no
   user files touched) so resize reflows without the leftover prompt fragment and search/scroll can
   jump by prompt. *Tests:* U (sequence parser), manual resize check. *Parity:* TERM-1 (follow-up).
+  *Done:* `AletheTerminal/ShellIntegration` ports libghostty's `shell_integration.zig` injection, which
+  host-managed mode skips, onto the MIT integration GhosttyKit already bundles: zsh through `ZDOTDIR`
+  (the user's own kept in `GHOSTTY_ZSH_ZDOTDIR`), bash through `--posix` + `ENV` (`GHOSTTY_BASH_*`
+  contract, `HISTFILE` fix), `GHOSTTY_SHELL_FEATURES=cursor,title`. Applied by
+  `ShellLaunch.loginShell` to interactive shells only; agents (`-c`) are untouched. The scripts emit
+  OSC 133 A/B/C/D and OSC 7. New Terminal menu: Previous Prompt ⌘↑ / Next Prompt ⌘↓ on the focused
+  terminal (`jump_to_prompt`; `AppEnvironment.focusedTerminal`, reused by P2-4).
+  *Deviations:* no fish (GhosttyKit bundles no fish integration; Ghostty's own is GPL) and no
+  macOS `/bin/bash` 3.2 (Ghostty skips it too). No sequence parser was needed: Ghostty parses the marks.
+  *Tests (written, not run — owner decision 2026-09-24):* `ShellIntegrationTests` (5, one runs an
+  interactive zsh and checks OSC 133 A and D). The manual resize check (prompt fragment gone) is owed
+  with the other tests.
 - [ ] **P2-4 (L) Terminal search.** ⌘F find bar on Ghostty search actions: next/previous, match count,
   case toggle, highlight all, Esc closes. *Tests:* U, UI, HT. *Parity:* TERM-3.
 - [ ] **P2-5 (M) Smart copy/paste.** Paste images (saved to a temp file, path typed in), files from
@@ -1132,7 +1144,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-12 | Link viewer overlay | P2 | Not started | |
 | WS-13 | Empty workspace launcher | P2 | Not started | |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
-| TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); process-tree info later |
+| TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); shell integration marks (P2-3); process-tree kill (P2-2); process-tree info later |
 | TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |
 | TERM-3 | Terminal search | P0 spike, P2 | Not started | Ghostty search actions |
 | TERM-4 | Smart copy/paste | P2 | Not started | |

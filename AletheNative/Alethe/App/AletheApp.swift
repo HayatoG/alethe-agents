@@ -30,6 +30,7 @@ struct AletheApp: App {
             SidebarCommands()
             FileCommands(environment: environment)
             ViewCommands(environment: environment)
+            TerminalCommands(environment: environment)
         }
 
         Settings {

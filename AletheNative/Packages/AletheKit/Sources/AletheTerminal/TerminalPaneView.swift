@@ -125,6 +125,13 @@ public final class TerminalPaneView: NSView {
         session.readViewportText()
     }
 
+    /// Scrolls to the previous (negative) or next prompt; needs the shell's OSC 133 marks
+    /// (`ShellIntegration`) or an agent that emits them.
+    @discardableResult
+    public func jumpToPrompt(_ delta: Int) -> Bool {
+        terminalView.performBindingAction("jump_to_prompt:\(delta)")
+    }
+
     // MARK: - Search (Ghostty binding actions)
 
     @discardableResult
