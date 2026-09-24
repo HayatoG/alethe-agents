@@ -19,6 +19,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
+        ImagePasteMonitor.install()
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         Task { @MainActor in
             await environment?.flush()

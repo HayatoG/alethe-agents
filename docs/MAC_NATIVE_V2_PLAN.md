@@ -1,7 +1,7 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1…P2-4 and the Phase 1 full run,
-> none run since P1-11). Done: P2-1…P2-4. Next: P2-5. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 in progress** (Phase 1 complete; tests owed: P1-12, P2-1…P2-5 and the Phase 1 full run,
+> none run since P1-11). Done: P2-1…P2-5. Next: P2-6. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1031,9 +1031,25 @@ they run per the test cadence above.
   Highlight all comes from Ghostty.
   *Tests (written, not run — owner decision 2026-09-24):* `TerminalSearchTests` (2), UI
   `TerminalSearchTests` (find/count/next/Esc; HT at 90/100/120 %).
-- [ ] **P2-5 (M) Smart copy/paste.** Paste images (saved to a temp file, path typed in), files from
+- [x] **P2-5 (M) Smart copy/paste.** Paste images (saved to a temp file, path typed in), files from
   Finder (quoted paths), large text with bracketed paste; copy on select optional. *Tests:* U (payload
   mapping), UI. *Parity:* TERM-4.
+  *Done:* Already native before this task (GhosttyKit + Ghostty): text paste with bracketed paste and
+  newline handling, and files copied in Finder pasting as escaped paths. Added:
+  `AletheTerminal/SmartPaste` (upstream priority files → image → text; paths escaped like Ghostty's
+  macOS app, with upstream's trailing space; images saved as PNG under
+  `$TMPDIR/Alethe/Pasted Images`, TIFF/JPEG/HEIC converted). `TerminalPaneView.pasteImageIfNeeded`
+  pastes a saved image's path through `paste(text:)`; `Terminals/ImagePasteMonitor` (local key
+  monitor installed at launch) routes ⌘V there only when a terminal has focus and the pasteboard holds
+  just an image. The terminal accepts drops: Finder files paste as paths, dragged images are saved
+  first, with an accent border while dragging.
+  *Deviations:* paths are backslash-escaped, not double-quoted (the macOS convention Ghostty and
+  Terminal use; upstream quotes for Windows). Edit › Paste clicked with the mouse still pastes text
+  only (the monitor sees ⌘V). No copy on select (upstream has none; Ghostty's option can come with
+  terminal settings).
+  *Tests (written, not run — owner decision 2026-09-24):* `SmartPasteTests` (5). No UI test: the
+  terminal's text is not readable through accessibility; image paste and drops are owed as a manual
+  check.
 - [ ] **P2-6 (M) Prompt history.** Per-tab history of submitted prompts, ⌃↑/⌃↓ to recall, persisted per
   profile with a cap. *Tests:* U (port of upstream cases), UI. *Parity:* TERM-5.
 - [ ] **P2-7 (L) Scrollback persistence + reattach.** Ring buffer flushed to `scrollback/<tab>.bin`
@@ -1161,7 +1177,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); shell integration marks (P2-3); process-tree kill (P2-2); process-tree info later |
 | TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |
 | TERM-3 | Terminal search | P0 spike, P2 | Done | P2-4; Ghostty search is case-insensitive only |
-| TERM-4 | Smart copy/paste | P2 | Not started | |
+| TERM-4 | Smart copy/paste | P2 | Done | P2-5; paths backslash-escaped (macOS convention) |
 | TERM-5 | Prompt history | P2 | Not started | |
 | TERM-6 | Clickable links | P2 | Not started | |
 | TERM-7 | Terminal themes/font | P1 | Done | App theme + zoom-scaled font (P1-7) |

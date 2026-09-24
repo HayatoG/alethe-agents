@@ -51,4 +51,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Find in the terminal (⌘F): matches are highlighted as you type, the bar shows which match you
   are on out of how many, ↩ / ⇧↩ or ⌘G / ⇧⌘G move between them, ⌘E searches the selected text and
   Esc closes the bar.
+- Paste a screenshot or a copied image into a terminal with ⌘V: it is saved as a PNG and its path is
+  typed in, ready for an agent to open. Files and images dragged onto a terminal paste as their paths.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

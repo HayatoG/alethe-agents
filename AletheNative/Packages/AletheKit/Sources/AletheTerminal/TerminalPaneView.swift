@@ -60,6 +60,8 @@ public final class TerminalPaneView: NSView {
         forceKill.session = session
         terminalView.configuration = TerminalSurfaceOptions(backend: .inMemory(session))
         terminalView.delegate = self
+        registerForDraggedTypes([.fileURL] + SmartPaste.imageTypes)
+        dropHighlight = theme.nsColor(.accent)
         terminalView.controller = controller
         terminalView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(terminalView)
@@ -100,6 +102,60 @@ public final class TerminalPaneView: NSView {
 
     public func applyTheme(_ theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize) {
         _ = controller.setTheme(TerminalAppearance.terminalTheme(for: theme, fontSize: fontSize))
+        dropHighlight = theme.nsColor(.accent)
+    }
+
+    // MARK: - Smart paste and drop
+
+    private var dropHighlight = NSColor.controlAccentColor
+
+    /// The paste Ghostty cannot do on its own: an image with no file behind it (a screenshot, "Copy
+    /// Image") is saved as a PNG and its path pasted. False when the pasteboard holds files or text,
+    /// which Ghostty's own paste handles (escaped paths, bracketed paste).
+    public func pasteImageIfNeeded(from pasteboard: NSPasteboard = .general) -> Bool {
+        guard case .image(let data) = SmartPaste.payload(from: pasteboard),
+              let path = try? SmartPaste.saveImage(data) else { return false }
+        return terminalView.paste(text: SmartPaste.format(paths: [path]))
+    }
+
+    override public func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        guard SmartPaste.payload(from: sender.draggingPasteboard) != .empty else { return [] }
+        setDropHighlighted(true)
+        return .copy
+    }
+
+    override public func draggingExited(_ sender: (any NSDraggingInfo)?) {
+        setDropHighlighted(false)
+    }
+
+    override public func concludeDragOperation(_ sender: (any NSDraggingInfo)?) {
+        setDropHighlighted(false)
+    }
+
+    /// Files dropped from Finder paste as their paths; an image dragged out of a browser or a
+    /// screenshot thumbnail is saved first (upstream drag-and-drop).
+    override public func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
+        setDropHighlighted(false)
+        let text: String
+        switch SmartPaste.payload(from: sender.draggingPasteboard) {
+        case .paths(let paths):
+            text = SmartPaste.format(paths: paths)
+        case .image(let data):
+            guard let path = try? SmartPaste.saveImage(data) else { return false }
+            text = SmartPaste.format(paths: [path])
+        case .text(let string):
+            text = string
+        case .empty:
+            return false
+        }
+        focus()
+        return terminalView.paste(text: text)
+    }
+
+    private func setDropHighlighted(_ highlighted: Bool) {
+        wantsLayer = true
+        layer?.borderWidth = highlighted ? 2 : 0
+        layer?.borderColor = dropHighlight.cgColor
     }
 
     /// Types `prompt` into the agent once it is ready (see `PromptDelivery`). True once sent.
