@@ -58,18 +58,22 @@ public struct PaneTab: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
-/// A workspace pane (the Tauri app's "terminal"): one or more tabs, one visible.
+/// A workspace pane (the Tauri app's "terminal"): a terminal with one or more tabs, one visible, or
+/// one file or page (`content`), with no tabs.
 public struct Pane: Codable, Hashable, Sendable, Identifiable {
     public var id: PaneID
+    public var content: PaneContent
     public var tabs: [PaneTab]
     public var activeTabID: TabID?
     /// The sub-tabs lane shown with a single tab (upstream `laneVisible`); nil means hidden. With
     /// several tabs the lane is always shown.
     public var laneVisible: Bool?
 
-    public init(id: PaneID = .make(), tabs: [PaneTab], activeTabID: TabID? = nil, laneVisible: Bool? = nil) {
+    public init(id: PaneID = .make(), content: PaneContent = .terminal, tabs: [PaneTab] = [],
+                activeTabID: TabID? = nil, laneVisible: Bool? = nil) {
         self.id = id
-        self.tabs = tabs
+        self.content = content
+        self.tabs = content.isTerminal ? tabs : []
         self.activeTabID = activeTabID ?? tabs.first?.id
         self.laneVisible = laneVisible
     }
@@ -78,7 +82,7 @@ public struct Pane: Codable, Hashable, Sendable, Identifiable {
         tabs.first { $0.id == activeTabID } ?? tabs.first
     }
 
-    public var isLaneVisible: Bool { tabs.count > 1 || laneVisible == true }
+    public var isLaneVisible: Bool { content.isTerminal && (tabs.count > 1 || laneVisible == true) }
 }
 
 public struct Project: Codable, Hashable, Sendable, Identifiable {
@@ -136,8 +140,25 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
 
 /// Everything the sidebar and workspace show, persisted as `workspace.json` in the profile folder.
 public struct WorkspaceDocument: VersionedDocument, Hashable {
-    public static let currentVersion = 1
-    public static let migrations: [Int: @Sendable (inout JSONObject) throws -> Void] = [:]
+    public static let currentVersion = 2
+    public static let migrations: [Int: @Sendable (inout JSONObject) throws -> Void] = [
+        // v2 (P2-8): panes say what they show; every v1 pane was a terminal.
+        1: { object in
+            guard var projects = object["projects"]?.arrayValue else { return }
+            for index in projects.indices {
+                guard var project = projects[index].objectValue,
+                      var panes = project["panes"]?.arrayValue else { continue }
+                for pane in panes.indices {
+                    guard var value = panes[pane].objectValue, value["content"] == nil else { continue }
+                    value["content"] = .object(["kind": .string("terminal")])
+                    panes[pane] = .object(value)
+                }
+                project["panes"] = .array(panes)
+                projects[index] = .object(project)
+            }
+            object["projects"] = .array(projects)
+        },
+    ]
     public static let initial = WorkspaceDocument()
 
     public var schemaVersion: Int

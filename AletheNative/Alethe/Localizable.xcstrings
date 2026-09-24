@@ -1,6 +1,40 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "addContent.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose what to show beside the project's terminals."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha o que mostrar ao lado dos terminais do projeto."
+          }
+        }
+      }
+    },
+    "addContent.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Content"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar conteúdo"
+          }
+        }
+      }
+    },
     "color.black" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1119,6 +1153,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Importar do Alethe (Tauri)"
+          }
+        }
+      }
+    },
+    "menu.file.addContent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Content…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar conteúdo…"
           }
         }
       }
@@ -2887,6 +2938,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paleta Dark+ padrão do Visual Studio Code."
+          }
+        }
+      }
+    },
+    "undo.addContent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Content"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar conteúdo"
           }
         }
       }

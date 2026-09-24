@@ -47,6 +47,9 @@ struct MainWindow: View {
         case .newSubTab(let pane):
             NewTerminalSheet(workspace: workspace, undoManager: undoManager,
                              initialProject: workspace.document.pane(pane)?.project.id, targetPane: pane)
+        case .addContent(let project):
+            AddContentSheet(workspace: workspace, undoManager: undoManager,
+                            project: project ?? workspace.document.workspace.selectedProjectID)
         case .importTauri:
             TauriImportSheet(workspace: workspace, undoManager: undoManager)
         }

@@ -58,6 +58,9 @@ private struct FileCommands: Commands {
             Button("menu.file.newTerminal") { environment.editorRequest = .newTerminal(nil) }
                 .keyboardShortcut("t", modifiers: .command)
                 .disabled(environment.workspace?.document.projects.isEmpty ?? true)
+            Button("menu.file.addContent") { environment.editorRequest = .addContent(nil) }
+                .keyboardShortcut("a", modifiers: [.command, .shift])
+                .disabled(AddContentSheet.options.isEmpty || (environment.workspace?.document.projects.isEmpty ?? true))
             Divider()
             Button("sidebar.addProject") { actions?.chooseFolders() }
                 .keyboardShortcut("o", modifiers: .command)

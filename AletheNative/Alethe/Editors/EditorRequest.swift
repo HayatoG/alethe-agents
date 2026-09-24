@@ -10,6 +10,8 @@ enum EditorRequest: Identifiable, Hashable {
     case newTerminal(ProjectID?)
     /// New sub-tab in a pane.
     case newSubTab(PaneID)
+    /// Add a file or page pane to a project (nil: the selected one).
+    case addContent(ProjectID?)
     /// Import from the Tauri app's data.
     case importTauri
 
@@ -21,6 +23,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .editGroup(let id): "editGroup:\(id)"
         case .newTerminal: "newTerminal"
         case .newSubTab(let id): "newSubTab:\(id)"
+        case .addContent: "addContent"
         case .importTauri: "importTauri"
         }
     }

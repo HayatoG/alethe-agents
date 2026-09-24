@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-7 (P2-1…P2-5 tested; P2-6…P2-7
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-8 (P2-1…P2-5 tested; P2-6…P2-8
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-8. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7). Next: P2-9. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1089,9 +1089,18 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* `ScrollbackFileTests` (4), P
   `ScrollbackFilePerformanceTests.testTenBusyTerminalsFlushCost` (10 terminals × 1 MiB). Manual check
   owed: quit with output on screen, relaunch, output is back above the new prompt.
-- [ ] **P2-8 (M) Pane kinds + Add Content.** Model v2: `Pane.content` (terminal | markdown | image | video
+- [x] **P2-8 (M) Pane kinds + Add Content.** Model v2: `Pane.content` (terminal | markdown | image | video
   | diff | web) with a migration from v1; Add Content sheet listing the kinds (unavailable kinds
   hidden until their task lands). *Tests:* U (migration golden), UI. *Parity:* WS-11.
+  *Done:* `AletheModel/PaneContent` (upstream `PaneKind` minus `file`, `graphify`, `orchestrator`,
+  which arrive with their features), stored as `{kind, path|url}`. `WorkspaceDocument` v2: the
+  migration gives every v1 pane `content: {kind: terminal}` (the store backs the v1 file up first).
+  Non-terminal panes have no tabs (`Pane.init` drops them, `addTab` refuses them, no lane);
+  `addPane(to:content:)` adds one. `Editors/AddContentSheet` (File › Add Content… ⇧⌘A) lists
+  `options`, empty until P2-9, so the menu item stays disabled rather than offering kinds that do not
+  work yet.
+  *Tests (written, not run — owner decision 2026-09-24):* `PaneContentTests` (3: round trip, v1
+  golden migration through `DocumentStore`, content panes). UI test comes with P2-9, the first option.
 - [ ] **P2-9 (M) Markdown pane.** Rendered view of a file with live reload (`DispatchSource` file
   watch), edit/preview toggle, save. *Tests:* U (watcher), UI. *Parity:* WS-6.
 - [ ] **P2-10 (S) Image and video panes.** Image with fit/actual size; video on AVKit. *Tests:* UI.
@@ -1203,7 +1212,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-8 | Video pane | P2 | Not started | AVKit |
 | WS-9 | Diff pane | P2 | Not started | |
 | WS-10 | Focus mode | P2 | Not started | |
-| WS-11 | Add content | P2 | Not started | |
+| WS-11 | Add content | P2 | In progress | Sheet + model v2 (P2-8); options land with each pane kind |
 | WS-12 | Link viewer overlay | P2 | Not started | |
 | WS-13 | Empty workspace launcher | P2 | Not started | |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |

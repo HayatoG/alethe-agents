@@ -147,6 +147,18 @@ extension WorkspaceDocument {
         return pane.id
     }
 
+    /// Adds a pane showing a file or page (not a terminal) and opens/focuses it.
+    @discardableResult
+    public mutating func addPane(to projectID: ProjectID, content: PaneContent) -> PaneID? {
+        guard !content.isTerminal, project(projectID) != nil else { return nil }
+        let pane = Pane(content: content)
+        updateProject(projectID) { $0.panes.append(pane) }
+        workspace.gridWeights.removeValue(forKey: projectID.rawValue)
+        open(projectID)
+        workspace.focusedPaneID = pane.id
+        return pane.id
+    }
+
     public mutating func closePane(_ paneID: PaneID) {
         guard let (project, _) = pane(paneID) else { return }
         updateProject(project.id) { $0.panes.removeAll { $0.id == paneID } }
@@ -180,7 +192,7 @@ extension WorkspaceDocument {
     /// Adds a sub-tab to a pane, shows it and focuses the pane.
     @discardableResult
     public mutating func addTab(_ tab: PaneTab, to paneID: PaneID) -> Bool {
-        guard let (project, _) = pane(paneID) else { return false }
+        guard let (project, pane) = pane(paneID), pane.content.isTerminal else { return false }
         updatePane(paneID) { pane in
             pane.tabs.append(tab)
             pane.activeTabID = tab.id
