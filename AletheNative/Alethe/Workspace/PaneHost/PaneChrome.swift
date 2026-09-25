@@ -201,6 +201,8 @@ struct PaneHeader: View {
     let onDisable: () -> Void
     /// Session Cost… for the shown tab; nil when it has no session.
     let onSessionCost: (() -> Void)?
+    /// Continue in the other agent (Claude Code ↔ Codex); nil for other agents.
+    let onHandoff: (() -> Void)?
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
     @Environment(AppEnvironment.self) private var environment
@@ -266,6 +268,9 @@ struct PaneHeader: View {
             }
             if let onSessionCost {
                 Button("menu.terminal.sessionCost", action: onSessionCost)
+            }
+            if let onHandoff {
+                Button("menu.terminal.handoff", action: onHandoff)
             }
             Button("pane.disable", action: onDisable)
             Divider()

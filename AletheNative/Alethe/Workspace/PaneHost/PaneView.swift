@@ -1,3 +1,4 @@
+import AletheAgents
 import AletheDesign
 import AletheModel
 import AletheTerminal
@@ -79,6 +80,7 @@ final class PaneView: NSView {
             onToggleFocus: { context.setFocusMode(context.environment.focusModePaneID == pane.id ? nil : pane.id) },
             onDisable: { context.setDisabled(pane.id, true) },
             onSessionCost: tab.sessionID == nil ? nil : { context.environment.editorRequest = .sessionCost(tab.id) },
+            onHandoff: Handoff.supports(AgentKind(rawValue: tab.agent)) ? { context.environment.editorRequest = .handoff(tab.id) } : nil,
             onDrag: onDrag))
         configureLane(pane: pane, project: project, focused: focused, context: context)
 

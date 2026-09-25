@@ -1,3 +1,4 @@
+import AletheAgents
 import AletheModel
 import AppKit
 import AletheTerminal
@@ -36,6 +37,10 @@ struct TerminalCommands: Commands {
                 if let tab = focusedTab { environment.editorRequest = .sessionCost(tab.id) }
             }
             .disabled(focusedTab?.sessionID == nil)
+            Button("menu.terminal.handoff") {
+                if let tab = focusedTab { environment.editorRequest = .handoff(tab.id) }
+            }
+            .disabled(focusedTab.map { !Handoff.supports(AgentKind(rawValue: $0.agent)) } ?? true)
             Button("menu.terminal.resumePrevious") { resumePrevious() }
                 .disabled(environment.terminals.running.isEmpty)
             Divider()

@@ -7,10 +7,11 @@ import Testing
     @Test func duplicatesWithinFiveSecondsAreDropped() {
         var log = NotificationLog()
         let start = Date()
-        #expect(log.post(AppNotification(title: "Claude finished", body: "a", createdAt: start)))
-        #expect(!log.post(AppNotification(title: "Claude finished", body: "a", createdAt: start + 2)))
-        #expect(log.post(AppNotification(title: "Claude finished", body: "a", createdAt: start + 6)))
-        #expect(log.post(AppNotification(title: "Claude finished", body: "b", createdAt: start + 6)))
+        let first = log.post(AppNotification(title: "Claude finished", body: "a", createdAt: start))
+        let duplicate = log.post(AppNotification(title: "Claude finished", body: "a", createdAt: start + 2))
+        let later = log.post(AppNotification(title: "Claude finished", body: "a", createdAt: start + 6))
+        let other = log.post(AppNotification(title: "Claude finished", body: "b", createdAt: start + 6))
+        #expect(first && !duplicate && later && other)
         #expect(log.entries.count == 3 && log.unseen == 3)
     }
 

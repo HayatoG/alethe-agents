@@ -82,6 +82,7 @@ final class AppEnvironment {
             loadedHistory.update { $0.prune(keeping: tabs) }
         }
         Self.removeOrphanScrollback(in: locations.scrollback(profile), keeping: tabs)
+        Handoff.pruneOld(in: locations.handoffs(profile))
         #if DEBUG
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
             loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }

@@ -152,4 +152,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Notifications: when an agent finishes or needs your answer in a terminal you are not looking at,
   it shows up under the bell in the toolbar — and as a macOS notification when Alethe is in the
   background. Click one to jump to that terminal. Turn it off in Settings › General.
+- Continue in the Other Agent… (Terminal menu or a terminal's menu) hands a Claude Code conversation
+  to Codex, or the other way round: review and edit the context capsule — secrets are redacted — and a
+  new terminal of the other agent picks the work up from it.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

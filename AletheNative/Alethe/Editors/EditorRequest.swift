@@ -24,6 +24,8 @@ enum EditorRequest: Identifiable, Hashable {
     case conversations(ProjectID?)
     /// Tokens and cost of a tab's session (P3-8).
     case sessionCost(TabID)
+    /// Continue a tab's conversation in the other agent (P3-12).
+    case handoff(TabID)
 
     var id: String {
         switch self {
@@ -40,6 +42,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .findJump: "findJump"
         case .conversations: "conversations"
         case .sessionCost(let tab): "sessionCost:\(tab)"
+        case .handoff(let tab): "handoff:\(tab)"
         }
     }
 }

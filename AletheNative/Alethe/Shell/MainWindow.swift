@@ -66,6 +66,8 @@ struct MainWindow: View {
             ConversationsSheet(workspace: workspace, undoManager: undoManager, initialProject: project)
         case .sessionCost(let tab):
             SessionCostSheet(workspace: workspace, tabID: tab)
+        case .handoff(let tab):
+            HandoffSheet(workspace: workspace, undoManager: undoManager, tabID: tab)
         }
     }
 

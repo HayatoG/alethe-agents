@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-12. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1656,10 +1656,27 @@ ship; they run per the test cadence above.
   *Deviation:* no transient in-app toasts (the Mac idiom is the bell and Notification Center); limit-reset
   and Pomodoro notifications arrive with their features (P3-13, Phase 7).
   *Tests (written, not run — owner decision):* `NotificationLogTests` (2), UI `NotificationsTests`. Compiled.
-- [ ] **P3-12 (L) Claude Code ↔ Codex handoff.** Prepare a handoff from one agent's conversation,
+- [x] **P3-12 (L) Claude Code ↔ Codex handoff.** Prepare a handoff from one agent's conversation,
   materialize it for the other and continue in a new sub-tab (upstream `HandoffModal`,
   `prepare/materialize/complete_agent_handoff`, `handoffs/`). *Tests:* U (handoff documents), UI.
   *Parity:* AG-7.
+  *Done:* `AletheAgents/Handoff` ports `handoff.rs`: events from Claude Code transcripts (side chains
+  left out) and Codex rollouts — user and assistant text (8 000 / 5 000 characters), tool calls (1 200),
+  tool output (800); the capsule (original task, latest request, up to 12 more user instructions, the
+  last 18 events, the workspace's git state, what was lost; 48 000 characters at most) with upstream's
+  wording, so the receiving agent reads the same packet; secret redaction (API keys, JWTs, private keys,
+  auth headers, `*TOKEN=` style assignments); the source transcript (the tab's session, or the folder's
+  newest, flagged); `materialize` writes the reviewed capsule atomically to
+  `<profile>/handoffs/<id>/context.md` (64 KB at most); capsules older than 7 days are pruned at launch.
+  `Editors/HandoffSheet` (upstream `HandoffModal`): counts of included, omitted and redacted events, the
+  capsule to review and edit with its size, the privacy note, the unrestricted toggle; Continue in <agent>
+  opens a new terminal of the other agent in the same project whose first prompt is upstream's bootstrap
+  prompt pointing at the capsule. Entry points: Terminal › Continue in the Other Agent… and the pane menu,
+  for Claude Code and Codex tabs.
+  *Deviation:* upstream removes a capsule when its handoff completes; here capsules age out after 7 days
+  (the agent may re-read it). Remote-question extraction (for remote control, Phase 7) is not ported.
+  Also fixes a P3-11 test that did not compile.
+  *Tests (written, not run — owner decision):* `HandoffTests` (5). Compiled.
 - [ ] **P3-13 (L) AI usage.** Claude Code, Codex and Antigravity usage (limits, windows, resets) with
   their caches, usage pills in the toolbar, the AI Usage sheet, Codex reset credit and a notification
   when a limit resets (upstream `*UsageCache.ts`, `AiUsageModal`, `ResetCreditModal`). Tokens are read
@@ -1768,7 +1785,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | AG-4 | Launcher resolution + override | P1, P3 | Done | Resolver + `cliPaths` (P1-8); Choose CLI… on a missing CLI (P1-7); Settings › Agents with version, Choose…, Reset (P3-2) |
 | AG-5 | Install/update/uninstall CLIs | P3 | Done | P3-3; macOS commands from each vendor's docs (script, Homebrew, npm) |
 | AG-6 | Enable/disable agents | P3 | Done | P3-2; Settings › Agents |
-| AG-7 | Claude ↔ Codex handoff | P3 | Not started | |
+| AG-7 | Claude ↔ Codex handoff | P3 | Done | P3-12; review-and-edit capsule, redaction, new terminal with upstream's bootstrap prompt |
 | AG-8 | Agent hook bridge | P3 | Done | P3-9; loopback endpoint (Network.framework), Claude --settings, Codex notify forwarder, traffic fallback |
 | AG-9 | Model discovery | P3 | Done | P3-5; real listings + Claude aliases, no stale fallback lists; any id can be typed |
 | SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Done | Claude + Codex (P1-10); OpenCode, Antigravity, Cursor (P3-6) |
