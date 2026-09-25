@@ -1908,14 +1908,14 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   / `worktreeBranch` (optional, old `workspace.json` decodes, U 2); sidebar branch symbol + tooltip; tab
   menu Commit Worktree Changes… / Remove Worktree (asks once). Open: project `autoWorktree`/`worktreeMode`
   settings, lock/cleanup in the UI, UI tests.
-- [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
+- [x] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
   sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
   sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.
   *Done (model):* target `AletheMerge` ports `merge_analyzer.rs`: 12 path classes (Sentinel before
   Planning) with upstream's strategy text; `MergeAnalyzer.analyze` trial-merges in a throwaway detached
   worktree `.alethe/merge-envs/analyze-<id>`, always removed; `MergeAnalysis` keeps upstream field names;
   `MergeCenterStage` (clean analysis skips to validate). U+G 7. Event Bus events, panel/tree/sheet UI owed.
-- [ ] **P4-11 (L) Merge Center — prepare.** Prepare and rebase onto the target (upstream
+- [x] **P4-11 (L) Merge Center — prepare.** Prepare and rebase onto the target (upstream
   `conflict_resolution.rs`), conflicts listed with open-in-diff and agent-assisted resolution in a
   terminal, cancelable long steps. *Tests:* G (conflict scenarios), UI. *Parity:* GIT-5.
   *Done (model):* `ConflictResolution` in `AletheMerge` ports `conflict_resolution.rs`: `prepare` builds
@@ -1923,7 +1923,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   writes `<id>.json` + `ALETHE_CONFLICT.md` (upstream prompt verbatim); `rebaseOntoTarget`, `preflightAbort`,
   `abort`; progress via `MergePrepareStep`; cancellation stops git and tears down (force-remove + prune).
   G+U 6. Sheet stage UI, agent terminal launch, Event Bus events owed.
-- [ ] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
+- [x] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
   probe, contract check, branch testing (upstream `BranchTestingModal`), results kept per merge.
   *Tests:* G, UI. *Parity:* GIT-5.
   *Done (model):* `MergeValidation` (per-project commands + suggested ones from `package.json`,
@@ -1931,7 +1931,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   commands = "unverified"; results Codable per merge) and `HealthProbe` (free port, poll URL, always kills).
   G+U with P4-13. Open: upstream's contract check and the probe's terminal step are not ported; the probe
   kills the shell but not servers it spawned (use the process-tree kill when wired in the app).
-- [ ] **P4-13 (L) Merge Center — finish.** Finalize, abort, preflight abort, force cleanup (asks once),
+- [x] **P4-13 (L) Merge Center — finish.** Finalize, abort, preflight abort, force cleanup (asks once),
   confirm worktree commit (upstream `ConfirmWorktreeCommitModal`), worktree removal after merging.
   *Tests:* G, UI. *Parity:* GIT-5.
   *Done (model):* `MergeFinish`: finalize (blocks on markers/unresolved files, validation + optional
@@ -1939,6 +1939,13 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   env only on success), abort, preflight abort, force cleanup (only under `.alethe/merge-envs`, flagged to
   confirm once), pending worktree changes committed with a confirmed message, worktree removal after
   merging (only under `.alethe/worktrees`). 16 tests (12 G). Sheets UI owed.
+  *Done (Merge Center UI, `02124a5`, `e6bb660`, `cc89cb4`):* sheet from the project menu and History menu
+  with the Analyze → Prepare → Validate → Finish header. Analyze trial-merges two local branches (progress,
+  cancel forwarded to git) and lists conflicts with class + strategy; Prepare builds the environment (a clean
+  merge still prepares, since Validate/Finish need it), Resolve with Agent, refresh, rebase onto target, abort
+  (asks once); Validate runs per-run editable commands with output; Finish merges; force cleanup asks once.
+  Open: Resolve with Agent always uses Claude Code; results are plain text; a closed sheet does not resume;
+  the sidebar merge panel/tree and branch testing sheet; U/UI tests.
 - [x] **P4-14 (M) Open pull requests.** A sidebar tab with the user's PRs (`gh search prs
   --involves=@me`; upstream `PullRequestsSidebar`): status and checks, open in the browser, send to a
   Todo (P4-16); a clear state when `gh` is missing or signed out. *Tests:* U (parsing), UI. *Parity:*
