@@ -172,3 +172,18 @@ import Testing
         #expect(lines == [#"it's $HOME "ok""#, (executable as NSString).deletingLastPathComponent])
     }
 }
+
+/// CLI version probe (P3-2; upstream `parse_version`).
+@Suite struct CLIVersionTests {
+    @Test func parsesTheFirstDottedNumber() {
+        #expect(CLIVersion.parse("2.0.14 (Claude Code)") == "2.0.14")
+        #expect(CLIVersion.parse("codex-cli 0.46.0\n") == "0.46.0")
+        #expect(CLIVersion.parse("version 1.2.") == "1.2")
+        #expect(CLIVersion.parse("no version here 42") == nil)
+    }
+
+    @Test func probesARealExecutable() async {
+        // /bin/sh answers --version with nothing usable; the probe returns nil instead of hanging.
+        #expect(await CLIVersion.probe("/usr/bin/true", timeout: .seconds(2)) == nil)
+    }
+}

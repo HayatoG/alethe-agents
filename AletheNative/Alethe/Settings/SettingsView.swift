@@ -12,6 +12,9 @@ struct SettingsView: View {
             Tab("settings.appearance.tab", systemImage: "paintpalette") {
                 AppearanceSettings()
             }
+            Tab("settings.agents.tab", systemImage: "sparkles") {
+                AgentSettings()
+            }
             Tab("settings.resources.tab", systemImage: "memorychip") {
                 ResourceSettings()
             }

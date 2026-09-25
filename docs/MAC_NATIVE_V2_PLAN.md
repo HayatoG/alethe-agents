@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-2. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1484,9 +1484,20 @@ ship; they run per the test cadence above.
   disk comes with P3-6.
   *Tests (written, not run — owner decision):* `AgentRegistryTests` (roster, flags), `AgentArgumentsTests`
   (+3), UI `AgentRosterTests` (the sheet offers all ten). Compiled.
-- [ ] **P3-2 (M) Settings › Agents.** Per-agent row: enable/disable (hidden from sheets and Find/Jump
+- [x] **P3-2 (M) Settings › Agents.** Per-agent row: enable/disable (hidden from sheets and Find/Jump
   when off), detected CLI path and version, Choose… / Reset override. *Tests:* U, UI, HT. *Parity:*
   AG-6, AG-4.
+  *Done:* Settings › Agents (`Settings/AgentSettings`; upstream Preferences › Terminal enabled agents
+  and CLI paths): one row per agent with an on/off toggle, its color and the version its CLI reports,
+  the CLI path it will run (or “not found” in the status color), Custom + Reset when overridden, and
+  Choose… (the same name check as the terminal's Choose CLI; the launcher cache is invalidated after a
+  change). `AgentRegistry.enabled(_:setting:on:)` stores all-on as nil so agents added later start on;
+  the shell cannot be turned off. `AletheAgents/CLIVersion` ports upstream `parse_version` and
+  `cli_version_at`: `--version`, `-v`, `version` in turn, stdout and stderr, the CLI's folder first on
+  PATH, a 5 s watchdog. Turned-off agents leave New Terminal and the launcher's first-project chips;
+  their existing terminals keep working.
+  *Tests (written, not run — owner decision):* `CLIVersionTests` (2), `AgentRegistryTests` (+1), UI
+  `AgentSettingsTests` (an agent turned off leaves New Terminal; HT at three zoom levels). Compiled.
 - [ ] **P3-3 (L) Install, update and uninstall agent CLIs.** Toolchain probe (npm, Homebrew, pipx,
   curl installers per upstream `AgentInstall`), install/update/uninstall with a live log, version
   check against the latest release. *Tests:* U (recipes, probe parsing), UI (dry-run seed). *Parity:*
@@ -1626,9 +1637,9 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | AG-1 | 11 agent types | P1 (5), P3 | Done | P3-1; ten agents; `wsl`: Won't port (Windows-only) |
 | AG-2 | Unrestricted flags | P1 | Done | Launch support (P1-8); per-terminal toggle in the New Terminal sheet (P1-9) |
 | AG-3 | New-terminal modal | P1, P3 | Partial | Basic sheet + first prompt (P1-9); grid picker, 9router, planner, repeat last in P3 |
-| AG-4 | Launcher resolution + override | P1, P3 | Partial | Resolver + `cliPaths` (P1-8); Choose CLI… on a missing CLI (P1-7); Settings page with AG-5 |
+| AG-4 | Launcher resolution + override | P1, P3 | Done | Resolver + `cliPaths` (P1-8); Choose CLI… on a missing CLI (P1-7); Settings › Agents with version, Choose…, Reset (P3-2) |
 | AG-5 | Install/update/uninstall CLIs | P3 | Not started | |
-| AG-6 | Enable/disable agents | P3 | Not started | |
+| AG-6 | Enable/disable agents | P3 | Done | P3-2; Settings › Agents |
 | AG-7 | Claude ↔ Codex handoff | P3 | Not started | |
 | AG-8 | Agent hook bridge | P3 | Not started | |
 | AG-9 | Model discovery | P3 | Not started | |

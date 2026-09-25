@@ -39,4 +39,11 @@ import Testing
         #expect(registry.enabledKinds(["codex", "claude", "bogus"]) == [.claude, .codex, .shell])
         #expect(registry.enabledKinds([]) == [.shell])
     }
+
+    @Test func togglingAgentsKeepsAllOnAsNil() {
+        let off = registry.enabled(nil, setting: .kiro, on: false)
+        #expect(off?.contains("kiro") == false && off?.contains("claude") == true)
+        #expect(registry.enabled(off, setting: .kiro, on: true) == nil, "all on again is stored as all")
+        #expect(registry.enabled(nil, setting: .shell, on: false) == nil, "the shell stays")
+    }
 }

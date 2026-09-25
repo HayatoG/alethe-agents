@@ -91,4 +91,13 @@ public struct AgentRegistry: Sendable {
         let allowed = Set(enabled.compactMap(parse))
         return kinds.filter { $0 == .shell || allowed.contains($0) }
     }
+
+    /// `enabled` after turning one agent on or off. Everything on is stored as nil ("all"), so agents
+    /// added in later versions start enabled; the shell cannot be turned off.
+    public func enabled(_ enabled: [String]?, setting kind: AgentKind, on: Bool) -> [String]? {
+        guard kind != .shell else { return enabled }
+        var kinds = Set(enabledKinds(enabled))
+        if on { kinds.insert(kind) } else { kinds.remove(kind) }
+        return kinds == Set(self.kinds) ? nil : self.kinds.filter { kinds.contains($0) && $0 != .shell }.map(\.rawValue)
+    }
 }

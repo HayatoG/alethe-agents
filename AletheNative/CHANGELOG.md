@@ -126,4 +126,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   overlays from animating (it also follows the macOS setting).
 - New agents: GitHub Copilot, Antigravity, Mimo, Freebuff and Kiro CLI join Claude Code, Codex,
   Cursor, OpenCode and the shell in New Terminal, each with its unrestricted mode where the CLI has one.
+- Settings › Agents: turn agents you don't use off (they leave New Terminal), see which CLI each
+  agent runs and its version, and point one at another CLI or back to automatic lookup.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
