@@ -42,6 +42,21 @@ public struct ThemeCatalog: Sendable {
         }
     }
 
+    private init(themes: [Theme]) {
+        self.themes = themes
+    }
+
+    /// This catalog followed by the valid `contributed` themes (e.g. from plugins), for the picker.
+    /// A contribution whose id is already listed or that fails validation is dropped.
+    public func merging(_ contributed: [Theme]) -> ThemeCatalog {
+        var ids = Set(themes.map(\.id))
+        var merged = themes
+        for theme in contributed where theme.validationErrors.isEmpty && ids.insert(theme.id).inserted {
+            merged.append(theme)
+        }
+        return ThemeCatalog(themes: merged)
+    }
+
     public func theme(id: String) -> Theme? {
         themes.first { $0.id == id }
     }

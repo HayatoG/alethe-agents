@@ -6,6 +6,11 @@ side is the source of truth. Kept for audit and for converting the theme-pack pl
 It is NOT part of the build.
 
     Scripts/oneshot/convert-themes.py <upstream-repo-root> <output-dir>
+    Scripts/oneshot/convert-themes.py --theme-pack <upstream-repo-root> <output-dir>
+
+With --theme-pack it converts src/plugins/theme-pack/themes.ts instead (P4-18): each theme's tokens
+lay over the dark base and its terminal entries over the dark xterm palette, like upstream's
+plugin-theme cascade. Only <output-dir>/Themes/<id>.json is written.
 
 Reads:
   src/styles/theme.css                       token blocks per [data-theme='<id>'] (dark = :root base)
@@ -136,7 +141,57 @@ def camel(name: str) -> str:
     return head + "".join(part.capitalize() for part in rest)
 
 
+def parse_theme_pack(ts: str) -> list[dict]:
+    themes = []
+    chunks = re.split(r"\n  \{\n    id: ", ts)[1:]
+    for chunk in chunks:
+        theme_id = re.match(r"'([a-z0-9-]+)'", chunk).group(1)
+        label = re.search(r"label:\s*'([^']+)'", chunk).group(1)
+        swatch = re.findall(r"'(#[0-9a-fA-F]+)'", re.search(r"swatch:\s*\[([^\]]*)\]", chunk).group(1))
+        tokens_body = re.search(r"tokens:\s*\{(.*?)\n    \}", chunk, flags=re.S).group(1)
+        tokens = dict(re.findall(r"'(--[a-z0-9-]+)':\s*'([^']+)'", tokens_body))
+        terminal_body = re.search(r"terminal:\s*\{(.*?)\n    \}", chunk, flags=re.S).group(1)
+        terminal = dict(re.findall(r"([a-zA-Z]+):\s*'([^']+)'", terminal_body))
+        themes.append({"id": theme_id, "label": label, "swatch": swatch, "tokens": tokens, "terminal": terminal})
+    return themes
+
+
+def convert_theme_pack(upstream: Path, out_dir: Path) -> None:
+    base = parse_theme_blocks((upstream / "src/styles/theme.css").read_text())["dark"]
+    xterm = parse_xterm_themes((upstream / "src/components/XTermView/xtermThemes.ts").read_text())
+    pack = parse_theme_pack((upstream / "src/plugins/theme-pack/themes.ts").read_text())
+    color_names = sorted(n for n in base if not n.startswith(NON_COLOR_PREFIXES))
+    themes_dir = out_dir / "Themes"
+    themes_dir.mkdir(parents=True, exist_ok=True)
+    for theme in pack:
+        tokens = resolve_vars({**base, **theme["tokens"]})
+        palette = {**xterm["dark"], **theme["terminal"]}
+        swatch = [to_hex(c) for c in theme["swatch"]]
+        document = {
+            "id": theme["id"],
+            "name": theme["label"],
+            "isLight": luminance_is_light(swatch[0]),
+            "swatch": swatch,
+            "colors": {camel(n): to_hex(tokens[n]) for n in color_names},
+            "shadows": {
+                level: parse_shadow(tokens[f"--shadow-{level}"]) for level in ("sm", "md", "lg")
+            },
+            "terminal": {
+                "background": to_hex(palette["background"]),
+                "foreground": to_hex(palette["foreground"]),
+                "cursor": to_hex(palette["cursor"]),
+                "selection": to_hex(palette["selectionBackground"]),
+                "ansi": [to_hex(palette.get(k, XTERM_DEFAULT_ANSI[i])) for i, k in enumerate(ANSI_KEYS)],
+            },
+        }
+        (themes_dir / f"{theme['id']}.json").write_text(json.dumps(document, indent=2) + "\n")
+    print(f"{len(pack)} theme-pack themes")
+
+
 def main() -> None:
+    if sys.argv[1] == "--theme-pack":
+        convert_theme_pack(Path(sys.argv[2]), Path(sys.argv[3]))
+        return
     upstream, out_dir = Path(sys.argv[1]), Path(sys.argv[2])
     css = (upstream / "src/styles/theme.css").read_text()
     blocks = parse_theme_blocks(css)
