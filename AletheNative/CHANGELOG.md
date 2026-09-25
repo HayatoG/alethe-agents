@@ -208,6 +208,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   open in the browser, copy the URL, or send one to your Todos.
 - Files tab in the right sidebar: browse the project folder with git badges and live refresh; open,
   rename, create, move to Trash, reveal in Finder, and Quick Look (Space).
+- Pull requests: review one with an agent and model of your choice, then squash merge it only while its
+  head is still the commit that was reviewed.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

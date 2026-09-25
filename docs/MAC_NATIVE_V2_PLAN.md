@@ -1946,9 +1946,15 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   loaded lazily, badges on status tokens, click opens the browser, menu Open / Copy URL / Send to Todo;
   states for gh missing (`brew install gh`), signed out (`gh auth login`), no PRs, errors. Open: per-row
   details are not cached across refreshes; UI tests.
-- [ ] **P4-15 (L) PR review and squash merge.** Review a PR with an agent in a terminal (upstream
+- [x] **P4-15 (L) PR review and squash merge.** Review a PR with an agent in a terminal (upstream
   `PullRequestReviewModal`; review agent and model preferences), squash merge guarded by the reviewed
   head SHA (`gh pr merge --squash --match-head-commit`). *Tests:* U, UI. *Parity:* PR-2.
+  *Done (UI, `c8452bd`):* PR row › Review with Agent… fetches the current head SHA, picks an installed
+  agent (last used, else Claude Code) and optional `--model`, opens a terminal in the selected project with
+  upstream's review prompt (reads the PR with `gh pr diff`/`gh pr view`, never commits/pushes/merges) and
+  records the reviewed SHA. Squash Merge… is enabled only after a review, confirms PR + SHA, runs
+  `gh pr merge --squash --match-head-commit`; a moved head shows gh's error and asks to review again.
+  Open: reviewed SHAs and agent/model choice are in memory only; U tests for the prompt.
 - [ ] **P4-16 (L) Todos.** Built-in plugin (upstream `plugins/todos`): global and per-project lists,
   tags, PR links, reorder, the external `todos.jsonc` template (`ensure_todo_template`) and settings.
   *Tests:* U (store, file round-trip), UI. *Parity:* PER-1.
