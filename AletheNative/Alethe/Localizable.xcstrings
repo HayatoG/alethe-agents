@@ -1282,13 +1282,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "⌥⌘D to stop · Esc to cancel"
+            "value" : "⌥⌘E to stop · Esc to cancel"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "⌥⌘D para parar · Esc para cancelar"
+            "value" : "⌥⌘E para parar · Esc para cancelar"
           }
         }
       }

@@ -17,6 +17,9 @@ struct MainWindow: View {
                 .navigationSplitViewColumnWidth(min: metrics.size(200), ideal: metrics.size(240), max: metrics.size(360))
         } detail: {
             WorkspaceView()
+                // Inside the detail column: over the whole split view, AppKit's split views take the clicks.
+                .overlay(alignment: .bottom) { DictationHUD() }
+                .animation(environment.reducesMotion ? nil : .easeOut(duration: 0.2), value: environment.dictation.machine.phase)
                 .toolbar {
                     ToolbarItem(placement: .navigation) { HomeButton() }
                     ToolbarItem(placement: .primaryAction) { UsagePills() }
@@ -24,8 +27,6 @@ struct MainWindow: View {
                     ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
                 }
         }
-        .overlay(alignment: .bottom) { DictationHUD() }
-        .animation(environment.reducesMotion ? nil : .easeOut(duration: 0.2), value: environment.dictation.machine.phase)
         .frame(minWidth: 800, minHeight: 500)
         .sheet(item: editorRequest) { request in
             if let workspace = environment.workspace {

@@ -117,7 +117,7 @@ struct WorkspaceLauncher: View {
             Text("launcher.startWith")
                 .font(metrics.font(.footnote).weight(.semibold))
                 .foregroundStyle(theme[.textTertiary])
-            HStack(spacing: metrics.space(.s)) {
+            FlowLayout(spacing: metrics.space(.s), lineSpacing: metrics.space(.s)) {
                 ForEach(agents, id: \.self) { kind in
                     let selected = kind == agent
                     Button { agent = kind } label: {
@@ -127,6 +127,8 @@ struct WorkspaceLauncher: View {
                                 .frame(width: metrics.size(8), height: metrics.size(8))
                             Text(verbatim: AgentLabels.name(for: kind.rawValue))
                                 .font(metrics.font(.footnote).weight(selected ? .semibold : .regular))
+                                .lineLimit(1)
+                                .fixedSize()
                         }
                         .padding(.horizontal, metrics.space(.m))
                         .padding(.vertical, metrics.space(.s))

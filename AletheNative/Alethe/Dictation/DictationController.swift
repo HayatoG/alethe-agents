@@ -4,7 +4,7 @@ import AppKit
 import AVFoundation
 import Observation
 
-/// Dictation (upstream PER-6, with Apple's on-device speech instead of Parakeet): ⌥⌘D pressed starts and
+/// Dictation (upstream PER-6, with Apple's on-device speech instead of Parakeet): ⌥⌘E pressed starts and
 /// pressed again stops, held it stops on release; Esc cancels. Final text goes into what had focus when
 /// it started — a terminal (typed, no Enter) or a text field — in the interface language.
 @Observable
@@ -36,14 +36,14 @@ final class DictationController {
         }
     }
 
-    /// ⌥⌘D down/up, and Esc while dictating.
+    /// ⌥⌘E down/up, and Esc while dictating. (⌥⌘D is macOS's Dock hiding shortcut and never reaches the app.)
     private func handle(_ event: NSEvent) -> Bool {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting([.capsLock, .numericPad, .function])
         if event.type == .keyDown, event.keyCode == 53, machine.isActive || machine.phase != .idle {
             apply(machine.escape())
             return true
         }
-        guard event.charactersIgnoringModifiers?.lowercased() == "d", flags == [.command, .option] else { return false }
+        guard event.charactersIgnoringModifiers?.lowercased() == "e", flags == [.command, .option] else { return false }
         if event.type == .keyDown {
             if !event.isARepeat { apply(machine.keyDown(at: event.timestamp)) }
         } else {

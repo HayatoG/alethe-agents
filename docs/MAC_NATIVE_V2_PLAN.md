@@ -1,11 +1,11 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 3 in progress** (Phases 1 and 2 complete and tested). Test run 2026-09-24 after P2-28: package
-> 272/272; UI 55/55 (after fixes); smoke sidebar-drag, pane-drag, grid-drag all pass. Open: the workspace
-> tab close button's accessibility frame
-> is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
-> resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-18. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 3 complete and tested** (Phases 1–3 done). Test run 2026-09-25 after P3-18: package
+> 336/336; UI 67/67 (after fixes); smoke sidebar-drag, pane-drag, grid-drag pass (grid-drag intermittent
+> right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
+> where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
+> prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
+> Next: break Phase 4 into tasks. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -628,7 +628,7 @@ Principles from the apple-design guidance, translated to SwiftUI/AppKit.
 | Shift+Tab, Ctrl+PgUp/PgDn | ⌥⌘← / ⌥⌘→ | Cycle terminals (Shift+Tab is left to the terminal; ⌥⌘↑/↓ went to prompt history in P2-6) |
 | Ctrl+B | ⌃⌘S | Toggle sidebar (standard) |
 | Ctrl + / − / 0 | ⌘+ / ⌘− / ⌘0 | UI zoom |
-| Ctrl+E | ⌘E is "Use Selection for Find" on Mac → dictation uses Fn-Fn / ⌥⌘D | Dictation |
+| Ctrl+E | ⌘E is "Use Selection for Find" on Mac → dictation uses ⌥⌘E (⌥⌘D is macOS's Dock hiding shortcut; Fn-Fn is system Dictation) | Dictation |
 | Ctrl+Enter (git) | ⌘↩ | Commit |
 | Ctrl+↑/↓ (prompt history) | ⌥⌘↑ / ⌥⌘↓ | Prompt history (P2-6; ⌃↑/⌃↓ belong to Mission Control) |
 | — | ⌘↑ / ⌘↓ | Previous / next prompt mark (P2-3) |
@@ -1746,14 +1746,14 @@ ship; they run per the test cadence above.
   *Tests (written, not run — owner decision):* `SetupProgressTests` (1; ran once while writing it), UI
   `SetupWalkthroughTests` (hide, then Help brings it back). Compiled.
 - [x] **P3-17 (L) Dictation.** Apple SpeechAnalyzer (ADR-7a) instead of Parakeet: microphone permission,
-  toggle and hold (Fn-Fn / ⌥⌘D, §6.3), text into the focused terminal or field, language from the
+  toggle and hold (⌥⌘E, §6.3), text into the focused terminal or field, language from the
   interface language. *Tests:* U (state machine), UI (permission-denied path). *Parity:* PER-6.
   *Done:* `AletheFoundation/DictationMachine` (idle → starting → listening → finishing; toggle on a short
   press, hold past 0.4 s stops on release, Esc cancels, failures: microphone denied, language
   unsupported, unavailable). `Dictation/DictationEngine`: `AVAudioEngine` tap converted with
   `AVAudioConverter` to `SpeechAnalyzer.bestAvailableAudioFormat`, `SpeechTranscriber` with volatile
   results, the language's model installed on first use through `AssetInventory`; stop finalizes through
-  the end of input. `DictationController`: ⌥⌘D down/up through a local event monitor (Edit › Dictate for
+  the end of input. `DictationController`: ⌥⌘E down/up through a local event monitor (Edit › Dictate for
   clicks), microphone permission via `AVCaptureDevice`, the target captured at start — a terminal gets
   the words typed without Enter (`TerminalPaneView.type`), a text field through `NSTextInputClient` —
   final segments inserted with a separating space; language = interface language in the user's region.
@@ -1762,11 +1762,29 @@ ship; they run per the test cadence above.
   `com.apple.security.device.audio-input` (`Alethe/Alethe.entitlements`) and has a localized
   `NSMicrophoneUsageDescription` (`InfoPlist.xcstrings`; the strings gate skips code-key rules there).
   Debug flag `-AletheDictationDenied YES` simulates a denied microphone.
-  *Deviation:* no Fn-Fn — macOS owns it for system Dictation, which also works in Alethe's fields; ⌥⌘D
-  only. No `CaptureInputSequenceProvider` yet (ADR-7a lists it as a macOS 27 option).
+  *Deviation:* no Fn-Fn — macOS owns it for system Dictation, which also works in Alethe's fields; ⌥⌘E
+  only (⌥⌘D, the plan's first choice, is macOS's global Dock hiding shortcut — found by the UI test). No `CaptureInputSequenceProvider` yet (ADR-7a lists it as a macOS 27 option).
   *Tests (written, not run — owner decision):* `DictationMachineTests` (3; ran once while writing them),
   UI `DictationTests` (denied path). Compiled. Needs a manual check with a real microphone.
-- [ ] **P3-18 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+- [x] **P3-18 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+  *Done:* `AletheNative/CHANGELOG.md` covers every Phase 3 task. Matrix (§8): every row scheduled for
+  Phase 3 is Done (HOME-1 without the ASCII background or avatar; PER-6 without Fn-Fn). upstream-watch
+  `2f3e5ed..origin/main` (2026-09-25): 0 commits, baseline stays `2f3e5ed`.
+  *Full test run* (2026-09-25): package 336/336 once three bugs were fixed — the control-sequence
+  regexes of `InstallLog.clean` and `ActivityMonitor.stripControls` used `\u{1B}`, which ICU rejects, so
+  nothing was stripped (and the no-hook activity heuristic counted escape codes as output); the JSONL
+  reader let through a line that ended just past its size limit; a Handoff test expected one redaction
+  where the capsule repeats the request. UI 66/67 on the first full run: the dictation test found that
+  ⌥⌘D is macOS's global Dock hiding shortcut and never reaches the app — dictation moved to ⌥⌘E; its HUD
+  moved into the detail column (over the whole split view AppKit took the clicks) with a larger dismiss
+  button. Then UI 67/67 for the changed test; smoke sidebar-drag, pane-drag and grid-drag pass (grid-drag
+  failed twice right after pane-drag and passed alone — intermittent, the app from the previous script
+  likely still quitting). Two earlier attempts stopped at a Touch ID prompt: Automation Mode had reverted
+  to requiring authentication. Also fixed from a screenshot: the empty-workspace agent chips were squeezed
+  into one row and broke letter by letter — they now wrap (`FlowLayout`).
+  *Phase 3 exit check:* all agents upstream supports on macOS are in the registry, install (P3-3) and
+  resume (P3-6); working / needs-input / done, cost and usage show live with notifications (P3-8 – P3-13);
+  Home shows real data (P3-15). Open: dictation with a real microphone and the earlier manual checks.
 
 **Phase 3 exit criteria:** every agent upstream supports on macOS runs, installs and resumes; agents'
 state (working, waiting, done, cost, usage) shows live with notifications; Home shows real data.
@@ -1916,7 +1934,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | PER-3 | Spotify | P7 | Not started | |
 | PER-4 | Discord Rich Presence | P7 | Not started | |
 | PER-5 | 9router | P7 | Not started | |
-| PER-6 | Dictation | P3 | Done | P3-17; Apple SpeechAnalyzer, ⌥⌘D toggle/hold, no Fn-Fn |
+| PER-6 | Dictation | P3 | Done | P3-17; Apple SpeechAnalyzer, ⌥⌘E toggle/hold, no Fn-Fn |
 | PER-7 | Remote control | P7 | Not started | |
 | EXP-1 | Agent Canvas POC + TokenHud | — | Won't port | Experimental upstream; revisit after v1 |
 | EXP-2 | Agent Sandbox | — | Won't port | Disabled upstream |

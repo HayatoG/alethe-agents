@@ -163,7 +163,7 @@ private struct ViewCommands: Commands {
             Button(environment.dictation.machine.isActive ? LocalizedStringKey("menu.edit.stopDictation") : "menu.edit.dictate") {
                 environment.dictation.toggle()
             }
-            .keyboardShortcut("d", modifiers: [.command, .option])
+            .keyboardShortcut("e", modifiers: [.command, .option])
         }
         CommandGroup(after: .help) {
             Button("menu.help.showSetup") {

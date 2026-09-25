@@ -21,7 +21,7 @@ struct DictationHUD: View {
             .padding(.horizontal, metrics.space(.xl))
             .padding(.vertical, metrics.space(.m))
             .background(theme[.surfaceModal], in: Capsule())
-            .overlay(Capsule().strokeBorder(theme[.borderStrong]))
+            .overlay(Capsule().strokeBorder(theme[.borderStrong]).allowsHitTesting(false))
             .padding(.bottom, metrics.space(.xxl))
             .transition(environment.reducesMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             .accessibilityElement(children: .contain)
@@ -49,7 +49,11 @@ struct DictationHUD: View {
                 }
                 .accessibilityIdentifier("dictation.openSettings")
             }
-            Button { dictation.dismissFailure() } label: { Image(systemName: "xmark") }
+            Button { dictation.dismissFailure() } label: {
+                Image(systemName: "xmark")
+                    .frame(width: metrics.size(22), height: metrics.size(22))
+                    .contentShape(Rectangle())
+            }
                 .buttonStyle(.borderless)
                 .accessibilityLabel(Text("dictation.dismiss"))
                 .accessibilityIdentifier("dictation.dismiss")
