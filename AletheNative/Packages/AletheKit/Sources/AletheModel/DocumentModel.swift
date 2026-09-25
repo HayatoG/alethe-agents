@@ -36,9 +36,12 @@ public final class DocumentModel<Document: VersionedDocument> {
         }
     }
 
+    /// A change that leaves the document as it was is dropped: observers (the pane host rebuilds
+    /// its hosted views) are not woken and nothing is saved.
     public func update(_ body: (inout Document) -> Void) {
         var next = document
         body(&next)
+        guard next != document else { return }
         replace(with: next)
     }
 
@@ -46,6 +49,7 @@ public final class DocumentModel<Document: VersionedDocument> {
     public func update(undoManager: UndoManager?, actionName: String, _ body: (inout Document) -> Void) {
         let before = document
         update(body)
+        guard document != before else { return }
         registerUndo(undoManager, restoring: before, actionName: actionName)
     }
 

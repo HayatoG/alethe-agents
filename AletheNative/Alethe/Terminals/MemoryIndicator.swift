@@ -100,6 +100,7 @@ private struct MemoryDetails: View {
         }
         .padding(metrics.space(.xl))
         .frame(width: metrics.size(340))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("memory.details")
     }
 

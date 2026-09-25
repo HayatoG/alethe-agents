@@ -16,8 +16,9 @@ final class CustomGridTests: XCTestCase {
         let one = element(app, "pane.header.one"), two = element(app, "pane.header.two")
         XCTAssertTrue(one.waitForExistence(timeout: 5))
 
-        element(app, "container.layout.api").click()
-        app.menuItems["Design Grid…"].click()
+        let picker = element(app, "container.layout.api")
+        picker.click()
+        picker.menuItems["Design Grid…"].click()
         XCTAssertTrue(element(app, "layoutDesigner").waitForExistence(timeout: 5))
         element(app, "layoutDesigner.preset.rows").click()
         element(app, "editor.confirm").click()
@@ -33,8 +34,9 @@ final class CustomGridTests: XCTestCase {
     func testDesignerGrowsTheSelectedBox() {
         let (app, _) = launchAlethe(arguments: ["-AletheUITestSeed", "panes"])
         XCTAssertTrue(element(app, "container.layout.api").waitForExistence(timeout: 5))
-        element(app, "container.layout.api").click()
-        app.menuItems["Design Grid…"].click()
+        let picker = element(app, "container.layout.api")
+        picker.click()
+        picker.menuItems["Design Grid…"].click()
         // Auto: one, two on the first row; three alone on the second, with a free slot beside it.
         element(app, "layoutDesigner.box.three").click()
         XCTAssertTrue(element(app, "layoutDesigner.grow.right").waitForExistence(timeout: 5))

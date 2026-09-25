@@ -17,7 +17,8 @@ final class LaunchAndQuitTests: XCTestCase {
         app.typeKey("q", modifierFlags: .command)
         XCTAssertTrue(app.dialogs.firstMatch.waitForExistence(timeout: 5) || app.sheets.firstMatch.waitForExistence(timeout: 1),
                       "quitting asks first")
-        app.buttons["Cancel"].click()
+        let alert = app.dialogs.firstMatch.exists ? app.dialogs.firstMatch : app.sheets.firstMatch
+        alert.buttons["Cancel"].click()
         XCTAssertEqual(app.state, .runningForeground, "Cancel keeps Alethe open")
         app.terminate()
     }
@@ -26,7 +27,9 @@ final class LaunchAndQuitTests: XCTestCase {
         let (app, root) = launchAlethe(arguments: ["-AletheUITestSeed", "panes"])
         XCTAssertTrue(element(app, "container.api").waitForExistence(timeout: 5))
         app.typeKey(",", modifierFlags: .command)
-        let toggle = app.checkBoxes["settings.startClean"].firstMatch
+        // Settings reopens on the last tab it showed.
+        app.toolbars.buttons["General"].firstMatch.click()
+        let toggle = element(app, "settings.startClean")
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         toggle.click()
         RunLoop.current.run(until: Date().addingTimeInterval(1))

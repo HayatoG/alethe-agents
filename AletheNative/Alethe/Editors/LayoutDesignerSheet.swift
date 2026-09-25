@@ -50,6 +50,7 @@ struct LayoutDesignerSheet: View {
         .frame(width: metrics.size(760), height: metrics.size(500))
         .background(theme[.surfaceModal])
         .onAppear(perform: load)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("layoutDesigner")
     }
 
@@ -168,6 +169,7 @@ struct LayoutDesignerSheet: View {
                 }
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("layoutDesigner.canvas")
     }
 

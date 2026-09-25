@@ -12,13 +12,15 @@ final class LayoutModeTests: XCTestCase {
     }
 
     private func choose(_ mode: String, in app: XCUIApplication) {
-        element(app, "container.layout.api").click()
-        app.menuItems[mode].click()
+        let picker = element(app, "container.layout.api")
+        picker.click()
+        picker.menuItems[mode].click()
     }
 
     func testSpotlightAndSidebar() {
         let (app, _) = launchAlethe(arguments: ["-AletheUITestSeed", "panes"])
-        let one = element(app, "pane.header.one"), two = element(app, "pane.header.two")
+        // The panes, not their headers (headers all have the same height).
+        let one = element(app, "pane.one"), two = element(app, "pane.two")
         XCTAssertTrue(one.waitForExistence(timeout: 5))
 
         choose("Spotlight", in: app)
@@ -37,8 +39,9 @@ final class LayoutModeTests: XCTestCase {
             let (app, _) = launchAlethe(arguments: ["-AletheUITestSeed", "panes"])
             XCTAssertTrue(element(app, "container.layout.api").waitForExistence(timeout: 5))
             for key in keys { app.typeKey(key, modifierFlags: .command) }
-            element(app, "container.layout.api").click()
-            XCTAssertTrue(app.menuItems["Spotlight"].waitForExistence(timeout: 5), "picker missed at \(label)")
+            let picker = element(app, "container.layout.api")
+            picker.click()
+            XCTAssertTrue(picker.menuItems["Spotlight"].waitForExistence(timeout: 5), "picker missed at \(label)")
             app.typeKey(.escape, modifierFlags: [])
             app.terminate()
         }

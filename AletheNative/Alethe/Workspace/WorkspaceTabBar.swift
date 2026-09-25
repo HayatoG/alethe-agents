@@ -59,15 +59,15 @@ struct WorkspaceTabBar: View {
                     .font(metrics.font(.caption).monospacedDigit())
                     .foregroundStyle(theme[.textTertiary])
             }
-            Button {
-                workspace.update { $0.closeWorkspaceTab(tab.id) }
-            } label: {
-                Image(systemName: "xmark")
-                    .font(metrics.font(.caption).weight(.semibold))
-                    .frame(width: metrics.size(14), height: metrics.size(14))
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.borderless)
+            // Pure SwiftUI, not a borderless (AppKit-backed) button: inside the horizontal scroll
+            // view an NSButton reports a wrong frame and cannot be hit where it is drawn.
+            Image(systemName: "xmark")
+                .font(metrics.font(.caption).weight(.semibold))
+                .frame(width: metrics.size(14), height: metrics.size(14))
+                .contentShape(Rectangle())
+                .onTapGesture { workspace.update { $0.closeWorkspaceTab(tab.id) } }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { workspace.update { $0.closeWorkspaceTab(tab.id) } }
             .foregroundStyle(theme[.textTertiary])
             .opacity(isActive || hovered == tab.id ? 1 : 0)
             .help(Text("workspaceTabs.close"))

@@ -47,6 +47,7 @@ struct LinkPreviewSheet: View {
         }
         .frame(width: metrics.size(760), height: metrics.size(560))
         .background(theme[.bg])
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("linkPreview")
     }
 

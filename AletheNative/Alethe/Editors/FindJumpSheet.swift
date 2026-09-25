@@ -54,7 +54,8 @@ struct FindJumpSheet: View {
             Divider()
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: metrics.space(.xxs)) {
+                    // Not lazy: at most 50 rows, and every row stays reachable by accessibility.
+                    VStack(spacing: metrics.space(.xxs)) {
                         if results.isEmpty {
                             Text("findJump.nothing")
                                 .font(metrics.font(.body))
@@ -78,6 +79,7 @@ struct FindJumpSheet: View {
         .background(theme[.surfaceModal])
         .onAppear { fieldFocused = true }
         .onExitCommand { dismiss() }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("findJump")
     }
 
@@ -118,7 +120,8 @@ struct FindJumpSheet: View {
         .padding(.vertical, metrics.space(.s))
         .background(selected ? theme[.accentFaint] : Color.clear, in: RoundedRectangle(cornerRadius: metrics.radius(.sm)))
         .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: [info.title, info.subtitle].compactMap { $0 }.joined(separator: ", ")))
         .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
         .accessibilityIdentifier("findJump.row.\(info.title)")
     }

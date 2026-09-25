@@ -1,11 +1,12 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 complete — compiled, tests not run** (Phase 1 complete). P2-1…P2-5 tested; P2-6…P2-28
-> compiled, their tests written but never run (owner decision 2026-09-24): the full package and UI runs
-> are owed before Phase 3. Manual checks owed: prompt redraw after resize (P2-3), image paste and drops
-> (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container
-> reorder drag (P2-16), grid drags (P2-19), hibernation and resume (P2-24), quit confirmation (P2-26).
-> Next: the owed test run, then Phase 3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 complete and tested** (Phase 1 complete). Test run 2026-09-24 after P2-28: package
+> 272/272; UI 53/55 (after fixes); smoke sidebar-drag, pane-drag, grid-drag all pass. Open: `WebPaneTests`
+> (the address field loses the `c` of `/etc` when XCUITest types it — to investigate), `AppearanceTests`
+> (the run cannot take its screenshot — environment); the workspace tab close button's accessibility frame
+> is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
+> resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
+> Next: Phase 3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1442,9 +1443,15 @@ they run per the test cadence above.
   grid of containers) are left open. §6.3 gains ⇧⌘↩ / ⌥⌘↩ and ⇧⌘F; ⌘K is Find/Jump without the ⇧⌘P
   alias. upstream-watch `2f3e5ed..origin/main` (2026-09-24): 0 commits — nothing to triage, baseline
   stays `2f3e5ed` (the run rewrote the same-day report with an empty range; the original was kept).
-  *Full test run: not done* — owner decision 2026-09-24: continue through P2-28 without running tests.
-  Owed before Phase 3: the package tests (P2-6…P2-27 written, never run) and the UI suite with its
-  three smoke scripts (`grid-drag.sh` new in P2-19); manual checks listed in the status line.
+  *Full test run* (owner request, after P2-28): package 272/272 once two bugs were fixed (`./path` links
+  lost their leading dot; git's capitalized “Not a git repository” was not recognized). UI first run 40/55:
+  a container `accessibilityIdentifier` without `.accessibilityElement(children: .contain)` hid its
+  children's identifiers (layout designer, Find/Jump, link preview, memory popover), a lazy stack hid
+  Find/Jump rows, and `DocumentModel.update` woke observers (and rebuilt hosted pane views) even when a
+  change left the document equal — now dropped; the rest were test queries (ambiguous menu items,
+  Settings reopening on its last tab, header vs pane frames). Final: UI 53/55, three smoke scripts pass.
+  Open: `WebPaneTests` address typing loses one character; `AppearanceTests` screenshot (environment);
+  tab close button accessibility frame off screen (VoiceOver).
   *Phase 2 exit check:* terminal and workspace rows at parity (WS-3's two scopes aside); terminals
   survive relaunch with their scrollback (P2-7); idle hidden terminals hibernate when the policy
   allows, resuming when shown (P2-24). Everything compiled; nothing verified by running tests.

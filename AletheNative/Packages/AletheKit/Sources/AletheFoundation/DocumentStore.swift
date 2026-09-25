@@ -1,7 +1,7 @@
 import Foundation
 
 /// A document persisted as one JSON file with a `schemaVersion` field.
-public protocol VersionedDocument: Codable, Sendable {
+public protocol VersionedDocument: Codable, Sendable, Equatable {
     /// Version this build writes.
     static var currentVersion: Int { get }
     /// `migrations[n]` turns a version-`n` object into a version-`n + 1` object.

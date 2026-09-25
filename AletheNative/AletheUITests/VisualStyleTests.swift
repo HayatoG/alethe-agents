@@ -17,17 +17,19 @@ final class VisualStyleTests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 5))
         let normalHeight = row.frame.height
         app.typeKey(",", modifierFlags: .command)
-        app.radioButtons["Clean"].firstMatch.click()
+        app.toolbars.buttons["Appearance"].firstMatch.click()
+        app.radioGroups["settings.style"].radioButtons.element(boundBy: 1).click()
         XCTAssertTrue(eventually { row.frame.height < normalHeight }, "the sidebar gets compact")
-        app.checkBoxes["settings.reduceMotion"].firstMatch.click()
+        app.descendants(matching: .any)["settings.reduceMotion"].firstMatch.click()
         RunLoop.current.run(until: Date().addingTimeInterval(1))
         app.terminate()
 
         let (relaunched, _) = launchAlethe(dataRoot: root)
         XCTAssertTrue(relaunched.descendants(matching: .any)["sidebar.project.scratch"].waitForExistence(timeout: 5))
         relaunched.typeKey(",", modifierFlags: .command)
-        XCTAssertEqual(relaunched.radioButtons["Clean"].firstMatch.value as? Int, 1, "Clean survives a relaunch")
-        XCTAssertEqual(relaunched.checkBoxes["settings.reduceMotion"].firstMatch.value as? Int, 1)
+        relaunched.toolbars.buttons["Appearance"].firstMatch.click()
+        XCTAssertEqual(relaunched.radioGroups["settings.style"].radioButtons.element(boundBy: 1).value as? Int, 1, "Clean survives a relaunch")
+        XCTAssertEqual(relaunched.descendants(matching: .any)["settings.reduceMotion"].firstMatch.value as? Int, 1)
         relaunched.terminate()
     }
 
@@ -38,11 +40,12 @@ final class VisualStyleTests: XCTestCase {
             XCTAssertTrue(element(app, "workspace.empty").waitForExistence(timeout: 5))
             for key in keys { app.typeKey(key, modifierFlags: .command) }
             app.typeKey(",", modifierFlags: .command)
-            let clean = app.radioButtons["Clean"].firstMatch
+            app.toolbars.buttons["Appearance"].firstMatch.click()
+            let clean = app.radioGroups["settings.style"].radioButtons.element(boundBy: 1)
             XCTAssertTrue(clean.waitForExistence(timeout: 5))
             clean.click()
             XCTAssertTrue(eventually { (clean.value as? Int) == 1 }, "style missed at \(label)")
-            let motion = app.checkBoxes["settings.reduceMotion"].firstMatch
+            let motion = app.descendants(matching: .any)["settings.reduceMotion"].firstMatch
             motion.click()
             XCTAssertTrue(eventually { (motion.value as? Int) == 1 }, "motion toggle missed at \(label)")
             app.terminate()
