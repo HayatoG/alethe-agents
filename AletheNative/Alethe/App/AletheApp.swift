@@ -1,5 +1,6 @@
 import AletheDesign
 import AletheFoundation
+import AletheModel
 import SwiftUI
 
 @main
@@ -31,6 +32,7 @@ struct AletheApp: App {
             FileCommands(environment: environment)
             ViewCommands(environment: environment)
             TerminalCommands(environment: environment)
+            HistoryCommands(environment: environment)
         }
 
         Settings {
@@ -104,5 +106,43 @@ private struct ViewCommands: Commands {
             .disabled(environment.workspace?.document.workspace.selectedProjectID == nil && !fullscreen)
             Divider()
         }
+    }
+}
+
+/// History menu (Safari's idiom): back/forward through visited workspace views, switching and
+/// reopening workspace tabs (upstream Alt+←/→, Ctrl+Tab, Ctrl+Shift+T).
+private struct HistoryCommands: Commands {
+    let environment: AppEnvironment
+
+    @MainActor private var document: WorkspaceDocument? { environment.workspace?.document }
+
+    var body: some Commands {
+        CommandMenu("menu.history") {
+            Button("menu.view.back") { environment.workspace?.update { $0.navigateHistory(-1) } }
+                .keyboardShortcut("[", modifiers: .command)
+                .disabled(document?.canGoBack != true)
+            Button("menu.view.forward") { environment.workspace?.update { $0.navigateHistory(1) } }
+                .keyboardShortcut("]", modifiers: .command)
+                .disabled(document?.canGoForward != true)
+            Divider()
+            Button("menu.history.nextTab") { showTab(1) }
+                .keyboardShortcut(.tab, modifiers: .control)
+                .disabled(document?.workspaceTab(1) == nil)
+            Button("menu.history.previousTab") { showTab(-1) }
+                .keyboardShortcut(.tab, modifiers: [.control, .shift])
+                .disabled(document?.workspaceTab(-1) == nil)
+            Divider()
+            Button("menu.history.closeTab") {
+                environment.workspace?.update { doc in doc.workspace.activeTabID.map { doc.closeWorkspaceTab($0) } }
+            }
+            .disabled(document?.workspace.activeTabID == nil)
+            Button("menu.history.reopenTab") { environment.workspace?.update { $0.reopenClosedWorkspaceTab() } }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
+                .disabled(document?.workspace.closedTabs.isEmpty ?? true)
+        }
+    }
+
+    @MainActor private func showTab(_ offset: Int) {
+        environment.workspace?.update { doc in doc.workspaceTab(offset).map { doc.activateWorkspaceTab($0) } }
     }
 }

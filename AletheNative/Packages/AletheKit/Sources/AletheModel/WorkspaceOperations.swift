@@ -118,6 +118,7 @@ extension WorkspaceDocument {
         workspace.gridWeights.removeValue(forKey: id.rawValue)
         if workspace.selectedProjectID == id { workspace.selectedProjectID = nil }
         normalizeContainerWeights()
+        repairNavigation()
     }
 
     /// Moves a project to `location` at `index` (clamped). Moving within the same list accounts for
@@ -299,6 +300,8 @@ extension WorkspaceDocument {
             workspace.isolatedPaneID = nil
         }
         normalizeContainerWeights()
+        repairNavigation()
+        syncActiveTab()
     }
 
     // MARK: - Containers

@@ -168,14 +168,20 @@ struct SidebarActions {
         workspace.update { $0.setLaneVisible(visible, for: pane) }
     }
 
+    /// Selecting a project shows it in its own workspace tab; with ⌥ it joins the current tab instead
+    /// (upstream `openProjectWorkspace` / `addProjectToWorkspace`).
     func select(_ item: SidebarItem?) {
+        let adding = NSEvent.modifierFlags.contains(.option)
         workspace.update { doc in
+            func show(_ id: ProjectID) {
+                if adding { doc.open(id) } else { doc.openInTab(id) }
+            }
             switch item {
             case .project(let id):
-                doc.open(id)
+                show(id)
             case .tab(let tabID):
                 if let project = doc.paneHolding(tabID)?.project {
-                    doc.open(project.id)
+                    show(project.id)
                     doc.activateTab(tabID)
                 }
             case .group, .none:

@@ -21,19 +21,27 @@ struct WorkspaceView: View {
             content
             #endif
         }
+        .onChange(of: environment.workspace?.document.currentSnapshot) { _, _ in
+            environment.workspace?.update { $0.syncActiveTab() }
+        }
         .onChange(of: allTabIDs) { _, tabs in environment.terminals.prune(keeping: tabs) }
         .onChange(of: allPaneIDs) { _, panes in environment.contentPanes.prune(keeping: panes) }
         .onChange(of: environment.theme) { _, _ in applyAppearance() }
         .onChange(of: environment.terminalFontSize) { _, _ in applyAppearance() }
     }
 
-    @ViewBuilder
     private var content: some View {
-        if let doc = environment.workspace?.document, !doc.workspace.openProjectIDs.isEmpty {
-            PaneHost(document: doc, terminalStates: environment.terminals.states,
-                     terminalGenerations: environment.terminals.generations)
-        } else {
-            emptyState
+        VStack(spacing: 0) {
+            if let workspace = environment.workspace, !workspace.document.workspace.tabs.isEmpty {
+                WorkspaceTabBar(workspace: workspace)
+            }
+            if let doc = environment.workspace?.document, !doc.workspace.openProjectIDs.isEmpty {
+                PaneHost(document: doc, terminalStates: environment.terminals.states,
+                         terminalGenerations: environment.terminals.generations)
+            } else {
+                emptyState
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
     }
 

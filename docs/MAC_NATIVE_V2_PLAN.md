@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-16 (P2-1…P2-5 tested; P2-6…P2-16
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-17 (P2-1…P2-5 tested; P2-6…P2-17
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-17. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-18. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1237,8 +1237,26 @@ they run per the test cadence above.
   `ContainerControlsTests` (collapse/expand, project alone, pane alone, ⇧⌘↩). Owed: HT for the new
   header buttons at three zoom levels and a container-reorder case in `Scripts/smoke/pane-drag.sh`.
   Compiled.
-- [ ] **P2-17 (M) Workspace tabs and history.** Tabs of open workspaces, reopen closed tab (⇧⌘T), back
+- [x] **P2-17 (M) Workspace tabs and history.** Tabs of open workspaces, reopen closed tab (⇧⌘T), back
   and forward (⌘[ / ⌘]). *Tests:* U (port of `workspaceNavigation` cases), UI. *Parity:* WS-5.
+  *Done:* `AletheModel/WorkspaceNavigation` ports upstream `workspaceNavigation.ts` and the navigation
+  slices: `WorkspaceSnapshot` (open containers, widths, focus, selection, collapsed, fullscreen,
+  isolated pane), `WorkspaceTab` (project or composition, pinned) and `WorkspaceHistoryEntry`.
+  `WorkspaceState` gains `tabs`, `closedTabs`, `activeTabID`, `history`, `historyIndex`, decoded with
+  defaults (no schema bump). Operations: `openInTab` (a project's own tab, reused; a project already in
+  the view is only selected), `activateWorkspaceTab`, `workspaceTab(_:)` (wrapping), `togglePinned`,
+  `moveWorkspaceTab`, `closeWorkspaceTab` (to the reopen list; next tab shown), `reopenClosedWorkspaceTab`,
+  `navigateHistory`, `syncActiveTab` (the live view is written back to the active tab and the current
+  history entry; a project tab showing more becomes a composition; with no tab, a non-empty view
+  becomes the first one), `repairNavigation`. Limits 10 tabs (oldest unpinned dropped) and 50 history
+  entries. `Workspace/WorkspaceTabBar` above the panes: back/forward, tabs with color, name and "+N",
+  close on hover, pin/close menu, drag to reorder. Sidebar: a click opens the project's tab; ⌥-click
+  adds it to the current tab (upstream `addProjectToWorkspace`). New History menu (Safari idiom): Back
+  ⌘[, Forward ⌘], Show Next/Previous Tab ⌃Tab / ⌃⇧Tab, Close Workspace Tab, Reopen Closed Tab ⇧⌘T.
+  *Deviation:* no terminal or group tabs yet (groups open with SB-3 work); composition tabs cover them.
+  *Tests (written, not run — owner decision 2026-09-24):* `WorkspaceNavigationTests` (12, port of the
+  upstream cases plus tab operations), UI `WorkspaceTabsTests` (tab per project, ⌘[ / ⌘], close,
+  ⇧⌘T). Compiled.
 - [ ] **P2-18 (M) Spotlight and Sidebar layouts.** Layout picker per project; Auto stays the default.
   *Tests:* U (geometry), UI, HT. *Parity:* WS-3 (part).
 - [ ] **P2-19 (L) Custom grid + layout designer.** Cell merge/split, drag handles, per-scope layout
@@ -1325,7 +1343,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-2 | Flat mode | P2 | Not started | |
 | WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto done (P1-6) |
 | WS-4 | Named project grids | P2 | Not started | |
-| WS-5 | Tabs, closed tabs, history | P2 | Not started | |
+| WS-5 | Tabs, closed tabs, history | P2 | Done | P2-17; History menu (⌘[ ⌘] ⌃Tab ⇧⌘T), ⌥-click adds to the current tab |
 | WS-6 | Markdown pane | P2 | Done | P2-9; Mermaid as code (ADR-11) |
 | WS-7 | Image pane | P2 | Done | P2-10 |
 | WS-8 | Video pane | P2 | Done | P2-10; AVKit |

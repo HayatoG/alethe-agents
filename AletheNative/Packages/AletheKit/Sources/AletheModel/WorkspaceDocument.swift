@@ -132,11 +132,22 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
     public var fullscreenProjectID: ProjectID?
     /// The one pane shown, filling its fullscreen container (upstream `isolatedPaneId`).
     public var isolatedPaneID: PaneID?
+    /// Workspace tabs in bar order, pinned first (upstream `workspace.tabs`).
+    public var tabs: [WorkspaceTab]
+    /// Recently closed tabs, newest first, for ⇧⌘T (upstream `workspace.closedTabs`).
+    public var closedTabs: [WorkspaceTab]
+    public var activeTabID: WorkspaceTabID?
+    /// Visited views for back/forward, oldest first (upstream `workspace.history`).
+    public var history: [WorkspaceHistoryEntry]
+    /// The current entry of `history`; -1 when empty.
+    public var historyIndex: Int
 
     public init(openProjectIDs: [ProjectID] = [], containerWeights: [Double] = [],
                 gridWeights: [String: GridWeights] = [:], focusedPaneID: PaneID? = nil,
                 selectedProjectID: ProjectID? = nil, collapsedProjectIDs: [ProjectID] = [],
-                fullscreenProjectID: ProjectID? = nil, isolatedPaneID: PaneID? = nil) {
+                fullscreenProjectID: ProjectID? = nil, isolatedPaneID: PaneID? = nil, tabs: [WorkspaceTab] = [],
+                closedTabs: [WorkspaceTab] = [], activeTabID: WorkspaceTabID? = nil,
+                history: [WorkspaceHistoryEntry] = [], historyIndex: Int = -1) {
         self.openProjectIDs = openProjectIDs
         self.containerWeights = containerWeights
         self.gridWeights = gridWeights
@@ -145,9 +156,14 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
         self.collapsedProjectIDs = collapsedProjectIDs
         self.fullscreenProjectID = fullscreenProjectID
         self.isolatedPaneID = isolatedPaneID
+        self.tabs = tabs
+        self.closedTabs = closedTabs
+        self.activeTabID = activeTabID
+        self.history = history
+        self.historyIndex = historyIndex
     }
 
-    /// Fields added after v2 (P2-16) are optional in the file: older files decode unchanged.
+    /// Fields added after v2 (P2-16, P2-17) are optional in the file: older files decode unchanged.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         openProjectIDs = try container.decode([ProjectID].self, forKey: .openProjectIDs)
@@ -158,6 +174,11 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
         collapsedProjectIDs = try container.decodeIfPresent([ProjectID].self, forKey: .collapsedProjectIDs) ?? []
         fullscreenProjectID = try container.decodeIfPresent(ProjectID.self, forKey: .fullscreenProjectID)
         isolatedPaneID = try container.decodeIfPresent(PaneID.self, forKey: .isolatedPaneID)
+        tabs = try container.decodeIfPresent([WorkspaceTab].self, forKey: .tabs) ?? []
+        closedTabs = try container.decodeIfPresent([WorkspaceTab].self, forKey: .closedTabs) ?? []
+        activeTabID = try container.decodeIfPresent(WorkspaceTabID.self, forKey: .activeTabID)
+        history = try container.decodeIfPresent([WorkspaceHistoryEntry].self, forKey: .history) ?? []
+        historyIndex = try container.decodeIfPresent(Int.self, forKey: .historyIndex) ?? history.count - 1
     }
 }
 

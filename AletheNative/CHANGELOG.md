@@ -79,4 +79,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a bar above it offers to open the page in a pane beside it or in your browser, once per address.
 - Project containers can be collapsed to a narrow strip, shown alone (⌥⌘↩ or the header button) and
   reordered by dragging their header; a single pane can be shown alone from its menu or with ⇧⌘↩.
+- Workspace tabs: clicking a project in the sidebar opens it in its own tab (⌥-click adds it to the
+  current one instead). Tabs sit above your panes; switch with a click or ⌃Tab / ⌃⇧Tab, drag to
+  reorder, pin the ones you keep, and close them — History › Reopen Closed Tab (⇧⌘T) brings the last
+  one back. Back (⌘[) and Forward (⌘]) retrace the views you visited, and everything is restored on
+  relaunch.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
