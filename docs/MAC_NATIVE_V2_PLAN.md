@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-4. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-5. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1521,9 +1521,19 @@ ship; they run per the test cadence above.
   exists — upstream's rule) and Uninstall…; “x.y available” next to the version.
   *Tests (written, not run — owner decision):* `AgentInstallTests` (6), UI `AgentInstallTests` (the sheet
   in a debug dry-run mode that prints the command instead of running it). Compiled.
-- [ ] **P3-4 (M) New Terminal sheet completion.** Repeat last (⌥⌘T, upstream `lastTerminalCreation`),
+- [x] **P3-4 (M) New Terminal sheet completion.** Repeat last (⌥⌘T, upstream `lastTerminalCreation`),
   named-grid picker (P2-20), planner option; 9router moves with Phase 5 integrations. *Tests:* U, UI.
   *Parity:* AG-3.
+  *Done:* `PreferencesDocument.lastTerminalCreation` (`TerminalCreation`: agent, a folder other than the
+  project's, unrestricted, extra arguments; optional) is written by every New Terminal. File › New
+  Terminal Like Last (⌥⌘T, upstream Ctrl+Alt+T) adds that terminal to the selected project without the
+  sheet; with nothing to repeat, or the agent since turned off, it opens the sheet. The sheet gains a
+  Grid picker when the project has named grids (P2-20): the chosen grid is shown first, so the pane
+  joins it.
+  *Deviation:* upstream's planner option is the orchestration mode (a canvas and its MCP wiring); it
+  moves to Phase 6 with the Orchestrator (ORC). 9router moves to Phase 5.
+  *Tests (written, not run — owner decision):* `TerminalCreationTests` (2), UI `NewTerminalLikeLastTests`
+  (⌥⌘T repeats a shell without the sheet). Compiled.
 - [ ] **P3-5 (M) Model discovery.** Models each provider offers (upstream `discover_provider_models`),
   a model picker in the New Terminal sheet passed as the agent's model flag. *Tests:* U (parsers), UI.
   *Parity:* AG-9.
@@ -1655,7 +1665,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SB-8 | View placement | P4 | Not started | |
 | AG-1 | 11 agent types | P1 (5), P3 | Done | P3-1; ten agents; `wsl`: Won't port (Windows-only) |
 | AG-2 | Unrestricted flags | P1 | Done | Launch support (P1-8); per-terminal toggle in the New Terminal sheet (P1-9) |
-| AG-3 | New-terminal modal | P1, P3 | Partial | Basic sheet + first prompt (P1-9); grid picker, 9router, planner, repeat last in P3 |
+| AG-3 | New-terminal modal | P1, P3 | Done | Basic sheet + first prompt (P1-9); repeat last ⌥⌘T and grid picker (P3-4); planner → Phase 6, 9router → Phase 5 |
 | AG-4 | Launcher resolution + override | P1, P3 | Done | Resolver + `cliPaths` (P1-8); Choose CLI… on a missing CLI (P1-7); Settings › Agents with version, Choose…, Reset (P3-2) |
 | AG-5 | Install/update/uninstall CLIs | P3 | Done | P3-3; macOS commands from each vendor's docs (script, Homebrew, npm) |
 | AG-6 | Enable/disable agents | P3 | Done | P3-2; Settings › Agents |

@@ -33,6 +33,9 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var visualStyle: String?
     /// Reduced motion even when macOS Reduce Motion is off (upstream `motionPreference`, P2-27).
     public var reducedMotion: Bool?
+    /// The last New Terminal choice, for New Terminal Like Last ⌥⌘T (upstream
+    /// `lastTerminalCreation`, P3-4).
+    public var lastTerminalCreation: TerminalCreation?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,
@@ -51,5 +54,26 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public mutating func zoom(by steps: Int) {
         let next = (uiScale + Double(steps) * Self.uiScaleStep) * 10
         uiScale = min(max(next.rounded() / 10, Self.uiScaleRange.lowerBound), Self.uiScaleRange.upperBound)
+    }
+}
+
+/// A terminal as New Terminal created it, repeated by New Terminal Like Last.
+public struct TerminalCreation: Codable, Hashable, Sendable {
+    public var agent: String
+    /// A folder other than the project's; nil runs in the project folder.
+    public var folder: String?
+    public var unrestricted: Bool
+    public var extraArguments: [String]
+
+    public init(agent: String, folder: String? = nil, unrestricted: Bool = false, extraArguments: [String] = []) {
+        self.agent = agent
+        self.folder = folder
+        self.unrestricted = unrestricted
+        self.extraArguments = extraArguments
+    }
+
+    /// A new tab like the one this records.
+    public func tab() -> PaneTab {
+        PaneTab(agent: agent, workingDirectory: folder, unrestricted: unrestricted, extraArguments: extraArguments)
     }
 }

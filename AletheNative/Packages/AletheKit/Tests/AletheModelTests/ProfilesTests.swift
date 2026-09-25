@@ -46,3 +46,18 @@ import Testing
         #expect(again.document.projects.map(\.name) == ["Only in A"])
     }
 }
+
+/// New Terminal Like Last (P3-4).
+@Suite struct TerminalCreationTests {
+    @Test func repeatsTheRecordedTab() {
+        let creation = TerminalCreation(agent: "codex", folder: "/tmp/x", unrestricted: true, extraArguments: ["--model", "o3"])
+        let tab = creation.tab()
+        #expect(tab.agent == "codex" && tab.workingDirectory == "/tmp/x" && tab.unrestricted && tab.extraArguments == ["--model", "o3"])
+    }
+
+    @Test func olderPreferencesDecodeWithoutIt() throws {
+        let json = #"{"schemaVersion":1,"themeID":"elite-indigo","uiScale":1,"alwaysStartUnrestricted":false}"#
+        let preferences = try JSONDecoder().decode(PreferencesDocument.self, from: Data(json.utf8))
+        #expect(preferences.lastTerminalCreation == nil)
+    }
+}

@@ -23,6 +23,8 @@ struct NewTerminalSheet: View {
     @State private var folder = ""
     @State private var unrestricted = false
     @State private var prompt = ""
+    /// Named grid the new terminal joins (P3-4); nil is the main grid.
+    @State private var gridID: ProjectGridID?
 
     private var registry: AgentRegistry { .builtin }
     private var agents: [AgentKind] { registry.enabledKinds(environment.preferences?.document.enabledAgents) }
@@ -50,7 +52,19 @@ struct NewTerminalSheet: View {
                         Text(verbatim: project.name).tag(ProjectID?.some(project.id))
                     }
                 } label: { Text("newTerminal.project") }
-                    .onChange(of: projectID) { _, _ in folder = project?.folder ?? "" }
+                    .onChange(of: projectID) { _, _ in
+                        folder = project?.folder ?? ""
+                        gridID = project?.shownGridID
+                    }
+                if let project, !project.namedGrids.isEmpty {
+                    Picker(selection: $gridID) {
+                        Text("projectGrid.main").tag(ProjectGridID?.none)
+                        ForEach(project.namedGrids) { grid in
+                            Text(verbatim: grid.name).tag(Optional(grid.id))
+                        }
+                    } label: { Text("newTerminal.grid") }
+                        .accessibilityIdentifier("newTerminal.grid")
+                }
             }
 
             LabeledContent("newTerminal.folder") {
@@ -127,6 +141,7 @@ struct NewTerminalSheet: View {
         agent = last.flatMap { agents.contains($0) ? $0 : nil } ?? (agents.contains(.claude) ? .claude : agents.first ?? .shell)
         projectID = initialProject.flatMap { workspace.document.project($0)?.id } ?? workspace.document.projects.first?.id
         folder = project?.folder ?? ""
+        gridID = project?.shownGridID
         if let targetPane, let found = workspace.document.pane(targetPane) {
             folder = found.pane.activeTab?.workingDirectory ?? found.project.folder
         }
@@ -161,8 +176,15 @@ struct NewTerminalSheet: View {
                 $0.addTab(tab, to: targetPane)
             }
         } else {
+            let grid = gridID
             workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newTerminal")) {
+                // New panes join the shown grid: show the chosen one first.
+                if grid != $0.project(project.id)?.shownGridID { $0.activateGrid(grid, in: project.id) }
                 $0.addPane(to: project.id, tab: tab)
+            }
+            environment.preferences?.update {
+                $0.lastTerminalCreation = TerminalCreation(agent: tab.agent, folder: tab.workingDirectory,
+                                                           unrestricted: tab.unrestricted, extraArguments: tab.extraArguments)
             }
         }
         environment.preferences?.update { $0.lastAgent = agent.rawValue }

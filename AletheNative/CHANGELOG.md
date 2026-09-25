@@ -131,4 +131,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Install, update and uninstall agent CLIs from Settings › Agents: Alethe offers the ways that work
   on your Mac (the vendor's install script, Homebrew or npm), shows the exact command and its output,
   and checks the result. A newer release is flagged next to the installed version.
+- File › New Terminal Like Last (⌥⌘T) opens another terminal just like the last one you created,
+  without the sheet. New Terminal also lets you pick which of the project's grids it joins.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

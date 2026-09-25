@@ -1,3 +1,4 @@
+import AletheAgents
 import AletheDesign
 import AletheFoundation
 import AletheModel
@@ -60,6 +61,9 @@ private struct FileCommands: Commands {
             Button("menu.file.newTerminal") { environment.editorRequest = .newTerminal(nil) }
                 .keyboardShortcut("t", modifiers: .command)
                 .disabled(environment.workspace?.document.projects.isEmpty ?? true)
+            Button("menu.file.newTerminalLikeLast") { newTerminalLikeLast() }
+                .keyboardShortcut("t", modifiers: [.command, .option])
+                .disabled(environment.workspace?.document.projects.isEmpty ?? true)
             Button("menu.file.addContent") { environment.editorRequest = .addContent(nil) }
                 .keyboardShortcut("a", modifiers: [.command, .shift])
                 .disabled(AddContentSheet.options.isEmpty || (environment.workspace?.document.projects.isEmpty ?? true))
@@ -69,6 +73,22 @@ private struct FileCommands: Commands {
                 .disabled(environment.workspace == nil)
             Button("menu.file.importTauri") { environment.editorRequest = .importTauri }
                 .disabled(environment.workspace == nil)
+        }
+    }
+
+    /// Repeats the last New Terminal choice in the selected project without the sheet (upstream
+    /// Ctrl+Alt+T); with nothing to repeat, the sheet opens.
+    @MainActor private func newTerminalLikeLast() {
+        guard let workspace = environment.workspace,
+              let project = workspace.document.workspace.selectedProjectID ?? workspace.document.projects.first?.id,
+              let last = environment.preferences?.document.lastTerminalCreation,
+              AgentRegistry.builtin.enabledKinds(environment.preferences?.document.enabledAgents)
+                .contains(AgentKind(rawValue: last.agent)) else {
+            environment.editorRequest = .newTerminal(nil)
+            return
+        }
+        workspace.update(undoManager: NSApp.keyWindow?.undoManager, actionName: String(localized: "undo.newTerminal")) {
+            $0.addPane(to: project, tab: last.tab())
         }
     }
 

@@ -3299,6 +3299,23 @@
         }
       }
     },
+    "menu.file.newTerminalLikeLast" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Terminal Like Last"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novo Terminal Igual ao Último"
+          }
+        }
+      }
+    },
     "menu.history" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3873,6 +3890,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pasta"
+          }
+        }
+      }
+    },
+    "newTerminal.grid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grid"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grade"
           }
         }
       }
