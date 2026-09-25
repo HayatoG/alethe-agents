@@ -18,6 +18,7 @@ struct MainWindow: View {
         } detail: {
             WorkspaceView()
                 .toolbar {
+                    ToolbarItem(placement: .primaryAction) { UsagePills() }
                     ToolbarItem(placement: .primaryAction) { NotificationsButton() }
                     ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
                 }
@@ -68,6 +69,8 @@ struct MainWindow: View {
             SessionCostSheet(workspace: workspace, tabID: tab)
         case .handoff(let tab):
             HandoffSheet(workspace: workspace, undoManager: undoManager, tabID: tab)
+        case .aiUsage:
+            AIUsageSheet()
         }
     }
 

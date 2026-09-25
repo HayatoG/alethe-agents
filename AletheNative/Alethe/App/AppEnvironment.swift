@@ -30,6 +30,8 @@ final class AppEnvironment {
     let installer = AgentInstaller()
     /// Agent notifications and the in-app list (P3-11).
     let notifier = AgentNotifier()
+    /// AI usage of the providers (P3-13).
+    let usage = UsageMonitor()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -101,6 +103,7 @@ final class AppEnvironment {
         self.preferences = loadedPreferences
         self.promptHistory = loadedHistory
         resources.start(environment: self)
+        usage.start(environment: self)
         NotificationCenter.default.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
                                                object: NSWorkspace.shared, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {

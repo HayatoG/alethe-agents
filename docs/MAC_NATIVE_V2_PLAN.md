@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-13. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-14. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1677,10 +1677,24 @@ ship; they run per the test cadence above.
   (the agent may re-read it). Remote-question extraction (for remote control, Phase 7) is not ported.
   Also fixes a P3-11 test that did not compile.
   *Tests (written, not run — owner decision):* `HandoffTests` (5). Compiled.
-- [ ] **P3-13 (L) AI usage.** Claude Code, Codex and Antigravity usage (limits, windows, resets) with
+- [x] **P3-13 (L) AI usage.** Claude Code, Codex and Antigravity usage (limits, windows, resets) with
   their caches, usage pills in the toolbar, the AI Usage sheet, Codex reset credit and a notification
   when a limit resets (upstream `*UsageCache.ts`, `AiUsageModal`, `ResetCreditModal`). Tokens are read
   where the CLIs keep them and never logged. *Tests:* U (parsers, cache), UI. *Parity:* USE-1.
+  *Done:* `AletheAgents/AIUsage` ports the three usage readers: Claude Code (`/api/oauth/usage` with the
+  OAuth token from `CLAUDE_OAUTH_TOKEN`, `~/.claude/.credentials.json` or Claude Code's Keychain item; 5h,
+  7d and 7d Opus windows), Codex (`account/rateLimits/read` over `codex app-server` JSON-RPC: windows
+  named from their length, plan, available reset credits; `account/rateLimitResetCredit/consume`),
+  Antigravity (`fetchAvailableModels` with the token from its Keychain item, refreshed through `agy models`
+  on 401; models bucketed by remaining quota and reset, named by family), and `resets(from:to:)` for
+  windows that were at the limit and came back. Tokens are never logged. App: `UsageMonitor` refreshes
+  the providers shown in the toolbar every 5 minutes (none until the user turns a pill on, since reading
+  the Keychain can prompt) and all of them when AI Usage opens, keeping the last good figures on a
+  failure; `UsagePills` in the toolbar (busiest window, tinted with the status tokens); `AIUsageSheet`
+  with every window, when it resets, the Codex plan and reset credits (with confirmation), per-provider
+  pill toggles and the limit-reset notification toggle; resets post through `AgentNotifier`.
+  *Deviation:* the figures are cached in memory only (upstream persists them); a relaunch fetches again.
+  *Tests (written, not run — owner decision):* `AIUsageTests` (6; ran once while writing them). Compiled.
 - [ ] **P3-14 (M) Activity tracking.** Active time per agent and project sampled into
   `activity-stats.json` (upstream `activityTracker.ts`), summaries by day and agent, clear.
   *Tests:* U (sampling, summaries). *Parity:* USE-2.
@@ -1814,7 +1828,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | ORC-1 | Orchestrator board | P6 | Not started | |
 | ORC-2 | Orchestrator MCP tools + core | P6 | Not started | Swift stdio binary |
 | ORC-3 | Scheduler, telemetry, planning audit | P6 | Not started | |
-| USE-1 | Usage pills + AI Usage + reset credit | P3 | Not started | |
+| USE-1 | Usage pills + AI Usage + reset credit | P3 | Done | P3-13; pills opt-in per provider, in-memory cache |
 | USE-2 | Activity tracking | P3 | Not started | |
 | USE-3 | RAM control, hibernation, supervisor | P2 | Done | P2-24; memory indicator + policy; hibernated terminals resume when shown; no history chart |
 | USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |

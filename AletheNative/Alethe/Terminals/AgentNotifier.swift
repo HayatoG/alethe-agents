@@ -38,6 +38,13 @@ final class AgentNotifier: NSObject, UNUserNotificationCenterDelegate {
         if !NSApp.isActive { Task { await deliver(entry) } }
     }
 
+    /// Any other notification (a limit reset): the list, and macOS when Alethe is in the background.
+    func post(title: String, body: String, agent: String? = nil) {
+        let entry = AppNotification(title: title, body: body, agent: agent)
+        guard log.post(entry) else { return }
+        if !NSApp.isActive { Task { await deliver(entry) } }
+    }
+
     private func deliver(_ entry: AppNotification) async {
         let center = UNUserNotificationCenter.current()
         if permission == nil {

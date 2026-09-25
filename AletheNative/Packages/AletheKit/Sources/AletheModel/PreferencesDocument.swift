@@ -38,6 +38,10 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var lastTerminalCreation: TerminalCreation?
     /// Notify when an agent finishes or needs an answer out of view (P3-11); nil means yes.
     public var notifyAgents: Bool?
+    /// Providers with a usage pill in the toolbar (`claude`, `codex`, `antigravity`; P3-13).
+    public var usagePills: [String]?
+    /// Notify when a usage limit resets (upstream `notifyOnLimitReset`); nil means yes.
+    public var notifyLimitReset: Bool?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

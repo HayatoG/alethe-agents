@@ -26,6 +26,8 @@ enum EditorRequest: Identifiable, Hashable {
     case sessionCost(TabID)
     /// Continue a tab's conversation in the other agent (P3-12).
     case handoff(TabID)
+    /// AI usage of the providers (P3-13).
+    case aiUsage
 
     var id: String {
         switch self {
@@ -43,6 +45,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .conversations: "conversations"
         case .sessionCost(let tab): "sessionCost:\(tab)"
         case .handoff(let tab): "handoff:\(tab)"
+        case .aiUsage: "aiUsage"
         }
     }
 }

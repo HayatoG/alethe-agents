@@ -155,4 +155,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Continue in the Other Agent… (Terminal menu or a terminal's menu) hands a Claude Code conversation
   to Codex, or the other way round: review and edit the context capsule — secrets are redacted — and a
   new terminal of the other agent picks the work up from it.
+- AI Usage (toolbar gauge) shows Claude Code, Codex and Antigravity limits — each window, how full it
+  is and when it resets — with the Codex plan and reset credits. Turn on a provider's toolbar pill to
+  keep an eye on it, and get notified when a limit resets.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
