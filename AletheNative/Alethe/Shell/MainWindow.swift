@@ -87,9 +87,10 @@ struct MainWindow: View {
         case .pluginSheet(let viewID, let project):
             PluginViewRegistry.sheet(for: viewID, workspace: workspace, undoManager: undoManager,
                                      projectID: project ?? workspace.document.workspace.selectedProjectID)
-        case .mergeCenter(let project):
+        case .mergeCenter(let project, let resume):
             MergeCenterSheet(workspace: workspace, undoManager: undoManager,
-                             projectID: project ?? workspace.document.workspace.selectedProjectID)
+                             projectID: project ?? workspace.document.workspace.selectedProjectID,
+                             resumeID: resume)
         case .worktrees(let project):
             WorktreesSheet(workspace: workspace, projectID: project ?? workspace.document.workspace.selectedProjectID)
         case .branchTesting(let project):

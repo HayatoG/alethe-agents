@@ -19,6 +19,24 @@ public struct MergeMeta: Sendable, Hashable, Codable {
     public var target: String
     public var projectId: String?
     public var conflictPaths: [String]
+    /// Native-only additions, optional so upstream metadata still decodes: the Merge Center stage
+    /// last reached (for resuming) and the latest Validate results.
+    public var stage: MergeCenterStage?
+    public var lastValidation: ValidationReport?
+    public var contractWarnings: [ContractWarning]?
+
+    public init(id: String, source: String, target: String, projectId: String? = nil, conflictPaths: [String],
+                stage: MergeCenterStage? = nil, lastValidation: ValidationReport? = nil,
+                contractWarnings: [ContractWarning]? = nil) {
+        self.id = id
+        self.source = source
+        self.target = target
+        self.projectId = projectId
+        self.conflictPaths = conflictPaths
+        self.stage = stage
+        self.lastValidation = lastValidation
+        self.contractWarnings = contractWarnings
+    }
 }
 
 /// Outcome of reconciling the environment with the target's current tip (upstream
@@ -142,6 +160,46 @@ public struct ConflictResolution: Sendable {
     public func conflicts(id: String) async throws -> [ConflictFile] {
         let env = try existingEnvironment(id: id)
         return try await MergeAnalyzer(root: root, runner: runner).unmergedFiles(in: env).map { ConflictFile(path: $0) }
+    }
+
+    // MARK: Resume
+
+    /// Environments still on disk (metadata plus worktree), most recently touched first. Analysis
+    /// worktrees and unreadable metadata are skipped.
+    public func inProgress() -> [MergeSessionSummary] {
+        let fm = FileManager.default
+        let dir = MergeAnalyzer.mergeEnvsDirectory(root: root)
+        guard let entries = try? fm.contentsOfDirectory(
+            at: dir, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles]) else { return [] }
+        let found = entries.compactMap { url -> (MergeSessionSummary, Date)? in
+            guard url.pathExtension == "json" else { return nil }
+            let id = url.deletingPathExtension().lastPathComponent
+            guard (try? Self.validateID(id)) != nil, (try? existingEnvironment(id: id)) != nil,
+                  let meta = try? readMeta(id: id), meta.id == id else { return nil }
+            let date = (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            return (MergeSessionSummary(meta: meta), date)
+        }
+        return found.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0.id < $1.0.id }.map(\.0)
+    }
+
+    /// Rebuilds a prepared environment from its metadata, with the files still unmerged now.
+    public func resume(id: String) async throws -> (environment: ConflictEnvironment, meta: MergeMeta) {
+        let env = try existingEnvironment(id: id)
+        let meta = try readMeta(id: id)
+        let conflicts = try await MergeAnalyzer(root: root, runner: runner).unmergedFiles(in: env).map { ConflictFile(path: $0) }
+        let prompt = env.appendingPathComponent(Self.promptFileName)
+        let environment = ConflictEnvironment(
+            id: id, path: env, branch: Self.branchName(id: id), clean: meta.conflictPaths.isEmpty,
+            conflicts: conflicts, promptPath: FileManager.default.fileExists(atPath: prompt.path) ? prompt : nil)
+        return (environment, meta)
+    }
+
+    /// Updates the environment's metadata in place (stage reached, latest validation).
+    public func updateMeta(id: String, _ change: (inout MergeMeta) -> Void) throws {
+        _ = try existingEnvironment(id: id)
+        var meta = try readMeta(id: id)
+        change(&meta)
+        try writeMeta(meta)
     }
 
     // MARK: Reconcile with the target

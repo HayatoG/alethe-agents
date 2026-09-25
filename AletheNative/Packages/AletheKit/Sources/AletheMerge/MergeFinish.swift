@@ -59,6 +59,15 @@ public struct MergeFinishOutcome: Codable, Equatable, Sendable {
     /// API contract warnings (upstream shield layer 3); `nil` when the check did not run.
     public var contractWarnings: [ContractWarning]? = nil
 
+    public init(merged: Bool, stage: Stage, output: String, validation: ValidationReport? = nil,
+                contractWarnings: [ContractWarning]? = nil) {
+        self.merged = merged
+        self.stage = stage
+        self.output = output
+        self.validation = validation
+        self.contractWarnings = contractWarnings
+    }
+
     public var validationRan: Bool { validation?.ranAnyCommand ?? false }
 }
 

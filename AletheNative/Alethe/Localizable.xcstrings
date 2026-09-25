@@ -7651,6 +7651,23 @@
         }
       }
     },
+    "merge.agent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent to resolve with"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agente para resolver"
+          }
+        }
+      }
+    },
     "merge.agentPaneName" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11914,6 +11931,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hibernado para poupar memória; retoma ao aparecer"
+          }
+        }
+      }
+    },
+    "sidebar.merge.conflicts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conflicts: %lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conflitos: %lld"
+          }
+        }
+      }
+    },
+    "sidebar.merge.groupBy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group Conflicts"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrupar conflitos"
+          }
+        }
+      }
+    },
+    "sidebar.merge.groupByClass" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Class"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por classe"
+          }
+        }
+      }
+    },
+    "sidebar.merge.groupByFolder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Folder"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por pasta"
+          }
+        }
+      }
+    },
+    "sidebar.merge.open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in Merge Center"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir na Central de Merge"
+          }
+        }
+      }
+    },
+    "sidebar.merge.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge %@ → %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge %@ → %@"
           }
         }
       }

@@ -30,8 +30,9 @@ enum EditorRequest: Identifiable, Hashable {
     case aiUsage
     /// A sheet contributed by a plugin, by its `viewID`, for a project (nil: the selected one).
     case pluginSheet(viewID: String, project: ProjectID?)
-    /// Merge Center of a project (nil: the selected one; P4-10…P4-13).
-    case mergeCenter(ProjectID?)
+    /// Merge Center of a project (nil: the selected one; P4-10…P4-13), optionally resuming a
+    /// prepared merge environment by id.
+    case mergeCenter(ProjectID?, resume: String? = nil)
     /// Worktrees of a project (nil: the selected one; P4-9).
     case worktrees(ProjectID?)
     /// Branch testing of a project (nil: the selected one; P4-12).

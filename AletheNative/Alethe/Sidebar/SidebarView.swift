@@ -158,6 +158,7 @@ private struct ProjectRow: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
+    @State private var merges = ProjectMergeWatcher()
 
     private var disabledTabs: Set<TabID> {
         Set(project.panes.filter(\.isDisabled).flatMap { $0.tabs.map(\.id) })
@@ -166,7 +167,7 @@ private struct ProjectRow: View {
     var body: some View {
         let tabs = project.panes.flatMap(\.tabs)
         Group {
-            if tabs.isEmpty {
+            if tabs.isEmpty && merges.sessions.isEmpty {
                 label
             } else {
                 DisclosureGroup {
@@ -198,6 +199,9 @@ private struct ProjectRow: View {
                         .contextMenu { TabContextMenu(tab: tab, project: project, actions: actions) }
                         .accessibilityIdentifier("sidebar.tab.\(tab.agent)")
                     }
+                    ForEach(merges.sessions) { session in
+                        SidebarMergePanel(session: session, project: project)
+                    }
                 } label: {
                     label
                 }
@@ -205,6 +209,9 @@ private struct ProjectRow: View {
         }
         .tag(SidebarItem.project(project.id))
         .itemProvider { NSItemProvider(object: SidebarDrag.payload(project.id) as NSString) }
+        .task(id: project.folder) {
+            await merges.watch(folder: URL(filePath: project.folder, directoryHint: .isDirectory), projectID: project.id)
+        }
     }
 
     private var label: some View {

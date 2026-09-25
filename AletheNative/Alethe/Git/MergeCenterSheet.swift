@@ -1,3 +1,4 @@
+import AletheAgents
 import AletheDesign
 import AletheGit
 import AletheMerge
@@ -6,11 +7,15 @@ import SwiftUI
 
 /// Merge Center (P4-10…P4-13; upstream merge plugin) for a project's repository. The Analyze stage
 /// trial-merges a source branch into a target in a disposable worktree and lists the conflicts
-/// with their class and resolution strategy.
+/// with their class and resolution strategy. With `resumeID` it reopens a prepared environment
+/// from its metadata at the stage it had reached.
 struct MergeCenterSheet: View {
     let workspace: WorkspaceModel
     let undoManager: UndoManager?
     let projectID: ProjectID?
+    var resumeID: String?
+    @Environment(AppEnvironment.self) private var environment
+    @State private var agent: AgentKind = .claude
     @State private var model: MergeCenterModel?
     @State private var confirmAbort = false
     @State private var confirmCleanup = false
@@ -41,9 +46,12 @@ struct MergeCenterSheet: View {
         }
         .task {
             guard let project else { return }
-            let model = MergeCenterModel(folder: URL(filePath: project.folder, directoryHint: .isDirectory))
+            let model = MergeCenterModel(folder: URL(filePath: project.folder, directoryHint: .isDirectory),
+                                         projectID: project.id)
             self.model = model
-            await model.load()
+            let last = AgentRegistry.builtin.parse(environment.preferences?.document.lastAgent)
+            agent = last.flatMap { agents.contains($0) ? $0 : nil } ?? (agents.contains(.claude) ? .claude : agents.first ?? .claude)
+            await model.load(resume: resumeID)
         }
         .onDisappear { model?.cancel() }
         .accessibilityIdentifier("merge.center")
@@ -125,8 +133,18 @@ struct MergeCenterSheet: View {
     private func prepare(_ model: MergeCenterModel) -> some View {
         VStack(alignment: .leading, spacing: metrics.space(.m)) {
             actionRow(model) {
+                Picker("merge.agent", selection: $agent) {
+                    ForEach(agents, id: \.self) { kind in
+                        Text(verbatim: AgentLabels.name(for: kind.rawValue)).tag(kind)
+                    }
+                }
+                .labelsHidden()
+                .fixedSize()
+                .disabled(agents.isEmpty)
+                .help(Text("merge.agent"))
+                .accessibilityIdentifier("merge.agent")
                 Button("merge.resolveWithAgent") { resolveWithAgent(model) }
-                    .disabled(model.environment == nil)
+                    .disabled(model.environment == nil || !agents.contains(agent))
                     .accessibilityIdentifier("merge.resolveWithAgent")
                 Button("merge.refresh") { model.refreshConflicts() }
                 Button("merge.rebase") { model.rebase() }
@@ -150,14 +168,25 @@ struct MergeCenterSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// Opens an agent terminal in the merge environment, primed with the conflict instruction.
+    /// Enabled agents whose CLI is installed (shells cannot resolve conflicts).
+    private var agents: [AgentKind] {
+        let preferences = environment.preferences?.document
+        return AgentRegistry.builtin.enabledKinds(preferences?.enabledAgents).filter { kind in
+            guard let command = AgentRegistry.builtin.descriptor(for: kind)?.cliCommand else { return false }
+            return environment.launchers.resolve(command, override: preferences?.cliPaths?[kind.rawValue]) != nil
+        }
+    }
+
+    /// Opens a terminal of the chosen agent in the merge environment, primed with the conflict
+    /// instruction; the choice becomes the last used agent.
     private func resolveWithAgent(_ model: MergeCenterModel) {
-        guard let project, let path = model.environment?.path.path else { return }
-        let tab = PaneTab(agent: "claude", title: String(localized: "merge.agentPaneName"),
+        guard let project, let path = model.environment?.path.path, agents.contains(agent) else { return }
+        let tab = PaneTab(agent: agent.rawValue, title: String(localized: "merge.agentPaneName"),
                           workingDirectory: path, initialPrompt: ConflictResolution.agentInstruction())
         workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newTerminal")) {
             $0.addPane(to: project.id, tab: tab)
         }
+        environment.preferences?.update { $0.lastAgent = agent.rawValue }
         dismiss()
     }
 
@@ -352,11 +381,14 @@ struct MergeCenterSheet: View {
 @MainActor @Observable
 final class MergeCenterModel {
     let folder: URL
+    let projectID: ProjectID?
     private(set) var root: URL?
     private(set) var branches: [String] = []
     var source = ""
     var target = ""
-    var stage = MergeCenterStage.analyze
+    var stage = MergeCenterStage.analyze {
+        didSet { if stage != oldValue { recordStage() } }
+    }
     private(set) var environment: ConflictEnvironment?
     private(set) var conflicts: [ConflictFile] = []
     /// Validation commands for this run, one per line.
@@ -372,11 +404,14 @@ final class MergeCenterModel {
     private(set) var error: String?
     private var task: Task<Void, Never>?
 
-    init(folder: URL) { self.folder = folder }
+    init(folder: URL, projectID: ProjectID? = nil) {
+        self.folder = folder
+        self.projectID = projectID
+    }
 
     var canAnalyze: Bool { root != nil && !source.isEmpty && !target.isEmpty && source != target }
 
-    func load() async {
+    func load(resume id: String? = nil) async {
         defer { loading = false }
         do {
             let root = try await GitRepository.discover(folder)
@@ -387,8 +422,42 @@ final class MergeCenterModel {
             target = current ?? branches.first ?? ""
             source = branches.first { $0 != target } ?? ""
             commandsText = ValidationSettings.suggested(for: root).commands.joined(separator: "\n")
+            if let id { try await resume(id: id, root: root) }
         } catch {
             self.error = String(describing: error)
+        }
+    }
+
+    /// Restores a prepared environment from its metadata: branches, live conflicts, the stage it had
+    /// reached and its last validation (the sheet no longer restarts at Analyze).
+    private func resume(id: String, root: URL) async throws {
+        let (env, meta) = try await Task.detached { try await ConflictResolution(root: root).resume(id: id) }.value
+        source = meta.source
+        target = meta.target
+        environment = env
+        conflicts = env.conflicts
+        if let report = meta.lastValidation {
+            outcome = MergeFinishOutcome(
+                merged: false, stage: report.status == .failed ? .validation : .validated, output: "",
+                validation: report, contractWarnings: meta.contractWarnings)
+        }
+        stage = MergeResumePoint.stage(recorded: meta.stage, conflictPaths: meta.conflictPaths,
+                                       unresolved: env.conflicts.map(\.path))
+    }
+
+    /// Persists the stage reached (and the latest validation) in the environment's metadata, so the
+    /// sidebar panel shows it and a reopened sheet resumes there. Best-effort.
+    private func recordStage() {
+        guard let root, let id = environment?.id, stage != .analyze else { return }
+        let (stage, report, warnings) = (stage, outcome?.validation, outcome?.contractWarnings)
+        Task.detached {
+            try? ConflictResolution(root: root).updateMeta(id: id) {
+                $0.stage = stage
+                if let report {
+                    $0.lastValidation = report
+                    $0.contractWarnings = warnings
+                }
+            }
         }
     }
 
@@ -449,7 +518,8 @@ final class MergeCenterModel {
     func prepare() {
         guard let root else { return }
         let (source, target) = (source, target)
-        perform({ try await ConflictResolution(root: root).prepare(source: source, target: target) }) { env in
+        let projectID = projectID?.rawValue
+        perform({ try await ConflictResolution(root: root).prepare(source: source, target: target, projectId: projectID) }) { env in
             self.environment = env
             self.conflicts = env.conflicts
             self.note = nil
@@ -481,6 +551,7 @@ final class MergeCenterModel {
         perform({ try await MergeFinisher(root: root).validate(handle, settings: settings) }) { outcome in
             self.note = Self.describe(outcome)
             self.outcome = outcome
+            self.recordStage()
         }
     }
 
