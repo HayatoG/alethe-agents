@@ -2361,11 +2361,20 @@ cadence above.
   `opencode.json` plugin entry merged with a backup via `ConfigFileWriter`, untouched when unparsable),
   FSEvents `.planning/` watchers, `list_project_plans`, `opencode export` parsing with a cancelable
   timed runner (`ExternalCommand`). Tests (upstream cases) written and compiled, NOT run.
-- [ ] **P5-21 (L) MCP store.** Port of `mcp_store.rs`: scan all agents and scopes with an mtime cache,
+- [x] **P5-21 (L) MCP store.** Port of `mcp_store.rs`: scan all agents and scopes with an mtime cache,
   config paths, upsert, remove and enable/disable into the right source (upstream `pick_source`), sync a
   server to other agents with a report of skipped fields, reveal env values on request (never logged),
   every write through P5-1 with its backup; restore a backup. Needs P5-14. *Tests:* G (upstream's store
   cases in temporary homes), U (source picking, sync report). *Parity:* EXT-1.
+  *Done:* (`9b1fcd4`) `McpStore` (port of `mcp_store.rs`): scans every agent and scope with an
+  mtime+size cache, lists config paths and capabilities; add/remove/enable write into the server's own
+  source (`pick_source`) after validation, unsupported-field refusal, `.jsonc` rejection and a check
+  that no other server changed, all through `ConfigFileWriter`; sync copies servers between agents
+  without the UI (per target: written, skipped, blocked with fields, failed; cancel stops before the
+  next target); reveal returns one env/header value per request, never logged; backups list/restore
+  (repository files get per-file hashed backup folders; restore checks agent/file and parseability and
+  backs up first); grouping and Sync All helpers for P5-25/26. Remove, restore and overwriting sync are
+  flagged to confirm once. Tests (upstream cases in temp homes) written and compiled, NOT run.
 - [x] **P5-22 (M) MCP health and registry.** Health (upstream `mcp_health.rs`): `claude mcp list`,
   `codex mcp list --json`, `opencode mcp list` parsed per server, 45 s timeout, none for Antigravity and
   Cursor (config only), no command or URL in the result. Registry search (upstream `mcp_catalog.rs`):
