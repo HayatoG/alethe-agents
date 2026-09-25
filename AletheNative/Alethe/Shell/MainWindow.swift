@@ -27,6 +27,7 @@ struct MainWindow: View {
                     ToolbarItem(placement: .primaryAction) { UsagePills() }
                     ToolbarItem(placement: .primaryAction) { NotificationsButton() }
                     ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
+                    ToolbarItem(placement: .primaryAction) { ProfileToolbarMenu() }
                 }
                 .inspector(isPresented: rightSidebarVisible) {
                     RightSidebar()

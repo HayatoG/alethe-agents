@@ -6,12 +6,27 @@ public struct ProfileEntry: Codable, Hashable, Sendable, Identifiable {
     /// nil for the built-in default profile, whose name is localized by the UI.
     public var name: String?
     public var createdAt: Date
+    /// When the profile was last switched to or renamed (upstream `last_used_at_ms`); absent in
+    /// older files.
+    public var lastUsedAt: Date?
 
-    public init(id: ProfileID, name: String?, createdAt: Date = Date()) {
+    public init(id: ProfileID, name: String?, createdAt: Date = Date(), lastUsedAt: Date? = nil) {
         self.id = id
         self.name = name
         self.createdAt = createdAt
+        self.lastUsedAt = lastUsedAt
     }
+}
+
+/// Why a profile operation was refused (upstream `profile_name_exists`, "cannot delete the last
+/// local profile", …).
+public enum ProfileError: Error, Equatable, Sendable {
+    case nameRequired
+    case nameExists
+    case notFound
+    /// The active profile is never deleted: switch first.
+    case activeProfile
+    case lastProfile
 }
 
 /// `profiles.json` at the data root: which profiles exist and which one is active.
@@ -44,6 +59,99 @@ public struct ProfileIndexDocument: VersionedDocument, Hashable {
         let entry = ProfileEntry(id: .make(), name: name)
         profiles.append(entry)
         return entry.id
+    }
+
+    // MARK: Operations (P5-9)
+
+    /// Longest profile name kept; longer input is cut.
+    public static let maxNameLength = 64
+
+    /// Trims, folds runs of whitespace (newlines included) into one space, drops control characters
+    /// and caps the length; nil when nothing is left (upstream `normalize_profile_name`, which the UI
+    /// guards with "name required").
+    public static func normalizedName(_ raw: String) -> String? {
+        let words = raw.unicodeScalars
+            .filter { !CharacterSet.controlCharacters.contains($0) || CharacterSet.whitespacesAndNewlines.contains($0) }
+            .reduce(into: "") { $0.unicodeScalars.append($1) }
+            .split(whereSeparator: { $0.isWhitespace })
+        let joined = words.joined(separator: " ")
+        guard !joined.isEmpty else { return nil }
+        return String(joined.prefix(maxNameLength)).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// The name shown for `entry`; the built-in default profile has none and shows `defaultName`.
+    public func displayName(of entry: ProfileEntry, defaultName: String) -> String {
+        entry.name ?? defaultName
+    }
+
+    /// Names compare case- and diacritic-insensitively, as upstream's `eq_ignore_ascii_case`.
+    public func isNameTaken(_ name: String, except id: ProfileID? = nil, defaultName: String) -> Bool {
+        profiles.contains {
+            $0.id != id && displayName(of: $0, defaultName: defaultName)
+                .compare(name, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }
+    }
+
+    public func profile(_ id: ProfileID) -> ProfileEntry? {
+        profiles.first { $0.id == id }
+    }
+
+    /// Adds a profile; the caller creates its folder and switches to it if wanted.
+    @discardableResult
+    public mutating func createProfile(named raw: String, defaultName: String, now: Date = Date()) throws -> ProfileID {
+        guard let name = Self.normalizedName(raw) else { throw ProfileError.nameRequired }
+        guard !isNameTaken(name, defaultName: defaultName) else { throw ProfileError.nameExists }
+        let entry = ProfileEntry(id: .make(), name: name, createdAt: now, lastUsedAt: now)
+        profiles.append(entry)
+        return entry.id
+    }
+
+    public mutating func renameProfile(_ id: ProfileID, to raw: String, defaultName: String, now: Date = Date()) throws {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { throw ProfileError.notFound }
+        guard let name = Self.normalizedName(raw) else { throw ProfileError.nameRequired }
+        guard !isNameTaken(name, except: id, defaultName: defaultName) else { throw ProfileError.nameExists }
+        profiles[index].name = name
+        profiles[index].lastUsedAt = now
+    }
+
+    /// Removes the entry; the caller removes its folder. Never the active or the last profile.
+    public mutating func removeProfile(_ id: ProfileID) throws {
+        guard profiles.contains(where: { $0.id == id }) else { throw ProfileError.notFound }
+        guard id != activeProfile.id else { throw ProfileError.activeProfile }
+        guard profiles.count > 1 else { throw ProfileError.lastProfile }
+        profiles.removeAll { $0.id == id }
+    }
+
+    /// Makes `id` the profile the next launch opens.
+    public mutating func activate(_ id: ProfileID, now: Date = Date()) throws {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { throw ProfileError.notFound }
+        activeProfileID = id
+        profiles[index].lastUsedAt = now
+    }
+
+    /// A free name for a copy of `id`: `format` (one `%@`) applied to its name, then numbered.
+    public func duplicateName(for id: ProfileID, format: String, defaultName: String) -> String {
+        let source = profile(id).map { displayName(of: $0, defaultName: defaultName) } ?? defaultName
+        let base = Self.normalizedName(String(format: format, source)) ?? source
+        var candidate = base, number = 2
+        while isNameTaken(candidate, defaultName: defaultName) {
+            candidate = Self.normalizedName("\(base) \(number)") ?? base
+            number += 1
+        }
+        return candidate
+    }
+
+    /// List order (upstream `list_profile_summaries`): the active profile first, then the most
+    /// recently used, then by name.
+    public func ordered(defaultName: String) -> [ProfileEntry] {
+        let active = activeProfile.id
+        return profiles.sorted { a, b in
+            if (a.id == active) != (b.id == active) { return a.id == active }
+            let aUsed = a.lastUsedAt ?? a.createdAt, bUsed = b.lastUsedAt ?? b.createdAt
+            if aUsed != bUsed { return aUsed > bUsed }
+            return displayName(of: a, defaultName: defaultName)
+                .localizedStandardCompare(displayName(of: b, defaultName: defaultName)) == .orderedAscending
+        }
     }
 }
 

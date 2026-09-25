@@ -68,7 +68,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Quitting stops every terminal (upstream `useCloseConfirmation`): ask first while any runs,
     /// unless the user turned the question off (also from the alert itself).
     @MainActor private func confirmQuit() -> Bool {
-        guard let environment, environment.preferences?.document.confirmQuit != false else { return true }
+        guard let environment, !environment.relaunching,
+              environment.preferences?.document.confirmQuit != false else { return true }
         #if DEBUG
         // Smoke scripts quit throwaway instances with AppleScript; UI tests opt in explicitly.
         if UserDefaults.standard.string(forKey: "AletheDataRoot") != nil,

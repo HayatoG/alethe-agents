@@ -22,6 +22,11 @@ final class AppEnvironment {
     /// Reviewed PR head SHAs and the review agent/model (P4-15).
     private(set) var pullRequestReviews: PullRequestReviewsModel?
     private(set) var locations: DataLocations?
+    /// The profile this process runs. Fixed for the process: switching writes the index and relaunches,
+    /// so files written on the way out still land in this profile.
+    private(set) var profileID: ProfileID?
+    /// Set right before a relaunch the user already confirmed; the quit question is skipped.
+    var relaunching = false
     /// Built-in plugins of the active profile (P4-2); created by `load`.
     private(set) var plugins: PluginHost?
     /// Third-party ExtensionKit extensions of the active profile (P4-19); created by `load`.
@@ -136,6 +141,7 @@ final class AppEnvironment {
         await diagnostics.start(logs: locations.logs)
         let profiles = await DocumentModel<ProfileIndexDocument>.load(from: locations.profileIndex)
         let profile = profiles.document.activeProfile.id
+        profileID = profile
         async let workspace = WorkspaceModel.load(from: locations.workspace(profile))
         async let preferences = PreferencesModel.load(from: locations.preferences(profile))
         async let promptHistory = PromptHistoryModel.load(from: locations.promptHistory(profile))
@@ -239,7 +245,7 @@ final class AppEnvironment {
 
     /// The saved output of a terminal tab (`scrollback/<tab>.bin` in the active profile).
     func scrollbackFile(for tab: TabID) -> ScrollbackFile? {
-        guard let locations, let profile = profiles?.document.activeProfile.id else { return nil }
+        guard let locations, let profile = profileID else { return nil }
         return ScrollbackFile(url: locations.scrollback(profile).appending(path: "\(tab.rawValue).bin"))
     }
 

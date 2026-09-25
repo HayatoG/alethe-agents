@@ -27,6 +27,9 @@ struct SettingsView: View {
             Tab("settings.plugins.tab", systemImage: "puzzlepiece.extension", value: SettingsTab.plugins) {
                 PluginSettings()
             }
+            Tab("settings.profiles.tab", systemImage: "person.2", value: SettingsTab.profiles) {
+                ProfileSettings()
+            }
         }
         .frame(width: 560)
         .scenePadding()
@@ -35,7 +38,7 @@ struct SettingsView: View {
 
 /// The Settings pane shown; Home's setup steps open a given one.
 enum SettingsTab: Hashable {
-    case general, appearance, agents, resources, features, plugins
+    case general, appearance, agents, resources, features, plugins, profiles
 }
 
 private struct GeneralSettings: View {

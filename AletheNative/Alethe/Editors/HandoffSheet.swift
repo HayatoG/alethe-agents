@@ -110,7 +110,7 @@ struct HandoffSheet: View {
 
     private func start() {
         guard let draft, let source, let locations = environment.locations,
-              let profile = environment.profiles?.document.activeProfile.id else { return }
+              let profile = environment.profileID else { return }
         do {
             let file = try Handoff.materialize(content, in: locations.handoffs(profile))
             let flag = AgentRegistry.builtin.descriptor(for: draft.target)?.unrestrictedFlag
