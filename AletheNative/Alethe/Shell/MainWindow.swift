@@ -101,6 +101,8 @@ struct MainWindow: View {
             CrashNoticeSheet()
         case .skills:
             SkillsSheet(store: environment.skillStore)
+        case .gsdSyncActivity(let target):
+            GSDSyncActivitySheet(target: target)
         }
     }
 

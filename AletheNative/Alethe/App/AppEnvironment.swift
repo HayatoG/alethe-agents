@@ -78,6 +78,8 @@ final class AppEnvironment {
     let graphify = GraphifyController()
     /// The Playwright MCP server and its shared browser (P5-19).
     let playwright = PlaywrightBrowser()
+    /// GSD Sync child sessions and the OpenCode plugin install (P5-24).
+    let gsdSync = GSDSyncController()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -204,6 +206,7 @@ final class AppEnvironment {
         #if DEBUG
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
             loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }
+            loadedPreferences.update { TestSeeds.apply(seed, to: &$0) }
         }
         // `-AletheUITestPreview <file name in the data root>`: opens the link preview at launch.
         if let name = UserDefaults.standard.string(forKey: "AletheUITestPreview") {
@@ -221,6 +224,7 @@ final class AppEnvironment {
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences
         aiMemory.start(environment: self)
+        gsdSync.start(environment: self, profileDirectory: locations.profileDirectory(profile))
         followAppIcon()
         self.promptHistory = loadedHistory
         resources.start(environment: self)

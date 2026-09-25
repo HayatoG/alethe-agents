@@ -46,6 +46,8 @@ enum EditorRequest: Identifiable, Hashable {
     case crashNotice
     /// History › Skills…: the skills of every agent (P5-15).
     case skills
+    /// The GSD Sync child session's activity (P5-24; upstream `GsdSyncActivityView`).
+    case gsdSyncActivity(GSDSyncActivityTarget)
 
     var id: String {
         switch self {
@@ -72,6 +74,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .diagnostics: "diagnostics"
         case .crashNotice: "crashNotice"
         case .skills: "skills"
+        case .gsdSyncActivity(let target): "gsdSyncActivity:\(target.sessionID)"
         }
     }
 }

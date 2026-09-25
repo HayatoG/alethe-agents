@@ -1,5 +1,6 @@
 import AletheDesign
 import AletheGit
+import AletheIntegrations
 import AletheMerge
 import AletheModel
 import SwiftUI
@@ -120,5 +121,40 @@ struct SidebarMergePanel: View {
         case .validate: "merge.stage.validate"
         case .finish: "merge.stage.finish"
         }
+    }
+}
+
+/// A worktree's GSD planning status under its project (upstream `SidebarMergePanel` planning gate,
+/// P5-24): the child session's state and the roadmap progress; clicking opens its activity.
+struct SidebarPlanningStatus: View {
+    let session: GSDSyncSession
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    var body: some View {
+        Button {
+            environment.editorRequest = .gsdSyncActivity(GSDSyncActivityTarget(session))
+        } label: {
+            Label {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(verbatim: format("sidebar.planning.title", session.name))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    HStack(spacing: metrics.space(.xs)) {
+                        GSDSyncStateGlyph(session: session)
+                        Text(verbatim: GSDPlanningText.progress(session) ?? String(localized: "gsdSync.planning.started"))
+                    }
+                    .font(metrics.font(.footnote))
+                    .foregroundStyle(theme[.textSecondary])
+                }
+            } icon: {
+                Image(systemName: session.planning.reportedComplete ? "checkmark.circle" : "list.bullet.clipboard")
+                    .foregroundStyle(theme[session.planning.reportedComplete ? .statusActive : .accent])
+            }
+        }
+        .buttonStyle(.plain)
+        .help(Text("sidebar.planning.open"))
+        .accessibilityIdentifier("sidebar.planning.\(session.name)")
     }
 }

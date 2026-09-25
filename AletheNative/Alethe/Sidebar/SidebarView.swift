@@ -166,8 +166,9 @@ private struct ProjectRow: View {
 
     var body: some View {
         let tabs = project.panes.flatMap(\.tabs)
+        let planning = environment.gsdSync.sessions(of: project.id)
         Group {
-            if tabs.isEmpty && merges.sessions.isEmpty {
+            if tabs.isEmpty && merges.sessions.isEmpty && planning.isEmpty {
                 label
             } else {
                 DisclosureGroup {
@@ -201,6 +202,9 @@ private struct ProjectRow: View {
                     }
                     ForEach(merges.sessions) { session in
                         SidebarMergePanel(session: session, project: project)
+                    }
+                    ForEach(planning) { session in
+                        SidebarPlanningStatus(session: session)
                     }
                 } label: {
                     label

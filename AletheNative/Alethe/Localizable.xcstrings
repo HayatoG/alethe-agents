@@ -4302,6 +4302,23 @@
         }
       }
     },
+    "features.gsdSync.addModel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Model"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar modelo"
+          }
+        }
+      }
+    },
     "features.gsdSync.detail" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4315,6 +4332,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Acompanha as sessões filhas isoladas que o OpenCode roda durante o planejamento e mostra a atividade delas ao vivo. Só aparece em projetos com um terminal OpenCode."
+          }
+        }
+      }
+    },
+    "features.gsdSync.model" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model %lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelo %lld"
+          }
+        }
+      }
+    },
+    "features.gsdSync.models" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model fallback chain"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cadeia de fallback de modelos"
+          }
+        }
+      }
+    },
+    "features.gsdSync.models.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup models for the child session, tried in order if the mirrored model fails."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelos reserva para a sessão-filha, tentados em ordem se o modelo espelhado falhar."
+          }
+        }
+      }
+    },
+    "features.gsdSync.models.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No fallback configured — only the mirrored model is tried."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum fallback configurado — só o modelo espelhado é tentado."
+          }
+        }
+      }
+    },
+    "features.gsdSync.models.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The child session always tries the model the main conversation just used first. This list is a safety net for when that model also fails (a rate limit, say); each is tried in order. Applies to the next OpenCode start."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sessão-filha sempre tenta primeiro o modelo que a conversa principal acabou de usar. Esta lista é a rede de segurança para quando esse modelo também falhar (um limite de uso, por exemplo); cada um é tentado em ordem. Vale a partir do próximo início do OpenCode."
+          }
+        }
+      }
+    },
+    "features.gsdSync.removeModel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Model"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover modelo"
           }
         }
       }
@@ -6236,6 +6355,363 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O CLI do Graphify não foi encontrado."
+          }
+        }
+      }
+    },
+    "gsdActivity.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenCode could not export the session."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O OpenCode não conseguiu exportar a sessão."
+          }
+        }
+      }
+    },
+    "gsdActivity.failedDetail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenCode could not export the session: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O OpenCode não conseguiu exportar a sessão: %@"
+          }
+        }
+      }
+    },
+    "gsdActivity.instructionHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sent to the agent — click to expand"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "enviado ao agente — clique para expandir"
+          }
+        }
+      }
+    },
+    "gsdActivity.invalidSession" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The child session id is not valid."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O id da sessão-filha não é válido."
+          }
+        }
+      }
+    },
+    "gsdActivity.loading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading activity…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carregando atividade…"
+          }
+        }
+      }
+    },
+    "gsdActivity.openCodeMissing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenCode was not found. Set its path in Settings › Agents."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O OpenCode não foi encontrado. Defina o caminho em Ajustes › Agentes."
+          }
+        }
+      }
+    },
+    "gsdActivity.patchApplied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File change applied."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alteração de arquivo aplicada."
+          }
+        }
+      }
+    },
+    "gsdActivity.roleAssistant" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agente"
+          }
+        }
+      }
+    },
+    "gsdActivity.roleUser" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instruction"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instrução"
+          }
+        }
+      }
+    },
+    "gsdActivity.tokens" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tokens"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tokens"
+          }
+        }
+      }
+    },
+    "gsdActivity.unreadable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenCode's export could not be read."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não deu para ler a exportação do OpenCode."
+          }
+        }
+      }
+    },
+    "gsdSync.childError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GSD Sync could not update the goal or plan"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O GSD Sync não conseguiu atualizar o goal ou o plano"
+          }
+        }
+      }
+    },
+    "gsdSync.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active GSD Sync session"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma sessão GSD Sync ativa"
+          }
+        }
+      }
+    },
+    "gsdSync.empty.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Child sessions of this project's OpenCode tabs appear here once the GSD plugin starts one."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As sessões-filha das abas OpenCode deste projeto aparecem aqui quando o plugin GSD inicia uma."
+          }
+        }
+      }
+    },
+    "gsdSync.planning.complete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning complete"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planejamento concluído"
+          }
+        }
+      }
+    },
+    "gsdSync.planning.percent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld%% done"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld%% feito"
+          }
+        }
+      }
+    },
+    "gsdSync.planning.started" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning started"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planejamento iniciado"
+          }
+        }
+      }
+    },
+    "gsdSync.planning.tasks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld tasks"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld tarefas"
+          }
+        }
+      }
+    },
+    "gsdSync.state.busy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizando"
+          }
+        }
+      }
+    },
+    "gsdSync.state.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erro"
+          }
+        }
+      }
+    },
+    "gsdSync.state.idle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ociosa"
           }
         }
       }
@@ -13482,6 +13958,23 @@
         }
       }
     },
+    "rightSidebar.gsdSync" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GSD Sync"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GSD Sync"
+          }
+        }
+      }
+    },
     "rightSidebar.pullRequests" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17031,6 +17524,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Novo Subgrupo…"
+          }
+        }
+      }
+    },
+    "sidebar.planning.open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show GSD Sync Activity"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar atividade do GSD Sync"
+          }
+        }
+      }
+    },
+    "sidebar.planning.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning · %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planejamento · %@"
           }
         }
       }

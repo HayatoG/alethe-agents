@@ -294,6 +294,18 @@ final class TerminalRegistry {
             }
             return
         }
+        // GSD Sync (P5-24): the plugin, its model chain and the `opencode.json` entry go in first, so
+        // OpenCode loads them on this start (upstream `XTermView` before `spawn_pty`).
+        if kind == .opencode, environment.features.isOn(.gsdSync), !preparing.contains(tab.id) {
+            preparing.insert(tab.id)
+            Task { [weak self, weak environment] in
+                await environment?.gsdSync.prepareLaunch(in: cwd)
+                guard let self, let environment, self.preparing.remove(tab.id) != nil,
+                      environment.workspace?.document.paneHolding(tab.id) != nil else { return }
+                self.startPrepared(tab, in: project, environment: environment, fresh: fresh)
+            }
+            return
+        }
         startPrepared(tab, in: project, environment: environment, fresh: fresh)
     }
 

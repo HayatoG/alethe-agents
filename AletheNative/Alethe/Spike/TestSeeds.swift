@@ -111,6 +111,13 @@ enum TestSeeds {
             doc.addPane(to: project, content: .web(url: "http://127.0.0.1:9/", options: WebPaneOptions()))
         case "skills":
             seedSkills()
+        case "gsdSync":
+            // A repository with a GSD Sync child session mid-planning, in a project holding a disabled
+            // OpenCode tab: GSD Sync is available without spawning OpenCode (P5-24).
+            let repo = seedPlanningRepository()
+            let project = doc.addProject(name: "gsdproj", folder: repo.path, color: .purple)
+            if let pane = doc.addPane(to: project, tab: PaneTab(agent: "opencode")) { doc.setDisabled(pane, true) }
+            doc.workspace.selectedProjectID = project
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"
@@ -119,6 +126,39 @@ enum TestSeeds {
         default:
             break
         }
+    }
+
+    /// Preferences a seed needs (applied with the workspace seed).
+    static func apply(_ name: String, to preferences: inout PreferencesDocument) {
+        switch name {
+        case "gsdSync":
+            preferences.features.set(.gsdSync, on: true)
+        default:
+            break
+        }
+    }
+
+    /// `gsdrepo` in the data root: a repository whose `.planning/` has a busy child session, a
+    /// status and a three-item roadmap with one item checked.
+    private static func seedPlanningRepository() -> URL {
+        let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+        let repo = URL(filePath: root).appending(path: "gsdrepo")
+        let planning = repo.appending(path: ".planning")
+        try? FileManager.default.createDirectory(at: planning, withIntermediateDirectories: true)
+        let git = Process()
+        git.executableURL = URL(filePath: "/usr/bin/git")
+        git.arguments = ["-C", repo.path, "init", "-q"]
+        try? git.run()
+        git.waitUntilExit()
+        let files = [
+            ".gsd-child-session": "ses_seededchild\n",
+            ".gsd-child-busy": "",
+            "status.md": "Status: In Progress\nProgress: 40%\n",
+            "task.md": "- [x] Map the API\n- [ ] Write the client\n- [ ] Ship it\n",
+            "plan.md": "# Plan\n\n1. Map the API\n",
+        ]
+        for (name, text) in files { try? Data(text.utf8).write(to: planning.appending(path: name)) }
+        return repo
     }
 
     /// Skills in the `-AletheIntegrationsHome` folder (P5-15): `brand` in the shared store linked

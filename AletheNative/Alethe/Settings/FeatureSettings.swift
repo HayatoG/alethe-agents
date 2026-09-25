@@ -79,7 +79,9 @@ private struct FeatureOptions: View {
             GraphifyOptions()
         case .playwright:
             PlaywrightOptions()
-        case .browser, .mcp, .orchestrator, .gsdSync, .prs:
+        case .gsdSync:
+            GSDSyncOptions()
+        case .browser, .mcp, .orchestrator, .prs:
             EmptyView()
         }
     }
@@ -140,6 +142,84 @@ private struct GraphifyOptions: View {
         let value = trimmed.isEmpty ? nil : trimmed
         guard environment.preferences?.document.graphifyCommand != value else { return }
         environment.preferences?.update { $0.graphifyCommand = value }
+    }
+}
+
+/// Settings › Features › GSD Sync (upstream `prefs.gsdSyncModels*`): the fallback models the child
+/// session tries in order after the mirrored one; saved on submit, remove and close.
+private struct GSDSyncOptions: View {
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.metrics) private var metrics
+    @Environment(\.theme) private var theme
+    @State private var models: [ModelEntry] = []
+    @State private var loaded = false
+
+    private struct ModelEntry: Identifiable {
+        let id = UUID()
+        var name: String
+    }
+
+    var body: some View {
+        LabeledContent {
+            Button {
+                models.append(ModelEntry(name: ""))
+            } label: {
+                Label("features.gsdSync.addModel", systemImage: "plus")
+            }
+            .accessibilityIdentifier("settings.gsdSync.add")
+        } label: {
+            Text("features.gsdSync.models")
+            Text("features.gsdSync.models.detail")
+        }
+        if models.isEmpty {
+            Text("features.gsdSync.models.empty")
+                .font(metrics.font(.footnote))
+                .foregroundStyle(theme[.textSecondary])
+                .accessibilityIdentifier("settings.gsdSync.empty")
+        }
+        ForEach($models) { $model in
+            let index = models.firstIndex { $0.id == model.id } ?? 0
+            HStack(spacing: metrics.space(.s)) {
+                Text(verbatim: "\(index + 1).")
+                    .font(metrics.font(.body).monospacedDigit())
+                    .foregroundStyle(theme[.textTertiary])
+                TextField(text: $model.name, prompt: Text(verbatim: "provider/model")) {
+                    Text(verbatim: format("features.gsdSync.model", index + 1))
+                }
+                .labelsHidden()
+                .onSubmit(store)
+                .accessibilityIdentifier("settings.gsdSync.model.\(index)")
+                Button {
+                    models.removeAll { $0.id == model.id }
+                    store()
+                } label: {
+                    Image(systemName: "minus.circle")
+                }
+                .buttonStyle(.borderless)
+                .help(Text("features.gsdSync.removeModel"))
+                .accessibilityLabel(Text("features.gsdSync.removeModel"))
+                .accessibilityIdentifier("settings.gsdSync.remove.\(index)")
+            }
+        }
+        Text("features.gsdSync.models.hint")
+            .font(metrics.font(.footnote))
+            .foregroundStyle(theme[.textSecondary])
+            .onAppear(perform: load)
+            .onDisappear(perform: store)
+    }
+
+    private func load() {
+        guard !loaded else { return }
+        loaded = true
+        models = (environment.preferences?.document.gsdSyncModelChain ?? []).map { ModelEntry(name: $0) }
+    }
+
+    /// Blank rows are dropped; an empty chain is stored as none.
+    private func store() {
+        let chain = models.map { $0.name.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let value = chain.isEmpty ? nil : chain
+        guard environment.preferences?.document.gsdSyncModelChain != value else { return }
+        environment.preferences?.update { $0.gsdSyncModelChain = value }
     }
 }
 
