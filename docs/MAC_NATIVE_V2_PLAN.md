@@ -5,7 +5,7 @@
 > right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
 > where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
 > prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P4-2 (P4-1 done). Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: Phase 4 open items — P4-5 (plugin + tests), P4-9 (project settings), P4-10 (sidebar merge panel), P4-12 (branch testing, contract check), P4-16/17 (remaining UI), P4-19 (spike), P4-20 (review). Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1978,7 +1978,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
 - [ ] **P4-17 (M) Pomodoro.** Timer in the Todos panel and a toolbar pill (upstream `PomodoroWidget`),
   focus todo (`focusTodoId`), work/break lengths, the session surviving relaunch, a notification at the
   end (P3-11). *Tests:* U (timer state), UI. *Parity:* PER-2.
-- [ ] **P4-18 (S) Theme pack.** Upstream's four theme-pack themes as a data plugin on the theme
+- [x] **P4-18 (S) Theme pack.** Upstream's four theme-pack themes as a data plugin on the theme
   contribution point, in the picker with the built-ins. *Tests:* U (tokens complete), HT. *Parity:* UI-1.
   *Done (package):* target `AletheThemePack`: `ThemePackPlugin` (`alethe.theme-pack`) contributes Dark
   Lemon, Orca, Ember and Golden Premium (converted by `convert-themes.py --theme-pack`, upstream layering
