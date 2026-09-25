@@ -91,6 +91,10 @@ struct PaneHostContext {
         workspace?.update { $0.setFullscreen(project) }
     }
 
+    func setLayoutMode(_ mode: PaneLayoutMode, for project: ProjectID) {
+        workspace?.update { $0.setLayoutMode(mode, for: project) }
+    }
+
     func isolate(_ pane: PaneID?) {
         workspace?.update { $0.isolate(pane) }
     }

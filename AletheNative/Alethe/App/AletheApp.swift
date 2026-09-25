@@ -85,6 +85,15 @@ private struct ViewCommands: Commands {
     @MainActor private var isolated: Bool { environment.workspace?.document.workspace.isolatedPaneID != nil }
     @MainActor private var fullscreen: Bool { environment.workspace?.document.workspace.fullscreenProjectID != nil }
 
+    /// The selected project's layout.
+    @MainActor private var layout: Binding<PaneLayoutMode> {
+        Binding {
+            environment.workspace.flatMap { doc in doc.document.workspace.selectedProjectID.flatMap(doc.document.project) }?.layout ?? .auto
+        } set: { mode in
+            environment.workspace?.update { doc in doc.workspace.selectedProjectID.map { doc.setLayoutMode(mode, for: $0) } }
+        }
+    }
+
     var body: some Commands {
         CommandGroup(after: .toolbar) {
             Button("menu.view.zoomIn") { environment.preferences?.update { $0.zoom(by: 1) } }
@@ -104,6 +113,10 @@ private struct ViewCommands: Commands {
             }
             .keyboardShortcut(.return, modifiers: [.command, .option])
             .disabled(environment.workspace?.document.workspace.selectedProjectID == nil && !fullscreen)
+            Picker("menu.view.layout", selection: layout) {
+                ForEach(PaneLayoutMode.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
             Divider()
         }
     }

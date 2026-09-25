@@ -202,6 +202,9 @@ public enum TauriImport {
                 workspace.updateProject(created) { $0.createdAt = createdAt }
             }
             workspace.updateProject(created) { $0.panes = panes }
+            if let mode = (project["layoutMode"] as? String).flatMap(PaneLayoutMode.init(rawValue:)), mode != .auto {
+                workspace.updateProject(created) { $0.layoutMode = mode }
+            }
             report.panes += panes.count
             report.tabs += panes.reduce(0) { $0 + $1.tabs.count }
         }

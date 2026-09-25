@@ -84,4 +84,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   reorder, pin the ones you keep, and close them — History › Reopen Closed Tab (⇧⌘T) brings the last
   one back. Back (⌘[) and Forward (⌘]) retrace the views you visited, and everything is restored on
   relaunch.
+- Project layouts: the layout button in a project's header (or View › Project Layout) switches
+  between Auto, Spotlight (the first terminal large, the others stacked beside it) and Sidebar (the
+  others in a narrow list, the first terminal large). Each project keeps its own layout, and the
+  splits stay resizable.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

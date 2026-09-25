@@ -78,3 +78,50 @@ import Testing
         #expect(geometry.dividers[.row(0)] == CGRect(x: 0, y: 202, width: 410, height: 6))
     }
 }
+
+/// Spotlight and Sidebar (P2-18, upstream `SpotlightLayout` / `SidebarLayout`).
+@Suite struct PaneLayoutModeTests {
+    let rect = CGRect(x: 0, y: 0, width: 410, height: 310)
+
+    @Test func spotlightPutsTheFirstPaneLargeOnTheLeft() {
+        let geometry = PaneGridGeometry(count: 3, in: rect, weights: GridWeights(), gap: 10, handle: 6, mode: .spotlight)
+        #expect(geometry.paneFrames.count == 3)
+        #expect(geometry.paneFrames[0] == CGRect(x: 0, y: 0, width: 260, height: 310))
+        #expect(geometry.paneFrames[1] == CGRect(x: 270, y: 0, width: 140, height: 150))
+        #expect(geometry.paneFrames[2] == CGRect(x: 270, y: 160, width: 140, height: 150))
+        #expect(Set(geometry.dividers.keys) == [.column(row: 0), .row(0)])
+        #expect(geometry.dividers[.row(0)]?.minX == 270, "stack dividers span only the stack")
+    }
+
+    @Test func sidebarPutsTheFirstPaneLargeOnTheRight() {
+        let geometry = PaneGridGeometry(count: 2, in: rect, weights: GridWeights(), gap: 10, handle: 6, mode: .sidebar)
+        #expect(geometry.paneFrames[0].minX > geometry.paneFrames[1].minX)
+        #expect(geometry.paneFrames[1].width < geometry.paneFrames[0].width)
+        #expect(geometry.paneFrames[1].height == 310)
+        #expect(Set(geometry.dividers.keys) == [.column(row: 0)])
+    }
+
+    @Test func onePaneFillsTheAreaInEveryMode() {
+        for mode in PaneLayoutMode.allCases {
+            let geometry = PaneGridGeometry(count: 1, in: rect, weights: GridWeights(), gap: 10, handle: 6, mode: mode)
+            #expect(geometry.paneFrames == [rect])
+        }
+    }
+
+    @Test func customColumnWeightsWin() {
+        let weights = GridWeights(columns: [0.5, 0.5])
+        let geometry = PaneGridGeometry(count: 2, in: rect, weights: weights, gap: 10, handle: 6, mode: .spotlight)
+        #expect(geometry.paneFrames[0].width == 200)
+    }
+
+    @Test func changingTheModeResetsTrackSizes() {
+        var doc = WorkspaceDocument()
+        let id = doc.addProject(name: "a", folder: "/a")
+        doc.workspace.gridWeights[id.rawValue] = GridWeights(columns: [0.3, 0.7])
+        doc.setLayoutMode(.spotlight, for: id)
+        #expect(doc.project(id)?.layout == .spotlight)
+        #expect(doc.workspace.gridWeights[id.rawValue] == nil)
+        doc.setLayoutMode(.auto, for: id)
+        #expect(doc.project(id)?.layoutMode == nil, "Auto is stored as absent")
+    }
+}

@@ -1,5 +1,24 @@
 import CoreGraphics
 
+/// How a project arranges its panes (upstream `LayoutMode`).
+public enum PaneLayoutMode: String, Codable, CaseIterable, Sendable {
+    /// Rows of two (`AutoLayout`).
+    case auto
+    /// The first pane large on the left, the others stacked on the right.
+    case spotlight
+    /// The others stacked in a narrow list on the left, the first pane large on the right.
+    case sidebar
+
+    /// Default column shares of the two tracks (upstream panel `defaultSize`).
+    var defaultColumns: [Double] {
+        switch self {
+        case .auto: []
+        case .spotlight: [0.65, 0.35]
+        case .sidebar: [0.22, 0.78]
+        }
+    }
+}
+
 /// Upstream's "Auto" layout (`PaneArea.tsx` `AutoLayout`): one pane fills the area, two sit side by
 /// side, three or more go in rows of two with an odd last pane spanning its row.
 public enum AutoLayout {
@@ -68,12 +87,13 @@ public enum TrackMath {
     }
 }
 
-/// Pane frames and resize handles of one project's pane area (Auto layout).
+/// Pane frames and resize handles of one project's pane area.
 public struct PaneGridGeometry: Equatable, Sendable {
     public enum Divider: Hashable, Sendable {
-        /// Between the two columns of `row` (all two-pane rows share the column weights).
+        /// Between the two columns of `row` (all two-pane rows share the column weights). Spotlight
+        /// and Sidebar have one, `row: 0`, between the main pane and the stack.
         case column(row: Int)
-        /// Between row `index` and the next one.
+        /// Between row `index` and the next one (in Spotlight and Sidebar: of the stack).
         case row(Int)
     }
 
@@ -83,7 +103,31 @@ public struct PaneGridGeometry: Equatable, Sendable {
     public var rowSizes: [CGFloat]
 
     /// - Parameter handle: thickness of a divider's hit area, centered on its gap.
-    public init(count: Int, in rect: CGRect, weights: GridWeights, gap: CGFloat, handle: CGFloat) {
+    public init(count: Int, in rect: CGRect, weights: GridWeights, gap: CGFloat, handle: CGFloat,
+                mode: PaneLayoutMode = .auto) {
+        paneFrames = []
+        dividers = [:]
+        if mode != .auto, count > 1 {
+            // Two columns: the main pane and a stack of the others (upstream Spotlight/Sidebar).
+            let columnWeights = weights.columns.count == 2 ? weights.columns : mode.defaultColumns
+            columnSizes = TrackMath.sizes(count: 2, weights: columnWeights, total: rect.width, gap: gap)
+            let columnX = TrackMath.offsets(columnSizes, gap: gap, origin: rect.minX)
+            let (main, stack) = mode == .spotlight ? (0, 1) : (1, 0)
+            rowSizes = TrackMath.sizes(count: count - 1, weights: weights.rows, total: rect.height, gap: gap)
+            let rowY = TrackMath.offsets(rowSizes, gap: gap, origin: rect.minY)
+            paneFrames.append(CGRect(x: columnX[main], y: rect.minY, width: columnSizes[main], height: rect.height))
+            for row in rowSizes.indices {
+                paneFrames.append(CGRect(x: columnX[stack], y: rowY[row], width: columnSizes[stack], height: rowSizes[row]))
+                if row < rowSizes.count - 1 {
+                    let center = rowY[row + 1] - gap / 2
+                    dividers[.row(row)] = CGRect(x: columnX[stack], y: center - handle / 2,
+                                                 width: columnSizes[stack], height: handle)
+                }
+            }
+            let center = columnX[1] - gap / 2
+            dividers[.column(row: 0)] = CGRect(x: center - handle / 2, y: rect.minY, width: handle, height: rect.height)
+            return
+        }
         let rows = AutoLayout.rows(for: count)
         let twoColumns = rows.contains(2)
         columnSizes = TrackMath.sizes(count: twoColumns ? AutoLayout.columns : 1, weights: weights.columns,
@@ -92,8 +136,6 @@ public struct PaneGridGeometry: Equatable, Sendable {
         let columnX = TrackMath.offsets(columnSizes, gap: gap, origin: rect.minX)
         let rowY = TrackMath.offsets(rowSizes, gap: gap, origin: rect.minY)
 
-        paneFrames = []
-        dividers = [:]
         for (row, panes) in rows.enumerated() {
             let y = rowY[row], height = rowSizes[row]
             if panes == 2 {

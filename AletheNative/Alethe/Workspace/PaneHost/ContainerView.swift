@@ -60,6 +60,7 @@ final class ContainerView: NSView {
                    isCollapsed: Bool, isFullscreen: Bool, isolatedPane: PaneID?,
                    context: PaneHostContext, onHeaderDrag: @escaping (CGSize?) -> Void) {
         self.context = context
+        if let lastProject, lastProject.layout != project.layout { animateNextLayout = true }
         lastProject = project
         lastFocused = focusedPane
         lastSelected = isSelected
@@ -71,6 +72,7 @@ final class ContainerView: NSView {
         setAccessibilityIdentifier("container.\(project.name)")
         header.rootView = context.hosted(ContainerHeader(
             project: project, isSelected: isSelected, isFullscreen: isFullscreen,
+            onLayout: { context.setLayoutMode($0, for: project.id) },
             onCollapse: { context.setCollapsed(project.id, true) },
             onFullscreen: { context.setFullscreen(isFullscreen ? nil : project.id) },
             onClose: { context.closeContainer(project.id) },
@@ -128,7 +130,7 @@ final class ContainerView: NSView {
         if let liveColumns { current.columns = TrackMath.weights(liveColumns) }
         if let liveRows { current.rows = TrackMath.weights(liveRows) }
         return PaneGridGeometry(count: order.count, in: paneArea, weights: current, gap: gap,
-                                handle: max(gap, context?.metrics.size(8) ?? 8))
+                                handle: max(gap, context?.metrics.size(8) ?? 8), mode: lastProject?.layout ?? .auto)
     }
 
     override func layout() {

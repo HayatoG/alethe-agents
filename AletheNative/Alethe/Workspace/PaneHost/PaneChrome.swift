@@ -8,6 +8,7 @@ struct ContainerHeader: View {
     let project: Project
     let isSelected: Bool
     let isFullscreen: Bool
+    let onLayout: (PaneLayoutMode) -> Void
     let onCollapse: () -> Void
     let onFullscreen: () -> Void
     let onClose: () -> Void
@@ -25,6 +26,7 @@ struct ContainerHeader: View {
                 .foregroundStyle(theme[isSelected ? .textPrimary : .textSecondary])
                 .lineLimit(1)
             Spacer(minLength: 0)
+            layoutMenu
             if !isFullscreen {
                 headerButton("sidebar.left", label: "workspace.container.collapse", id: "container.collapse.\(project.name)",
                              action: onCollapse)
@@ -45,6 +47,32 @@ struct ContainerHeader: View {
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("container.\(project.name)")
+    }
+
+    /// Layout picker (upstream `LayoutFooter`): Auto stays the default.
+    private var layoutMenu: some View {
+        Menu {
+            Picker(selection: Binding(get: { project.layout }, set: onLayout)) {
+                ForEach(PaneLayoutMode.allCases, id: \.self) { mode in
+                    Label(mode.title, systemImage: mode.symbol).tag(mode)
+                }
+            } label: {
+                EmptyView()
+            }
+            .pickerStyle(.inline)
+        } label: {
+            Image(systemName: project.layout.symbol)
+                .font(metrics.font(.caption).weight(.semibold))
+                .frame(width: metrics.size(18), height: metrics.size(18))
+                .contentShape(Rectangle())
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .foregroundStyle(theme[.textTertiary])
+        .help(Text("workspace.layout"))
+        .accessibilityLabel(Text("workspace.layout"))
+        .accessibilityIdentifier("container.layout.\(project.name)")
     }
 
     private func headerButton(_ symbol: String, label: LocalizedStringKey, id: String,
@@ -183,6 +211,24 @@ enum AgentTokens {
         case "opencode": .agentOpencode
         case "cursor": .agentCursor
         default: .agentShell
+        }
+    }
+}
+
+extension PaneLayoutMode {
+    var title: LocalizedStringKey {
+        switch self {
+        case .auto: "workspace.layout.auto"
+        case .spotlight: "workspace.layout.spotlight"
+        case .sidebar: "workspace.layout.sidebar"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .auto: "square.grid.2x2"
+        case .spotlight: "rectangle.righthalf.inset.filled"
+        case .sidebar: "rectangle.leadinghalf.inset.filled"
         }
     }
 }

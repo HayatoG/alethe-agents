@@ -93,16 +93,21 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
     public var folder: String
     public var panes: [Pane]
     public var createdAt: Date
+    /// How the panes are arranged; nil means Auto (P2-18; absent in older files).
+    public var layoutMode: PaneLayoutMode?
 
     public init(id: ProjectID = .make(), name: String, color: ProjectColor = .blue, folder: String,
-                panes: [Pane] = [], createdAt: Date = Date()) {
+                panes: [Pane] = [], createdAt: Date = Date(), layoutMode: PaneLayoutMode? = nil) {
         self.id = id
         self.name = name
         self.color = color
         self.folder = folder
         self.panes = panes
         self.createdAt = createdAt
+        self.layoutMode = layoutMode
     }
+
+    public var layout: PaneLayoutMode { layoutMode ?? .auto }
 }
 
 /// Relative track sizes of a pane grid; empty means equal sizes.

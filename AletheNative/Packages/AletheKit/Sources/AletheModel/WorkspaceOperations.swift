@@ -306,6 +306,13 @@ extension WorkspaceDocument {
 
     // MARK: - Containers
 
+    /// Changes how a project arranges its panes; custom track sizes belong to one mode, so they reset.
+    public mutating func setLayoutMode(_ mode: PaneLayoutMode, for id: ProjectID) {
+        guard let project = project(id), project.layout != mode else { return }
+        updateProject(id) { $0.layoutMode = mode == .auto ? nil : mode }
+        workspace.gridWeights.removeValue(forKey: id.rawValue)
+    }
+
     /// Moves an open container to `index` among the open ones; its width moves with it.
     public mutating func moveContainer(_ id: ProjectID, to index: Int) {
         guard let from = workspace.openProjectIDs.firstIndex(of: id) else { return }
