@@ -2572,7 +2572,7 @@ above.
   `spawn.log` with environment names only, P5-11). Needs P6-1. *Tests:* U (arguments, a child ignoring
   SIGTERM is killed and reaped, a full pipe does not block another worker, stale-worker matching), P
   (spawn to first line). *Parity:* ORC-2.
-- [ ] **P6-4 (L) Codex app-server worker protocol.** A pure state machine from JSON lines to worker
+- [x] **P6-4 (L) Codex app-server worker protocol.** A pure state machine from JSON lines to worker
   events and back (upstream `spawn_worker` handshake, `on_worker_message`, `on_worker_request`):
   `initialize` with `experimentalApi`, `initialized`, `thread/start` (approval policy `never` or the
   granular form, `approvalsReviewer: user`, sandbox `workspace-write`, web search live or disabled) or
@@ -2585,6 +2585,14 @@ above.
   *Tests:* G (Codex transcripts recorded from upstream's fake-launcher cases,
   `the_handshake_offers_a_way_to_answer_a_blocked_worker`), U (every event, unknown request refused,
   resume vs. start). *Parity:* ORC-2.
+  *Done:* (`b3d49d1`) `CodexWorkerProtocol.swift`: `CodexWorkerSession` state machine turns app-server
+  JSON lines into worker events and replies (handshake; `thread/start` or `thread/resume` for
+  interrupted jobs; approval requests become a pending ask answered on the asking id; anything else gets
+  -32601; `turn/steer` for P6-7); `CodexApprovalPolicy` (never or granular, sandbox workspace-write);
+  `Job.apply(_:)` (settling on turn end is the core's job). Independent of the P6-3 host:
+  `pump(lines:handle:write:)` writes one compact JSON message per call (framing is the host's). P6-6
+  must copy `session.nextRequestID` back to the job and may ignore `requestFailed` like upstream. Tests
+  (upstream goldens incl. a recorded transcript + units) written and compiled, NOT run.
 - [ ] **P6-5 (M) Claude Code stream-json worker protocol.** The same contract for Claude workers
   (upstream `on_worker_message_claude`): the first user message is the first turn (no handshake),
   `--resume <session>` for an interrupted job; `system` `init` (session id) and `permission_denied`
