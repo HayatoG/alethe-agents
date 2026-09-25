@@ -140,7 +140,11 @@ private struct ThemeGrid: View {
     @Environment(\.metrics) private var metrics
 
     private var themes: [Theme] {
-        ThemeCatalog.builtinOrder.compactMap { ThemeCatalog.builtin.theme(id: $0) }
+        // Built-ins in picker order, then plugin themes in contribution order.
+        let catalog = environment.themeCatalog
+        let builtin = ThemeCatalog.builtinOrder.compactMap { catalog.theme(id: $0) }
+        let ids = Set(builtin.map(\.id))
+        return builtin + catalog.themes.filter { !ids.contains($0.id) }
     }
 
     var body: some View {

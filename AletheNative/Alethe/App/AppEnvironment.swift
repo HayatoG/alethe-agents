@@ -2,7 +2,9 @@ import AletheAgents
 import AletheDesign
 import AletheFoundation
 import AletheModel
+import AlethePluginKit
 import AletheTerminal
+import AletheThemePack
 import AppKit
 import Foundation
 import Observation
@@ -16,6 +18,8 @@ final class AppEnvironment {
     private(set) var preferences: PreferencesModel?
     private(set) var promptHistory: PromptHistoryModel?
     private(set) var locations: DataLocations?
+    /// Built-in plugins of the active profile (P4-2); created by `load`.
+    private(set) var plugins: PluginHost?
     /// Sheet requested by a menu, the sidebar or the workspace.
     var editorRequest: EditorRequest?
     /// The pane shown in focus mode (P2-21); not persisted.
@@ -54,8 +58,21 @@ final class AppEnvironment {
 
     var isLoaded: Bool { workspace != nil && preferences != nil }
 
+    /// Built-in themes plus those contributed by active plugins, for the picker and resolution.
+    var themeCatalog: ThemeCatalog {
+        guard let plugins, !plugins.contributions.themes.isEmpty else { return .builtin }
+        let contributed = plugins.contributions.themes
+        if let cache = themeCatalogCache, cache.contributions == contributed { return cache.catalog }
+        let catalog = ThemeCatalog.builtin.merging(contributions: contributed)
+        themeCatalogCache = (contributed, catalog)
+        return catalog
+    }
+
+    /// Decoding contributed themes on every `theme` read would be wasteful; keyed by the contributions.
+    @ObservationIgnored private var themeCatalogCache: (contributions: [ThemeContribution], catalog: ThemeCatalog)?
+
     var theme: Theme {
-        ThemeCatalog.builtin.resolved(id: preferences?.document.themeID ?? PreferencesDocument.defaultThemeID)
+        themeCatalog.resolved(id: preferences?.document.themeID ?? PreferencesDocument.defaultThemeID)
             .styled(visualStyle)
     }
 
@@ -101,6 +118,10 @@ final class AppEnvironment {
         }
         Self.removeOrphanScrollback(in: locations.scrollback(profile), keeping: tabs)
         Handoff.pruneOld(in: locations.handoffs(profile))
+        // Plugins load before the preferences are published, so a pack theme applies on the first frame.
+        let plugins = PluginHost(plugins: Self.builtinPlugins, dataRoot: locations.profileDirectory(profile))
+        await plugins.load()
+        self.plugins = plugins
         #if DEBUG
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
             loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }
@@ -158,6 +179,7 @@ final class AppEnvironment {
     /// Writes every pending change; called before the app quits.
     func flush() async {
         await activity.finish()
+        await plugins?.shutdown()
         terminals.terminateAll()
         terminals.hooks.stop()
         await workspace?.flush()
@@ -165,6 +187,9 @@ final class AppEnvironment {
         await promptHistory?.flush()
         await profiles?.flush()
     }
+
+    /// Plugins compiled into the app, in registration order.
+    static let builtinPlugins: [any AlethePlugin.Type] = [ThemePackPlugin.self]
 
     /// `-AletheDataRoot <path>` (debug builds) points the app at another data folder: UI tests and
     /// manual experiments never touch the real one.

@@ -22,6 +22,10 @@ extension Theme {
         case "min-light": Text("theme.minLight")
         case "catppuccin-frappe": Text("theme.catppuccinFrappe")
         case "gruvbox-material": Text("theme.gruvboxMaterial")
+        case "dark-lemon": Text("theme.darkLemon")
+        case "orca": Text("theme.orca")
+        case "ember": Text("theme.ember")
+        case "golden-premium": Text("theme.goldenPremium")
         default: Text(verbatim: id)
         }
     }
