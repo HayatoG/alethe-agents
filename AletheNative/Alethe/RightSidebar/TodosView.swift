@@ -22,6 +22,8 @@ struct TodosView: View {
     var body: some View {
         if let store = TodosPlugin.activeStore {
             VStack(spacing: 0) {
+                PomodoroPill(store: store)
+                    .padding(.top, 8)
                 addRow(store)
                 List {
                     if let project {
