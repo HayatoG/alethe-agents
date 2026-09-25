@@ -255,6 +255,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the changes and can be undone.
 - Open in VS Code in the project and terminal menus, Show in Finder for a terminal's folder, and Open in
   Browser for the project's repository page.
+- AI Memory: with the feature on, Claude Code, Codex and OpenCode start with the ai-memory MCP server
+  without editing your config files; Settings › Features › AI Memory shows the CLI, its version and the
+  server state.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

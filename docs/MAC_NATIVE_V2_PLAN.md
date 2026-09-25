@@ -2280,10 +2280,17 @@ cadence above.
   `project.graphifyEnabled` in the project editor; the `graphify <root> --mcp` server added to launches
   through P5-4. Needs P5-1, P5-3, P5-4. *Tests:* G (upstream graph fixtures and snapshot cases), U
   (diff, prune). *Parity:* EXT-5.
-- [ ] **P5-18 (M) ai-memory wiring.** Port of `ai_memory.rs`: detect (`ai-memory --version`, endpoint
+- [x] **P5-18 (M) ai-memory wiring.** Port of `ai_memory.rs`: detect (`ai-memory --version`, endpoint
   health), command override, the `ai-memory mcp` server added to Claude Code, Codex and OpenCode launches
   through P5-4 when the aiMemory feature is on; status and a link to its docs in Settings › Features ›
   ai-memory. Needs P5-3, P5-4. *Tests:* U (detection parsing, wiring on/off). *Parity:* EXT-6.
+  *Done:* (`8511733`) `AletheIntegrations/AiMemory.swift`: detection (`--version` with timeout and
+  cancel; loopback health on 127.0.0.1:49374) and the rule adding `ai-memory mcp` to a launch while the
+  feature is on and the CLI is on disk (skipped only if detection found that executable broken —
+  launches never wait for detection). App `AiMemoryController` registers the provider with
+  `McpLaunchWiring` (Claude, Codex, OpenCode); command override in `cliPaths["ai-memory"]`. Settings ›
+  Features › AI Memory: path, Choose…/Reset, version, server state, Check Again, docs link (no toast
+  system, so no one-time missing-CLI toast). Tests (U) written and compiled, NOT run.
 - [ ] **P5-19 (L) Playwright MCP browser session.** Port of `browser_session.rs`: resolve a
   Chromium-family browser (Chrome, Chromium, Edge, Brave; explicit path), launch it on a free loopback
   debugging port with its profile inside the Alethe profile, ready when `/json/version` answers, killed
