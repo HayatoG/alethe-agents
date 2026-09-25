@@ -288,6 +288,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Orchestration board pane: open it from Add Content › Orchestration or the project menu, or choose Open
   as Orchestration in New Terminal to start a Claude Code or Codex planner with a goal and the board
   beside it; orchestrator panes and job history come over from the Tauri app.
+- Settings › Multiagent (with the orchestrator feature on): run a project's `.planning/task.md` roadmap
+  as a task queue, see event metrics and recent events by correlation id, and turn on planning
+  autocommit with the audit history.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

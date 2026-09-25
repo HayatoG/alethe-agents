@@ -2847,13 +2847,23 @@ above.
   (`setAutocommit`, `isAutocommitEnabled`); P6-22 must `follow(… by: .autocommit)` the chosen project.
   Tests (upstream `records_scoped_audit_commit_with_agent_trailer` on temp repos + U) written and
   compiled, NOT run.
-- [ ] **P6-22 (M) Settings › Multiagent.** A Settings tab (upstream `MultiagentPage`, `schedulerStore`):
+- [x] **P6-22 (M) Settings › Multiagent.** A Settings tab (upstream `MultiagentPage`, `schedulerStore`):
   scheduler — project picker, Run Tick, the task queue with status, dependencies, assigned worker and
   Cancel (asks once); execution metrics; recent events filterable by correlation id; planning audit —
   the autocommit toggle and the project's history. Refreshed from the bus, not polled. Files:
   `SettingsView.swift` (`SettingsTab.multiagent`), new `Alethe/Settings/MultiagentSettings.swift`,
   `MultiagentController` (holds the scheduler). Needs P6-18, P6-20, P6-21. *Tests:* UI (a seeded
   `.planning/` project: tick, cancel, autocommit), HT. *Parity:* ORC-3.
+  *Done:* (`3be39a0`) Settings › Multiagent (only while the orchestrator feature is on; falls back to
+  General when turned off): project picker, Run Tick in the project's worktree mode, task queue in
+  roadmap order with status, dependencies, assigned worker and Cancel (asks once); event-bus metrics;
+  newest 15 events filterable by correlation id; planning audit history (15) with the autocommit toggle
+  (off at every launch). Refreshes from the bus (150 ms coalescing; history reloads on
+  `PlanningCommitted`). `MultiagentController` holds `Scheduler(bus:)` with auto-tick and `focus(_:)`
+  follows the chosen project by `.scheduler` and by `.autocommit` while on. The app now links
+  `AletheOrchestrator`. Not ported: upstream opening an agent terminal on `AgentSpawnRequested` (running
+  tasks show their worker id only). Tests (UI/HT `MultiagentSettingsTests`) written and compiled, NOT
+  run.
 - [ ] **P6-23 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
 
 Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
