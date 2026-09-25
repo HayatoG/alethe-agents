@@ -30,6 +30,8 @@ enum EditorRequest: Identifiable, Hashable {
     case aiUsage
     /// Git Control of a project (nil: the selected one; P4-5).
     case gitControl(ProjectID?)
+    /// Merge Center of a project (nil: the selected one; P4-10…P4-13).
+    case mergeCenter(ProjectID?)
 
     var id: String {
         switch self {
@@ -49,6 +51,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .handoff(let tab): "handoff:\(tab)"
         case .aiUsage: "aiUsage"
         case .gitControl: "gitControl"
+        case .mergeCenter: "mergeCenter"
         }
     }
 }

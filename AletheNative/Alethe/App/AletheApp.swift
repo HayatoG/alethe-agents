@@ -208,6 +208,8 @@ private struct HistoryCommands: Commands {
                 .disabled(environment.workspace?.document.projects.isEmpty ?? true)
             Button("menu.git.control") { environment.editorRequest = .gitControl(nil) }
                 .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
+            Button("menu.merge.center") { environment.editorRequest = .mergeCenter(nil) }
+                .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
             Divider()
             Button("menu.history.nextTab") { showTab(1) }
                 .keyboardShortcut(.tab, modifiers: .control)

@@ -248,6 +248,7 @@ private struct ProjectContextMenu: View {
         }
         Button("menu.history.conversations") { environment.editorRequest = .conversations(project.id) }
         Button("menu.git.control") { environment.editorRequest = .gitControl(project.id) }
+        Button("menu.merge.center") { environment.editorRequest = .mergeCenter(project.id) }
         Menu("sidebar.grids") {
             Button("projectGrid.main") { actions.workspace.update { $0.activateGrid(nil, in: project.id) } }
             ForEach(project.namedGrids) { grid in
