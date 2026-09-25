@@ -64,4 +64,15 @@ import Testing
         let long = String(repeating: "a", count: 500)
         #expect(ConversationHistory.truncated(long).count == ConversationHistory.promptLimit)
     }
+
+    @Test func titlesComeFromTheSessionTranscript() throws {
+        let home = try temporaryHome()
+        defer { try? FileManager.default.removeItem(atPath: home) }
+        let folder = "\(home)/.claude/projects/\(ClaudeSessions.projectFolderName(for: "/repo"))"
+        try FileManager.default.createDirectory(atPath: folder, withIntermediateDirectories: true)
+        try Data(#"{"type":"user","message":{"content":"Write the README"}}"#.utf8).write(to: URL(filePath: "\(folder)/s9.jsonl"))
+        #expect(ConversationHistory.title(.claude, sessionID: "s9", cwd: "/repo", homeDirectory: home) == "Write the README")
+        #expect(ConversationHistory.title(.claude, sessionID: "../x", cwd: "/repo", homeDirectory: home) == nil)
+        #expect(ConversationHistory.title(.shell, sessionID: "s9", cwd: "/repo", homeDirectory: home) == nil)
+    }
 }

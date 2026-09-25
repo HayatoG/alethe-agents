@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-10. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-11. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1626,9 +1626,21 @@ ship; they run per the test cadence above.
   `trackClaudeSessionHook`); `onActivityChange` for notifications (P3-11). Shown in P3-10.
   *Tests (written, not run — owner decision):* `AgentHooksTests` (7, including a P loopback round trip).
   Compiled.
-- [ ] **P3-10 (M) Live titles and busy/done glyphs.** Chat titles from the sessions (upstream
+- [x] **P3-10 (M) Live titles and busy/done glyphs.** Chat titles from the sessions (upstream
   `get_*_session_title`) in the sidebar, lane and tab bar; working / waiting / done glyphs with unread
   completion (upstream `completionUnread`). *Tests:* U, UI. *Parity:* SB-5.
+  *Done:* `ConversationHistory.title` (upstream `get_claude_session_title` / `get_codex_session_title`:
+  Claude's generated title or first prompt, Codex's first prompt; ids with a slash refused).
+  `TerminalRegistry`: `titles` per agent tab, read off the main thread when a tab starts with a session
+  and whenever it finishes or asks something; `displayName(of:)` (the tab's own title, else the
+  conversation's, else the agent) used by the sidebar, the sub-tabs lane and the pane header; `unread`
+  (upstream `completionUnread`): set when an agent finishes or asks while its tab is not the focused
+  pane's shown tab in the active app, cleared when that tab comes to the front or the app becomes
+  active on it. `Terminals/AgentStatusGlyph`: a pulsing dot while working (static with reduced motion),
+  a question bubble when it waits for an answer, a dot when it finished unseen — next to the name in the
+  sidebar and the pane header, and on the lane item.
+  *Deviation:* unread completions are kept for the session, not saved (upstream persists the flag).
+  *Tests (written, not run — owner decision):* `ConversationHistoryTests` (+1). Compiled.
 - [ ] **P3-11 (M) Notifications.** UserNotifications when an agent finishes or waits for input while its
   pane is not in view, 5 s dedupe, clicking jumps to the tab; an in-app list for Home. *Tests:* U
   (dedupe, routing), UI. *Parity:* SET-9, HOME-5 (data).
@@ -1734,7 +1746,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Partial | Name, color, folder, group (P1-5); clone, marker, git init, stack in P5 |
 | SB-3 | Groups (nested, suspend) | P1, P2 | Done | Nested groups (P1-4/P1-5); suspend and resume (P2-23) |
 | SB-4 | Export/import project config | P5 | Not started | |
-| SB-5 | Live chat title + busy/done glyph | P3 | Not started | |
+| SB-5 | Live chat title + busy/done glyph | P3 | Done | P3-10; titles from transcripts, working / needs-input / unread-done glyphs |
 | SB-6 | Open in VS Code / Finder / browser | P5 | Not started | `NSWorkspace` |
 | SB-7 | Right sidebar | P4 | Not started | Inspector column |
 | SB-8 | View placement | P4 | Not started | |

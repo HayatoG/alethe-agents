@@ -69,7 +69,8 @@ private struct SubTabItem: View {
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
-    private var name: String { tab.title ?? AgentLabels.name(for: tab.agent) }
+    @Environment(AppEnvironment.self) private var environment
+    private var name: String { environment.terminals.displayName(of: tab) }
 
     var body: some View {
         Button(action: onActivate) {
@@ -92,6 +93,10 @@ private struct SubTabItem: View {
                     .frame(width: 2, height: metrics.size(16))
                     .offset(x: -metrics.space(.xs) - 1)
             }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            AgentStatusGlyph(tab: tab.id)
+                .allowsHitTesting(false)
         }
         .overlay(alignment: .topTrailing) {
             if canClose && isHovered {

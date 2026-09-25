@@ -2,6 +2,7 @@ import AletheAgents
 import AletheDesign
 import AletheModel
 import AletheTerminal
+import AppKit
 import Foundation
 import Observation
 
@@ -33,6 +34,10 @@ final class TerminalRegistry {
     /// Called on every activity change (notifications, P3-11).
     @ObservationIgnored var onActivityChange: ((TabID, AgentActivity, AgentHookEvent?) -> Void)?
     @ObservationIgnored let hooks = AgentHookHub()
+    /// Conversation titles of agent tabs (P3-10), read from their transcripts.
+    private(set) var titles: [TabID: String] = [:]
+    /// Tabs whose agent finished while the user was elsewhere (upstream `completionUnread`).
+    private(set) var unread: Set<TabID> = []
     @ObservationIgnored private var watches: [TabID: ActivityWatch] = [:]
     @ObservationIgnored private var ticker: Timer?
     @ObservationIgnored private var views: [TabID: TerminalPaneView] = [:]
@@ -85,6 +90,7 @@ final class TerminalRegistry {
         preparing.remove(tab)
         watches.removeValue(forKey: tab)?.stop()
         activity.removeValue(forKey: tab)
+        unread.remove(tab)
         launches.removeValue(forKey: tab)
         retriedFresh.remove(tab)
         claims.release(owner: tab.rawValue)
@@ -111,7 +117,39 @@ final class TerminalRegistry {
     private func setActivity(_ next: AgentActivity, for tab: TabID, event: AgentHookEvent? = nil) {
         guard activity[tab] != next else { return }
         activity[tab] = next
+        if next == .done || next == .needsInput {
+            if !isInFront(tab) { unread.insert(tab) }
+            refreshTitle(tab)
+        }
         onActivityChange?(tab, next, event)
+    }
+
+    /// The tab the user is looking at: the focused pane's shown tab in the key window.
+    func isInFront(_ tab: TabID) -> Bool {
+        guard NSApp.isActive, let document = hookEnvironment?.workspace?.document,
+              let pane = document.workspace.focusedPaneID else { return false }
+        return document.pane(pane)?.pane.activeTab?.id == tab
+    }
+
+    func markRead(_ tab: TabID) {
+        unread.remove(tab)
+    }
+
+    /// Reads the tab's conversation title off the main thread.
+    func refreshTitle(_ tab: TabID) {
+        guard let document = hookEnvironment?.workspace?.document, let (project, pane) = document.paneHolding(tab),
+              let item = pane.tabs.first(where: { $0.id == tab }), let session = item.sessionID else { return }
+        let kind = AgentKind(rawValue: item.agent), cwd = item.workingDirectory ?? project.folder
+        Task { [weak self] in
+            let title = await Task.detached { ConversationHistory.title(kind, sessionID: session, cwd: cwd) }.value
+            guard let self, let title, self.titles[tab] != title else { return }
+            self.titles[tab] = title
+        }
+    }
+
+    /// What to call a tab: its own title, else its conversation's, else the agent's name.
+    func displayName(of tab: PaneTab) -> String {
+        tab.title ?? titles[tab.id] ?? AgentLabels.name(for: tab.agent)
     }
 
     /// Traffic heuristics for a tab: a submitted prompt means working; for agents without turn hooks,
@@ -313,7 +351,10 @@ final class TerminalRegistry {
             }
             views[tab.id] = view
             states[tab.id] = .running
-            if kind != .shell { watch(tab.id, view: view, heuristicTurns: !hooks.reportsTurns(kind)) }
+            if kind != .shell {
+                watch(tab.id, view: view, heuristicTurns: !hooks.reportsTurns(kind))
+                if tab.sessionID != nil { refreshTitle(tab.id) }
+            }
             launches[tab.id] = (.now, sessionID != nil)
             if let prompt = tab.initialPrompt, kind != .shell {
                 deliver(prompt, to: view, tab: tab.id, style: kind == .opencode ? .typeAndConfirm : .paste,

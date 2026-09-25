@@ -164,6 +164,19 @@ public enum ConversationHistory {
             .first { !$0.isEmpty && !$0.hasPrefix("<") }
     }
 
+    /// A conversation's title for the sidebar and tabs (upstream `get_claude_session_title`,
+    /// `get_codex_session_title`): Claude's generated title or first prompt, Codex's first prompt.
+    public static func title(_ kind: AgentKind, sessionID: String, cwd: String,
+                             homeDirectory: String = NSHomeDirectory()) -> String? {
+        guard !sessionID.isEmpty, !sessionID.contains("/"),
+              let path = SessionCosts.transcript(kind, sessionID: sessionID, cwd: cwd, homeDirectory: homeDirectory) else { return nil }
+        switch kind {
+        case .claude: return claudeSummary(id: sessionID, path: path).displayTitle
+        case .codex: return codexFirstPrompt(atPath: path)
+        default: return nil
+        }
+    }
+
     /// Conversations of an agent in a folder (Claude Code and Codex keep readable transcripts).
     public static func list(_ kind: AgentKind, cwd: String) -> [ConversationSummary] {
         switch kind {

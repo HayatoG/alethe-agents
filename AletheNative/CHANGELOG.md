@@ -146,4 +146,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Alethe now knows what each agent is doing — working, waiting for you, or done — from Claude Code's
   and Codex's own events (without touching your settings) and, for other agents, from their output.
   A Claude conversation that you `/clear` or `/resume` stays bound to its terminal.
+- Agent terminals are named after their conversation in the sidebar, the lane and the title bar, and
+  show what they are doing: a pulsing dot while working, a question bubble when they wait for you, and
+  a dot when they finished while you were looking elsewhere.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

@@ -203,6 +203,7 @@ struct PaneHeader: View {
     let onSessionCost: (() -> Void)?
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
+    @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
@@ -211,10 +212,11 @@ struct PaneHeader: View {
             Circle()
                 .fill(theme[AgentTokens.accent(for: tab.agent)])
                 .frame(width: metrics.size(6), height: metrics.size(6))
-            Text(verbatim: tab.title ?? AgentLabels.name(for: tab.agent))
+            Text(verbatim: environment.terminals.displayName(of: tab))
                 .font(metrics.font(.footnote).weight(.medium))
                 .foregroundStyle(theme[isFocused ? .textPrimary : .textSecondary])
                 .lineLimit(1)
+            AgentStatusGlyph(tab: tab.id)
             if tab.unrestricted {
                 Image(systemName: "bolt.fill")
                     .font(metrics.font(.caption))

@@ -1,5 +1,6 @@
 import AletheDesign
 import AletheModel
+import AppKit
 import SwiftUI
 
 /// The workspace area: open projects as containers of panes (`PaneHost`), or the empty state.
@@ -25,6 +26,11 @@ struct WorkspaceView: View {
             environment.workspace?.update { $0.syncActiveTab() }
         }
         .onChange(of: allTabIDs) { _, tabs in environment.terminals.prune(keeping: tabs) }
+        // Looking at a tab reads its completion (upstream clears `completionUnread` on focus).
+        .onChange(of: frontTab) { _, tab in if let tab { environment.terminals.markRead(tab) } }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if let frontTab { environment.terminals.markRead(frontTab) }
+        }
         .onChange(of: environment.workspace?.document.disabledTabIDs ?? []) { _, tabs in
             for tab in tabs { environment.terminals.suspend(tab) }
         }
@@ -53,6 +59,11 @@ struct WorkspaceView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+    }
+
+    private var frontTab: TabID? {
+        guard let document = environment.workspace?.document, let pane = document.workspace.focusedPaneID else { return nil }
+        return document.pane(pane)?.pane.activeTab?.id
     }
 
     private var allTabIDs: Set<TabID> {

@@ -170,8 +170,12 @@ private struct ProjectRow: View {
                     ForEach(tabs) { tab in
                         let disabled = disabledTabs.contains(tab.id)
                         Label {
-                            Text(verbatim: tab.title ?? AgentLabels.name(for: tab.agent))
-                                .foregroundStyle(theme[disabled ? .textTertiary : .textPrimary])
+                            HStack(spacing: metrics.space(.xs)) {
+                                Text(verbatim: environment.terminals.displayName(of: tab))
+                                    .foregroundStyle(theme[disabled ? .textTertiary : .textPrimary])
+                                    .lineLimit(1)
+                                AgentStatusGlyph(tab: tab.id)
+                            }
                         } icon: {
                             Image(systemName: disabled ? "pause.circle"
                                   : environment.terminals.hibernated.contains(tab.id) ? "moon.zzz"
