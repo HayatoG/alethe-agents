@@ -1888,6 +1888,10 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   end (P3-11). *Tests:* U (timer state), UI. *Parity:* PER-2.
 - [ ] **P4-18 (S) Theme pack.** Upstream's four theme-pack themes as a data plugin on the theme
   contribution point, in the picker with the built-ins. *Tests:* U (tokens complete), HT. *Parity:* UI-1.
+  *Done (package):* target `AletheThemePack`: `ThemePackPlugin` (`alethe.theme-pack`) contributes Dark
+  Lemon, Orca, Ember and Golden Premium (converted by `convert-themes.py --theme-pack`, upstream layering
+  over the dark base); `ThemeCatalog.merging(_:)` appends valid contributed themes, dropping id clashes.
+  U 5/5. App registration + picker come with P4-2.
 - [ ] **P4-19 (M) ExtensionKit spike.** The app's extension point, a sample third-party extension in
   its own signed app (a sidebar tab rendered remotely with `EXHostViewController`, a command, storage
   through the host), capability prompts on first enable, crash isolation. Outcome recorded in ADR-9;
