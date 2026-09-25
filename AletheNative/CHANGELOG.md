@@ -278,6 +278,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Code graph pane (Add Content or the project menu): pan, zoom, search and inspect a project's Graphify
   graph, open a node's source, compare snapshots with the changes highlighted, roll back, or generate
   the graph when there is none.
+- First-run onboarding: your name, style and theme, agents, features and MCP servers, plus import from
+  the Tauri app when its data is found; skippable, reopened from Help › Show Onboarding…; a welcome-back
+  screen after an update or a long absence.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

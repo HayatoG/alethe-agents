@@ -2424,13 +2424,23 @@ cadence above.
   Add Server (upstream `AddServerFlow`: registry search or manual, env hints, target agents and scope);
   first-use intro (`mcpOnboardingSeen`), `mcpDefaultScope`. Needs P5-3, P5-15, P5-21, P5-22. *Tests:* UI
   (add, disable, sync on seeded temporary homes), HT. *Parity:* EXT-1.
-- [ ] **P5-26 (L) Onboarding and welcome.** First-run sheet (upstream `OnboardingModal`, keyboard-first,
+- [x] **P5-26 (L) Onboarding and welcome.** First-run sheet (upstream `OnboardingModal`, keyboard-first,
   skippable): name (the profile's display name, macOS first name as default), style and theme, agents
   (detected, install through P3-3), features (P5-3), MCP (upstream `McpStep`: servers found per agent,
   gaps, Sync All through P5-21), and the optional Tauri import with its summary (P1-12); `onboardingDone`;
   Welcome back after an update or long absence (upstream `WelcomeModal`); hands over to the P3-16
   walkthrough. Needs P5-3, P5-9, P5-21. *Tests:* UI (complete, skip, import offered only when Tauri data
   exists), HT. *Parity:* SET-7.
+  *Done:* (`98cd0b8`) `AletheModel/Onboarding` (`OnboardingStep.steps`,
+  `PreferencesDocument.recordLaunch` → onboarding, or welcome back after an update or ≥ 7 days away;
+  `onboardingDone`, `firstLaunchAt`, `lastLaunchAt`, `lastSeenVersion`; profiles that already have
+  projects skip it). `Home/OnboardingSheet`: name (profile name; macOS first name by default), Tauri
+  import (only with Tauri data; summary after), style and theme, agents (Settings rows, install via
+  P3-3), features, MCP (per agent, gaps, Sync All via `McpStore`; mcp feature only); Return / ⌘[ / Esc;
+  choices apply as you go; finishing shows Home with the P3-16 steps; Help › Show Onboarding….
+  `WelcomeBackSheet` (upstream `WelcomeModal`, not on every launch). Deviation: import right after the
+  name. UI tests only see it with `-AletheUITestOnboarding`/`-AletheUITestWelcome`. Tests (U 7, UI 3)
+  written and compiled, NOT run.
 - [ ] **P5-27 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
 
 Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
