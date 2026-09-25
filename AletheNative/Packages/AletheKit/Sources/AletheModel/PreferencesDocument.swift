@@ -53,6 +53,9 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var enabledFeatures: [String: Bool]?
     /// Dock icon artwork (upstream `appIconTheme`); read through `iconTheme`, nil is the default.
     public var appIconTheme: String?
+    /// Models the GSD Sync child session tries in order (upstream `gsdSyncModelChain`), written to
+    /// `.opencode/alethe-gsd-config.json`; nil or empty lets OpenCode pick.
+    public var gsdSyncModelChain: [String]?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,
