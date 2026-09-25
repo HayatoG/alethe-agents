@@ -26,6 +26,8 @@ final class AppEnvironment {
     let terminals = TerminalRegistry()
     /// Memory supervision of the terminals (P2-24).
     let resources = ResourceMonitor()
+    /// Agent CLI installs, one at a time (P3-3).
+    let installer = AgentInstaller()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.

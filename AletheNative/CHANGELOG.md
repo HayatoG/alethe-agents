@@ -128,4 +128,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Cursor, OpenCode and the shell in New Terminal, each with its unrestricted mode where the CLI has one.
 - Settings › Agents: turn agents you don't use off (they leave New Terminal), see which CLI each
   agent runs and its version, and point one at another CLI or back to automatic lookup.
+- Install, update and uninstall agent CLIs from Settings › Agents: Alethe offers the ways that work
+  on your Mac (the vendor's install script, Homebrew or npm), shows the exact command and its output,
+  and checks the result. A newer release is flagged next to the installed version.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

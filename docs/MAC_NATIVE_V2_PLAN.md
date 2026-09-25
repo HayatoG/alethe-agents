@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-4. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1498,10 +1498,29 @@ ship; they run per the test cadence above.
   their existing terminals keep working.
   *Tests (written, not run — owner decision):* `CLIVersionTests` (2), `AgentRegistryTests` (+1), UI
   `AgentSettingsTests` (an agent turned off leaves New Terminal; HT at three zoom levels). Compiled.
-- [ ] **P3-3 (L) Install, update and uninstall agent CLIs.** Toolchain probe (npm, Homebrew, pipx,
+- [x] **P3-3 (L) Install, update and uninstall agent CLIs.** Toolchain probe (npm, Homebrew, pipx,
   curl installers per upstream `AgentInstall`), install/update/uninstall with a live log, version
   check against the latest release. *Tests:* U (recipes, probe parsing), UI (dry-run seed). *Parity:*
   AG-5.
+  *Done:* `AletheAgents/AgentInstall` is the macOS edition of upstream `agentInstall.ts` and
+  `agentVersions.ts`. Upstream's catalog is Windows-only (`irm … | iex`, WinGet, Scoop, Chocolatey), so
+  each command is the one the vendor documents for macOS, checked on 2026-09-24: install scripts for
+  Claude Code, Codex, Cursor, Antigravity, OpenCode, MiMo and Kiro; Homebrew for Claude Code, Codex,
+  Copilot and OpenCode; npm for Claude Code, Codex, Copilot, OpenCode, MiMo and Freebuff.
+  `InstallToolchain` (node version, npm, brew). Methods are filtered by the toolchain and ordered script
+  → Homebrew → npm; uninstall is derived for Homebrew and npm only (install scripts document none —
+  upstream's rule); `needsNode` and Node via `brew install node` or the download page;
+  `AgentVersions.isOutdated` and `latest` (npm registry, GitHub releases for Antigravity; nil on any
+  failure); `InstallLog.clean` (escapes out, CR to newline, 12 000-character tail).
+  `Settings/AgentInstaller` runs one operation at a time app-wide, in the user's login shell (PATH as
+  they have it, Alethe's inherited variables scrubbed, `NONINTERACTIVE=1` for Homebrew), streams the
+  log, can stop the run (process tree), and verifies by looking the CLI up again — gone for uninstall,
+  the version moved for an update. `Settings/AgentInstallSheet` (upstream `AgentInstallModal`): the
+  methods this Mac can run with their exact commands, the log, the result, the vendor's install page.
+  Settings › Agents: Install… when the CLI is missing; a menu with Update… (npm, when a newer release
+  exists — upstream's rule) and Uninstall…; “x.y available” next to the version.
+  *Tests (written, not run — owner decision):* `AgentInstallTests` (6), UI `AgentInstallTests` (the sheet
+  in a debug dry-run mode that prints the command instead of running it). Compiled.
 - [ ] **P3-4 (M) New Terminal sheet completion.** Repeat last (⌥⌘T, upstream `lastTerminalCreation`),
   named-grid picker (P2-20), planner option; 9router moves with Phase 5 integrations. *Tests:* U, UI.
   *Parity:* AG-3.
@@ -1638,7 +1657,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | AG-2 | Unrestricted flags | P1 | Done | Launch support (P1-8); per-terminal toggle in the New Terminal sheet (P1-9) |
 | AG-3 | New-terminal modal | P1, P3 | Partial | Basic sheet + first prompt (P1-9); grid picker, 9router, planner, repeat last in P3 |
 | AG-4 | Launcher resolution + override | P1, P3 | Done | Resolver + `cliPaths` (P1-8); Choose CLI… on a missing CLI (P1-7); Settings › Agents with version, Choose…, Reset (P3-2) |
-| AG-5 | Install/update/uninstall CLIs | P3 | Not started | |
+| AG-5 | Install/update/uninstall CLIs | P3 | Done | P3-3; macOS commands from each vendor's docs (script, Homebrew, npm) |
 | AG-6 | Enable/disable agents | P3 | Done | P3-2; Settings › Agents |
 | AG-7 | Claude ↔ Codex handoff | P3 | Not started | |
 | AG-8 | Agent hook bridge | P3 | Not started | |
