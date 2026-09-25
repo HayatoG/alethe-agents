@@ -6155,6 +6155,40 @@
         }
       }
     },
+    "settings.general.activity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity statistics"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estatísticas de atividade"
+          }
+        }
+      }
+    },
+    "settings.general.activity.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time with Alethe open and agents working, kept on this Mac for Home."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempo com o Alethe aberto e agentes trabalhando, guardado neste Mac para a Home."
+          }
+        }
+      }
+    },
     "settings.general.alwaysUnrestricted" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6185,6 +6219,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Novas sessões de agentes pulam as confirmações de permissão (por exemplo, o --dangerously-skip-permissions do Claude Code)."
+          }
+        }
+      }
+    },
+    "settings.general.clearActivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Statistics"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar Estatísticas"
+          }
+        }
+      }
+    },
+    "settings.general.clearActivity.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all activity statistics? This cannot be undone."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar todas as estatísticas de atividade? Isso não pode ser desfeito."
           }
         }
       }

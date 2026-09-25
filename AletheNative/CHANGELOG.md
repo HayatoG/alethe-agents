@@ -158,4 +158,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - AI Usage (toolbar gauge) shows Claude Code, Codex and Antigravity limits — each window, how full it
   is and when it resets — with the Codex plan and reset credits. Turn on a provider's toolbar pill to
   keep an eye on it, and get notified when a limit resets.
+- Alethe keeps activity statistics — time with it open and in use, and time agents spent working, in
+  parallel or in the background, per agent and project — on this Mac for Home. Settings › General clears
+  them.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

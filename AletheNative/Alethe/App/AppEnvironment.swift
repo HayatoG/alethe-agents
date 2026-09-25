@@ -32,6 +32,8 @@ final class AppEnvironment {
     let notifier = AgentNotifier()
     /// AI usage of the providers (P3-13).
     let usage = UsageMonitor()
+    /// Time analytics (P3-14).
+    let activity = ActivityTracker()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -104,6 +106,7 @@ final class AppEnvironment {
         self.promptHistory = loadedHistory
         resources.start(environment: self)
         usage.start(environment: self)
+        activity.start(environment: self, file: locations.activityStats(profile))
         NotificationCenter.default.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
                                                object: NSWorkspace.shared, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -139,6 +142,7 @@ final class AppEnvironment {
 
     /// Writes every pending change; called before the app quits.
     func flush() async {
+        await activity.finish()
         terminals.terminateAll()
         terminals.hooks.stop()
         await workspace?.flush()

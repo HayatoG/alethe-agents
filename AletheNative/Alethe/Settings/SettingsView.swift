@@ -26,6 +26,7 @@ struct SettingsView: View {
 
 private struct GeneralSettings: View {
     @Environment(AppEnvironment.self) private var environment
+    @State private var confirmClear = false
 
     var body: some View {
         Form {
@@ -50,8 +51,18 @@ private struct GeneralSettings: View {
                 Text("settings.general.notifyAgents.help")
             }
             .accessibilityIdentifier("settings.notifyAgents")
+            LabeledContent {
+                Button("settings.general.clearActivity") { confirmClear = true }
+                    .accessibilityIdentifier("settings.clearActivity")
+            } label: {
+                Text("settings.general.activity")
+                Text("settings.general.activity.help")
+            }
         }
         .formStyle(.grouped)
+        .confirmationDialog(Text("settings.general.clearActivity.confirm"), isPresented: $confirmClear) {
+            Button("settings.general.clearActivity", role: .destructive) { environment.activity.clear() }
+        }
     }
 
     private func optional(_ keyPath: WritableKeyPath<PreferencesDocument, Bool?>, default value: Bool) -> Binding<Bool> {

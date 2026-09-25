@@ -79,6 +79,7 @@ public struct DataLocations: Sendable, Hashable {
     public func preferences(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "preferences.json") }
     public func promptHistory(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "prompt-history.json") }
     /// Handoff capsules for agents to read (P3-12).
+    public func activityStats(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "activity-stats.json") }
     public func handoffs(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "handoffs", directoryHint: .isDirectory) }
 
     public func scrollback(_ id: ProfileID) -> URL {

@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-14. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-15. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1695,9 +1695,19 @@ ship; they run per the test cadence above.
   pill toggles and the limit-reset notification toggle; resets post through `AgentNotifier`.
   *Deviation:* the figures are cached in memory only (upstream persists them); a relaunch fetches again.
   *Tests (written, not run — owner decision):* `AIUsageTests` (6; ran once while writing them). Compiled.
-- [ ] **P3-14 (M) Activity tracking.** Active time per agent and project sampled into
+- [x] **P3-14 (M) Activity tracking.** Active time per agent and project sampled into
   `activity-stats.json` (upstream `activityTracker.ts`), summaries by day and agent, clear.
   *Tests:* U (sampling, summaries). *Parity:* USE-2.
+  *Done:* `AletheModel/ActivityStats` ports `activity_stats.rs`: samples (duration capped at 15 s, app in
+  front, user active, the project and terminal in front, each agent's working/waiting state) added into
+  per-day totals — app open/focused, user active/idle, agent wall time vs. summed time, background agent
+  time, parallel time and peak concurrency, per agent and per project — in `activity-stats.json`
+  (version 1, upstream's camelCase keys, atomic writes); summaries over any set of days; `lastDays`.
+  App: `ActivityTracker` samples every 5 s (user active = input in Alethe in the last 5 minutes; agent
+  working from the hook bridge / heuristic activity, P3-10), writes every 30 s, when Alethe goes to the
+  background and before quitting, off the main thread through `ActivityStore`; a failed write keeps the
+  last 360 samples. Settings › General › Clear Statistics (with confirmation).
+  *Tests (written, not run — owner decision):* `ActivityStatsTests` (4; ran once while writing them). Compiled.
 - [ ] **P3-15 (L) Home dashboard.** Greeting, recent projects, quick actions, a mini-terminal quick
   launch, activity graph and time analytics (P3-14), usage strip (P3-13), notifications (P3-11); ⇧⌘H
   toggles Home ↔ workspace and a preference opens on Home. The ASCII background only if it passes the
@@ -1829,7 +1839,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | ORC-2 | Orchestrator MCP tools + core | P6 | Not started | Swift stdio binary |
 | ORC-3 | Scheduler, telemetry, planning audit | P6 | Not started | |
 | USE-1 | Usage pills + AI Usage + reset credit | P3 | Done | P3-13; pills opt-in per provider, in-memory cache |
-| USE-2 | Activity tracking | P3 | Not started | |
+| USE-2 | Activity tracking | P3 | Done | P3-14; same file format as upstream |
 | USE-3 | RAM control, hibernation, supervisor | P2 | Done | P2-24; memory indicator + policy; hibernated terminals resume when shown; no history chart |
 | USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |
 | UI-1 | Themes (16 + 4) | P0, P1, P4 | Partial | 16 built-ins + picker (P1-11); theme packs in P4 |
