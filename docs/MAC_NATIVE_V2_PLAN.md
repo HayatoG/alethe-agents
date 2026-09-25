@@ -2244,13 +2244,20 @@ cadence above.
   is never modified (so the icon shows only while running); Settings › Appearance › App Icon, default
   elite-indigo with upstream fallback; imported from Tauri. Tests (U + UI in `AppearanceTests`) written
   and compiled, NOT run.
-- [ ] **P5-13 (M) Toolbar configuration.** The window toolbar becomes customizable (SwiftUI
+- [x] **P5-13 (M) Toolbar configuration.** The window toolbar becomes customizable (SwiftUI
   `.toolbar(id:)`, View › Customize Toolbar…; upstream `TopbarSettingsModal`): usage pills per provider,
   memory, Pomodoro, notifications, profile, Home; visibility priorities on macOS 27 (ADR-7a).
   P3-13's `usagePills` maps onto the pill items so AI Usage's toggles keep working; upstream `topbarShow*`
   imported. Remote and 9router items arrive with Phase 7. Needs P5-9. *Tests:* U (migration of `usagePills`), UI
   (hide and restore an item), HT. *Parity:* UI-7.
-- [ ] **P5-14 (L) MCP model and agent adapters.** `AletheIntegrations` port of `mcp_model.rs` and
+  *Done:* (`f10b473`) the main toolbar is customizable (`.toolbar(id: "main")`, `ToolbarCommands` ›
+  Customize Toolbar…) with nine items: Home, Pomodoro, Claude/Codex/Antigravity usage pills, AI Usage,
+  Notifications, Memory, Profile (P5-9 `ProfileToolbarMenu`); pills overflow first (visibility
+  priorities on 26.1+, `lowerThan:` on 27). Settings › Toolbar toggles each item (a separate tab so
+  Appearance stays within the screen at 120 % zoom); `toolbarItems` stores differences only; preferences
+  v2 migrates P3-13's `usagePills` (older builds open v2 read-only); upstream `topbarShow*` imported.
+  Tests (U + UI `ToolbarSettingsTests`) written and compiled, NOT run.
+- [x] **P5-14 (L) MCP model and agent adapters.** `AletheIntegrations` port of `mcp_model.rs` and
   `mcp_agents.rs`: `McpServer` (stdio, HTTP, SSE; command, arguments, env with literal or `${VAR}`
   entries, headers, timeouts, enabled), scopes (global, project) and source kinds (user, local, project),
   per-agent capabilities and unsupported fields; five adapters reading and writing their files — Claude
@@ -2259,27 +2266,58 @@ cadence above.
   (`opencode.json`/`.jsonc` `mcp`), Antigravity (`~/.gemini/config/mcp_config.json`, imports) — with
   upstream's managed-key lists. Needs P5-1, P5-2. *Tests:* G (upstream's adapter cases and fixture
   files per agent), U (unsupported fields, masking). *Parity:* EXT-1.
-- [ ] **P5-15 (M) Skills browser.** Service (upstream `skills.rs`): scan `~/.claude/skills`,
+  *Done:* (`bcaba4f`) `AletheIntegrations/MCP`: port of `mcp_model.rs` (scopes, source kinds,
+  capabilities, unsupported fields, masked views; `description`/`dump` never show a secret; converts to
+  and from P5-4's `McpLaunchServer`) and five text-only adapters: Claude Code (user, `projects.<folder>`
+  local, `.mcp.json`), Codex through `TOMLDocument` (inline entries keep their form), Cursor, OpenCode
+  (`.jsonc` read-only) and Antigravity (import ownership as pure functions for P5-21), with upstream's
+  managed-key lists; a non-object where the server map belongs throws instead of being replaced.
+  Upstream cases as goldens with per-agent fixtures; written and compiled, NOT run.
+- [x] **P5-15 (M) Skills browser.** Service (upstream `skills.rs`): scan `~/.claude/skills`,
   `~/.codex/skills` (bundled system skills marked, not removable), `~/.config/opencode/skill`,
   `~/.gemini/skills` and the shared `~/.agents/skills` (symlinks resolved), frontmatter, file tree,
   `.skill-lock.json` source; uninstall (asks once, bundled refused). Sheet (upstream `SkillsBrowser`):
   agents, filter, detail with the `SKILL.md` rendered (AletheDocuments) and the files; P5-25 embeds it.
   Needs P5-1, P5-3 (gated by mcp). *Tests:* U (frontmatter shapes, scan fixtures, name validation), UI.
   *Parity:* EXT-2.
-- [ ] **P5-16 (M) Agent library and economy agents.** Service (upstream `agent_library.rs`,
+  *Done:* (`2023270`) `SkillStore` (port of `skills.rs`) scans Claude Code, Codex, OpenCode, Antigravity
+  and `~/.agents/skills` off main (cancelable), resolves links, treats Codex `.system`/marker skills as
+  bundled (never removed), parses frontmatter, the capped file tree and `.skill-lock.json`; names
+  validated, paths proven inside the root; uninstall removes a link only, sends a real folder to the
+  Trash (upstream deleted), and keeps a shared copy while any agent links it. History › Skills… (mcp
+  feature) opens the embeddable `SkillsBrowser` (P5-25 reuses it). Debug `-AletheIntegrationsHome` for
+  test homes. Tests (U + UI `SkillsBrowserTests`) written and compiled, NOT run.
+- [x] **P5-16 (M) Agent library and economy agents.** Service (upstream `agent_library.rs`,
   `economy_agents.rs`, `lib/agentLibrary.ts`): the library templates and the economy (Haiku) agents as
   data, listed, installed and removed under a project's `.claude/agents` or `~/.claude/agents`; only
   files carrying the Alethe marker (upstream's wording or the new English one) are removed without asking.
   Surface: Project menu › Agent Library… (upstream shows it only in the Agent Canvas POC, EXP-1): cost
   and category, installed state, the economy toggle. Template text in English. Needs P5-1. *Tests:* U
   (install/uninstall, marker detection, economy toggle), UI. *Parity:* EXT-4.
-- [ ] **P5-17 (L) Graphify service.** Port of `graphify.rs`: detect the CLI (`--version`, command
+  *Done:* (`4e0b665`) library templates and economy (Haiku) agents as English data in
+  `AletheIntegrations/AgentLibrary`, installed/removed under a project's `.claude/agents` or
+  `~/.claude/agents` through `ConfigFileWriter` (new `remove(over:backupSlot:)` with the same checks and
+  backup). Files with the Alethe marker (upstream or English wording) go without asking; others ask
+  once; economy on never overwrites a user file with the same name. Economy agents renamed to English
+  (`haiku-summarizer`, `haiku-mechanic`), upstream files removed when marked; the guard now carries the
+  marker; user scope uses `$HOME/.claude/agents/codex-only-guard.cjs`. Project menu › Agent Library…
+  with scope, cost, category, installed state, economy toggle, Undo of the last change. Tests (U + UI)
+  written and compiled, NOT run.
+- [x] **P5-17 (L) Graphify service.** Port of `graphify.rs`: detect the CLI (`--version`, command
   override in Settings › Features › Graphify), generate the graph (one run per repository at a time,
   cancelable), read `graphify-out/graph.json` into nodes and edges off the main thread, snapshots in
   `.alethe/graph-snapshots/` (snapshot, list, diff by node and edge sets, rollback asks once, prune);
   `project.graphifyEnabled` in the project editor; the `graphify <root> --mcp` server added to launches
   through P5-4. Needs P5-1, P5-3, P5-4. *Tests:* G (upstream graph fixtures and snapshot cases), U
   (diff, prune). *Parity:* EXT-5.
+  *Done:* (`8ee5505`, reconciled in `0305be9`) `AletheIntegrations/Graphify`: CLI detection, one
+  generation per repository (cancelable, 15 min), `graph.json` read off main (3000-node cap, source file
+  kept, numeric communities), snapshots in `.alethe/graph-snapshots/` compatible with the Tauri app
+  (create, list, diff, rollback, prune). App `GraphifyController` adds `graphify <root> --mcp` via
+  `McpLaunchWiring` for Claude Code, Codex and OpenCode when the feature and `project.graphifyEnabled`
+  are on (only if the CLI is found), generating a missing graph; no writes to the project's agent
+  configs; outside a repository the folder is the root. Settings › Features › Graphify command + status;
+  project editor toggle; imported from Tauri. Tests written and compiled, NOT run.
 - [x] **P5-18 (M) ai-memory wiring.** Port of `ai_memory.rs`: detect (`ai-memory --version`, endpoint
   health), command override, the `ai-memory mcp` server added to Claude Code, Codex and OpenCode launches
   through P5-4 when the aiMemory feature is on; status and a link to its docs in Settings › Features ›
@@ -2291,7 +2329,7 @@ cadence above.
   `McpLaunchWiring` (Claude, Codex, OpenCode); command override in `cliPaths["ai-memory"]`. Settings ›
   Features › AI Memory: path, Choose…/Reset, version, server state, Check Again, docs link (no toast
   system, so no one-time missing-CLI toast). Tests (U) written and compiled, NOT run.
-- [ ] **P5-19 (L) Playwright MCP browser session.** Port of `browser_session.rs`: resolve a
+- [x] **P5-19 (L) Playwright MCP browser session.** Port of `browser_session.rs`: resolve a
   Chromium-family browser (Chrome, Chromium, Edge, Brave; explicit path), launch it on a free loopback
   debugging port with its profile inside the Alethe profile, ready when `/json/version` answers, killed
   (process tree) on quit and when stale at launch — matched by executable, never by command line; status.
@@ -2300,13 +2338,29 @@ cadence above.
   *Deviation:* the shared browser is not shown in the web pane (CDP engine Won't port, BR-1); it runs as
   its own window unless headless. Needs P5-3, P5-4. *Tests:* U (arguments, loopback-only endpoint,
   stale matching), P (start to ready). *Parity:* BR-3.
-- [ ] **P5-20 (L) GSD Sync service.** Ports of `planning_gate.rs` (planning status from
+  *Done:* (`0212719`) `AletheIntegrations`: `BrowserLaunch` (Chrome/Chromium/Edge/Brave or a path,
+  loopback port, profile in `<profile>/browser-session`, `--use-mock-keychain`), `BrowserSession` actor
+  (ready on `/json/version` within 20 s, shared concurrent starts, cancelable, process group SIGTERM
+  then SIGKILL), stale sweep only when both the executable is a browser and the exact profile argument
+  matches, `PlaywrightMcp` args. App `PlaywrightBrowser` registers with `McpLaunchWiring` for all three
+  agents; shared mode attaches only while the shared browser runs (agents never start it); dedicated
+  mode optionally headless. Settings › Features › Playwright Browser: mode, headless toggles, path,
+  status, Start/Stop; stops on quit and when turned off. No CDP pane (own window unless headless). Tests
+  written and compiled, NOT run.
+- [x] **P5-20 (L) GSD Sync service.** Ports of `planning_gate.rs` (planning status from
   `.planning/status.md` and roadmap checkboxes; `.gsd-child-session`/`-busy`/`-error`/state; procedure),
   `opencode_gsd_plugin.rs` (the `alethe-gsd-state.ts` plugin from upstream's asset, version marker, never
   over a user-edited file; `opencode.json` plugin entry merged; `.opencode/alethe-gsd-config.json` model
   chain from `gsdSyncModelChain`), the `.planning/` watcher (FSEvents; upstream `start/stop_gsd_watcher`),
   `list_project_plans`, and `opencode export <child>` parsed into messages and parts. Needs P5-1.
   *Tests:* G (upstream's plugin-write and status cases), U (export parsing). *Parity:* EXT-7.
+  *Done:* (`50d2d8c`) `AletheIntegrations/GSDSync`: `PlanningGate` (status.md Status over Progress,
+  task.md checkboxes, plan.md notes, child-session id/busy/error files — error deleted once read;
+  repository root found without git), `GSDOpenCodePlugin` (upstream `alethe-gsd-state.ts` v12 verbatim
+  as a resource, never over a user-edited or newer copy; model-chain file from `gsdSyncModelChain`;
+  `opencode.json` plugin entry merged with a backup via `ConfigFileWriter`, untouched when unparsable),
+  FSEvents `.planning/` watchers, `list_project_plans`, `opencode export` parsing with a cancelable
+  timed runner (`ExternalCommand`). Tests (upstream cases) written and compiled, NOT run.
 - [ ] **P5-21 (L) MCP store.** Port of `mcp_store.rs`: scan all agents and scopes with an mtime cache,
   config paths, upsert, remove and enable/disable into the right source (upstream `pick_source`), sync a
   server to other agents with a report of skipped fields, reveal env values on request (never logged),

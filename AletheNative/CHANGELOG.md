@@ -258,6 +258,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - AI Memory: with the feature on, Claude Code, Codex and OpenCode start with the ai-memory MCP server
   without editing your config files; Settings › Features › AI Memory shows the CLI, its version and the
   server state.
+- The toolbar is customizable: View › Customize Toolbar… arranges it and Settings › Toolbar shows or
+  hides each item (Home, Pomodoro, usage pills, AI Usage, notifications, memory, profile); the previous
+  Alethe's top bar choices are imported.
+- Skills browser (History › Skills…): the skills of Claude Code, Codex, OpenCode, Antigravity and the
+  shared store with filter, details, files and the rendered SKILL.md; removal asks first and never
+  touches bundled skills.
+- Agent Library (project menu): install Alethe's Claude Code subagents in a project or for all projects,
+  with cost badges, and turn economy mode's Haiku agents on or off; your own files are never touched
+  without asking.
+- Graphify: turn it on per project and Claude Code, Codex and OpenCode get the project's code graph as
+  an MCP server (generated on first launch if missing); Settings › Features › Graphify sets and checks
+  the command.
+- Playwright browser (Settings › Features): agents get the Playwright MCP server, attaching to a browser
+  Alethe starts (Shared) or opening their own (Dedicated).
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
