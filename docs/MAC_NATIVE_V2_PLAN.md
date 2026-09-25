@@ -1866,10 +1866,21 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   new file/folder, Quick Look on Space, open in a pane (Markdown, media, text, web), drag to a pane or
   grid slot, reveal in Finder, live refresh (FSEvents). *Tests:* U (tree model, badges), UI.
   *Parity:* FS-1.
+  *Done (model):* target `AletheFiles`: lazy `FileTree` (folders first, case-insensitive, flat visible
+  rows, refresh re-reads open folders, debounced watcher via `GitWatcher`), SF Symbol icon map and pane
+  kind per file (upstream map; HTML/PDF open in the web pane), git badges with upstream priorities and
+  folder aggregation, validated rename/new/Trash (`.trashUnavailable` lets the UI confirm a permanent
+  delete). Upstream hides nothing; only `.DS_Store` is hidden by default. U 13. Sidebar tab UI owed.
 - [ ] **P4-9 (L) Worktrees.** Worktree isolation per agent (upstream `worktrees.rs`): provision, list,
   remove, lock/unlock, fetch branch, commit pending changes, cleanup; `autoWorktree` / `worktreeMode` /
   `worktreeAgentId` on new terminals and the New Terminal sheet; the sidebar marks worktree terminals.
   *Tests:* G, UI. *Parity:* GIT-4.
+  *Done (model):* `GitWorktrees` in `AletheGit` ports `worktrees.rs`: `<repo>/.alethe/worktrees/<id>/` on
+  `alethe/agent-<id>` as a linked worktree or `clone --local`; provision, list (porcelain parser), remove
+  (refused while locked), lock/unlock, fetch branch, pending changes, commit pending (skips `.planning/`,
+  `.opencode/`, `opencode.json`), cleanup (drops orphan dirs, then prune); typed `GitWorktreeError`;
+  `WorktreeSettings` (`autoWorktree`, `worktreeMode`, agent id; shells never). U+G 10. New Terminal /
+  sidebar UI owed.
 - [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
   sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
   sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.

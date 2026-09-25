@@ -191,6 +191,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   links, reordering, the editable JSONC template file, and a Pomodoro session that survives relaunch.
 - Settings › Plugins lists the built-in plugins with version and capabilities, turns each on or off and
   shows a load error; the Theme Pack themes appear in the theme picker.
+- Groundwork for the file explorer and agent worktrees (not in the interface yet): a lazy file tree with
+  icons, git badges, rename/new/Trash and live refresh; each agent in its own git worktree or local copy
+  with lock/unlock, auto-commit of pending work and cleanup; the Merge Center's prepare step (a separate
+  merge copy, conflicts listed with a strategy each, and a ready prompt for an agent to resolve them).
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
