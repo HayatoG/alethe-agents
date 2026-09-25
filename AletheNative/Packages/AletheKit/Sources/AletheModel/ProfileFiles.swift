@@ -57,9 +57,9 @@ public enum ProfileFiles {
         return ext == "tmp" || ext == "log"
     }
 
-    /// Copies `source` into `destination` (created), leaving runtime files and anything but regular
-    /// files and folders (sockets, symbolic links) behind.
-    public static func copyProfileFolder(from source: URL, to destination: URL) throws {
+    /// Copies `source` into `destination` (created), leaving runtime files, the top-level entries named
+    /// in `skipping` and anything but regular files and folders (sockets, symbolic links) behind.
+    public static func copyProfileFolder(from source: URL, to destination: URL, skipping: Set<String> = []) throws {
         let manager = FileManager.default
         try manager.createDirectory(at: destination, withIntermediateDirectories: true)
         guard manager.fileExists(atPath: source.path) else { return }
@@ -71,7 +71,8 @@ public enum ProfileFiles {
             if values.isSymbolicLink == true { continue }
             let relative = String(url.resolvingSymlinksInPath().path.dropFirst(base.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             guard !relative.isEmpty else { continue }
-            if isRuntimeFile(relativePath: relative) {
+            let topLevel = relative.split(separator: "/").first.map(String.init) ?? relative
+            if isRuntimeFile(relativePath: relative) || skipping.contains(topLevel) {
                 if values.isDirectory == true { enumerator.skipDescendants() }
                 continue
             }

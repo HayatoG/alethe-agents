@@ -27,6 +27,8 @@ final class AppEnvironment {
     private(set) var profileID: ProfileID?
     /// Set right before a relaunch the user already confirmed; the quit question is skipped.
     var relaunching = false
+    /// What the launch applied from a scheduled import, reset or erase (P5-10); Settings reports it.
+    var dataMaintenanceResult: Result<PendingDataOperation?, any Error> = .success(nil)
     /// Built-in plugins of the active profile (P4-2); created by `load`.
     private(set) var plugins: PluginHost?
     /// Third-party ExtensionKit extensions of the active profile (P4-19); created by `load`.
@@ -131,6 +133,10 @@ final class AppEnvironment {
     func load() async {
         guard !isLoaded, let locations = try? Self.dataLocations() else { return }
         self.locations = locations
+        // An import, reset or erase confirmed before the relaunch (P5-10) applies before anything loads.
+        dataMaintenanceResult = await Task.detached { () -> Result<PendingDataOperation?, any Error> in
+            Result { try DataMaintenance.applyPending(in: locations) }
+        }.value
         #if DEBUG
         // `-AletheUITestCrashMarker YES`: the previous run "crashed" (an unclean marker is seeded).
         if UserDefaults.standard.bool(forKey: "AletheUITestCrashMarker") {

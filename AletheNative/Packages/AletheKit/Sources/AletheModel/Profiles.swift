@@ -194,6 +194,13 @@ public struct DataLocations: Sendable, Hashable {
     public func activityStats(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "activity-stats.json") }
     public func handoffs(_ id: ProfileID) -> URL { profileDirectory(id).appending(path: "handoffs", directoryHint: .isDirectory) }
 
+    /// Automatic backups taken before an import, reset or erase (P5-10); an erase keeps them.
+    public var safetyBackups: URL { root.appending(path: "safety-backups", directoryHint: .isDirectory) }
+    /// An import, reset or erase waiting for the next launch (P5-10).
+    public var pendingOperation: URL { root.appending(path: "pending-operation.json") }
+    /// Imported backups unpacked and validated, waiting to replace a profile (P5-10).
+    public var importStaging: URL { root.appending(path: "import-staging", directoryHint: .isDirectory) }
+
     public func scrollback(_ id: ProfileID) -> URL {
         profileDirectory(id).appending(path: "scrollback", directoryHint: .isDirectory)
     }
