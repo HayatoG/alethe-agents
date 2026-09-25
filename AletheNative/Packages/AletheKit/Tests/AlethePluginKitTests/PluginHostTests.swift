@@ -70,6 +70,19 @@ func temporaryDirectory() -> URL {
         #expect(host.contributions.themes.isEmpty)
     }
 
+    @Test func viewPlacementSurvivesANewHost() async throws {
+        let root = temporaryDirectory()
+        let first = PluginHost(plugins: [TabsPlugin.self], dataRoot: root)
+        await first.load()
+        try await first.moveSidebarTab("tabs.main", to: .left, at: 0)
+        #expect(first.viewPlacements.arranged(first.contributions.sidebarTabs).left.map(\.id) == ["tabs.main"])
+        let second = PluginHost(plugins: [TabsPlugin.self], dataRoot: root)
+        await second.load()
+        #expect(second.viewPlacements.side(of: "tabs.main", in: second.contributions.sidebarTabs) == .left)
+        try await second.resetViewPlacements()
+        #expect(second.viewPlacements == .empty)
+    }
+
     @Test func enabledStateSurvivesANewHost() async throws {
         let root = temporaryDirectory()
         let first = PluginHost(plugins: [TabsPlugin.self, ThemesPlugin.self], dataRoot: root)

@@ -7,9 +7,11 @@ import Observation
 public struct PluginHostState: VersionedDocument {
     public static let currentVersion = 1
     public static let migrations: [Int: @Sendable (inout JSONObject) throws -> Void] = [:]
-    public static let initial = PluginHostState(schemaVersion: 1, enabled: [:])
+    public static let initial = PluginHostState(schemaVersion: 1, enabled: [:], viewPlacements: nil)
     public var schemaVersion: Int
     public var enabled: [String: Bool]
+    /// Sidebar placement of contributed tabs (P4-2); absent until the user moves one.
+    public var viewPlacements: ViewPlacements?
 }
 
 /// Loads the statically registered plugins, activates the enabled ones and keeps their
@@ -34,6 +36,7 @@ public final class PluginHost {
     public private(set) var records: [Record] = []
     /// Contributions of every active plugin, in registration order.
     public private(set) var contributions = PluginContributions()
+    private var placements = ViewPlacements.empty
 
     @ObservationIgnored private let pluginTypes: [any AlethePlugin.Type]
     @ObservationIgnored private let dataRoot: URL
@@ -65,6 +68,7 @@ public final class PluginHost {
     /// Reads the persisted enabled state and activates every enabled, valid plugin.
     public func load() async {
         hostState = (try? await stateStore.load().document) ?? .initial
+        placements = hostState.viewPlacements ?? .empty
         records = []
         var seen = Set<String>()
         for type in pluginTypes {
@@ -109,6 +113,29 @@ public final class PluginHost {
             records[index].state = .disabled
         }
         rebuildContributions()
+    }
+
+    /// The user's placement of contributed sidebar tabs.
+    public var viewPlacements: ViewPlacements { placements }
+
+    /// Moves a contributed sidebar tab to a side and position, and persists it.
+    public func moveSidebarTab(_ id: String, to side: SidebarSide, at index: Int) async throws {
+        var updated = placements
+        updated.move(id, to: side, at: index, in: contributions.sidebarTabs)
+        try await savePlacements(updated)
+    }
+
+    /// Returns every contributed sidebar tab to its default side and order.
+    public func resetViewPlacements() async throws {
+        try await savePlacements(.empty)
+    }
+
+    private func savePlacements(_ updated: ViewPlacements) async throws {
+        guard updated != placements else { return }
+        placements = updated
+        hostState.viewPlacements = updated == .empty ? nil : updated
+        stateRevision += 1
+        try await stateStore.save(hostState, revision: stateRevision)
     }
 
     /// Deactivates every plugin and flushes their storage (call on quit).
