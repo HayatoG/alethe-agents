@@ -285,6 +285,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   side by side with health; add from the MCP registry or by hand, enable/disable with undo, edit, copy
   to agents that lack a server, reveal a masked value on request and restore config backups; skills are
   in the same window.
+- Orchestration board pane: open it from Add Content › Orchestration or the project menu, or choose Open
+  as Orchestration in New Terminal to start a Claude Code or Codex planner with a goal and the board
+  beside it; orchestrator panes and job history come over from the Tauri app.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

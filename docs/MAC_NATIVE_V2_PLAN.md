@@ -2674,7 +2674,7 @@ above.
   report; POSIX paths instead of drive letters), context share, elapsed time and token formatting. Needs
   P6-1. *Tests:* G (upstream `orchestratorRuns.test.ts` 25, `orchestratorGraph.test.ts` 30,
   `orchestratorMedia.test.ts` 5, Windows paths rewritten as POSIX). *Parity:* ORC-1.
-- [ ] **P6-13 (M) Orchestrator pane and entry points.** Pane kind `orchestrator`
+- [x] **P6-13 (M) Orchestrator pane and entry points.** Pane kind `orchestrator`
   (`{"kind":"orchestrator"}`; old workspace files unaffected) in `ContentPaneRegistry` with
   `OrchestratorPaneView` (an empty state until P6-14); Add Content › Orchestration and project menu ›
   Add Orchestrator (upstream `AddContentModal`, `sidebarMenus.tsx`, `createOrchestratorPane`); the New
@@ -2689,6 +2689,14 @@ above.
   `NewTerminalSheet.swift`, `SidebarView.swift`. *Tests:* U (pane decoding, import mapping), UI
   (Orchestration mode opens a planner and a board; entry points hidden with the feature off). *Parity:*
   ORC-1, AG-3.
+  *Done:* (`afd0e3e`) pane kind `orchestrator` (`{"kind":"orchestrator"}`; old workspace files
+  unaffected) shown by `OrchestratorPaneView` (empty board until P6-14, or a Turn On notice while the
+  feature is off). Add Content › Orchestration and project menu › Add Orchestration only while the
+  feature is on (the menu always adds a new board, as upstream). New Terminal › Open as Orchestration
+  offers Claude Code and Codex planners, sends the goal as the first prompt, turns the feature on before
+  the tab exists and adds the board right after the planner, which keeps focus (no pane groups). Tauri
+  import maps `orchestrator` panes (id and grid kept) and copies `orchestrator-jobs.json` into a profile
+  that has none. Tests (U + UI `OrchestratorEntryTests`) written and compiled, NOT run.
 - [ ] **P6-14 (L) Board canvas.** `OrchestratorPaneView` filled in (upstream
   `OrchestratorPane/index.tsx`): planner tabs (label, agent glyph, run count; a planner whose tab is
   gone says so), the rail (runs → workers by lane, attention first, unsettled runs open), the canvas
