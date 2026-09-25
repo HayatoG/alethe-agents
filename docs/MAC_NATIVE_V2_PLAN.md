@@ -3,8 +3,9 @@
 > Status: **Phases 0–5 implemented** (2026-09-25). Phases 0–3 tested (last run after P3-18: package
 > 336/336, UI 67/67, smoke scripts pass). Phase 4 round 1 ran the package suite (498 green); Phase 4
 > round 2 and all of Phase 5 were compiled only (owner decision) — see **Test debt** below.
-> Next: Phase 6 (Orchestrator v2), then 7 (Peripherals) and 8 (Release). Before Phase 6: clear the test
-> debt. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P6-1 (Phase 6, Orchestrator v2, is broken into P6-1…P6-23), then 7 (Peripherals) and 8
+> (Release). Before Phase 6: clear the test debt. Branch: `mac-native-v2` (created from `origin/main` @
+> `75083e2`, v1.7.0).
 >
 > **Test debt (2026-09-25).** Written and compiled, never run:
 > - Package suite (`swift test`): new or changed tests since `b8f5ab7` in AletheIntegrationsTests (19
@@ -2493,9 +2494,296 @@ folders; profiles, backup/import/reset, logs, crash report, app icon, toolbar an
 no secret appears in logs or exports.
 
 ### Phase 6 — Orchestrator v2
-ORC-2 port `orchestrator_core` (job model, workers, worktrees, approvals) with its tests as golden (3 × L);
-`alethe-orchestrator-mcp` stdio target (M); ORC-1 board UI (L); ORC-3 scheduler, telemetry, planning
-audit (L).
+Order: groundwork first — the `AletheOrchestrator` target with the job model and the MCP transport, the
+job store, the worker process host and the two worker protocols (Codex `app-server`, Claude Code
+`stream-json`) — then the core that queues, runs and settles workers, with steering, approvals, worktree
+isolation and agent fitness on top; then the app service that hosts the core behind the P3-9 loopback
+endpoint and wires planners per launch, and the `alethe-orchestrator-mcp` stdio binary; then the board
+(pure model, pane kind and entry points, canvas, worker actions, apply, spend and quota). ORC-3 (event
+bus and telemetry, scheduler, planning audit, Settings › Multiagent) runs alongside: it shares nothing
+with the board. Upstream keeps the core (`orchestrator_core.rs`) free of the app so the desktop app and
+the stdio binary host the same code; the port keeps that split — `AletheOrchestrator` has no UI and no
+app types. Principles: every process, pipe, git call and file read runs off the main thread and is
+cancelable; one stuck worker never blocks another (writes to a worker's stdin happen outside the core's
+isolation, as upstream `stage_rpc`); job state is written on transitions, not on streamed tokens,
+atomically (tmp → rename), and a crash restores it with in-flight work marked interrupted, never shown
+as running; worker processes run in their own process group and are always terminated and reaped — on
+cancel, release, timeout, the parked limit, quit, and at the next launch after a crash; irreversible
+steps (applying a worktree into a branch, cancelling a running worker) ask once; what a worker asks for
+approval is answered only by an explicit choice of the planner or the person, never automatically; the
+loopback token, the per-launch configs (0600) and worker environments are never logged (OSLog
+`.private`, `SecretRedactor` on exports) nor passed as arguments, and task text is user data (private).
+Every surface is gated by the `orchestrator` feature (P5-3). No new preference keys: the orchestration
+mode turns on the existing feature. *Tests* list what each task must ship; they run per the test cadence
+above.
+
+- [ ] **P6-1 (M) `AletheOrchestrator` target, job model and MCP transport.** New package target (ADR-7;
+  depends on AletheFoundation, AletheGit, AletheAgents, AletheIntegrations) with the types every later
+  task uses: `JobStatus` (queued, running, blocked, done, failed, cancelled, released, interrupted;
+  `settled`), `Job` with its snapshot and record in upstream's camelCase JSON (`Job::snapshot`,
+  `Job::record`), `Planner`, `Delivery` (sequence, type, job, outcome, text), `Launcher` (kind, program,
+  arguments, environment), ids `job-NN` / `run-NN` with `trailing_number`, `tail` (a report's end, 1200
+  characters in snapshots), token counts (`claude_token_count`, `add_token_counts`); the MCP transport
+  (upstream `handle_mcp_body`: `initialize` echoing the protocol version, `tools/list`, `tools/call` →
+  text content or `isError`, `ping`, unknown method -32601, notifications get no answer) over an
+  `OrchestratorToolHandler` protocol, and the nine tool schemas (`tools()`) verbatim as a JSON resource.
+  No processes, no UI. *Tests:* G (upstream `the_handshake_advertises_every_tool`,
+  `a_notification_gets_no_response_body`,
+  `the_delegate_schema_points_at_the_live_reading_instead_of_quoting_numbers`), U (snapshot and record
+  against upstream JSON). *Parity:* groundwork for ORC-2.
+- [ ] **P6-2 (S) Job store.** `OrchestratorJobStore` (upstream `set_store`/`restore`/`persist`):
+  `<profile>/orchestrator-jobs.json` in upstream's v2 shape (`version`, job records, planners), so a
+  file from the Tauri app loads; restore turns `running`/`queued` into `interrupted`, moves the job and
+  run counters past every restored id and keeps the planners; writes are atomic, serialized and
+  coalesced, requested on transitions only; an unreadable file is set aside (`.bak`) and the store
+  starts empty instead of failing. Needs P6-1. *Tests:* G (upstream
+  `history_outlives_the_process_and_in_flight_work_is_not_reported_as_running`,
+  `a_new_id_never_collides_with_a_restored_one`), U (corrupt file, coalesced writes). *Parity:* ORC-2.
+- [ ] **P6-3 (M) Worker process host.** `WorkerProcess` actor: spawns a `Launcher` in the job's folder
+  with a clean environment (the login-shell PATH the P3 launcher resolver builds) in its own process
+  group; stdin/stdout pipes (`O_CLOEXEC`), stderr discarded like upstream; an ordered line writer that
+  never runs inside the core's isolation (upstream `stage_rpc` + `send_rpc`: a full pipe blocks only its
+  own worker); stdout as an `AsyncStream` of JSON lines (invalid lines skipped, EOF ends it);
+  `terminate()` sends SIGTERM to the group, SIGKILL after 2 s, and reaps (upstream `teardown` kill +
+  wait; `withTaskCancellationShield` on 27, ADR-7a). Live workers are recorded (pid, group, executable,
+  start time) in `<profile>/orchestrator-workers.json`; after an unclean exit the next launch terminates
+  groups whose executable and start time still match — never matched by command line (as P5-19).
+  Launchers for `codex app-server` and Claude Code's headless `stream-json` mode (upstream
+  `Launcher::codex_app_server`, `claude_headless`), resolved once through `LauncherResolver`; a missing
+  CLI is an error only for the job that needs it. Adds the `orchestrator` log domain (spawns go to
+  `spawn.log` with environment names only, P5-11). Needs P6-1. *Tests:* U (arguments, a child ignoring
+  SIGTERM is killed and reaped, a full pipe does not block another worker, stale-worker matching), P
+  (spawn to first line). *Parity:* ORC-2.
+- [ ] **P6-4 (L) Codex app-server worker protocol.** A pure state machine from JSON lines to worker
+  events and back (upstream `spawn_worker` handshake, `on_worker_message`, `on_worker_request`):
+  `initialize` with `experimentalApi`, `initialized`, `thread/start` (approval policy `never` or the
+  granular form, `approvalsReviewer: user`, sandbox `workspace-write`, web search live or disabled) or
+  `thread/resume` for an interrupted job; `turn/start`, `turn/interrupt`; events `turn/started`,
+  `item/agentMessage/delta` (live reply), `item/completed` (report), `turn/plan/updated`,
+  `turn/diff/updated`, `thread/tokenUsage/updated`, `turn/completed` / `turn/failed`; the requests
+  `item/commandExecution/requestApproval` and `item/fileChange/requestApproval` become a pending ask
+  (kind, command, folder, reason, rpc id) and anything else is refused with -32601 so a worker never
+  hangs; answers `accept`, `acceptForSession`, `decline`, `abort`; request ids per job. Needs P6-1.
+  *Tests:* G (Codex transcripts recorded from upstream's fake-launcher cases,
+  `the_handshake_offers_a_way_to_answer_a_blocked_worker`), U (every event, unknown request refused,
+  resume vs. start). *Parity:* ORC-2.
+- [ ] **P6-5 (M) Claude Code stream-json worker protocol.** The same contract for Claude workers
+  (upstream `on_worker_message_claude`): the first user message is the first turn (no handshake),
+  `--resume <session>` for an interrupted job; `system` `init` (session id) and `permission_denied`
+  (reported: the stream has no approval channel, upstream runs `bypassPermissions`), `assistant` text
+  blocks, `rate_limit_event` (live quota), `result` (report, usage → tokens, `total_cost_usd` summed per
+  turn); steering interrupts and the aborted `result` is not announced (upstream `awaiting_steer`);
+  after a turn the worker's uncommitted `git diff HEAD` in its folder is its diff (through `AletheGit`).
+  Needs P6-1. *Tests:* G (upstream `a_claude_worker_reports_its_result_and_tokens`,
+  `a_claude_worker_picks_up_its_own_uncommitted_changes_as_a_diff`,
+  `steering_a_running_claude_worker_interrupts_instead_of_waiting_out_the_turn`,
+  `steering_a_settled_claude_worker_queues_the_next_turn` as transcript fixtures). *Parity:* ORC-2.
+- [ ] **P6-6 (L) Orchestrator core: queue and lifecycle.** `OrchestratorCore` actor (upstream `Core`):
+  launchers by kind, concurrency limit (default 4, clamped 1…16), a FIFO queue drained as slots free,
+  workers spawned through P6-3 with the P6-4/P6-5 protocol, deliveries with a sequence number,
+  `finish`/`finish_turn` (a completed turn keeps the process parked for follow-ups; at most 4 parked,
+  the oldest released — upstream `PARKED_LIMIT`), a watchdog per job (900 s default, 0 for none;
+  interrupt, then outcome `timeout`), `snapshot()` (jobs, planners, running, queued, limit) published
+  through an `AsyncStream` that never holds up the core (upstream observer channel), persistence through
+  P6-2 on transitions, `shutdown()` terminating every worker. Tools: `alethe_delegate` (tasks, agent,
+  folder, label; one call is one run), `alethe_check` (wait, `untilAllSettled`, 300 s default, 600 s
+  cap), `alethe_status`, `alethe_cancel`, `alethe_release`; an unconfigured agent fails its job cleanly
+  through the normal delivery path. Needs P6-2, P6-3, P6-4, P6-5. *Tests:* G (upstream
+  `a_settled_worker_reports_its_own_outcome`, `delegating_nothing_is_an_error`,
+  `checking_with_no_work_returns_at_once`, `a_job_fails_cleanly_when_no_launcher_is_configured`,
+  `the_observer_sees_every_state_change`, `two_workers_overlap_and_check_waits_for_both`,
+  `the_queue_never_breaches_the_concurrency_limit`,
+  `delegating_to_an_unconfigured_agent_fails_cleanly_like_any_other_agent`,
+  `a_worker_that_never_finishes_is_stopped_by_its_budget`, with upstream's fake launchers as shell
+  scripts), U (parked limit, no process left after `shutdown()`). *Parity:* ORC-2.
+- [ ] **P6-7 (M) Steering, follow-ups, approvals and isolation.** On the P6-6 core, in its own files:
+  `alethe_steer` (interrupt the running turn and deliver the correction next, context kept),
+  `alethe_send` (an inbox: a busy worker takes it as its next turn, a parked one at once, a released or
+  interrupted one is started again on its thread), `alethe_answer` plus `answer(job:decision:)` for the
+  board (only while an ask is pending; the ask clears and the worker resumes), `alethe_diff` /
+  `jobDiff`; delegate options `askForApproval` (granular policy, sandbox kept writable — upstream's
+  reasoning), `webSearch`, `timeoutSeconds` and `isolate`: one worktree per job through `GitWorktrees`
+  (P4-9) with upstream's path and branch (`<repo>/.alethe/worktrees/<job>/`, `alethe/agent-<job>`), made
+  outside the core's isolation; a batch is accepted whole or not at all (worktrees already made are
+  removed on failure). Needs P6-6. *Tests:* G (upstream `answering_is_refused_when_nothing_is_waiting`,
+  `steering_an_unknown_job_is_refused`, `isolating_outside_a_repository_says_so`,
+  `isolating_gives_each_worker_its_own_worktree`), U (inbox order, a half-made batch rolled back).
+  *Parity:* ORC-2.
+- [ ] **P6-8 (M) Agent fitness and routing.** `AgentFitness` from P3-13's usage readings (upstream
+  `lib/agentFitness.ts`: worst window, used %, reset, plan, rate-limited) pushed into the core
+  (`setAgentFitness`); every tool response carries the fitness block with `headroom` (agents sorted, so
+  a tie resolves the same way on every call); `alethe_delegate` adds `headroomHint` when the requested
+  side is at 80 % or rate-limited (`bothStrained` when the other is too) and records a routing note on
+  each job (`chosen` or `ignored`, the most strained agent, its window) — upstream `strain_of`,
+  `strained_agent`, `routing_note`, `headroom_hint`, `call_tool`. In its own files on the core. Needs
+  P6-6. *Tests:* G (upstream's eight fitness cases, `every_tool_response_carries_the_current_headroom`
+  through `a_rate_limited_agent_outranks_any_percentage`; `agentFitness.test.ts`). *Parity:* ORC-2,
+  ORC-1 (quota warnings).
+- [ ] **P6-9 (L) App orchestrator service, MCP endpoint and Claude Code planners.**
+  `OrchestratorService` (`@MainActor`, upstream `orchestrator.rs`): one core per profile, prepared on
+  first use (store path, restore, launchers resolved once — a missing CLI never delays launch),
+  snapshots republished for views, `answer`, `diff` and `message(steer:)` for the board, `shutdown()`
+  from `flush`. `POST /mcp` on the P3-9 `AgentHookServer` (same loopback listener and token,
+  `X-Alethe-Planner` header, 202 for notifications, the body limit kept). An `McpLaunchWiring` provider
+  (`OrchestratorWiring`) registers each Claude Code tab as a planner (id: the tab; label: its display
+  name) and adds an `alethe` HTTP server to its `--mcp-config` file — `McpLaunchServer` gains an HTTP
+  form (URL and headers) written only to the private per-launch file. Only while the feature is on.
+  Files: `AgentHookServer.swift`, `McpLaunch.swift`, `AgentHookHub.swift` (the MCP handler),
+  `AppEnvironment` (start and `flush`), new `Alethe/Orchestrator/`. Needs P6-6. *Tests:* U (`/mcp`
+  routing, 401 without the token, the HTTP server config, planner registration), P (a tool call round
+  trip over loopback). *Parity:* ORC-2.
+- [ ] **P6-10 (M) `alethe-orchestrator-mcp` stdio binary and Codex planners.** A SwiftPM executable in
+  AletheKit (ADR-7), embedded in the app under `Contents/Helpers/` and signed with it. Two modes: bridge
+  (`--bridge <file>`: a private per-launch file with endpoint, token and planner; stdin lines are posted
+  to the app's `/mcp` and the answers written back — replacing upstream's generated PowerShell bridge,
+  `write_codex_mcp_bridge`) and standalone (upstream `bin/alethe-orchestrator-mcp.rs`: its own core,
+  Codex from `ALETHE_CODEX` or PATH, `ALETHE_MAX_WORKERS`), so any MCP client can delegate without
+  Alethe open. Codex tabs become planners through `-c mcp_servers.alethe.command=<helper>` /
+  `args=["--bridge", <file>]` (P5-4) instead of upstream's `.codex/config.toml` block
+  (`codex_mcp_config_write`); the token never appears in arguments or logs. Files: `Package.swift`, the
+  app target's copy phase, `OrchestratorWiring`. Needs P6-7, P6-8, P6-9. *Tests:* U (bridge framing, no
+  line for a notification, the standalone handshake, the built helper against a stub endpoint).
+  *Parity:* ORC-2.
+- [ ] **P6-11 (M) Planner subagents.** Claude Code's own subagents and teammates reach the board
+  (upstream `agent_hooks_settings_path(orchestrator: true)`, `agent_events.rs`, `agentCanvasStore`,
+  `lib/orchestratorSubagents.ts`): with the feature on, P3-9's per-launch Claude settings add
+  `SubagentStart`, `SubagentStop`, `PreToolUse`, `PostToolUse`, `TeammateIdle`, `TaskCreated`,
+  `TaskCompleted` and `teammateMode: in-process`; `SubagentTracker` keeps the nodes per planner tab
+  (type, prompt, status, background or not) with their session cost (P3-8) and maps them to job
+  snapshots in one "Subagents" run per planner (`nativeSubagentJobs`). Codex subagent hooks only through
+  a per-launch `-c` override if Codex accepts one (upstream's Codex hook command is a no-op outside
+  Windows). Files: `AgentHooks.swift`, `AgentHookHub.swift`, new
+  `Alethe/Orchestrator/SubagentTracker.swift`. Needs P6-12. *Tests:* G
+  (`orchestratorSubagents.test.ts`), U (hook parsing, settings with and without the feature). *Parity:*
+  ORC-1 (subagents).
+- [ ] **P6-12 (M) Board model.** Pure ports in `AletheOrchestrator/Board`: runs and planners
+  (`lib/orchestratorRuns.ts`: lanes and their order, counts, worst state, attention, `groupRuns`,
+  `groupPlanners` with declared, orphaned and planner-less groups in a stable order,
+  `aggregateAgentSpend`), the canvas layout (`lib/orchestratorGraph.ts`: one tree per run, planner → run
+  → workers, media nodes, connectors and their labels, `fitView`, `zoomAt`, `focusView`, scale
+  0.35…1.6), media extraction (`lib/orchestratorMedia.ts`: at most 4 image paths and links from a
+  report; POSIX paths instead of drive letters), context share, elapsed time and token formatting. Needs
+  P6-1. *Tests:* G (upstream `orchestratorRuns.test.ts` 25, `orchestratorGraph.test.ts` 30,
+  `orchestratorMedia.test.ts` 5, Windows paths rewritten as POSIX). *Parity:* ORC-1.
+- [ ] **P6-13 (M) Orchestrator pane and entry points.** Pane kind `orchestrator`
+  (`{"kind":"orchestrator"}`; old workspace files unaffected) in `ContentPaneRegistry` with
+  `OrchestratorPaneView` (an empty state until P6-14); Add Content › Orchestration and project menu ›
+  Add Orchestrator (upstream `AddContentModal`, `sidebarMenus.tsx`, `createOrchestratorPane`); the New
+  Terminal sheet's Orchestration mode (upstream `NewTerminalModal` `SessionMode`: planner agents Claude
+  Code and Codex, a goal sent as the first prompt, the feature turned on before the terminal starts, the
+  board opened beside the planner — AG-3's planner option). *Deviation:* upstream stacks the two in a
+  `paneGroups[kind=orchestration]` group; there are no pane groups here, so the board is placed next to
+  the planner in the project's layout. The Tauri import maps `orchestrator` panes (skipped until now)
+  and copies `orchestrator-jobs.json` into the profile when it has none. All gated by the feature.
+  Files: `AletheModel/PaneContent.swift`, `AletheModel/TauriImport.swift`, `ContentPaneRegistry.swift`,
+  new `Workspace/ContentPanes/OrchestratorPaneView.swift`, `AddContentSheet.swift`,
+  `NewTerminalSheet.swift`, `SidebarView.swift`. *Tests:* U (pane decoding, import mapping), UI
+  (Orchestration mode opens a planner and a board; entry points hidden with the feature off). *Parity:*
+  ORC-1, AG-3.
+- [ ] **P6-14 (L) Board canvas.** `OrchestratorPaneView` filled in (upstream
+  `OrchestratorPane/index.tsx`): planner tabs (label, agent glyph, run count; a planner whose tab is
+  gone says so), the rail (runs → workers by lane, attention first, unsettled runs open), the canvas
+  (P6-12 layout drawn with SwiftUI `Canvas` plus node views: planner, run with done and blocked counts,
+  worker cards with status, elapsed, context share, tokens, cost, isolated and diff chips, media cards),
+  pan, pinch and button zoom, fit, focus on the selected worker; worker detail (plan, report or the live
+  reply's tail, routing note); the planner node reveals its terminal tab. Live from the P6-9 service
+  plus P6-11's subagents; Reduce Motion respected; theme tokens only. Files:
+  `OrchestratorPaneView.swift`, new files in `Alethe/Orchestrator/`. Needs P6-9, P6-11, P6-12, P6-13.
+  *Tests:* UI (a seeded jobs file: tabs, rail, select a worker, fit), HT (three zoom levels), P (layout
+  and redraw with 100 workers). *Parity:* ORC-1.
+- [ ] **P6-15 (M) Worker actions.** On the worker detail (upstream `ApprovalAsk`, the composer, the diff
+  viewer): a pending ask shows what, where and why with Accept, Accept for Session, Decline and Abort —
+  nothing is answered without a click, and an ask outside the worker's folder is called out (upstream
+  `askIn`); a message field that steers a running worker and sends to an idle one (upstream
+  `orchestrator_message`); the worker's diff with the Diff pane's line styling, loaded off main; Cancel
+  (asks once while running) and Release; Show in Finder for a worktree. Failures are recorded in
+  Diagnostics (P5-11). Files: new files in `Alethe/Orchestrator/`. Needs P6-7, P6-14. *Tests:* UI (a
+  stub worker blocked on an approval is answered from the board; steer vs. send), HT. *Parity:* ORC-1.
+- [ ] **P6-16 (M) Apply a worker's worktree.** Upstream `applyWorktree`: commit the worktree's pending
+  changes (`GitWorktrees.commitPending`), fetch the branch for local copies, analyze it against the
+  project's current branch with the Merge Center analyzer (P4-10) and, when clean, prepare and finalize
+  into it (P4-11, P4-13); a conflict or failed validation opens the Merge Center on that branch instead
+  (`EditorRequest.mergeCenter`, existing case). Asks once (it changes the target branch), runs off main
+  with progress, cancelable before the merge step, marks the job applied for the session. Files: new
+  `Alethe/Orchestrator/ApplyWorktree.swift` and its button on the worker detail. Needs P6-7, P6-14.
+  *Tests:* U (step order and stop points with stubs), UI (a clean apply on a seeded repository).
+  *Parity:* ORC-1.
+- [ ] **P6-17 (S) Spend and quota warnings.** The board header (upstream `aggregateAgentSpend`,
+  `useOrchestratorQuotaWarnings`): spend per agent for the selected planner (cost, or tokens when
+  unpriced) and a warning chip per agent at 80 % or rate-limited, with its reset; while a board is open,
+  Claude and Codex usage (P3-13 readers) is read every 60 s and pushed into the core as fitness (P6-8),
+  so the planner and the person read the same numbers (`FitnessFeed`). Files: new files in
+  `Alethe/Orchestrator/`. Needs P6-8, P6-14. *Tests:* U (threshold, the feed stops when the last board
+  closes), UI (seeded usage shows the chip). *Parity:* ORC-1.
+- [ ] **P6-18 (M) Event bus and telemetry.** `AletheFoundation/Events` (upstream `event_bus.rs`,
+  `telemetry.rs`): an `EventBus` actor (type, time, correlation id, task, agent, JSON data; each
+  subscriber gets an `AsyncStream` that drops its oldest events rather than blocking the publisher),
+  `Telemetry` (a count per event type; count, last and sum of `duration_ms`, `cost_usd`, `memory_mb`;
+  the last 500 traces, filterable by correlation id; appended to `<logs>/telemetry.jsonl`, rotated like
+  `alethe.log`, through `SecretRedactor`). The app's `MultiagentController` (new, in
+  `Alethe/Orchestrator/`) owns bus and telemetry, is started from `AppEnvironment`, and publishes
+  `PlanningUpdated` from the P5-20 `.planning/` FSEvents watchers it keeps for the projects the
+  scheduler or autocommit follow. No dependencies. *Tests:* G (upstream
+  `test_event_bus_publish_subscribe`, `test_telemetry_metrics_and_traces`), U (ring limit, correlation
+  filter, redaction). *Parity:* ORC-3.
+- [ ] **P6-19 (S) Event publishers.** The events upstream publishes outside the scheduler, from their
+  native equivalents, with upstream's names and data keys: Merge Center analysis and conflict resolution
+  (`merge_analyzer.rs`, `conflict_resolution.rs`), Graphify generation (`graphify.rs`), plugin load
+  failures (`plugins.rs`), resource policy actions (`resource_manager.rs`; `supervisor.rs` timeouts and
+  restarts only where P2-24 has an equivalent). Files: the owning app controllers only
+  (`GraphifyController`, the Merge Center model, the plugin host wiring, `ResourceMonitor`). Needs
+  P6-18. *Tests:* U (each publisher emits one event in upstream's shape). *Parity:* ORC-3.
+- [ ] **P6-20 (M) Scheduler.** `AletheOrchestrator/Scheduler` (upstream `scheduler.rs`): tasks from the
+  roadmap checkboxes of `.planning/task.md` (P5-20 `PlanningGate` parser) with ids derived from project
+  and text, each depending on the one before; a reload keeps running, done and failed tasks and drops
+  stale pending ones; a tick moves pending → ready when the dependencies are done, ready → running with
+  a `worktree:<task>` lease and a worktree provisioned in the project's worktree mode (P4-9), running →
+  done when that worktree's planning reports complete; cancel fails a running task and frees its lease;
+  ticks run on request and on `PlanningUpdated`; every transition is published (P6-18). In memory, like
+  upstream; subscribes to the bus itself, and the app's instance lives in `MultiagentController` from
+  P6-22. Needs P6-1, P6-18. *Tests:* G (upstream's four scheduler tests on temporary repositories).
+  *Parity:* ORC-3.
+- [ ] **P6-21 (M) Planning audit and autocommit.** `AletheIntegrations/GSDSync/PlanningAudit` (upstream
+  `planning.rs`): a record commits only `.planning/` (`git commit -- .planning`, so other staged work
+  never joins it) as `gsd(alethe): <reason>` with an `Alethe-Agent:` trailer, does nothing when
+  unchanged and publishes `PlanningCommitted`; history from `git log -- .planning` with unit/record
+  separators and the trailer (50, at most 500; empty on a new repository). Autocommit
+  (`PlanningAutocommit`, started by `MultiagentController`) is opt-in and off at each launch like
+  upstream: on `PlanningUpdated`, 2 s after the last change per planning folder. Needs P6-18. *Tests:* G
+  (upstream `records_scoped_audit_commit_with_agent_trailer`), U (debounce generations, history parsing,
+  unrelated staged files untouched). *Parity:* ORC-3.
+- [ ] **P6-22 (M) Settings › Multiagent.** A Settings tab (upstream `MultiagentPage`, `schedulerStore`):
+  scheduler — project picker, Run Tick, the task queue with status, dependencies, assigned worker and
+  Cancel (asks once); execution metrics; recent events filterable by correlation id; planning audit —
+  the autocommit toggle and the project's history. Refreshed from the bus, not polled. Files:
+  `SettingsView.swift` (`SettingsTab.multiagent`), new `Alethe/Settings/MultiagentSettings.swift`,
+  `MultiagentController` (holds the scheduler). Needs P6-18, P6-20, P6-21. *Tests:* UI (a seeded
+  `.planning/` project: tick, cancel, autocommit), HT. *Parity:* ORC-3.
+- [ ] **P6-23 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+
+Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
+beyond string catalogs — P6-7 and P6-8 add separate files to the core; rebase on conflicts). Shared
+files and the tasks that edit them, never two in one wave: `AppEnvironment` P6-18, P6-9; `AgentHookHub`
+P6-11, P6-9; `Package.swift` P6-1, P6-10; `OrchestratorWiring` P6-9, P6-10; `OrchestratorPaneView`
+P6-13, P6-14; `MultiagentController` P6-18, P6-21, P6-22; `SettingsView` P6-22 only. No task touches
+`EditorRequest`, `MainWindow`, the right sidebar's tab list or `PreferencesDocument`:
+1. P6-1, P6-13, P6-18 — no dependencies.
+2. P6-2, P6-3, P6-4, P6-5, P6-12, P6-19, P6-20, P6-21.
+3. P6-6, P6-11, P6-22.
+4. P6-7, P6-8, P6-9.
+5. P6-10, P6-14.
+6. P6-15, P6-16, P6-17.
+7. P6-23.
+
+**Phase 6 exit criteria:** a Claude Code or Codex terminal opened in Orchestration mode delegates
+through the `alethe_*` tools to Codex and Claude Code workers that run in parallel within the
+concurrency limit, each in its own worktree when asked, and can be checked, steered, sent more work,
+answered, cancelled and released; the board shows every planner, run, worker and subagent live, with
+approvals answered only by an explicit choice, diffs, apply into the branch after one confirmation,
+spend and quota warnings; `alethe-orchestrator-mcp` serves the same tools over stdio with or without the
+app; job history survives a relaunch or a crash with in-flight work shown as interrupted, and no worker
+process outlives its job, the app or a crash; the scheduler, telemetry and planning audit and autocommit
+work from Settings › Multiagent; no token or secret appears in logs, exports or process arguments.
 
 ### Phase 7 — Peripherals
 PER-7 remote control: `NWListener` HTTP+WS server, pairing QR (`CIQRCodeGenerator`), read-only/shell
