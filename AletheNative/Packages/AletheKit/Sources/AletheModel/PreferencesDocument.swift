@@ -51,6 +51,14 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     /// Optional modules turned on or off, keyed by `Feature` raw value (upstream `enabledFeatures`);
     /// read through `features`.
     public var enabledFeatures: [String: Bool]?
+    /// `shared` or `dedicated` (upstream `playwrightBrowserMode`, P5-19); nil is shared.
+    public var playwrightBrowserMode: String?
+    /// Playwright launches its dedicated browser headless (upstream `playwrightDedicatedHeadless`).
+    public var playwrightDedicatedHeadless: Bool?
+    /// The shared browser runs headless; it has no pane to show it in, so nil (a window) is the default.
+    public var playwrightSharedHeadless: Bool?
+    /// The shared browser's executable or `.app`; nil finds Chrome, Chromium, Edge or Brave.
+    public var playwrightBrowserPath: String?
     /// Dock icon artwork (upstream `appIconTheme`); read through `iconTheme`, nil is the default.
     public var appIconTheme: String?
     /// Models the GSD Sync child session tries in order (upstream `gsdSyncModelChain`), written to

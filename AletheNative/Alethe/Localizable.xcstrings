@@ -15420,6 +15420,329 @@
         }
       }
     },
+    "settings.playwright.browserPath" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser App"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App do Navegador"
+          }
+        }
+      }
+    },
+    "settings.playwright.browserPath.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chrome, Chromium, Edge or Brave, found automatically"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chrome, Chromium, Edge ou Brave, encontrado automaticamente"
+          }
+        }
+      }
+    },
+    "settings.playwright.dedicatedHeadless" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run the dedicated browser headless (no visible window)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rodar o navegador dedicado em modo headless (sem janela visível)"
+          }
+        }
+      }
+    },
+    "settings.playwright.error.noPort" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No free local port was available for the browser."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma porta local livre estava disponível para o navegador."
+          }
+        }
+      }
+    },
+    "settings.playwright.error.notFound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Chrome, Chromium, Edge or Brave was found. Install one or enter its path."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum Chrome, Chromium, Edge ou Brave foi encontrado. Instale um ou informe o caminho dele."
+          }
+        }
+      }
+    },
+    "settings.playwright.error.notReady" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The browser did not open its debugging port in time."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O navegador não abriu a porta de depuração a tempo."
+          }
+        }
+      }
+    },
+    "settings.playwright.error.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The shared browser did not start: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O navegador compartilhado não iniciou: %@"
+          }
+        }
+      }
+    },
+    "settings.playwright.mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navegador"
+          }
+        }
+      }
+    },
+    "settings.playwright.mode.dedicated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dedicated"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dedicado"
+          }
+        }
+      }
+    },
+    "settings.playwright.mode.dedicated.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each agent's Playwright launches its own separate browser, independent of the shared one and of other agents."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Playwright de cada agente abre um navegador separado, independente do compartilhado e dos outros agentes."
+          }
+        }
+      }
+    },
+    "settings.playwright.mode.shared" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartilhado"
+          }
+        }
+      }
+    },
+    "settings.playwright.mode.shared.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agents attach to the browser Alethe starts here, in its own window, and share its tabs. While it is not running, Playwright opens its own browser."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os agentes se conectam ao navegador que o Alethe inicia aqui, em uma janela própria, e compartilham as abas dele. Enquanto ele não estiver rodando, o Playwright abre um navegador próprio."
+          }
+        }
+      }
+    },
+    "settings.playwright.shared.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared Browser"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navegador Compartilhado"
+          }
+        }
+      }
+    },
+    "settings.playwright.sharedHeadless" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run the shared browser headless (no visible window)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rodar o navegador compartilhado em modo headless (sem janela visível)"
+          }
+        }
+      }
+    },
+    "settings.playwright.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Browser"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar Navegador"
+          }
+        }
+      }
+    },
+    "settings.playwright.status.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running at %1$@ (%2$@)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rodando em %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "settings.playwright.status.starting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciando…"
+          }
+        }
+      }
+    },
+    "settings.playwright.status.stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not running"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não está rodando"
+          }
+        }
+      }
+    },
+    "settings.playwright.stop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Browser"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar Navegador"
+          }
+        }
+      }
+    },
     "settings.plugins.capabilities" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -200,6 +200,10 @@ public struct DataLocations: Sendable, Hashable {
     public var pendingOperation: URL { root.appending(path: "pending-operation.json") }
     /// Imported backups unpacked and validated, waiting to replace a profile (P5-10).
     public var importStaging: URL { root.appending(path: "import-staging", directoryHint: .isDirectory) }
+    /// The shared Playwright browser's own browser profile (P5-19; upstream `browser-session`).
+    public func browserSession(_ id: ProfileID) -> URL {
+        profileDirectory(id).appending(path: "browser-session", directoryHint: .isDirectory)
+    }
 
     public func scrollback(_ id: ProfileID) -> URL {
         profileDirectory(id).appending(path: "scrollback", directoryHint: .isDirectory)

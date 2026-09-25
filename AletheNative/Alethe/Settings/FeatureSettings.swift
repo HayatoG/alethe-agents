@@ -49,6 +49,7 @@ private struct FeatureRow: View {
             environment.features.isOn(feature)
         } set: { on in
             environment.preferences?.update { $0.features.set(feature, on: on) }
+            if feature == .playwright, !on { Task { await environment.playwright.stop() } }
         }
     }
 
@@ -76,7 +77,9 @@ private struct FeatureOptions: View {
             AiMemoryOptions()
         case .graphify:
             GraphifyOptions()
-        case .browser, .mcp, .playwright, .orchestrator, .gsdSync, .prs:
+        case .playwright:
+            PlaywrightOptions()
+        case .browser, .mcp, .orchestrator, .gsdSync, .prs:
             EmptyView()
         }
     }

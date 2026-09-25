@@ -76,6 +76,8 @@ final class AppEnvironment {
     let aiMemory = AiMemoryController()
     /// Graphify CLI, graphs and the MCP server added to agent launches (P5-17).
     let graphify = GraphifyController()
+    /// The Playwright MCP server and its shared browser (P5-19).
+    let playwright = PlaywrightBrowser()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -211,6 +213,7 @@ final class AppEnvironment {
         // The hook bridge listens before any terminal starts, so the first launches are wired too.
         terminals.hookEnvironment = self
         graphify.start(environment: self)
+        playwright.start(profileDirectory: locations.browserSession(profile), wiring: terminals.mcp, environment: self)
         notifier.start(environment: self)
         pomodoro.start(environment: self)
         await terminals.hooks.start(terminals: terminals)
@@ -303,6 +306,7 @@ final class AppEnvironment {
         await extensions?.shutdown()
         terminals.terminateAll()
         terminals.hooks.stop()
+        await playwright.stop()
         await workspace?.flush()
         await preferences?.flush()
         await promptHistory?.flush()
