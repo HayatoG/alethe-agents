@@ -2767,7 +2767,7 @@ above.
   restarts only where P2-24 has an equivalent). Files: the owning app controllers only
   (`GraphifyController`, the Merge Center model, the plugin host wiring, `ResourceMonitor`). Needs
   P6-18. *Tests:* U (each publisher emits one event in upstream's shape). *Parity:* ORC-3.
-- [ ] **P6-20 (M) Scheduler.** `AletheOrchestrator/Scheduler` (upstream `scheduler.rs`): tasks from the
+- [x] **P6-20 (M) Scheduler.** `AletheOrchestrator/Scheduler` (upstream `scheduler.rs`): tasks from the
   roadmap checkboxes of `.planning/task.md` (P5-20 `PlanningGate` parser) with ids derived from project
   and text, each depending on the one before; a reload keeps running, done and failed tasks and drops
   stale pending ones; a tick moves pending → ready when the dependencies are done, ready → running with
@@ -2777,6 +2777,16 @@ above.
   upstream; subscribes to the bus itself, and the app's instance lives in `MultiagentController` from
   P6-22. Needs P6-1, P6-18. *Tests:* G (upstream's four scheduler tests on temporary repositories).
   *Parity:* ORC-3.
+  *Done:* (`f83313e`) `AletheOrchestrator/Scheduler`: `Scheduler` actor,
+  `SchedulerTask`/`SchedulerTaskStatus` in upstream camelCase JSON; loads `.planning/task.md` as a chain
+  with project-namespaced ids (FNV-1a, so ids differ from Tauri's — in-memory only); reload keeps
+  running/completed/failed and drops stale pending; tick pending → ready → running on a
+  `worktree:<task>` lease, provisioning a worktree in the project's mode (injectable), completing when
+  that worktree's planning reports complete; cancel fails a running task and frees the lease (cancel
+  during setup does not publish `AgentSpawnRequested`); transitions published with upstream names;
+  injected clock; auto-tick on `PlanningUpdated` only after `startAutoTick(on:)`. Upstream `supervisor`
+  start/stop not ported. P6-22 wires it into `MultiagentController`. Tests (upstream's 4 scheduler cases
+  on temp repos + units) written and compiled, NOT run.
 - [x] **P6-21 (M) Planning audit and autocommit.** `AletheIntegrations/GSDSync/PlanningAudit` (upstream
   `planning.rs`): a record commits only `.planning/` (`git commit -- .planning`, so other staged work
   never joins it) as `gsd(alethe): <reason>` with an `Alethe-Agent:` trailer, does nothing when
