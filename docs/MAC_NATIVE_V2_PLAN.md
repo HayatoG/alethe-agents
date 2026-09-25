@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-20 (P2-1…P2-5 tested; P2-6…P2-20
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-21 (P2-1…P2-5 tested; P2-6…P2-21
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-21. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-22. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1316,8 +1316,20 @@ they run per the test cadence above.
   of a workspace tab's snapshot.
   *Tests (written, not run — owner decision 2026-09-24):* `ProjectGridsTests` (6), UI `ProjectGridsTests`
   (create, switch, move a pane). Compiled.
-- [ ] **P2-21 (S) Flat mode and focus mode.** Flat workspace (no containers) and a focus overlay on one
+- [x] **P2-21 (S) Flat mode and focus mode.** Flat workspace (no containers) and a focus overlay on one
   pane. *Tests:* UI. *Parity:* WS-2, WS-10.
+  *Done:* Flat: `WorkspaceState.flat` (and in `WorkspaceSnapshot`, so each workspace tab keeps it;
+  both decode without it). `PaneHostView` shows one header-less container holding every open project's
+  shown panes in Auto (upstream `flat` → one `PaneArea`), each pane configured with its own project
+  (`ContainerView` `owners`); a project shown alone still wins. Track sizes under
+  `gridWeights["flat"]`. View › Flat Workspace. Focus mode (upstream `FocusOverlay`): the pane floats
+  over a blurred, dimmed backdrop (`FocusBackdropView`, `NSVisualEffectView` + theme `bg` at 55 %) with
+  32 × 24 pt margins; its container is raised above the backdrop and hides everything else of its own.
+  Enter by double-clicking a pane header, its menu or View › Focus on Pane (⇧⌘F); leave with Esc (taken
+  before the terminal, like upstream), a click on the backdrop or the same commands. Focus mode is
+  `AppEnvironment.focusModePaneID` (not saved, like upstream's UI store) and ends when its pane closes.
+  *Tests (written, not run — owner decision 2026-09-24):* UI `FlatAndFocusTests` (flat on/off; focus by
+  double-click, Esc, ⇧⌘F, backdrop click). Compiled.
 - [ ] **P2-22 (S) Empty workspace launcher.** Quick actions when nothing is open. *Tests:* UI, HT.
   *Parity:* WS-13.
 - [ ] **P2-23 (M) Disable and suspend.** Disable a terminal or project, suspend a group (SIGSTOP/SIGCONT),
@@ -1393,7 +1405,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | HOME-4 | Setup walkthrough | P3 | Not started | |
 | HOME-5 | Notifications list | P3 | Not started | |
 | WS-1 | Project containers | P1, P2 | Done | Open, resize, close (P1-6); collapse, fullscreen, reorder, isolate (P2-16) |
-| WS-2 | Flat mode | P2 | Not started | |
+| WS-2 | Flat mode | P2 | Done | P2-21; View › Flat Workspace, saved per workspace tab |
 | WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto (P1-6), Spotlight and Sidebar (P2-18), project Custom grid + designer (P2-19); workspace/group scopes open |
 | WS-4 | Named project grids | P2 | Done | P2-20; switched from the container header and the project menu (no grid rows in the sidebar) |
 | WS-5 | Tabs, closed tabs, history | P2 | Done | P2-17; History menu (⌘[ ⌘] ⌃Tab ⇧⌘T), ⌥-click adds to the current tab |
@@ -1401,7 +1413,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-7 | Image pane | P2 | Done | P2-10 |
 | WS-8 | Video pane | P2 | Done | P2-10; AVKit |
 | WS-9 | Diff pane | P2 | Done | P2-11; side by side added |
-| WS-10 | Focus mode | P2 | Not started | |
+| WS-10 | Focus mode | P2 | Done | P2-21; double-click header, ⇧⌘F, Esc/backdrop to leave |
 | WS-11 | Add content | P2 | Done | Markdown (P2-9), image/video (P2-10), Git changes (P2-11), website (P2-12); orchestration with ORC-1 |
 | WS-12 | Link viewer overlay | P2 | Done | P2-14; sheet + link actions menu (⇧⌘-click) |
 | WS-13 | Empty workspace launcher | P2 | Not started | |

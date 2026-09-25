@@ -17,6 +17,8 @@ final class AppEnvironment {
     private(set) var locations: DataLocations?
     /// Sheet requested by a menu, the sidebar or the workspace.
     var editorRequest: EditorRequest?
+    /// The pane shown in focus mode (P2-21); not persisted.
+    var focusModePaneID: PaneID?
 
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()

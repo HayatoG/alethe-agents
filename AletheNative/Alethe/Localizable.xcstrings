@@ -1089,6 +1089,74 @@
         }
       }
     },
+    "focusMode.enter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus on Pane"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focar no Painel"
+          }
+        }
+      }
+    },
+    "focusMode.enterHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double-click to focus on this pane"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clique duas vezes para focar neste painel"
+          }
+        }
+      }
+    },
+    "focusMode.exit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave Focus Mode"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sair do Modo Foco"
+          }
+        }
+      }
+    },
+    "focusMode.exitHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double-click or press Esc to leave focus mode"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clique duas vezes ou pressione Esc para sair do modo foco"
+          }
+        }
+      }
+    },
     "import.close" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2666,6 +2734,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voltar"
+          }
+        }
+      }
+    },
+    "menu.view.flat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flat Workspace"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workspace Plano"
           }
         }
       }

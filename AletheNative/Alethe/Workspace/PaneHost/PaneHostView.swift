@@ -23,6 +23,15 @@ final class PaneHostView: NSView {
     private var resizeDelta: CGFloat = 0
     private var focusedPane: PaneID?
     private var mouseMonitor: Any?
+    private var keyMonitor: Any?
+    /// Flat workspace: the one container's panes and the project each belongs to.
+    private var flatOwners: [PaneID: Project] = [:]
+    /// Focus mode (upstream `FocusOverlay`): the pane floating over a blurred backdrop.
+    private var focusModePane: PaneID?
+    private var backdrop: FocusBackdropView?
+
+    /// Id of the single container of a flat workspace.
+    static let flatID = ProjectID(rawValue: "alethe.flat")
 
     private struct ContainerDrag {
         let project: ProjectID
@@ -33,15 +42,27 @@ final class PaneHostView: NSView {
 
     override var isFlipped: Bool { true }
 
-    func update(document: WorkspaceDocument, context: PaneHostContext) {
+    func update(document: WorkspaceDocument, focusModePane: PaneID?, context: PaneHostContext) {
         self.context = context
         let state = document.workspace
         openIDs = state.openProjectIDs.filter { document.project($0) != nil }
         if liveSizes == nil { weights = state.containerWeights.count == openIDs.count ? state.containerWeights : [] }
         layer?.backgroundColor = context.theme.nsColor(.bg).cgColor
 
-        let ids = state.fullscreenProjectID.flatMap { openIDs.contains($0) ? [$0] : nil } ?? openIDs
-        let collapsedNow = Set(state.collapsedProjectIDs).intersection(ids)
+        // Flat (upstream `workspaceFlat`): every open project's shown panes in one Auto area, unless
+        // a project is shown alone.
+        let flat = state.flat && state.fullscreenProjectID.map { !openIDs.contains($0) } ?? true && !openIDs.isEmpty
+        var projects: [ProjectID: Project] = [:]
+        flatOwners = [:]
+        if flat {
+            let open = openIDs.compactMap(document.project)
+            for project in open { for pane in project.visiblePanes { flatOwners[pane.id] = project } }
+            projects[Self.flatID] = Project(id: Self.flatID, name: "", folder: "", panes: open.flatMap(\.visiblePanes))
+        } else {
+            for id in openIDs { projects[id] = document.project(id) }
+        }
+        let ids = flat ? [Self.flatID] : state.fullscreenProjectID.flatMap { openIDs.contains($0) ? [$0] : nil } ?? openIDs
+        let collapsedNow = flat ? [] : Set(state.collapsedProjectIDs).intersection(ids)
         if ids != order || collapsedNow != collapsed { animateNextLayout = !order.isEmpty }
         for (id, view) in containers where !ids.contains(id) {
             view.removeFromSuperview()
@@ -50,7 +71,7 @@ final class PaneHostView: NSView {
         order = ids
         collapsed = collapsedNow
         for id in ids {
-            guard let project = document.project(id) else { continue }
+            guard let project = projects[id] else { continue }
             let view = containers[id] ?? {
                 let view = ContainerView(projectID: id)
                 addSubview(view)
@@ -59,16 +80,20 @@ final class PaneHostView: NSView {
             }()
             view.configure(project: project, isSelected: state.selectedProjectID == id,
                            focusedPane: state.focusedPaneID,
-                           weights: project.layout == .grid
+                           weights: flat ? state.gridWeights[WorkspaceState.flatWeightsKey] ?? GridWeights()
+                               : project.layout == .grid
                                ? GridWeights(columns: project.effectiveGrid.colSizes ?? [], rows: project.effectiveGrid.rowSizes ?? [])
                                : state.gridWeights[project.weightsKey] ?? GridWeights(),
                            isCollapsed: collapsed.contains(id),
                            isFullscreen: state.fullscreenProjectID == id,
                            isolatedPane: state.fullscreenProjectID == id ? state.isolatedPaneID : nil,
+                           owners: flat ? flatOwners : [:], showsHeader: !flat,
                            context: context) { [weak self] translation in
                 self?.containerDragged(id, translation: translation)
             }
         }
+        self.focusModePane = containers.values.contains { $0.paneViews.contains { $0.paneID == focusModePane } }
+            ? focusModePane : nil
         if state.focusedPaneID != focusedPane {
             focusedPane = state.focusedPaneID
             let pane = containers.values.lazy.flatMap(\.paneViews).first { $0.paneID == state.focusedPaneID }
@@ -128,6 +153,44 @@ final class PaneHostView: NSView {
             animator.set(view, frame: frame.integral, animated: animated)
         }
         layoutDividers(frames)
+        layoutFocusMode(frames)
+    }
+
+    // MARK: - Focus mode
+
+    /// Raises the focused pane's container above a blurred backdrop and floats the pane inside the
+    /// whole area (upstream `FocusOverlay`: 24 × 32 pt margins). Click the backdrop or press Esc to
+    /// leave.
+    private func layoutFocusMode(_ frames: [ProjectID: CGRect]) {
+        guard let pane = focusModePane,
+              let (id, container) = containers.first(where: { $0.value.paneViews.contains { $0.paneID == pane } }) else {
+            containers.values.forEach { $0.setFocus(nil, frame: .zero) }
+            if let backdrop {
+                NSAnimationContext.runAnimationGroup({ $0.duration = 0.15; backdrop.animator().alphaValue = 0 },
+                                                     completionHandler: { backdrop.removeFromSuperview() })
+                self.backdrop = nil
+            }
+            return
+        }
+        let backdrop = self.backdrop ?? {
+            let view = FocusBackdropView()
+            view.onClick = { [weak self] in self?.context?.setFocusMode(nil) }
+            view.alphaValue = 0
+            self.backdrop = view
+            return view
+        }()
+        backdrop.tint = context?.theme.nsColor(.bg).withAlphaComponent(0.55)
+        backdrop.frame = bounds
+        if backdrop.superview == nil {
+            addSubview(backdrop, positioned: .above, relativeTo: nil)
+            NSAnimationContext.runAnimationGroup { $0.duration = 0.22; backdrop.animator().alphaValue = 1 }
+        }
+        addSubview(container, positioned: .above, relativeTo: backdrop)
+        let origin = frames[id]?.origin ?? container.frame.origin
+        let inset = CGSize(width: context?.metrics.size(32) ?? 32, height: context?.metrics.size(24) ?? 24)
+        let target = bounds.insetBy(dx: inset.width, dy: inset.height).offsetBy(dx: -origin.x, dy: -origin.y)
+        for (other, view) in containers where other != id { view.setFocus(nil, frame: .zero) }
+        container.setFocus(pane, frame: target)
     }
 
     // MARK: - Container resizing
@@ -227,15 +290,22 @@ final class PaneHostView: NSView {
             self?.focusPane(at: event)
             return event
         }
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+        // Esc leaves focus mode before the terminal sees it (upstream captures it too).
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, event.window === self.window, event.keyCode == 53, self.focusModePane != nil else { return event }
+            self.context?.setFocusMode(nil)
+            return nil
+        }
     }
 
     private func focusPane(at event: NSEvent) {
         guard event.window === window, let context else { return }
         let point = convert(event.locationInWindow, from: nil)
-        for (id, container) in containers where container.frame.contains(point) {
+        for (id, container) in containers where container.frame.contains(point) || focusModePane != nil {
             let local = container.convert(point, from: self)
-            if let pane = container.paneViews.first(where: { $0.frame.contains(local) }) {
-                context.focus(pane.paneID, in: id)
+            if let pane = container.paneViews.first(where: { !$0.isHidden && $0.frame.contains(local) }) {
+                context.focus(pane.paneID, in: flatOwners[pane.paneID]?.id ?? id)
             }
         }
     }
@@ -247,6 +317,7 @@ struct PaneHost: NSViewRepresentable {
     let document: WorkspaceDocument
     let terminalStates: [TabID: TerminalRegistry.State]
     let terminalGenerations: [TabID: Int]
+    let focusModePane: PaneID?
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
@@ -259,8 +330,46 @@ struct PaneHost: NSViewRepresentable {
     }
 
     func updateNSView(_ view: PaneHostView, context: Context) {
-        view.update(document: document, context: PaneHostContext(
+        view.update(document: document, focusModePane: focusModePane, context: PaneHostContext(
             environment: environment, theme: theme, metrics: metrics,
             undoManager: { [weak view] in view?.window?.undoManager }))
+    }
+}
+
+/// Focus mode backdrop: blurs and dims the workspace behind the focused pane; a click leaves.
+final class FocusBackdropView: NSVisualEffectView {
+    var onClick: () -> Void = {}
+    var tint: NSColor? {
+        didSet { dim.layer?.backgroundColor = tint?.cgColor }
+    }
+    private let dim = NSView()
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        material = .fullScreenUI
+        blendingMode = .withinWindow
+        state = .active
+        dim.wantsLayer = true
+        dim.autoresizingMask = [.width, .height]
+        addSubview(dim)
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(String(localized: "focusMode.exit"))
+        setAccessibilityIdentifier("focusMode.backdrop")
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func layout() {
+        super.layout()
+        dim.frame = bounds
+    }
+
+    override func mouseDown(with event: NSEvent) { onClick() }
+
+    override func accessibilityPerformPress() -> Bool {
+        onClick()
+        return true
     }
 }

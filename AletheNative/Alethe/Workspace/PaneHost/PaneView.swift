@@ -75,6 +75,8 @@ final class PaneView: NSView {
             onFillFreeSpace: canFill(pane: pane, project: project) ? { context.fillFreeSpace(pane.id) } : nil,
             gridTargets: GridTarget.all(for: pane, in: project),
             onMoveToGrid: { context.movePane(pane.id, toGrid: $0) },
+            isInFocusMode: context.environment.focusModePaneID == pane.id,
+            onToggleFocus: { context.setFocusMode(context.environment.focusModePaneID == pane.id ? nil : pane.id) },
             onDrag: onDrag))
         configureLane(pane: pane, project: project, focused: focused, context: context)
 

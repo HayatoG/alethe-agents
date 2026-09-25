@@ -85,6 +85,12 @@ private struct ViewCommands: Commands {
     @MainActor private var isolated: Bool { environment.workspace?.document.workspace.isolatedPaneID != nil }
     @MainActor private var fullscreen: Bool { environment.workspace?.document.workspace.fullscreenProjectID != nil }
 
+    @MainActor private var flat: Binding<Bool> {
+        Binding { environment.workspace?.document.workspace.flat ?? false } set: { value in
+            environment.workspace?.update { $0.workspace.flat = value }
+        }
+    }
+
     /// The selected project's layout.
     @MainActor private var layout: Binding<PaneLayoutMode> {
         Binding {
@@ -113,6 +119,13 @@ private struct ViewCommands: Commands {
             }
             .keyboardShortcut(.return, modifiers: [.command, .option])
             .disabled(environment.workspace?.document.workspace.selectedProjectID == nil && !fullscreen)
+            Button(environment.focusModePaneID == nil ? LocalizedStringKey("focusMode.enter") : "focusMode.exit") {
+                environment.focusModePaneID = environment.focusModePaneID == nil
+                    ? environment.workspace?.document.workspace.focusedPaneID : nil
+            }
+            .keyboardShortcut("f", modifiers: [.command, .shift])
+            .disabled(environment.workspace?.document.workspace.focusedPaneID == nil && environment.focusModePaneID == nil)
+            Toggle("menu.view.flat", isOn: flat)
             Picker("menu.view.layout", selection: layout) {
                 ForEach(PaneLayoutMode.allCases, id: \.self) { Text($0.title).tag($0) }
             }

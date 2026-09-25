@@ -105,7 +105,16 @@ struct PaneHostContext {
     }
 
     func setGridWeights(_ weights: GridWeights, for project: ProjectID) {
+        guard project != PaneHostView.flatID else {
+            workspace?.update { $0.workspace.gridWeights[WorkspaceState.flatWeightsKey] = weights }
+            return
+        }
         workspace?.update { $0.setTrackWeights(weights, for: project) }
+    }
+
+    /// Focus mode is a momentary view, not saved (upstream keeps it in the UI store).
+    func setFocusMode(_ pane: PaneID?) {
+        environment.focusModePaneID = pane
     }
 
     /// Dropping a grid pane on another pane or a free slot.

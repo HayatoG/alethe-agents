@@ -157,13 +157,16 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
     public var history: [WorkspaceHistoryEntry]
     /// The current entry of `history`; -1 when empty.
     public var historyIndex: Int
+    /// Flat workspace: the panes of every open project in one area, without containers (upstream
+    /// `preferences.workspaceFlat`, P2-21).
+    public var flat: Bool
 
     public init(openProjectIDs: [ProjectID] = [], containerWeights: [Double] = [],
                 gridWeights: [String: GridWeights] = [:], focusedPaneID: PaneID? = nil,
                 selectedProjectID: ProjectID? = nil, collapsedProjectIDs: [ProjectID] = [],
                 fullscreenProjectID: ProjectID? = nil, isolatedPaneID: PaneID? = nil, tabs: [WorkspaceTab] = [],
                 closedTabs: [WorkspaceTab] = [], activeTabID: WorkspaceTabID? = nil,
-                history: [WorkspaceHistoryEntry] = [], historyIndex: Int = -1) {
+                history: [WorkspaceHistoryEntry] = [], historyIndex: Int = -1, flat: Bool = false) {
         self.openProjectIDs = openProjectIDs
         self.containerWeights = containerWeights
         self.gridWeights = gridWeights
@@ -177,7 +180,11 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
         self.activeTabID = activeTabID
         self.history = history
         self.historyIndex = historyIndex
+        self.flat = flat
     }
+
+    /// Key of the flat area's track sizes in `gridWeights`.
+    public static let flatWeightsKey = "flat"
 
     /// Fields added after v2 (P2-16, P2-17) are optional in the file: older files decode unchanged.
     public init(from decoder: Decoder) throws {
@@ -195,6 +202,7 @@ public struct WorkspaceState: Codable, Hashable, Sendable {
         activeTabID = try container.decodeIfPresent(WorkspaceTabID.self, forKey: .activeTabID)
         history = try container.decodeIfPresent([WorkspaceHistoryEntry].self, forKey: .history) ?? []
         historyIndex = try container.decodeIfPresent(Int.self, forKey: .historyIndex) ?? history.count - 1
+        flat = try container.decodeIfPresent(Bool.self, forKey: .flat) ?? false
     }
 }
 

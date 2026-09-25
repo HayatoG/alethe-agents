@@ -97,4 +97,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   example “Review” beside the main one. Create one with New Grid… (layout menu or the project's
   menu), switch from the grid menu in the project's header, move a terminal with Move to Grid, and
   rename or delete a grid (keeping or closing its terminals). New terminals join the grid on screen.
+- Flat workspace (View › Flat Workspace): the terminals of every open project share one area,
+  without project headers. Each workspace tab remembers whether it is flat.
+- Focus mode: double-click a terminal's title bar (or View › Focus on Pane, ⇧⌘F) to float it over a
+  blurred workspace; Esc or a click outside brings everything back.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

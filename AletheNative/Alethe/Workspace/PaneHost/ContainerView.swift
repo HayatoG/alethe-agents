@@ -44,6 +44,11 @@ final class ContainerView: NSView {
     private var onHeaderDrag: (CGSize?) -> Void = { _ in }
     /// The narrow strip shown instead of header and panes while collapsed.
     private var strip: NSHostingView<AnyView>?
+    /// Flat workspace: no header, and each pane configured with its own project.
+    private var owners: [PaneID: Project] = [:]
+    private var showsHeader = true
+    /// Focus mode: the one pane shown, at this frame (container coordinates), over the backdrop.
+    private var focus: (pane: PaneID, frame: CGRect)?
 
     init(projectID: ProjectID) {
         self.projectID = projectID
@@ -62,8 +67,11 @@ final class ContainerView: NSView {
 
     func configure(project: Project, isSelected: Bool, focusedPane: PaneID?, weights: GridWeights,
                    isCollapsed: Bool, isFullscreen: Bool, isolatedPane: PaneID?,
+                   owners: [PaneID: Project] = [:], showsHeader: Bool = true,
                    context: PaneHostContext, onHeaderDrag: @escaping (CGSize?) -> Void) {
         self.context = context
+        self.owners = owners
+        self.showsHeader = showsHeader
         if let lastProject, lastProject.layout != project.layout { animateNextLayout = true }
         lastProject = project
         lastFocused = focusedPane
@@ -106,7 +114,7 @@ final class ContainerView: NSView {
                 panes[pane.id] = view
                 return view
             }()
-            view.configure(pane: pane, project: project, focused: pane.id == focusedPane,
+            view.configure(pane: pane, project: owners[pane.id] ?? project, focused: pane.id == focusedPane,
                            dropTarget: reorder?.target == pane.id, context: context) { [weak self] translation in
                 self?.reorderDrag(pane.id, translation: translation)
             }
@@ -128,14 +136,24 @@ final class ContainerView: NSView {
         needsLayout = true
     }
 
-    private var headerHeight: CGFloat { context?.metrics.size(30) ?? 30 }
+    private var headerHeight: CGFloat { showsHeader ? context?.metrics.size(30) ?? 30 : 0 }
     private var gap: CGFloat { context?.metrics.space(.s) ?? 6 }
     private var minimumPane: CGSize {
         CGSize(width: context?.metrics.size(160) ?? 160, height: context?.metrics.size(100) ?? 100)
     }
 
     private var paneArea: CGRect {
-        CGRect(x: 0, y: headerHeight + gap, width: bounds.width, height: max(0, bounds.height - headerHeight - gap))
+        let top = showsHeader ? headerHeight + gap : 0
+        return CGRect(x: 0, y: top, width: bounds.width, height: max(0, bounds.height - top))
+    }
+
+    /// Enters or leaves focus mode for one of this container's panes.
+    func setFocus(_ pane: PaneID?, frame: CGRect) {
+        let next = pane.flatMap { panes[$0] != nil ? ($0, frame) : nil }
+        guard next?.0 != focus?.pane || next?.1 != focus?.frame else { return }
+        animateNextLayout = true
+        focus = next
+        needsLayout = true
     }
 
     private func geometry() -> PaneGridGeometry {
@@ -151,7 +169,7 @@ final class ContainerView: NSView {
     override func layout() {
         super.layout()
         strip?.frame = bounds
-        header.isHidden = isCollapsed
+        header.isHidden = isCollapsed || !showsHeader || focus != nil
         emptyState?.isHidden = isCollapsed
         header.frame = CGRect(x: 0, y: 0, width: bounds.width, height: headerHeight)
         emptyState?.frame = paneArea
@@ -159,6 +177,15 @@ final class ContainerView: NSView {
         animateNextLayout = false
         if isCollapsed {
             panes.values.forEach { $0.isHidden = true }
+            dividers.values.forEach { $0.isHidden = true }
+            layoutSlots([])
+            return
+        }
+        if let focus {
+            for (id, view) in panes {
+                view.isHidden = id != focus.pane
+                if id == focus.pane { animator.set(view, frame: focus.frame.integral, animated: animated) }
+            }
             dividers.values.forEach { $0.isHidden = true }
             layoutSlots([])
             return

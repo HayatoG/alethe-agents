@@ -25,7 +25,10 @@ struct WorkspaceView: View {
             environment.workspace?.update { $0.syncActiveTab() }
         }
         .onChange(of: allTabIDs) { _, tabs in environment.terminals.prune(keeping: tabs) }
-        .onChange(of: allPaneIDs) { _, panes in environment.contentPanes.prune(keeping: panes) }
+        .onChange(of: allPaneIDs) { _, panes in
+            environment.contentPanes.prune(keeping: panes)
+            if let focus = environment.focusModePaneID, !panes.contains(focus) { environment.focusModePaneID = nil }
+        }
         .onChange(of: environment.theme) { _, _ in applyAppearance() }
         .onChange(of: environment.terminalFontSize) { _, _ in applyAppearance() }
     }
@@ -37,7 +40,8 @@ struct WorkspaceView: View {
             }
             if let doc = environment.workspace?.document, !doc.workspace.openProjectIDs.isEmpty {
                 PaneHost(document: doc, terminalStates: environment.terminals.states,
-                         terminalGenerations: environment.terminals.generations)
+                         terminalGenerations: environment.terminals.generations,
+                         focusModePane: environment.focusModePaneID)
             } else {
                 emptyState
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

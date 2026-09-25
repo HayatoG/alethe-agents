@@ -196,6 +196,8 @@ struct PaneHeader: View {
     /// The other grids of the project the pane can move to (empty: no named grids).
     let gridTargets: [GridTarget]
     let onMoveToGrid: (ProjectGridID?) -> Void
+    let isInFocusMode: Bool
+    let onToggleFocus: () -> Void
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
     @Environment(\.theme) private var theme
@@ -232,6 +234,8 @@ struct PaneHeader: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(theme[isFocused ? .bgElevated : .bgSunken])
         .contentShape(Rectangle())
+        .onTapGesture(count: 2, perform: onToggleFocus)
+        .help(Text(isInFocusMode ? "focusMode.exitHint" : "focusMode.enterHint"))
         .gesture(
             DragGesture(minimumDistance: 4, coordinateSpace: .global)
                 .onChanged { onDrag($0.translation) }
@@ -242,6 +246,7 @@ struct PaneHeader: View {
             Button(isLaneVisible ? LocalizedStringKey("subtabs.hideLane") : "subtabs.showLane", action: onToggleLane)
                 .disabled(isLaneVisible && !canHideLane)
             Button(isIsolated ? LocalizedStringKey("pane.showAll") : "pane.showAlone", action: onToggleIsolation)
+            Button(isInFocusMode ? LocalizedStringKey("focusMode.exit") : "focusMode.enter", action: onToggleFocus)
             if let onFillFreeSpace {
                 Button("pane.fillFreeSpace", action: onFillFreeSpace)
             }

@@ -16,10 +16,12 @@ public struct WorkspaceSnapshot: Codable, Hashable, Sendable {
     public var collapsedProjectIDs: [ProjectID]
     public var fullscreenProjectID: ProjectID?
     public var isolatedPaneID: PaneID?
+    /// Flat workspace (P2-21; absent in snapshots saved before it).
+    public var flat: Bool
 
     public init(openProjectIDs: [ProjectID] = [], containerWeights: [Double] = [], focusedPaneID: PaneID? = nil,
                 selectedProjectID: ProjectID? = nil, collapsedProjectIDs: [ProjectID] = [],
-                fullscreenProjectID: ProjectID? = nil, isolatedPaneID: PaneID? = nil) {
+                fullscreenProjectID: ProjectID? = nil, isolatedPaneID: PaneID? = nil, flat: Bool = false) {
         self.openProjectIDs = openProjectIDs
         self.containerWeights = containerWeights
         self.focusedPaneID = focusedPaneID
@@ -27,6 +29,19 @@ public struct WorkspaceSnapshot: Codable, Hashable, Sendable {
         self.collapsedProjectIDs = collapsedProjectIDs
         self.fullscreenProjectID = fullscreenProjectID
         self.isolatedPaneID = isolatedPaneID
+        self.flat = flat
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        openProjectIDs = try container.decode([ProjectID].self, forKey: .openProjectIDs)
+        containerWeights = try container.decode([Double].self, forKey: .containerWeights)
+        focusedPaneID = try container.decodeIfPresent(PaneID.self, forKey: .focusedPaneID)
+        selectedProjectID = try container.decodeIfPresent(ProjectID.self, forKey: .selectedProjectID)
+        collapsedProjectIDs = try container.decode([ProjectID].self, forKey: .collapsedProjectIDs)
+        fullscreenProjectID = try container.decodeIfPresent(ProjectID.self, forKey: .fullscreenProjectID)
+        isolatedPaneID = try container.decodeIfPresent(PaneID.self, forKey: .isolatedPaneID)
+        flat = try container.decodeIfPresent(Bool.self, forKey: .flat) ?? false
     }
 }
 
@@ -87,7 +102,8 @@ extension WorkspaceDocument {
         WorkspaceSnapshot(openProjectIDs: workspace.openProjectIDs, containerWeights: workspace.containerWeights,
                           focusedPaneID: workspace.focusedPaneID, selectedProjectID: workspace.selectedProjectID,
                           collapsedProjectIDs: workspace.collapsedProjectIDs,
-                          fullscreenProjectID: workspace.fullscreenProjectID, isolatedPaneID: workspace.isolatedPaneID)
+                          fullscreenProjectID: workspace.fullscreenProjectID, isolatedPaneID: workspace.isolatedPaneID,
+                          flat: workspace.flat)
     }
 
     /// Drops projects and panes that no longer exist (upstream `sanitizeWorkspaceSnapshot`).
@@ -122,6 +138,7 @@ extension WorkspaceDocument {
         workspace.collapsedProjectIDs = clean.collapsedProjectIDs
         workspace.fullscreenProjectID = clean.fullscreenProjectID
         workspace.isolatedPaneID = clean.isolatedPaneID
+        workspace.flat = clean.flat
     }
 
     // MARK: - Labels
