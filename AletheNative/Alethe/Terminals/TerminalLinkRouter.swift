@@ -4,8 +4,9 @@ import AppKit
 
 /// Opens a ⌘-clicked terminal link (upstream `XTermView` link actions): Markdown, images and videos in
 /// a pane of the project (focusing one that already shows the file), other files in their default
-/// app, folders in Finder, pages in the default browser, or in a web pane with ⌥ held. ⇧⌘-click shows
-/// every action in a menu (upstream's link actions menu), including a quick preview.
+/// app, folders in Finder, pages in the default browser, or in a web pane with ⌥ held (browser
+/// feature on). ⇧⌘-click shows every action in a menu (upstream's link actions menu), including a
+/// quick preview.
 extension AppEnvironment {
     func openTerminalLink(_ raw: String, from terminal: TerminalPaneView, tab: PaneTab, project: Project) {
         let cwd = terminal.reportedDirectory ?? tab.workingDirectory ?? project.folder
@@ -17,7 +18,7 @@ extension AppEnvironment {
         let inPane = NSEvent.modifierFlags.contains(.option)
         switch link {
         case .web(let url):
-            if inPane {
+            if inPane && features.isOn(.browser) {
                 open(.web(url: url.absoluteString, options: WebPaneOptions()), in: project.id)
             } else {
                 NSWorkspace.shared.open(url)
@@ -74,8 +75,10 @@ private final class LinkActionsMenu: NSObject {
         switch link {
         case .web(let url):
             add(menu, "linkMenu.openInBrowser") { NSWorkspace.shared.open(url) }
-            add(menu, "linkMenu.openInPane") { [environment, project] in
-                environment.open(.web(url: url.absoluteString, options: WebPaneOptions()), in: project)
+            if environment.features.isOn(.browser) {
+                add(menu, "linkMenu.openInPane") { [environment, project] in
+                    environment.open(.web(url: url.absoluteString, options: WebPaneOptions()), in: project)
+                }
             }
             add(menu, "linkMenu.preview") { [environment] in environment.editorRequest = .previewLink(.web(url)) }
         case .file(let path, _):

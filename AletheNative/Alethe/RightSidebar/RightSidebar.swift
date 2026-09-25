@@ -72,7 +72,7 @@ struct RightSidebar: View {
 
     private var tabs: [SidebarTabContribution] {
         // The app's own tabs (Files, Docs, Pull Requests) follow the plugin tabs.
-        let own = [FilesView.tab, DocsView.tab, PullRequestsView.tab]
+        let own = [FilesView.tab, DocsView.tab] + (environment.features.isOn(.prs) ? [PullRequestsView.tab] : [])
         let extensions = environment.extensions?.sidebarTabs ?? []
         guard let plugins = environment.plugins else { return extensions + own }
         return plugins.viewPlacements.arranged(plugins.contributions.sidebarTabs).right + extensions + own

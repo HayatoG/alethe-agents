@@ -3,12 +3,14 @@ import AletheModel
 import SwiftUI
 
 /// "localhost:5173 is ready" over a terminal whose output announced a local page: open it in a web
-/// pane beside the terminal, in the browser, or dismiss. Leaving it be is a fine answer too.
+/// pane beside the terminal (while the browser feature is on), in the browser, or dismiss. Leaving
+/// it be is a fine answer too.
 struct PageOfferBar: View {
     let url: URL
     let onOpenInPane: () -> Void
     let onOpenInBrowser: () -> Void
     let onDismiss: () -> Void
+    @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
@@ -26,8 +28,10 @@ struct PageOfferBar: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer(minLength: metrics.space(.s))
-            Button("pageOffer.openInPane", action: onOpenInPane)
-                .accessibilityIdentifier("pageOffer.openInPane")
+            if environment.features.isOn(.browser) {
+                Button("pageOffer.openInPane", action: onOpenInPane)
+                    .accessibilityIdentifier("pageOffer.openInPane")
+            }
             Button("pageOffer.openInBrowser", action: onOpenInBrowser)
                 .accessibilityIdentifier("pageOffer.openInBrowser")
             Button(action: onDismiss) {

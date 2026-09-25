@@ -21,6 +21,9 @@ struct SettingsView: View {
             Tab("settings.resources.tab", systemImage: "memorychip", value: SettingsTab.resources) {
                 ResourceSettings()
             }
+            Tab("settings.features.tab", systemImage: "square.grid.2x2", value: SettingsTab.features) {
+                FeatureSettings()
+            }
             Tab("settings.plugins.tab", systemImage: "puzzlepiece.extension", value: SettingsTab.plugins) {
                 PluginSettings()
             }
@@ -32,7 +35,7 @@ struct SettingsView: View {
 
 /// The Settings pane shown; Home's setup steps open a given one.
 enum SettingsTab: Hashable {
-    case general, appearance, agents, resources, plugins
+    case general, appearance, agents, resources, features, plugins
 }
 
 private struct GeneralSettings: View {

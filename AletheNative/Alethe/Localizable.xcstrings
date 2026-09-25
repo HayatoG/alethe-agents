@@ -2602,6 +2602,278 @@
         }
       }
     },
+    "features.aiMemory.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long-term memory shared across Claude Code, Codex and OpenCode. Requires the ai-memory server installed."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memória de longo prazo compartilhada entre Claude Code, Codex e OpenCode. Requer o servidor ai-memory instalado."
+          }
+        }
+      }
+    },
+    "features.aiMemory.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Memory"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI Memory"
+          }
+        }
+      }
+    },
+    "features.browser.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open websites inside the workspace as web panes."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra sites dentro da workspace em panes web."
+          }
+        }
+      }
+    },
+    "features.browser.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navegador"
+          }
+        }
+      }
+    },
+    "features.graphify.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualize the code graph inside the workspace."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualize o grafo do código dentro da workspace."
+          }
+        }
+      }
+    },
+    "features.graphify.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphify"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphify"
+          }
+        }
+      }
+    },
+    "features.gsdSync.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tracks the isolated child sessions OpenCode runs while planning, and shows their activity live. Only appears in projects with an OpenCode terminal."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acompanha as sessões filhas isoladas que o OpenCode roda durante o planejamento e mostra a atividade delas ao vivo. Só aparece em projetos com um terminal OpenCode."
+          }
+        }
+      }
+    },
+    "features.gsdSync.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GSD Sync"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GSD Sync"
+          }
+        }
+      }
+    },
+    "features.mcp.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspect and manage the MCP servers and skills of every coding agent from one panel."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecione e gerencie os servidores MCP e as skills de cada agente em um só painel."
+          }
+        }
+      }
+    },
+    "features.mcp.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP & Skills"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP e Skills"
+          }
+        }
+      }
+    },
+    "features.orchestrator.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gives Claude Code a set of Alethe tools for handing work to Codex workers that run in parallel. Alethe owns the sandbox, the concurrency limit and the workers themselves, and can steer or cancel one mid-run."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dá ao Claude Code um conjunto de ferramentas do Alethe para repassar trabalho a workers Codex que rodam em paralelo. O Alethe é dono do sandbox, do limite de concorrência e dos workers, e consegue corrigir ou cancelar um deles no meio da execução."
+          }
+        }
+      }
+    },
+    "features.orchestrator.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orquestração de agentes"
+          }
+        }
+      }
+    },
+    "features.playwright.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Points the Playwright MCP server at a browser: a shared one Alethe starts, or a dedicated one of its own."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aponta o servidor MCP do Playwright para um navegador: um compartilhado que o Alethe inicia, ou um dedicado só dele."
+          }
+        }
+      }
+    },
+    "features.playwright.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playwright Browser"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navegador Playwright"
+          }
+        }
+      }
+    },
+    "features.prs.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows GitHub pull requests you are involved in as author or reviewer, across every repository, in the right sidebar."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra os Pull Requests do GitHub em que você está envolvido como autor ou revisor, em todos os repositórios, na barra lateral direita."
+          }
+        }
+      }
+    },
+    "features.prs.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Pull Requests"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PRs abertos"
+          }
+        }
+      }
+    },
     "files.deletePermanently" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5777,6 +6049,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "caminhos das CLIs"
+          }
+        }
+      }
+    },
+    "import.pref.features" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "features"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "recursos"
           }
         }
       }
@@ -11693,6 +11982,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Os terminais não poderão mais abrir pastas no Alethe com alethe. Você pode instalá-lo de novo a qualquer momento."
+          }
+        }
+      }
+    },
+    "settings.features.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose which optional modules are visible in Alethe."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha quais módulos opcionais ficam visíveis no Alethe."
+          }
+        }
+      }
+    },
+    "settings.features.showFewer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Fewer"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar menos"
+          }
+        }
+      }
+    },
+    "settings.features.showMore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show %lld More"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar mais %lld"
+          }
+        }
+      }
+    },
+    "settings.features.tab" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Features"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recursos"
           }
         }
       }

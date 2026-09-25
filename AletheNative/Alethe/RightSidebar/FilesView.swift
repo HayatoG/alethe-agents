@@ -172,7 +172,7 @@ private struct FileTreeList: View {
         case .markdown?: .markdown(path: path)
         case .image?: .image(path: path)
         case .video?: .video(path: path)
-        case .web?: .web(url: node.url.absoluteString, options: WebPaneOptions())
+        case .web?: environment.features.isOn(.browser) ? .web(url: node.url.absoluteString, options: WebPaneOptions()) : nil
         case .text?, nil: nil
         }
         if let content {

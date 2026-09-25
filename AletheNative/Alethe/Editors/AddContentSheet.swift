@@ -10,6 +10,7 @@ struct AddContentSheet: View {
     let workspace: WorkspaceModel
     let undoManager: UndoManager?
     let project: ProjectID?
+    @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
@@ -72,6 +73,11 @@ struct AddContentSheet: View {
         },
     ]
 
+    /// The options whose feature is on: web pages need the browser feature (P5-3).
+    static func options(for features: Features) -> [Option] {
+        options.filter { $0.kind != .web || features.isOn(.browser) }
+    }
+
     private var target: Project? {
         project.flatMap { workspace.document.project($0) } ?? workspace.document.projects.first
     }
@@ -79,7 +85,7 @@ struct AddContentSheet: View {
     var body: some View {
         Form {
             Section {
-                ForEach(Self.options) { option in
+                ForEach(Self.options(for: environment.features)) { option in
                     Button { add(option) } label: {
                         HStack(spacing: metrics.space(.m)) {
                             Image(systemName: option.symbol)

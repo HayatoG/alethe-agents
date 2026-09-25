@@ -47,7 +47,7 @@ public enum TauriImport {
     }
 
     public enum Preference: String, Hashable, Sendable, CaseIterable {
-        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths
+        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features
     }
 
     /// What the importer needs to know about the native app, injected to keep this module free of
@@ -306,6 +306,17 @@ public enum TauriImport {
             report.preferences.insert(.cliPaths)
         }
         if report.preferences.contains(.cliPaths) { preferences.cliPaths = paths }
+        // Upstream's map as stored; keys this version does not know (legacy `git`, `todos`) are skipped.
+        if let stored = raw["enabledFeatures"] as? [String: Any] {
+            var features = preferences.features
+            for feature in Feature.allCases {
+                if let on = stored[feature.rawValue] as? Bool { features.set(feature, on: on) }
+            }
+            if features.enabled != preferences.features.enabled {
+                preferences.features = features
+                report.preferences.insert(.features)
+            }
+        }
         if let language = raw["language"] as? String, !language.isEmpty { report.language = language }
     }
 

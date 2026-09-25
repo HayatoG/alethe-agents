@@ -113,6 +113,9 @@ final class AppEnvironment {
         Metrics(scale: CGFloat(preferences?.document.uiScale ?? 1), style: visualStyle, reducesMotion: reducesMotion)
     }
 
+    /// Optional modules (P5-3); every gated surface reads this.
+    var features: Features { preferences?.document.features ?? .defaults }
+
     /// Builds agent commands with the user's CLI path overrides.
     var agentLauncher: AgentLauncher {
         AgentLauncher(launchers: launchers, overrides: preferences?.document.cliPaths ?? [:])

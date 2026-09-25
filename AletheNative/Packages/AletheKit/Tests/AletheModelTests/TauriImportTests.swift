@@ -71,6 +71,8 @@ import Testing
         #expect(prefs.enabledAgents == ["claude", "cursor", "opencode", "shell"])
         #expect(prefs.alwaysStartUnrestricted)
         #expect(prefs.cliPaths == ["claude": "/usr/bin/true"])
+        #expect(prefs.features.isOn(.playwright) && !prefs.features.isOn(.prs) && prefs.features.isOn(.browser))
+        #expect(prefs.enabledFeatures?["git"] == nil, "legacy flags are plugins now")
         #expect(report.preferences == Set(TauriImport.Preference.allCases))
         #expect(report.language == "pt-BR")
     }

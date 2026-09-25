@@ -303,7 +303,19 @@
       "shell": true,
       "kiro": true
     },
-    "visualStyle": "normal"
+    "visualStyle": "normal",
+    "enabledFeatures": {
+      "browser": true,
+      "graphify": true,
+      "mcp": true,
+      "playwright": true,
+      "orchestrator": false,
+      "gsdSync": false,
+      "aiMemory": false,
+      "prs": false,
+      "git": true,
+      "todos": true
+    }
   },
   "cliPaths": {
     "claude": "/usr/bin/true",

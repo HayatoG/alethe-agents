@@ -48,6 +48,9 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var setupDone: [String]?
     /// The setup walkthrough was hidden (upstream `setupWalkthroughHidden`).
     public var setupHidden: Bool?
+    /// Optional modules turned on or off, keyed by `Feature` raw value (upstream `enabledFeatures`);
+    /// read through `features`.
+    public var enabledFeatures: [String: Bool]?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

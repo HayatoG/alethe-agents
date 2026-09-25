@@ -158,6 +158,7 @@ struct TauriImportSheet: View {
             case .enabledAgents: String(localized: "import.pref.agents")
             case .alwaysUnrestricted: String(localized: "import.pref.unrestricted")
             case .cliPaths: String(localized: "import.pref.cliPaths")
+            case .features: String(localized: "import.pref.features")
             }
         }
         if report.language != nil { names.append(String(localized: "import.pref.language")) }
