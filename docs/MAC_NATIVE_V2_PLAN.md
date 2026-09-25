@@ -2715,7 +2715,7 @@ above.
   so the planner and the person read the same numbers (`FitnessFeed`). Files: new files in
   `Alethe/Orchestrator/`. Needs P6-8, P6-14. *Tests:* U (threshold, the feed stops when the last board
   closes), UI (seeded usage shows the chip). *Parity:* ORC-1.
-- [ ] **P6-18 (M) Event bus and telemetry.** `AletheFoundation/Events` (upstream `event_bus.rs`,
+- [x] **P6-18 (M) Event bus and telemetry.** `AletheFoundation/Events` (upstream `event_bus.rs`,
   `telemetry.rs`): an `EventBus` actor (type, time, correlation id, task, agent, JSON data; each
   subscriber gets an `AsyncStream` that drops its oldest events rather than blocking the publisher),
   `Telemetry` (a count per event type; count, last and sum of `duration_ms`, `cost_usd`, `memory_mb`;
@@ -2726,6 +2726,14 @@ above.
   scheduler or autocommit follow. No dependencies. *Tests:* G (upstream
   `test_event_bus_publish_subscribe`, `test_telemetry_metrics_and_traces`), U (ring limit, correlation
   filter, redaction). *Parity:* ORC-3.
+  *Done:* (`ebaba11`) `AletheFoundation/Events`: `EventBus` actor with a per-subscriber `AsyncStream`
+  (newest 1024 kept, oldest dropped, publishing never waits) and events in upstream's snake_case JSON;
+  `Telemetry` actor (count per event type; count/last/sum of `duration_ms`/`cost_usd`/`memory_mb`; last
+  500 traces filterable by correlation id; redacted rotating `<logs>/telemetry.jsonl`, 256 KB × 3). App
+  `MultiagentController` (started from `AppEnvironment`, stopped on quit) owns both and publishes
+  `PlanningUpdated` from `.planning/` watchers for projects that the scheduler or autocommit `follow`
+  (folders outside a git checkout rejected, as upstream). Tests (upstream bus/telemetry cases + ring,
+  filter, redaction, JSON keys) written and compiled, NOT run.
 - [ ] **P6-19 (S) Event publishers.** The events upstream publishes outside the scheduler, from their
   native equivalents, with upstream's names and data keys: Merge Center analysis and conflict resolution
   (`merge_analyzer.rs`, `conflict_resolution.rs`), Graphify generation (`graphify.rs`), plugin load
