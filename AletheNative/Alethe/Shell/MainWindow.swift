@@ -10,6 +10,7 @@ struct MainWindow: View {
     /// from the main window once it closes.
     @Environment(\.undoManager) private var undoManager
     @SceneStorage("main.columnVisibility") private var sidebarVisible = true
+    @AppStorage("main.rightSidebarWidth") private var rightSidebarWidth = 280.0
 
     var body: some View {
         NavigationSplitView(columnVisibility: columnVisibility) {
@@ -25,6 +26,13 @@ struct MainWindow: View {
                     ToolbarItem(placement: .primaryAction) { UsagePills() }
                     ToolbarItem(placement: .primaryAction) { NotificationsButton() }
                     ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
+                }
+                .inspector(isPresented: rightSidebarVisible) {
+                    RightSidebar()
+                        .inspectorColumnWidth(min: metrics.size(220), ideal: rightSidebarWidth, max: metrics.size(480))
+                        .onGeometryChange(for: Double.self) { $0.size.width } action: { width in
+                            if width > 0 { rightSidebarWidth = width }
+                        }
                 }
         }
         .frame(minWidth: 800, minHeight: 500)
@@ -79,6 +87,10 @@ struct MainWindow: View {
             GitControlSheet(workspace: workspace, undoManager: undoManager,
                             projectID: project ?? workspace.document.workspace.selectedProjectID)
         }
+    }
+
+    private var rightSidebarVisible: Binding<Bool> {
+        Binding { environment.rightSidebarVisible } set: { environment.rightSidebarVisible = $0 }
     }
 
     /// Sidebar visibility survives relaunch (state restoration).

@@ -3,6 +3,7 @@ import AletheDesign
 import AletheFoundation
 import AletheModel
 import AlethePluginKit
+import AletheTodos
 import AletheTerminal
 import AletheThemePack
 import AppKit
@@ -28,6 +29,14 @@ final class AppEnvironment {
     var showingHome = false
     /// The Settings pane shown.
     var settingsTab = SettingsTab.general
+    /// Right sidebar (P4-3; ⌥⌘0), persisted across launches.
+    var rightSidebarVisible = UserDefaults.standard.bool(forKey: "main.rightSidebarVisible") {
+        didSet { UserDefaults.standard.set(rightSidebarVisible, forKey: "main.rightSidebarVisible") }
+    }
+    /// The right-sidebar tab shown; nil for the first one.
+    var rightSidebarTab: String?
+    /// Bumped to focus the new-todo field (the Todos plugin's "New Todo" command).
+    var newTodoRequest = 0
 
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()
@@ -120,6 +129,12 @@ final class AppEnvironment {
         Handoff.pruneOld(in: locations.handoffs(profile))
         // Plugins load before the preferences are published, so a pack theme applies on the first frame.
         let plugins = PluginHost(plugins: Self.builtinPlugins, dataRoot: locations.profileDirectory(profile))
+        TodosPlugin.onNewTodo = { [weak self] in
+            guard let self else { return }
+            self.rightSidebarTab = TodosPlugin.sidebarTabID
+            self.rightSidebarVisible = true
+            self.newTodoRequest += 1
+        }
         await plugins.load()
         self.plugins = plugins
         #if DEBUG
@@ -189,7 +204,7 @@ final class AppEnvironment {
     }
 
     /// Plugins compiled into the app, in registration order.
-    static let builtinPlugins: [any AlethePlugin.Type] = [ThemePackPlugin.self]
+    static let builtinPlugins: [any AlethePlugin.Type] = [ThemePackPlugin.self, TodosPlugin.self]
 
     /// `-AletheDataRoot <path>` (debug builds) points the app at another data folder: UI tests and
     /// manual experiments never touch the real one.

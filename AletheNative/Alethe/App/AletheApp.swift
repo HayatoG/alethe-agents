@@ -2,6 +2,7 @@ import AletheAgents
 import AletheDesign
 import AletheFoundation
 import AletheModel
+import AletheTodos
 import SwiftUI
 
 @main
@@ -151,7 +152,15 @@ private struct ViewCommands: Commands {
             }
             .keyboardShortcut("f", modifiers: [.command, .shift])
             .disabled(environment.workspace?.document.workspace.focusedPaneID == nil && environment.focusModePaneID == nil)
-            Toggle("menu.view.flat", isOn: flat)
+            Button(environment.rightSidebarVisible ? LocalizedStringKey("menu.view.hideRightSidebar") : "menu.view.showRightSidebar") {
+                environment.rightSidebarVisible.toggle()
+            }
+            .keyboardShortcut("0", modifiers: [.command, .option])
+            Button("menu.view.newTodo") {
+                environment.plugins?.contributions.commands.first { $0.id == TodosPlugin.newTodoCommandID }?.perform()
+            }
+            .disabled(environment.plugins?.contributions.commands.contains { $0.id == TodosPlugin.newTodoCommandID } != true)
+                        Toggle("menu.view.flat", isOn: flat)
             Picker("menu.view.layout", selection: layout) {
                 ForEach(PaneLayoutMode.allCases, id: \.self) { Text($0.title).tag($0) }
             }

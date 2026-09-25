@@ -6172,6 +6172,23 @@
         }
       }
     },
+    "menu.view.hideRightSidebar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Right Sidebar"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar barra lateral direita"
+          }
+        }
+      }
+    },
     "menu.view.layout" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6185,6 +6202,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Layout do Projeto"
+          }
+        }
+      }
+    },
+    "menu.view.newTodo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Todo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nova tarefa"
           }
         }
       }
@@ -6270,6 +6304,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mostrar projeto sozinho"
+          }
+        }
+      }
+    },
+    "menu.view.showRightSidebar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Right Sidebar"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar barra lateral direita"
           }
         }
       }
@@ -7579,6 +7630,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nenhum agente em execução para retomar."
+          }
+        }
+      }
+    },
+    "rightSidebar.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No panels"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum painel"
+          }
+        }
+      }
+    },
+    "rightSidebar.tabs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right sidebar tabs"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abas da barra lateral direita"
+          }
+        }
+      }
+    },
+    "rightSidebar.todos" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarefas"
+          }
+        }
+      }
+    },
+    "rightSidebar.unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View unavailable"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualização indisponível"
           }
         }
       }
@@ -9993,6 +10112,159 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paleta Dark+ padrão do Visual Studio Code."
+          }
+        }
+      }
+    },
+    "todos.complete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concluir"
+          }
+        }
+      }
+    },
+    "todos.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluir"
+          }
+        }
+      }
+    },
+    "todos.disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Todo List plugin is disabled"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O plugin Lista de tarefas está desativado"
+          }
+        }
+      }
+    },
+    "todos.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No todos"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma tarefa"
+          }
+        }
+      }
+    },
+    "todos.global" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global"
+          }
+        }
+      }
+    },
+    "todos.new.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New todo (#tag)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nova tarefa (#tag)"
+          }
+        }
+      }
+    },
+    "todos.new.toProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to the selected project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar ao projeto selecionado"
+          }
+        }
+      }
+    },
+    "todos.rename" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renomear"
+          }
+        }
+      }
+    },
+    "todos.reopen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reopen"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reabrir"
           }
         }
       }
