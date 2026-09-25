@@ -1929,13 +1929,19 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   Fetch Branch (local copies), Commit Pending…, Remove (asks once, refuses locked; tabs go back to the
   project folder), Clean Up Stale (asks once). Tests written and compiled, NOT run: U 4
   (`ProjectWorktreeSettingsTests`), UI `WorktreesTests` (seed `worktrees`).
-- [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
+- [x] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
   sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
   sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.
   *Done (model):* target `AletheMerge` ports `merge_analyzer.rs`: 12 path classes (Sentinel before
   Planning) with upstream's strategy text; `MergeAnalyzer.analyze` trial-merges in a throwaway detached
   worktree `.alethe/merge-envs/analyze-<id>`, always removed; `MergeAnalysis` keeps upstream field names;
   `MergeCenterStage` (clean analysis skips to validate). U+G 7. Event Bus events, panel/tree/sheet UI owed.
+  *Done (sidebar + resume, `2ddd409`):* each project row lists its in-progress merges from
+  `.alethe/merge-envs/` (re-read every 4 s, no git): source → target, stage, conflict count, conflicts as a
+  tree by folder or class. Clicking reopens the Merge Center on that environment at its stage with its last
+  validation (`MergeMeta` gained optional `stage`, `lastValidation`, `contractWarnings`; upstream metadata
+  still decodes). Resolve with Agent offers installed enabled agents (last used, else Claude Code).
+  Tests written and compiled, NOT run. Open: live conflict count; Event Bus events.
 - [x] **P4-11 (L) Merge Center — prepare.** Prepare and rebase onto the target (upstream
   `conflict_resolution.rs`), conflicts listed with open-in-diff and agent-assisted resolution in a
   terminal, cancelable long steps. *Tests:* G (conflict scenarios), UI. *Parity:* GIT-5.
@@ -1944,7 +1950,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   writes `<id>.json` + `ALETHE_CONFLICT.md` (upstream prompt verbatim); `rebaseOntoTarget`, `preflightAbort`,
   `abort`; progress via `MergePrepareStep`; cancellation stops git and tears down (force-remove + prune).
   G+U 6. Sheet stage UI, agent terminal launch, Event Bus events owed.
-- [ ] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
+- [x] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
   probe, contract check, branch testing (upstream `BranchTestingModal`), results kept per merge.
   *Tests:* G, UI. *Parity:* GIT-5.
   *Done (model):* `MergeValidation` (per-project commands + suggested ones from `package.json`,
@@ -1952,6 +1958,12 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   commands = "unverified"; results Codable per merge) and `HealthProbe` (free port, poll URL, always kills).
   G+U with P4-13. Open: upstream's contract check and the probe's terminal step are not ported; the probe
   kills the shell but not servers it spawned (use the process-tree kill when wired in the app).
+  *Done (`a861721`):* Test Branch… sheet (project menu, History menu, Analyze): temporary worktree under
+  `.alethe/branch-tests/`, validation + optional health probe + contract check, always cleaned up; last 10
+  results per branch in `results.json`. Contract check ported from `contract_check.rs` (4 upstream golden
+  tests); Validate/Finish show structured results. The health probe runs as a process-group leader and kills
+  its whole tree. Tests written and compiled, NOT run. Open: `terminalVerified`, saved per-project
+  validation commands, BranchTestingModal's manual checklist and "send feedback to agent".
 - [x] **P4-13 (L) Merge Center — finish.** Finalize, abort, preflight abort, force cleanup (asks once),
   confirm worktree commit (upstream `ConfirmWorktreeCommitModal`), worktree removal after merging.
   *Tests:* G, UI. *Parity:* GIT-5.

@@ -224,6 +224,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   toolbar pill; the session carries on after relaunch.
 - Fixed: Files badges refresh on commits and stages when the project folder is inside a larger repository.
 - Pull requests: reviewed commits and the review agent/model are remembered across relaunches.
+- Sidebar: in-progress merges appear under their project with stage and conflicts (by folder or class);
+  clicking one reopens the Merge Center where you left off.
+- Merge Center: Resolve with Agent lets you pick any installed agent; Validate shows each command, the
+  health probe and an API contract check.
+- Test Branch…: run a branch's checks, health probe and contract check in a temporary checkout, with results
+  kept per branch.
+- Fixed: the health probe stops every process its start command launched, not just the shell.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
