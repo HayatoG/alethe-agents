@@ -19,6 +19,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: metrics.space(.xxl)) {
                     HomeHero()
                     QuickLaunch(workspace: workspace)
+                    SetupWalkthroughView(workspace: workspace)
                 }
                 .entrance(appeared, step: 0, reduced: environment.reducesMotion)
                 HStack(alignment: .top, spacing: metrics.space(.xxl)) {

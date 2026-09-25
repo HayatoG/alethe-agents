@@ -22,6 +22,8 @@ final class AppEnvironment {
     var focusModePaneID: PaneID?
     /// Home instead of the workspace (P3-15; ⇧⌘H).
     var showingHome = false
+    /// The Settings pane shown.
+    var settingsTab = SettingsTab.general
 
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()

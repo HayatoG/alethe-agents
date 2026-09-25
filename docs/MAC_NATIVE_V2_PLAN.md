@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-16. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-17. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1732,8 +1732,19 @@ ship; they run per the test cadence above.
   Playing waits for Spotify (Phase 7).
   *Tests (written, not run — owner decision):* `HomeDataTests` (2), `ActivityDaysTests` (2) (ran once
   while writing them); UI `HomeTests` (⇧⌘H toggles; quick launch opens a terminal). Compiled.
-- [ ] **P3-16 (M) Setup walkthrough.** First-run steps on Home (agents found, a first project, a first
+- [x] **P3-16 (M) Setup walkthrough.** First-run steps on Home (agents found, a first project, a first
   terminal), dismissible and resumable (upstream `SetupWalkthrough`). *Tests:* UI. *Parity:* HOME-4.
+  *Done:* `AletheModel/SetupWalkthrough` (`SetupStep`: agents, project, terminal, appearance; `SetupProgress`
+  completes steps from what exists — an enabled agent's CLI resolves, a project, a terminal pane — plus
+  those marked by hand in `PreferencesDocument.setupDone`). `Home/SetupWalkthroughView` on Home under
+  the quick launch (upstream `SetupWalkthrough`): progress, each step opens what does it (Settings ›
+  Agents, New Project, New Terminal, Settings › Appearance — which marks the step), Hide
+  (`setupHidden`); Help › Show Setup Steps brings it back and shows Home. Settings now opens on a given
+  pane (`AppEnvironment.settingsTab`).
+  *Deviation:* upstream has two steps (project, appearance); the agents and first-terminal steps are the
+  plan's.
+  *Tests (written, not run — owner decision):* `SetupProgressTests` (1; ran once while writing it), UI
+  `SetupWalkthroughTests` (hide, then Help brings it back). Compiled.
 - [ ] **P3-17 (L) Dictation.** Apple SpeechAnalyzer (ADR-7a) instead of Parakeet: microphone permission,
   toggle and hold (Fn-Fn / ⌥⌘D, §6.3), text into the focused terminal or field, language from the
   interface language. *Tests:* U (state machine), UI (permission-denied path). *Parity:* PER-6.
@@ -1787,7 +1798,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | HOME-1 | Home dashboard | P3 | Done | P3-15; no ASCII background (see P3-15 deviation), no avatar |
 | HOME-2 | Mini-terminal quick launch | P3 | Done | P3-15; quick launch picks a project instead of a folder |
 | HOME-3 | Activity graph / time analytics / usage strip | P3 | Done | P3-15 |
-| HOME-4 | Setup walkthrough | P3 | Not started | |
+| HOME-4 | Setup walkthrough | P3 | Done | P3-16; four steps (agents, project, terminal, appearance) |
 | HOME-5 | Notifications list | P3 | Done | P3-11 list, shown on Home in P3-15 |
 | WS-1 | Project containers | P1, P2 | Done | Open, resize, close (P1-6); collapse, fullscreen, reorder, isolate (P2-16) |
 | WS-2 | Flat mode | P2 | Done | P2-21; View › Flat Workspace, saved per workspace tab |

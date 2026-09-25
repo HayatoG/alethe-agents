@@ -44,6 +44,10 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var notifyLimitReset: Bool?
     /// Open on Home instead of the workspace (upstream `alwaysStartOnHome`; P3-15).
     public var startOnHome: Bool?
+    /// Setup steps marked done by hand (`SetupStep` raw values; P3-16).
+    public var setupDone: [String]?
+    /// The setup walkthrough was hidden (upstream `setupWalkthroughHidden`).
+    public var setupHidden: Bool?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

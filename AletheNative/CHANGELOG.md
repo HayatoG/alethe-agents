@@ -165,4 +165,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   prompt in any project, recent projects, AI usage, a 13-week activity graph with your streak, where your
   time went (active, agents working, in the background) and notifications. Settings › General can open
   Alethe on Home.
+- Home shows setup steps until they are done — install an agent, create a project, open a terminal, pick
+  a look — each one a click away. Hide them, and bring them back from Help › Show Setup Steps.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

@@ -4,24 +4,32 @@ import SwiftUI
 
 /// The standard Settings window (⌘,).
 struct SettingsView: View {
+    @Environment(AppEnvironment.self) private var environment
+
     var body: some View {
-        TabView {
-            Tab("settings.general.tab", systemImage: "gearshape") {
+        @Bindable var environment = environment
+        TabView(selection: $environment.settingsTab) {
+            Tab("settings.general.tab", systemImage: "gearshape", value: SettingsTab.general) {
                 GeneralSettings()
             }
-            Tab("settings.appearance.tab", systemImage: "paintpalette") {
+            Tab("settings.appearance.tab", systemImage: "paintpalette", value: SettingsTab.appearance) {
                 AppearanceSettings()
             }
-            Tab("settings.agents.tab", systemImage: "sparkles") {
+            Tab("settings.agents.tab", systemImage: "sparkles", value: SettingsTab.agents) {
                 AgentSettings()
             }
-            Tab("settings.resources.tab", systemImage: "memorychip") {
+            Tab("settings.resources.tab", systemImage: "memorychip", value: SettingsTab.resources) {
                 ResourceSettings()
             }
         }
         .frame(width: 560)
         .scenePadding()
     }
+}
+
+/// The Settings pane shown; Home's setup steps open a given one.
+enum SettingsTab: Hashable {
+    case general, appearance, agents, resources
 }
 
 private struct GeneralSettings: View {

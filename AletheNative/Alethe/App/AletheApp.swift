@@ -158,6 +158,13 @@ private struct ViewCommands: Commands {
             .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
             Divider()
         }
+        CommandGroup(after: .help) {
+            Button("menu.help.showSetup") {
+                environment.preferences?.update { $0.setupHidden = nil }
+                environment.showingHome = true
+            }
+            .disabled(environment.workspace == nil)
+        }
     }
 }
 
