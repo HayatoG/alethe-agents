@@ -100,6 +100,12 @@ public struct Pane: Codable, Hashable, Sendable, Identifiable {
     public var isLaneVisible: Bool { content.isTerminal && (tabs.count > 1 || laneVisible == true) }
 }
 
+/// How a project's agent worktrees are created (upstream `worktreeMode`; raw values match upstream).
+public enum ProjectWorktreeMode: String, Codable, CaseIterable, Sendable {
+    case gitWorktree
+    case localCopy
+}
+
 public struct Project: Codable, Hashable, Sendable, Identifiable {
     public var id: ProjectID
     public var name: String
@@ -118,6 +124,10 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
     public var grids: [ProjectGrid]?
     /// The named grid shown; nil is the main grid.
     public var activeGridID: ProjectGridID?
+    /// New agent terminals start in their own worktree (upstream `autoWorktree`, P4-9); nil is off.
+    public var autoWorktree: Bool?
+    /// How those worktrees are created; nil is a linked git worktree (upstream leaves it undefined).
+    public var worktreeMode: ProjectWorktreeMode?
 
     public init(id: ProjectID = .make(), name: String, color: ProjectColor = .blue, folder: String,
                 panes: [Pane] = [], createdAt: Date = Date(), layoutMode: PaneLayoutMode? = nil) {
@@ -132,6 +142,9 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
 
     /// The shown grid's layout.
     public var layout: PaneLayoutMode { activeArrangement.layoutMode ?? .auto }
+
+    public var usesAutoWorktree: Bool { autoWorktree ?? false }
+    public var effectiveWorktreeMode: ProjectWorktreeMode { worktreeMode ?? .gitWorktree }
 }
 
 /// Relative track sizes of a pane grid; empty means equal sizes.

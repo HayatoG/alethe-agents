@@ -202,6 +202,10 @@ public enum TauriImport {
                 workspace.updateProject(created) { $0.createdAt = createdAt }
             }
             workspace.updateProject(created) { $0.panes = panes }
+            if project["autoWorktree"] as? Bool == true { workspace.updateProject(created) { $0.autoWorktree = true } }
+            if let mode = (project["worktreeMode"] as? String).flatMap(ProjectWorktreeMode.init(rawValue:)) {
+                workspace.updateProject(created) { $0.worktreeMode = mode }
+            }
             if (project["activeGridId"] as? String).map({ $0 == "default" }) ?? true,
                let mode = (project["layoutMode"] as? String).flatMap(PaneLayoutMode.init(rawValue:)), mode != .auto {
                 workspace.updateProject(created) { $0.layoutMode = mode }

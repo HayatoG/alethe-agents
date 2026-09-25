@@ -64,6 +64,7 @@ struct NewTerminalSheet: View {
                     .onChange(of: projectID) { _, _ in
                         folder = project?.folder ?? ""
                         gridID = project?.shownGridID
+                        loadWorktreeDefaults()
                     }
                 if let project, !project.namedGrids.isEmpty {
                     Picker(selection: $gridID) {
@@ -207,6 +208,13 @@ struct NewTerminalSheet: View {
             folder = found.pane.activeTab?.workingDirectory ?? found.project.folder
         }
         unrestricted = startsUnrestricted
+        loadWorktreeDefaults()
+    }
+
+    /// The worktree toggle starts from the project's settings (upstream `autoWorktree` / `worktreeMode`).
+    private func loadWorktreeDefaults() {
+        ownWorktree = project?.usesAutoWorktree ?? false
+        worktreeMode = project?.effectiveWorktreeMode == .localCopy ? .localCopy : .gitWorktree
     }
 
     /// The agent's models, looked up off the main thread; never blocks the sheet.

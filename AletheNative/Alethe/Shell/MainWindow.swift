@@ -89,6 +89,8 @@ struct MainWindow: View {
         case .mergeCenter(let project):
             MergeCenterSheet(workspace: workspace, undoManager: undoManager,
                              projectID: project ?? workspace.document.workspace.selectedProjectID)
+        case .worktrees(let project):
+            WorktreesSheet(workspace: workspace, projectID: project ?? workspace.document.workspace.selectedProjectID)
         }
     }
 

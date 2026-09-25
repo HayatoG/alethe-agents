@@ -18,6 +18,9 @@ struct ProjectEditor: View {
     @State private var color: ProjectColor? = .blue
     @State private var location: ProjectLocation = .ungrouped
     @State private var nameEdited = false
+    /// Agent worktree defaults of the New Terminal sheet (P4-9).
+    @State private var autoWorktree = false
+    @State private var worktreeMode: ProjectWorktreeMode = .gitWorktree
 
     var body: some View {
         Form {
@@ -40,6 +43,18 @@ struct ProjectEditor: View {
                     Text(verbatim: group.name).tag(ProjectLocation.group(group.id))
                 }
             } label: { Text("editor.project.group") }
+            Section {
+                Toggle(isOn: $autoWorktree) {
+                    Text("editor.project.autoWorktree")
+                    Text("editor.project.autoWorktree.detail").font(metrics.font(.footnote))
+                }
+                .accessibilityIdentifier("editor.project.autoWorktree")
+                Picker(selection: $worktreeMode) {
+                    Text("newTerminal.worktree.mode.gitWorktree").tag(ProjectWorktreeMode.gitWorktree)
+                    Text("newTerminal.worktree.mode.localCopy").tag(ProjectWorktreeMode.localCopy)
+                } label: { Text("newTerminal.worktree.mode") }
+                    .accessibilityIdentifier("editor.project.worktreeMode")
+            } header: { Text("editor.project.worktrees") }
             if let problem {
                 Text(problem)
                     .foregroundStyle(.secondary)
@@ -93,6 +108,8 @@ struct ProjectEditor: View {
         name = project.name
         folder = project.folder
         color = project.color
+        autoWorktree = project.usesAutoWorktree
+        worktreeMode = project.effectiveWorktreeMode
         location = workspace.document.location(of: editing) ?? .ungrouped
         nameEdited = true
     }
@@ -108,18 +125,27 @@ struct ProjectEditor: View {
         let path = URL(filePath: expanded(folder)).standardizedFileURL.path
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         let color = color ?? .blue
+        // Defaults stay absent in the file, as upstream leaves them undefined.
+        let auto: Bool? = autoWorktree ? true : nil
+        let mode: ProjectWorktreeMode? = worktreeMode == .gitWorktree ? nil : worktreeMode
         if let editing {
             workspace.update(undoManager: undoManager, actionName: String(localized: "undo.editProject")) { doc in
                 doc.updateProject(editing) {
                     $0.name = trimmed
                     $0.folder = path
                     $0.color = color
+                    $0.autoWorktree = auto
+                    $0.worktreeMode = mode
                 }
                 if doc.location(of: editing) != location { doc.moveProject(editing, to: location, at: Int.max) }
             }
         } else {
             workspace.update(undoManager: undoManager, actionName: String(localized: "undo.addProject")) { doc in
                 let id = doc.addProject(name: trimmed, folder: path, color: color, in: location)
+                doc.updateProject(id) {
+                    $0.autoWorktree = auto
+                    $0.worktreeMode = mode
+                }
                 doc.open(id)
             }
         }

@@ -32,6 +32,8 @@ enum EditorRequest: Identifiable, Hashable {
     case pluginSheet(viewID: String, project: ProjectID?)
     /// Merge Center of a project (nil: the selected one; P4-10…P4-13).
     case mergeCenter(ProjectID?)
+    /// Worktrees of a project (nil: the selected one; P4-9).
+    case worktrees(ProjectID?)
 
     var id: String {
         switch self {
@@ -52,6 +54,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .aiUsage: "aiUsage"
         case .pluginSheet(let viewID, _): "pluginSheet:\(viewID)"
         case .mergeCenter: "mergeCenter"
+        case .worktrees: "worktrees"
         }
     }
 }

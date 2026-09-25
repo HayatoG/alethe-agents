@@ -252,6 +252,7 @@ private struct ProjectContextMenu: View {
             Button("menu.git.control") { environment.openPluginSheet(GitControlPlugin.sheetID, project: project.id) }
         }
         Button("menu.merge.center") { environment.editorRequest = .mergeCenter(project.id) }
+        Button("worktrees.manageEllipsis") { environment.editorRequest = .worktrees(project.id) }
         Menu("sidebar.grids") {
             Button("projectGrid.main") { actions.workspace.update { $0.activateGrid(nil, in: project.id) } }
             ForEach(project.namedGrids) { grid in

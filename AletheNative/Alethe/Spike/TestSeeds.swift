@@ -61,6 +61,24 @@ enum TestSeeds {
             let repo = seedRepository()
             try? Data("draft\n".utf8).write(to: repo.appending(path: "draft.txt"))
             _ = doc.addProject(name: "repo", folder: repo.path, color: .green)
+        case "worktrees":
+            // A throwaway repository with one locked agent worktree (P4-9).
+            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+            let repo = URL(filePath: root).appending(path: "wtrepo")
+            try? FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
+            try? Data("seed\n".utf8).write(to: repo.appending(path: "README.md"))
+            let worktree = repo.appending(path: ".alethe/worktrees/seed").path
+            for arguments in [["init", "-q"], ["add", "."], ["commit", "-q", "-m", "seed"],
+                              ["worktree", "add", "-q", "-b", "alethe/agent-seed", worktree, "HEAD"],
+                              ["worktree", "lock", "--reason", "seeded", worktree]] {
+                let git = Process()
+                git.executableURL = URL(filePath: "/usr/bin/git")
+                git.arguments = ["-C", repo.path, "-c", "user.name=seed", "-c", "user.email=seed@local",
+                                 "-c", "commit.gpgsign=false"] + arguments
+                try? git.run()
+                git.waitUntilExit()
+            }
+            _ = doc.addProject(name: "wtrepo", folder: repo.path, color: .green)
         case "web":
             // Port 9 (discard) is closed on a Mac: the page fails fast without touching the network.
             let project = doc.addProject(name: "site", folder: "/private/tmp", color: .blue)
