@@ -16,6 +16,8 @@ public enum JSONLReader {
             var start = chunk.startIndex
             while let newline = chunk[start...].firstIndex(of: UInt8(ascii: "\n")) {
                 if !oversized { pending.append(chunk[start..<newline]) }
+                // The limit is checked at the end of each chunk too; a line can finish just past it.
+                if pending.count > maxLineBytes { oversized = true }
                 if !oversized, !pending.isEmpty {
                     lines += 1
                     if !body(pending) || lines >= maxLines { return }

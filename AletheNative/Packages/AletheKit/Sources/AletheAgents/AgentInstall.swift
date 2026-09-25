@@ -195,7 +195,7 @@ public enum InstallLog {
     /// Installer output without escape sequences or control characters, trimmed to its tail
     /// (upstream `stripInstallLogAnsi`, `trimInstallLog`).
     public static func clean(_ text: String) -> String {
-        let pattern = #"\u{1B}\[[0-9;?]*[ -/]*[@-~]|\u{1B}\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\)|[\u{00}-\u{08}\u{0B}\u{0C}\u{0E}-\u{1F}]"#
+        let pattern = #"\x{1B}\[[0-9;?]*[ -/]*[@-~]|\x{1B}\][^\x{07}\x{1B}]*(?:\x{07}|\x{1B}\\)|[\x{00}-\x{08}\x{0B}\x{0C}\x{0E}-\x{1F}]"#
         let stripped = text.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")

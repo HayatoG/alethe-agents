@@ -86,3 +86,9 @@ import Testing
         #expect(received.withLock { $0 } == [#"claude|tab1|{"hook_event_name":"Stop"}"#])
     }
 }
+
+struct ActivityMonitorControlsTests {
+    @Test func stripsEscapeSequences() {
+        #expect(ActivityMonitor.stripControls("\u{1B}[1;32mdone\u{1B}[0m \u{1B}]0;title\u{07}ok") == "done ok")
+    }
+}

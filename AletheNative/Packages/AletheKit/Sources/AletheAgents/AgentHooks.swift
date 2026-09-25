@@ -155,7 +155,7 @@ public struct ActivityMonitor: Sendable {
     }
 
     static func stripControls(_ text: String) -> String {
-        text.replacingOccurrences(of: #"\u{1B}\[[0-?]*[ -/]*[@-~]|\u{1B}\][^\u{07}]*(?:\u{07}|\u{1B}\\)|\u{1B}[PX^_].*?\u{1B}\\|\u{1B}[@-_]"#,
+        text.replacingOccurrences(of: #"\x{1B}\[[0-?]*[ -/]*[@-~]|\x{1B}\][^\x{07}]*(?:\x{07}|\x{1B}\\)|\x{1B}[PX^_].*?\x{1B}\\|\x{1B}[@-_]"#,
                                   with: "", options: .regularExpression)
     }
 }
