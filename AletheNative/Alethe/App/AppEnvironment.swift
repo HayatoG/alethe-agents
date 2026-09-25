@@ -80,6 +80,8 @@ final class AppEnvironment {
     let playwright = PlaywrightBrowser()
     /// GSD Sync child sessions and the OpenCode plugin install (P5-24).
     let gsdSync = GSDSyncController()
+    /// Event bus, telemetry and `.planning/` change events for the scheduler and autocommit (P6-18).
+    let multiagent = MultiagentController()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -186,6 +188,7 @@ final class AppEnvironment {
         }
         #endif
         await diagnostics.start(logs: locations.logs)
+        await multiagent.start(logs: locations.logs)
         let profiles = await DocumentModel<ProfileIndexDocument>.load(from: locations.profileIndex)
         let profile = profiles.document.activeProfile.id
         profileID = profile
@@ -331,6 +334,7 @@ final class AppEnvironment {
         terminals.terminateAll()
         terminals.hooks.stop()
         await playwright.stop()
+        await multiagent.stop()
         await workspace?.flush()
         await preferences?.flush()
         await promptHistory?.flush()
