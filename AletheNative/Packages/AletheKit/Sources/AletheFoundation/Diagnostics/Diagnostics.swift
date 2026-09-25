@@ -61,9 +61,10 @@ public final class Diagnostics: Sendable {
     }
 
     /// One line in the spawn log (upstream `spawn.log`): what was started, never environment values.
-    public func recordSpawn(_ line: String, date: Date = .now) {
+    /// `domain` picks the OSLog category the line is also traced under.
+    public func recordSpawn(_ line: String, domain: LogDomain = .terminal, date: Date = .now) {
         let stamped = "\(date.formatted(.iso8601)) \(SecretRedactor.redact(line.replacingOccurrences(of: "\n", with: " ")))"
-        AppLog.logger(.terminal).info("\(stamped, privacy: .private)")
+        AppLog.logger(domain).info("\(stamped, privacy: .private)")
         state.withLock { state in
             guard let directory = state.directory else { return }
             Self.spawnLog(in: directory).append(stamped)

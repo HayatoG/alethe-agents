@@ -3,7 +3,7 @@ import os
 
 /// Areas of the app, one OSLog category each (`log stream --predicate 'subsystem == "com.kc1t.alethe.mac"'`).
 public enum LogDomain: String, CaseIterable, Codable, Sendable {
-    case app, terminal, agents, git, integrations, persistence
+    case app, terminal, agents, git, integrations, persistence, orchestrator
 }
 
 public enum DiagnosticLevel: String, CaseIterable, Codable, Sendable {
