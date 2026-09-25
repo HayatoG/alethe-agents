@@ -231,6 +231,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Test Branch…: run a branch's checks, health probe and contract check in a temporary checkout, with results
   kept per branch.
 - Fixed: the health probe stops every process its start command launched, not just the shell.
+- Third-party ExtensionKit extensions: listed in Settings › Plugins, ask for permission on first enable,
+  add their own right-sidebar tab, and are isolated if they crash (a sample extension is included).
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

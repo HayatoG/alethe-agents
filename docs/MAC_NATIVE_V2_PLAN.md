@@ -5,7 +5,7 @@
 > right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
 > where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
 > prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: Phase 4 open items — P4-5 (plugin + tests), P4-9 (project settings), P4-10 (sidebar merge panel), P4-12 (branch testing, contract check), P4-16/17 (remaining UI), P4-19 (spike), P4-20 (review). Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: Phase 5. Before it: run the package suite and `Scripts/uitest.sh` (Phase 4 tests are compiled, not run) and the owner's manual pass. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -2027,7 +2027,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   Lemon, Orca, Ember and Golden Premium (converted by `convert-themes.py --theme-pack`, upstream layering
   over the dark base); `ThemeCatalog.merging(_:)` appends valid contributed themes, dropping id clashes.
   U 5/5. App registration + picker come with P4-2.
-- [ ] **P4-19 (M) ExtensionKit spike.** The app's extension point, a sample third-party extension in
+- [x] **P4-19 (M) ExtensionKit spike.** The app's extension point, a sample third-party extension in
   its own signed app (a sidebar tab rendered remotely with `EXHostViewController`, a command, storage
   through the host), capability prompts on first enable, crash isolation. Outcome recorded in ADR-9;
   in-process bundles stay rejected unless the spike fails. *Tests:* UI (sample loads, a crash is
@@ -2036,12 +2036,23 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   (capability mapping, API version check, third parties start disabled, Codable consent ledger that re-asks
   only for new capabilities, `isAllowed` for XPC requests), U 10. Open: an Xcode extension-point + sample
   extension target, the load and crash-containment UI tests.
-- [ ] **P4-20 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
-  *Partial review (2026-09-25 02:45):* package suite 498 green; strings gate ok; Debug app builds. The
-  process-spawning terminal suites got a one-minute time limit after a rare hang (1 in ~15 runs of
-  `AletheTerminalTests`, not reproduced under sampling) stalled a full run — root cause still open. Not
-  done: parity matrix statuses, upstream-watch, UI tests, and a manual pass of all Phase 4 UI (none of it
-  has been launched yet).
+  *Done (host + sample, `5d35af4`, `681da4d`, `360a2dc`):* the app declares its extension point
+  (`com.kc1t.alethe.mac.sidebar-tab`, `EX_ENABLE_EXTENSION_POINT_GENERATION = YES`), discovers extensions,
+  lists them in Settings › Plugins with first-enable consent, renders an enabled extension's right-sidebar
+  tab with `EXHostViewController`, and serves storage + commands over XPC (`AletheExtensionSDK` message
+  types, requests checked by the consent ledger); an interruption shows a stopped state with Reload. Sample
+  `Samples/AletheSampleExtension` (sandboxed app + appex: tab, command, storage, debug Crash button) builds
+  and signs; `exutil` drops the generated binding with several inputs, so the sample declares it in its
+  Info.plist. UI `ExtensionKitTests` compiled, NOT run. Open (needs a real run): whether macOS accepts the
+  self-signed extension without approval, XCUITest reaching controls inside the remote view, the crash
+  signal reaching the host; auto-disable after repeated crashes.
+- [x] **P4-20 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+  *Done (review, 2026-09-25):* all Phase 4 tasks implemented. Round 1 ran the package suite (498 green);
+  round 2 (owner: compile only) added tests that are written and compiled but NOT run: package
+  `swift build --build-tests`, app `build.sh Debug` and UI `build-for-testing` all succeed. upstream-watch:
+  0 upstream commits since `2f3e5ed`. Parity rows updated below. Still owed: running the package suite and
+  `Scripts/uitest.sh`, a manual pass of all Phase 4 UI, and the rare `AletheTerminalTests` hang
+  (time-limited, root cause open).
 
 **Phase 4 exit criteria:** Git Control, the graph and the Merge Center cover upstream's flows on real
 repositories; the file explorer, worktrees and PRs work from the sidebar; Todos, Pomodoro and the theme
@@ -2117,8 +2128,8 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SB-4 | Export/import project config | P5 | Not started | |
 | SB-5 | Live chat title + busy/done glyph | P3 | Done | P3-10; titles from transcripts, working / needs-input / unread-done glyphs |
 | SB-6 | Open in VS Code / Finder / browser | P5 | Not started | `NSWorkspace` |
-| SB-7 | Right sidebar | P4 | Not started | Inspector column |
-| SB-8 | View placement | P4 | Not started | |
+| SB-7 | Right sidebar | P4 | Done | P4-3; ⌥⌘0, plugin tabs + Files, Docs, Pull Requests; extension tabs (P4-19) |
+| SB-8 | View placement | P4 | Partial | P4-2 model + persistence; no drag UI between sidebars yet |
 | AG-1 | 11 agent types | P1 (5), P3 | Done | P3-1; ten agents; `wsl`: Won't port (Windows-only) |
 | AG-2 | Unrestricted flags | P1 | Done | Launch support (P1-8); per-terminal toggle in the New Terminal sheet (P1-9) |
 | AG-3 | New-terminal modal | P1, P3 | Done | Basic sheet + first prompt (P1-9); repeat last ⌥⌘T and grid picker (P3-4); planner → Phase 6, 9router → Phase 5 |
@@ -2132,21 +2143,21 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SE-2 | Resume last session | P2 | Done | P2-26; Terminal › Resume Previous Conversations (Claude Code, Codex) |
 | SE-3 | Claude history + recent chats | P3 | Done | P3-7; History › Conversations… ⌘Y, Claude Code + Codex, one or all projects |
 | SE-4 | Session/transcript cost | P3 | Done | P3-8; Claude Code priced, Codex tokens, OpenCode from opencode.db (read-only) |
-| GIT-1 | Git Control | P4 | Not started | Built-in plugin |
-| GIT-2 | Commit graph | P4 | Not started | |
-| GIT-3 | Incoming/outgoing | P4 | Not started | |
-| GIT-4 | Worktree isolation | P4 | Not started | |
-| GIT-5 | Merge Center | P4 | Not started | |
-| PR-1 | Open PRs + send to Todo | P4 | Not started | `gh` CLI |
-| PR-2 | PR review + squash merge | P4 | Not started | |
-| FS-1 | File explorer + git badges | P4 | Not started | Quick Look |
+| GIT-1 | Git Control | P4 | Done | P4-5; built-in plugin, sheet from project/History menus; not in Find/Jump yet |
+| GIT-2 | Commit graph | P4 | Done | P4-6; Git Control › History; no diff of a past commit's file |
+| GIT-3 | Incoming/outgoing | P4 | Done | P4-7 |
+| GIT-4 | Worktree isolation | P4 | Done | P4-9; New Terminal toggle, project defaults, Worktrees… sheet |
+| GIT-5 | Merge Center | P4 | Done | P4-10…P4-13; sidebar panel, resume, branch testing, contract check; `terminalVerified` and BranchTesting checklist not ported |
+| PR-1 | Open PRs + send to Todo | P4 | Done | P4-14; right sidebar tab via `gh` |
+| PR-2 | PR review + squash merge | P4 | Done | P4-15; review reads the PR with `gh`, not a local branch diff |
+| FS-1 | File explorer + git badges | P4 | Done | P4-8; Quick Look on Space; no drag to a pane yet |
 | FS-2 | Folder browser | P1 | Replaced | `NSOpenPanel` + Finder drops (P1-4, P1-5) |
 | BR-1 | Web pane | P2 | Done | P2-12, WKWebView (private); CDP engine: Won't port |
 | BR-2 | Agent page offer | P2 | Done | P2-15; from terminal output (no shared CDP browser) |
 | BR-3 | Playwright MCP browser session | P5 | Not started | |
 | EXT-1 | MCP manager | P5 | Not started | |
 | EXT-2 | Skills browser | P5 | Not started | |
-| EXT-3 | Plugin system | P4 | Not started | Native `AlethePluginKit`; JS plugins: Won't port |
+| EXT-3 | Plugin system | P4 | Done | `AlethePluginKit` + built-ins (P4-1/2); ExtensionKit third parties (P4-19, unverified end to end); JS plugins: Won't port |
 | EXT-4 | Agent library + economy agents | P5 | Not started | |
 | EXT-5 | Graphify | P5 | Not started | |
 | EXT-6 | ai-memory wiring | P5 | Not started | |
@@ -2158,7 +2169,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | USE-2 | Activity tracking | P3 | Done | P3-14; same file format as upstream |
 | USE-3 | RAM control, hibernation, supervisor | P2 | Done | P2-24; memory indicator + policy; hibernated terminals resume when shown; no history chart |
 | USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |
-| UI-1 | Themes (16 + 4) | P0, P1, P4 | Partial | 16 built-ins + picker (P1-11); theme packs in P4 |
+| UI-1 | Themes (16 + 4) | P0, P1, P4 | Done | 16 built-ins + picker (P1-11); Theme Pack plugin (P4-18) |
 | UI-2 | Visual style normal/clean | P2 | Done | P2-27; Clean theme transform + compact sidebar |
 | UI-3 | Motion preference | P2 | Done | P2-27; preference or macOS Reduce Motion |
 | UI-4 | App icon themes | P5 | Not started | `NSApp.applicationIconImage` |
@@ -2179,8 +2190,8 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SET-11 | Audit center | P5 | Replaced | OSLog + diagnostic export |
 | SET-12 | Close confirmation | P2 | Done | P2-26; quit confirmation with Don't ask again; Settings toggle |
 | SET-13 | Keyboard shortcuts | P1, ongoing | Partial | ⌘N, ⇧⌘N, ⌘O, ⌘T, ⌘,, zoom, undo (P1-1…P1-9); §6.3 |
-| PER-1 | Todos | P4 | Not started | Built-in plugin |
-| PER-2 | Pomodoro | P4 | Not started | |
+| PER-1 | Todos | P4 | Done | P4-16; built-in plugin, right sidebar, JSONC template |
+| PER-2 | Pomodoro | P4 | Done | P4-17; toolbar pill, phase notifications |
 | PER-3 | Spotify | P7 | Not started | |
 | PER-4 | Discord Rich Presence | P7 | Not started | |
 | PER-5 | 9router | P7 | Not started | |
