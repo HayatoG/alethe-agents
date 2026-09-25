@@ -51,6 +51,8 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     /// Optional modules turned on or off, keyed by `Feature` raw value (upstream `enabledFeatures`);
     /// read through `features`.
     public var enabledFeatures: [String: Bool]?
+    /// Dock icon artwork (upstream `appIconTheme`); read through `iconTheme`, nil is the default.
+    public var appIconTheme: String?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

@@ -174,6 +174,7 @@ final class AppEnvironment {
         self.profiles = profiles
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences
+        followAppIcon()
         self.promptHistory = loadedHistory
         resources.start(environment: self)
         usage.start(environment: self)

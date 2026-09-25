@@ -47,7 +47,7 @@ public enum TauriImport {
     }
 
     public enum Preference: String, Hashable, Sendable, CaseIterable {
-        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features
+        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features, appIcon
     }
 
     /// What the importer needs to know about the native app, injected to keep this module free of
@@ -316,6 +316,10 @@ public enum TauriImport {
                 preferences.features = features
                 report.preferences.insert(.features)
             }
+        }
+        if let icon = (raw["appIconTheme"] as? String).flatMap(AppIconTheme.init(rawValue:)), icon != preferences.iconTheme {
+            preferences.iconTheme = icon
+            report.preferences.insert(.appIcon)
         }
         if let language = raw["language"] as? String, !language.isEmpty { report.language = language }
     }

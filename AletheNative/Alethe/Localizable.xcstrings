@@ -6036,6 +6036,23 @@
         }
       }
     },
+    "import.pref.appIcon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "app icon"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ícone do app"
+          }
+        }
+      }
+    },
     "import.pref.cliPaths" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11336,6 +11353,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ disponível"
+          }
+        }
+      }
+    },
+    "settings.appearance.appIcon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Icon"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ícone do app"
+          }
+        }
+      }
+    },
+    "settings.appearance.appIcon.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The icon shown in the Dock, independent from the interface theme."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O ícone exibido no Dock, independente do tema da interface."
           }
         }
       }

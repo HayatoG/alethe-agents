@@ -3,7 +3,7 @@ import AletheFoundation
 import AletheModel
 import SwiftUI
 
-/// Settings › Appearance: theme, UI zoom and interface language.
+/// Settings › Appearance: theme, app icon, UI zoom and interface language.
 struct AppearanceSettings: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.metrics) private var metrics
@@ -18,6 +18,15 @@ struct AppearanceSettings: View {
             } header: {
                 Text("settings.appearance.theme")
             }
+
+            Section {
+                AppIconGrid()
+            } header: {
+                Text("settings.appearance.appIcon")
+            } footer: {
+                Text("settings.appearance.appIcon.help")
+            }
+            .disabled(environment.preferences == nil)
 
             Section {
                 Picker(selection: Binding {
@@ -189,6 +198,70 @@ private struct ThemeGrid: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityValue(Text(verbatim: isSelected ? "1" : "0"))
         .accessibilityIdentifier("settings.theme.\(option.id)")
+    }
+}
+
+/// Upstream's four app icons (P5-12); choosing one changes the Dock icon at once.
+private struct AppIconGrid: View {
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    private var current: AppIconTheme { environment.preferences?.document.iconTheme ?? .default }
+
+    var body: some View {
+        HStack(spacing: metrics.space(.l)) {
+            ForEach(AppIconTheme.allCases, id: \.self) { tile($0) }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, metrics.space(.xs))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings.appIcon")
+    }
+
+    private func tile(_ option: AppIconTheme) -> some View {
+        let isSelected = option == current
+        return Button {
+            environment.preferences?.update { $0.iconTheme = option }
+        } label: {
+            VStack(spacing: metrics.space(.xs)) {
+                Group {
+                    if let image = AppIcon.image(for: option) {
+                        Image(nsImage: image).resizable().interpolation(.high)
+                    } else {
+                        Image(systemName: "app")
+                    }
+                }
+                .frame(width: metrics.size(56), height: metrics.size(56))
+                .padding(metrics.space(.xxs))
+                .overlay {
+                    RoundedRectangle(cornerRadius: metrics.radius(.lg))
+                        .strokeBorder(isSelected ? theme[.accent] : .clear, lineWidth: 2)
+                }
+                option.localizedName
+                    .font(metrics.font(.footnote))
+                    .foregroundStyle(isSelected ? theme[.textPrimary] : theme[.textSecondary])
+                    .lineLimit(1)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityValue(Text(verbatim: isSelected ? "1" : "0"))
+        .accessibilityIdentifier("settings.appIcon.\(option.rawValue)")
+    }
+}
+
+extension AppIconTheme {
+    /// Named like the themes they match.
+    var localizedName: Text {
+        switch self {
+        case .eliteOriginal: Text("theme.eliteOriginal")
+        case .elitePureBlack: Text("theme.elitePureBlack")
+        case .eliteIndigo: Text("theme.eliteIndigo")
+        case .eliteBlush: Text("theme.eliteBlush")
+        }
     }
 }
 

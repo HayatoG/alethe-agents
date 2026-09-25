@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings › Appearance (P1-11): theme, UI zoom and language.
+/// Settings › Appearance (P1-11): theme, app icon (P5-12), UI zoom and language.
 @MainActor
 final class AppearanceTests: XCTestCase {
     override func setUp() async throws {
@@ -78,6 +78,31 @@ final class AppearanceTests: XCTestCase {
             app.menuItems["System"].click()
             XCTAssertTrue(eventually { !note.exists }, "restart note stayed at \(label)")
             app.terminate()
+        }
+    }
+    /// App icon picker (P5-12) at three zoom levels: every tile selects where it is drawn, and the
+    /// choice survives a relaunch.
+    func testAppIconPickerReceivesClicksAtThreeZoomLevels() {
+        for (steps, label) in [(-1, "90%"), (0, "100%"), (2, "120%")] {
+            let (app, root) = launchAlethe()
+            XCTAssertTrue(app.descendants(matching: .any)["workspace.empty"].waitForExistence(timeout: 5))
+            for _ in 0..<abs(steps) { app.typeKey(steps > 0 ? "+" : "-", modifierFlags: .command) }
+            openAppearance(app)
+            func icon(_ id: String) -> XCUIElement { app.descendants(matching: .any)["settings.appIcon.\(id)"].firstMatch }
+            XCTAssertTrue(icon("elite-indigo").waitForExistence(timeout: 5))
+            XCTAssertEqual(icon("elite-indigo").value as? String, "1", "default icon not selected at \(label)")
+            for id in ["elite-original", "elite-pure-black", "elite-blush"] {
+                icon(id).click()
+                XCTAssertTrue(eventually { icon(id).value as? String == "1" }, "\(id) missed at \(label)")
+            }
+            XCTAssertEqual(icon("elite-indigo").value as? String, "0")
+            app.terminate()
+
+            let (relaunched, _) = launchAlethe(dataRoot: root)
+            openAppearance(relaunched)
+            let restored = relaunched.descendants(matching: .any)["settings.appIcon.elite-blush"].firstMatch
+            XCTAssertEqual(restored.value as? String, "1", "icon not restored after relaunch at \(label)")
+            relaunched.terminate()
         }
     }
 }

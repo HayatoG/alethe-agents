@@ -304,6 +304,7 @@
       "kiro": true
     },
     "visualStyle": "normal",
+    "appIconTheme": "elite-blush",
     "enabledFeatures": {
       "browser": true,
       "graphify": true,
