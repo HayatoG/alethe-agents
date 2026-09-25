@@ -2418,12 +2418,24 @@ cadence above.
   the plugin before an OpenCode tab starts; child errors go to the notification list. Deviation: no per-
   project `gsdWatcherEnabled` (the feature switch plus an OpenCode tab is the gate). Tests (U + UI + HT
   at 90/100/120 %) written and compiled, NOT run.
-- [ ] **P5-25 (L) MCP manager UI.** Right sidebar MCP tab (upstream `McpPanel`: scope switch, server
+- [x] **P5-25 (L) MCP manager UI.** Right sidebar MCP tab (upstream `McpPanel`: scope switch, server
   rows per agent, live health) and the MCP manager sheet (upstream `McpManagerModal`: list and detail,
   edit, per-agent enable with undo, sync to agents, reveal env, backups with restore, Skills from P5-15);
   Add Server (upstream `AddServerFlow`: registry search or manual, env hints, target agents and scope);
   first-use intro (`mcpOnboardingSeen`), `mcpDefaultScope`. Needs P5-3, P5-15, P5-21, P5-22. *Tests:* UI
   (add, disable, sync on seeded temporary homes), HT. *Parity:* EXT-1.
+  *Done:* (`ad86ab5`) right sidebar MCP tab (mcp feature): Servers/Skills switch, search, agent filter,
+  Project/Global scope (`mcpDefaultScope`), rows with agents, disabled/imported badges and health dots
+  (checked once per launch, then on request; off under a test home), unusable configs with the reason.
+  MCP manager sheet (row, add button or History › MCP Servers…): per-agent cards with health,
+  enable/disable with Undo (⌘Z), edit that never shows a stored secret, backups with restore and remove
+  (ask once), Show in Finder, Copy here / Copy to all missing (never overwrites), masked env with
+  explicit Reveal dropped on scope change or close; Skills (P5-15) embedded. Add Server from the
+  registry (stale/offline fallback, load more) or by hand, env hints with secrets in secure fields,
+  target agents greyed when they cannot hold it; undoable. One-time intro (`mcpOnboardingSeen`, marked
+  seen when the onboarding shows). Preferences imported from Tauri. Not ported: paste-JSON add, rename
+  on edit, overwriting sync. Tests (U `McpDraftTests`, UI/HT `McpManagerTests` on a seeded temp home)
+  written and compiled, NOT run.
 - [x] **P5-26 (L) Onboarding and welcome.** First-run sheet (upstream `OnboardingModal`, keyboard-first,
   skippable): name (the profile's display name, macOS first name as default), style and theme, agents
   (detected, install through P3-3), features (P5-3), MCP (upstream `McpStep`: servers found per agent,

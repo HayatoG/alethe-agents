@@ -281,6 +281,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - First-run onboarding: your name, style and theme, agents, features and MCP servers, plus import from
   the Tauri app when its data is found; skippable, reopened from Help › Show Onboarding…; a welcome-back
   screen after an update or a long absence.
+- MCP manager: an MCP tab in the right sidebar and History › MCP Servers… list every agent's servers
+  side by side with health; add from the MCP registry or by hand, enable/disable with undo, edit, copy
+  to agents that lack a server, reveal a masked value on request and restore config backups; skills are
+  in the same window.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
