@@ -25,6 +25,9 @@ struct NewTerminalSheet: View {
     @State private var prompt = ""
     /// Named grid the new terminal joins (P3-4); nil is the main grid.
     @State private var gridID: ProjectGridID?
+    /// Model passed with the agent's model flag (P3-5); empty is the agent's default.
+    @State private var model = ""
+    @State private var models: [String] = []
 
     private var registry: AgentRegistry { .builtin }
     private var agents: [AgentKind] { registry.enabledKinds(environment.preferences?.document.enabledAgents) }
@@ -76,6 +79,32 @@ struct NewTerminalSheet: View {
                 }
             }
 
+            if ModelDiscovery.modelFlag(for: agent) != nil {
+                LabeledContent("newTerminal.model") {
+                    HStack {
+                        TextField(text: $model) { Text("newTerminal.model.default") }
+                            .labelsHidden()
+                            .accessibilityIdentifier("newTerminal.model")
+                        if !models.isEmpty {
+                            Menu {
+                                Button("newTerminal.model.defaultItem") { model = "" }
+                                Divider()
+                                ForEach(models, id: \.self) { id in
+                                    Button { model = id } label: { Text(verbatim: id) }
+                                }
+                            } label: {
+                                Image(systemName: "chevron.up.chevron.down")
+                            }
+                            .menuStyle(.borderlessButton)
+                            .fixedSize()
+                            .accessibilityLabel(Text("newTerminal.model.choices"))
+                            .accessibilityIdentifier("newTerminal.model.choices")
+                        }
+                    }
+                }
+                .task(id: agent) { await discoverModels() }
+            }
+
             if let flag = descriptor?.unrestrictedFlag {
                 Toggle(isOn: $unrestricted) {
                     Text("newTerminal.unrestricted")
@@ -118,7 +147,10 @@ struct NewTerminalSheet: View {
         }
         .navigationTitle(Text(targetPane == nil ? LocalizedStringKey("newTerminal.title") : "newSubTab.title"))
         .onAppear(perform: loadInitial)
-        .onChange(of: agent) { _, _ in unrestricted = startsUnrestricted }
+        .onChange(of: agent) { _, _ in
+            unrestricted = startsUnrestricted
+            model = ""
+        }
     }
 
     private var startsUnrestricted: Bool {
@@ -148,6 +180,15 @@ struct NewTerminalSheet: View {
         unrestricted = startsUnrestricted
     }
 
+    /// The agent's models, looked up off the main thread; never blocks the sheet.
+    private func discoverModels() async {
+        models = []
+        let executable = descriptor?.cliCommand.flatMap {
+            environment.launchers.resolve($0, override: environment.preferences?.document.cliPaths?[agent.rawValue])
+        }
+        models = await ModelDiscovery.discover(agent, executable: executable)
+    }
+
     private func expanded(_ path: String) -> String {
         (path.trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath
     }
@@ -169,6 +210,7 @@ struct NewTerminalSheet: View {
             agent: agent.rawValue,
             workingDirectory: path == projectFolder ? nil : path,
             unrestricted: descriptor?.unrestrictedFlag != nil && unrestricted,
+            extraArguments: ModelDiscovery.arguments([], model: model, for: agent),
             initialPrompt: descriptor?.isShell == false && !text.isEmpty ? text : nil
         )
         if let targetPane {

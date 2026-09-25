@@ -22,9 +22,16 @@ public enum CLIVersion {
     }
 
     private static func run(_ executable: String, _ flag: String, timeout: Duration) async -> String? {
+        await CLIOutput.run(executable, [flag], timeout: timeout)
+    }
+}
+
+/// Output (stdout and stderr) of a short CLI call, or nil when it cannot start; killed past `timeout`.
+public enum CLIOutput {
+    public static func run(_ executable: String, _ arguments: [String], timeout: Duration) async -> String? {
         let process = Process()
         process.executableURL = URL(filePath: executable)
-        process.arguments = [flag]
+        process.arguments = arguments
         var environment = ProcessInfo.processInfo.environment
         let directory = (executable as NSString).deletingLastPathComponent
         environment["PATH"] = directory + ":" + (environment["PATH"] ?? "/usr/bin:/bin")

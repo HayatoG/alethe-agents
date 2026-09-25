@@ -61,3 +61,31 @@ import Testing
         }
     }
 }
+
+/// Model picker (P3-5; upstream `is_valid_model_id` cases).
+@Suite struct ModelDiscoveryTests {
+    @Test func acceptsModelIDsAndRejectsCLIProse() {
+        for id in ["claude-sonnet-4-5", "gpt-5", "o3-mini", "model-error-free", "anthropic/claude-sonnet-4"] {
+            #expect(ModelDiscovery.isValidModelID(id), "\(id)")
+        }
+        for id in ["", "ab", "--help", "# comment", "gpt 5", "usage:", "Usage:", "could", "ERROR:", "failed", "Available"] {
+            #expect(!ModelDiscovery.isValidModelID(id), "\(id)")
+        }
+    }
+
+    @Test func parsesListingsByFirstWord() {
+        let output = "Available models:\n  gpt-5   (default)\nsonnet-4.5 fast\n\ngpt-5\n--flags\n"
+        #expect(ModelDiscovery.parse(output) == ["gpt-5", "sonnet-4.5"])
+    }
+
+    @Test func modelArgumentsReplaceAnyEarlierModel() {
+        #expect(ModelDiscovery.arguments(["--model", "old", "-x"], model: "opus", for: .claude) == ["-x", "--model", "opus"])
+        #expect(ModelDiscovery.arguments(["--model=old"], model: "", for: .codex).isEmpty)
+        #expect(ModelDiscovery.arguments(["-x"], model: "m", for: .kiro) == ["-x"], "no model flag known")
+    }
+
+    @Test func claudeOffersItsAliasesWithoutRunningAnything() async {
+        #expect(await ModelDiscovery.discover(.claude, executable: nil) == ModelDiscovery.claudeAliases)
+        #expect(await ModelDiscovery.discover(.shell, executable: nil).isEmpty)
+    }
+}
