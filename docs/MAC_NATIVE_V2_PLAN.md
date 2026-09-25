@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
 > Status: **Phase 2 complete and tested** (Phase 1 complete). Test run 2026-09-24 after P2-28: package
-> 272/272; UI 54/55 (after fixes); smoke sidebar-drag, pane-drag, grid-drag all pass. Open: `AppearanceTests`
-> (the run cannot take its screenshot — environment); the workspace tab close button's accessibility frame
+> 272/272; UI 55/55 (after fixes); smoke sidebar-drag, pane-drag, grid-drag all pass. Open: the workspace
+> tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
 > Next: Phase 3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
@@ -1451,8 +1451,9 @@ they run per the test cadence above.
   Settings reopening on its last tab, header vs pane frames). Final: UI 53/55, three smoke scripts pass.
   The web address field “losing” the `c` of `/etc` was XCUITest, not the app: with the Brazilian - Pro
   layout, `typeText` sends `c` as ⌘C (a key probe saw the Command flag on every synthesized `c`); tests
-  now enter such text through the pasteboard (`paste(_:into:)`). Final: UI 54/55. Open: `AppearanceTests`
-  screenshot (environment); tab close button accessibility frame off screen (VoiceOver).
+  now enter such text through the pasteboard (`paste(_:into:)`). `AppearanceTests` could not screenshot
+  `app.windows.firstMatch` (an invisible helper window); it captures the screen now. Final: UI 55/55.
+  Open: tab close button accessibility frame off screen (VoiceOver).
   *Phase 2 exit check:* terminal and workspace rows at parity (WS-3's two scopes aside); terminals
   survive relaunch with their scrollback (P2-7); idle hidden terminals hibernate when the policy
   allows, resuming when shown (P2-24). Everything compiled; nothing verified by running tests.

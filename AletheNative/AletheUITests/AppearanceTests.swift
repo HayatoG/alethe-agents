@@ -27,7 +27,8 @@ final class AppearanceTests: XCTestCase {
         tile(app, "nord").click()
         XCTAssertTrue(eventually { self.tile(app, "nord").value as? String == "1" })
         XCTAssertEqual(tile(app, "elite-indigo").value as? String, "0")
-        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        // The screen, not `app.windows.firstMatch`: that can be an invisible helper window with no image.
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = "appearance-nord"
         shot.lifetime = .keepAlways
         add(shot)
