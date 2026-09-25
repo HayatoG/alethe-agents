@@ -2551,6 +2551,23 @@
         }
       }
     },
+    "git.incoming" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A receber"
+          }
+        }
+      }
+    },
     "git.initialize" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2632,6 +2649,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrir diff"
+          }
+        }
+      }
+    },
+    "git.outgoing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outgoing"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A enviar"
           }
         }
       }

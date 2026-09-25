@@ -20,6 +20,8 @@ final class GitControlModel {
     private(set) var phase: Phase = .loading
     private(set) var status: GitStatus?
     private(set) var branches: [GitBranch] = []
+    /// Commits ahead of and behind the upstream (P4-7); nil without an upstream.
+    private(set) var incomingOutgoing: GitIncomingOutgoing?
     private(set) var error: String?
     /// The remote operation in flight and its last progress line.
     private(set) var remoteAction: RemoteAction?
@@ -76,6 +78,7 @@ final class GitControlModel {
         do {
             status = try await repository.status()
             branches = (try? await repository.branches())?.filter { !$0.isRemote } ?? []
+            incomingOutgoing = try? await repository.incomingOutgoing(limit: 50)
             phase = .ready
         } catch {
             self.error = Self.describe(error)

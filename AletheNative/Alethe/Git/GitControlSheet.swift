@@ -211,6 +211,10 @@ struct GitControlSheet: View {
                     sectionHeader("git.changes", count: unstaged.count, action: "git.stageAll") { model.stageAll() }
                 }
             }
+            if let io = model.incomingOutgoing {
+                commitSection("git.incoming", commits: io.incoming, id: "git.incoming")
+                commitSection("git.outgoing", commits: io.outgoing, id: "git.outgoing")
+            }
         }
         .listStyle(.inset)
         .disabled(model.busy)
@@ -221,6 +225,34 @@ struct GitControlSheet: View {
             Button("editor.cancel", role: .cancel) {}
         } message: { entry in
             Text(verbatim: format("git.discard.message", entry.path))
+        }
+    }
+
+    /// Incoming or outgoing commits against the upstream (P4-7; upstream `IncomingOutgoing`).
+    @ViewBuilder
+    private func commitSection(_ title: LocalizedStringKey, commits: [GitCommit], id: String) -> some View {
+        if !commits.isEmpty {
+            Section {
+                ForEach(commits) { commit in
+                    HStack(spacing: metrics.space(.m)) {
+                        Text(verbatim: String(commit.hash.prefix(7)))
+                            .font(metrics.font(.caption).monospaced())
+                            .foregroundStyle(theme[.textSecondary])
+                        Text(verbatim: commit.subject).lineLimit(1)
+                        Spacer()
+                        Text(commit.date, style: .relative)
+                            .font(metrics.font(.caption))
+                            .foregroundStyle(theme[.textSecondary])
+                    }
+                    .help(Text(verbatim: commit.authorName))
+                }
+            } header: {
+                HStack {
+                    Text(title)
+                    Text(verbatim: "\(commits.count)").foregroundStyle(theme[.textSecondary])
+                }
+            }
+            .accessibilityIdentifier(id)
         }
     }
 
