@@ -38,10 +38,19 @@ final class AppEnvironment {
     let usage = UsageMonitor()
     /// Time analytics (P3-14).
     let activity = ActivityTracker()
+    /// Dictation (P3-17).
+    let dictation = DictationController()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
     let launchLanguage = LanguageSetting().current()
+
+    /// Dictation follows the interface language, in the user's region.
+    var dictationLocale: Locale {
+        let language = Bundle.main.preferredLocalizations.first ?? "en"
+        let code = Locale.Language(identifier: language).languageCode?.identifier ?? "en"
+        return Locale(languageCode: .init(code), languageRegion: Locale.current.region)
+    }
 
     var isLoaded: Bool { workspace != nil && preferences != nil }
 
@@ -112,6 +121,7 @@ final class AppEnvironment {
         resources.start(environment: self)
         usage.start(environment: self)
         activity.start(environment: self, file: locations.activityStats(profile))
+        dictation.start(environment: self)
         NotificationCenter.default.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
                                                object: NSWorkspace.shared, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {

@@ -24,6 +24,8 @@ struct MainWindow: View {
                     ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
                 }
         }
+        .overlay(alignment: .bottom) { DictationHUD() }
+        .animation(environment.reducesMotion ? nil : .easeOut(duration: 0.2), value: environment.dictation.machine.phase)
         .frame(minWidth: 800, minHeight: 500)
         .sheet(item: editorRequest) { request in
             if let workspace = environment.workspace {

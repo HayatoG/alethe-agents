@@ -217,6 +217,13 @@ public final class TerminalPaneView: NSView {
         return await PromptDelivery.deliver(prompt, style: style, io: io)
     }
 
+    /// Types text as if from the keyboard (dictation), without pressing Enter.
+    public func type(_ text: String) {
+        let data = Data(text.utf8)
+        tap.input(data)
+        process.write(data)
+    }
+
     /// Viewport text (visible rows), for tests and diagnostics.
     public func viewportText() -> String? {
         session.readViewportText()

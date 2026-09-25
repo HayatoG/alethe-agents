@@ -167,4 +167,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Alethe on Home.
 - Home shows setup steps until they are done — install an agent, create a project, open a terminal, pick
   a look — each one a click away. Hide them, and bring them back from Help › Show Setup Steps.
+- Dictation: press ⌥⌘D and speak — the words go into the focused terminal or field; press again to stop,
+  or hold the keys and release. Transcription runs on this Mac (Apple's speech model, downloaded the first
+  time) in the interface language; Esc cancels.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

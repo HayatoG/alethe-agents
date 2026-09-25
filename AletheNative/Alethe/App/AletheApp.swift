@@ -158,6 +158,13 @@ private struct ViewCommands: Commands {
             .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
             Divider()
         }
+        CommandGroup(after: .pasteboard) {
+            Divider()
+            Button(environment.dictation.machine.isActive ? LocalizedStringKey("menu.edit.stopDictation") : "menu.edit.dictate") {
+                environment.dictation.toggle()
+            }
+            .keyboardShortcut("d", modifiers: [.command, .option])
+        }
         CommandGroup(after: .help) {
             Button("menu.help.showSetup") {
                 environment.preferences?.update { $0.setupHidden = nil }

@@ -1,0 +1,14 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Privacy - Microphone Usage Description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Alethe uses the microphone for dictation into terminals and fields. Speech is transcribed on this Mac." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Alethe usa o microfone para ditado em terminais e campos. A fala é transcrita neste Mac." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-17. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-18. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1745,9 +1745,27 @@ ship; they run per the test cadence above.
   plan's.
   *Tests (written, not run — owner decision):* `SetupProgressTests` (1; ran once while writing it), UI
   `SetupWalkthroughTests` (hide, then Help brings it back). Compiled.
-- [ ] **P3-17 (L) Dictation.** Apple SpeechAnalyzer (ADR-7a) instead of Parakeet: microphone permission,
+- [x] **P3-17 (L) Dictation.** Apple SpeechAnalyzer (ADR-7a) instead of Parakeet: microphone permission,
   toggle and hold (Fn-Fn / ⌥⌘D, §6.3), text into the focused terminal or field, language from the
   interface language. *Tests:* U (state machine), UI (permission-denied path). *Parity:* PER-6.
+  *Done:* `AletheFoundation/DictationMachine` (idle → starting → listening → finishing; toggle on a short
+  press, hold past 0.4 s stops on release, Esc cancels, failures: microphone denied, language
+  unsupported, unavailable). `Dictation/DictationEngine`: `AVAudioEngine` tap converted with
+  `AVAudioConverter` to `SpeechAnalyzer.bestAvailableAudioFormat`, `SpeechTranscriber` with volatile
+  results, the language's model installed on first use through `AssetInventory`; stop finalizes through
+  the end of input. `DictationController`: ⌥⌘D down/up through a local event monitor (Edit › Dictate for
+  clicks), microphone permission via `AVCaptureDevice`, the target captured at start — a terminal gets
+  the words typed without Enter (`TerminalPaneView.type`), a text field through `NSTextInputClient` —
+  final segments inserted with a separating space; language = interface language in the user's region.
+  `DictationHUD` at the bottom of the window: words so far, model download, the failure with Open System
+  Settings (microphone) and Dismiss; the pulse stops under reduced motion. The app is now signed with
+  `com.apple.security.device.audio-input` (`Alethe/Alethe.entitlements`) and has a localized
+  `NSMicrophoneUsageDescription` (`InfoPlist.xcstrings`; the strings gate skips code-key rules there).
+  Debug flag `-AletheDictationDenied YES` simulates a denied microphone.
+  *Deviation:* no Fn-Fn — macOS owns it for system Dictation, which also works in Alethe's fields; ⌥⌘D
+  only. No `CaptureInputSequenceProvider` yet (ADR-7a lists it as a macOS 27 option).
+  *Tests (written, not run — owner decision):* `DictationMachineTests` (3; ran once while writing them),
+  UI `DictationTests` (denied path). Compiled. Needs a manual check with a real microphone.
 - [ ] **P3-18 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
 
 **Phase 3 exit criteria:** every agent upstream supports on macOS runs, installs and resumes; agents'
@@ -1898,7 +1916,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | PER-3 | Spotify | P7 | Not started | |
 | PER-4 | Discord Rich Presence | P7 | Not started | |
 | PER-5 | 9router | P7 | Not started | |
-| PER-6 | Dictation | P3 | Not started | Replaces Parakeet with Apple SpeechAnalyzer |
+| PER-6 | Dictation | P3 | Done | P3-17; Apple SpeechAnalyzer, ⌥⌘D toggle/hold, no Fn-Fn |
 | PER-7 | Remote control | P7 | Not started | |
 | EXP-1 | Agent Canvas POC + TokenHud | — | Won't port | Experimental upstream; revisit after v1 |
 | EXP-2 | Agent Sandbox | — | Won't port | Disabled upstream |

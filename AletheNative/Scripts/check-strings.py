@@ -3,6 +3,7 @@
 
   1. a key in any Localizable.xcstrings lacks a translated, non-empty value for a required
      language (en, pt-BR) — unless the key is marked "shouldTranslate": false;
+     InfoPlist.xcstrings holds Info.plist keys (e.g. `NSMicrophoneUsageDescription`): only rule 1;
   2. a key is an orphan: no Swift source in the catalog's module references it as a literal;
   3. Swift code uses a dotted key that is missing from its module's catalog;
   4. Swift code passes a plain-text literal to Text/Label/Button/etc. — user-visible text must be
@@ -65,9 +66,11 @@ def check(root: Path) -> list[str]:
         if data.get("sourceLanguage") != "en":
             problems.append(f"{catalog}: sourceLanguage must be en")
         keys = set()
+        info_plist = catalog.name == "InfoPlist.xcstrings"
         for key, entry in data.get("strings", {}).items():
-            keys.add(key)
-            if not DOTTED_KEY.match(key):
+            if not info_plist:
+                keys.add(key)
+            if not info_plist and not DOTTED_KEY.match(key):
                 problems.append(f"{catalog.name}: key '{key}' is not a dotted identifier")
             if entry.get("shouldTranslate") is False:
                 continue
