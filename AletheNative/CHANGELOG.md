@@ -184,6 +184,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Git layer: runs your own `git` for status, diffs, branches, commits, history and sync (pull, push and
   fetch with progress), and refreshes when the repository changes.
 - Theme Pack plugin: the Dark Lemon, Orca, Ember and Golden Premium themes.
+- Groundwork for Git review (not in the interface yet): commit graph lane layout, a merge analyzer that
+  trial-merges two branches in a throwaway worktree and classifies each conflict, your open pull requests
+  through `gh`, and a squash merge guarded by the reviewed head commit.
+- Groundwork for the Todos plugin (not in the interface yet): global and per-project lists with tags, PR
+  links, reordering, the editable JSONC template file, and a Pomodoro session that survives relaunch.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

@@ -1850,6 +1850,10 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   labels, HEAD), a lazy list for long histories, commit detail (message, files, diff), actions:
   cherry-pick, revert, reset soft/mixed/hard (hard asks), branch from commit, copy SHA.
   *Tests:* U (lane layout, golden against upstream fixtures), UI. *Parity:* GIT-2.
+  *Done (model):* `GitGraphLayout` in `AletheGit` ports upstream `buildGraphRows`: first parent keeps the
+  lane, extra parents open the first free lane, round-robin color per branch; rows carry lanes before/after,
+  top/bottom edges, pass-throughs, refs; `append(_:hasMore:)` paginates with open lanes. Deliberate
+  difference: a merge into an already-open lane draws its curve. U 11. Graph view, detail, actions owed.
 - [ ] **P4-7 (S) Incoming/outgoing.** Commits ahead of and behind the upstream branch with fetch, as a
   Git Control section (upstream `IncomingOutgoing`). *Tests:* G, UI. *Parity:* GIT-3.
 - [ ] **P4-8 (L) File explorer.** A sidebar tab (upstream `FileExplorer`): lazy tree with file-type
@@ -1864,6 +1868,10 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
 - [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
   sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
   sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.
+  *Done (model):* target `AletheMerge` ports `merge_analyzer.rs`: 12 path classes (Sentinel before
+  Planning) with upstream's strategy text; `MergeAnalyzer.analyze` trial-merges in a throwaway detached
+  worktree `.alethe/merge-envs/analyze-<id>`, always removed; `MergeAnalysis` keeps upstream field names;
+  `MergeCenterStage` (clean analysis skips to validate). U+G 7. Event Bus events, panel/tree/sheet UI owed.
 - [ ] **P4-11 (L) Merge Center — prepare.** Prepare and rebase onto the target (upstream
   `conflict_resolution.rs`), conflicts listed with open-in-diff and agent-assisted resolution in a
   terminal, cancelable long steps. *Tests:* G (conflict scenarios), UI. *Parity:* GIT-5.
@@ -1877,12 +1885,21 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   --involves=@me`; upstream `PullRequestsSidebar`): status and checks, open in the browser, send to a
   Todo (P4-16); a clear state when `gh` is missing or signed out. *Tests:* U (parsing), UI. *Parity:*
   PR-1.
+  *Done (model):* `GitHubPullRequests` in `AletheGit`: locates `gh`, typed ready/missing/signed-out from
+  `gh auth status`, upstream's `gh search prs` list parsed purely; review decision, checks and head SHA come
+  from a per-PR `gh pr view` (search cannot return them) merged in; `squashMergeArguments(pr:headSHA:)`
+  builds the P4-15 guard. U 11. Sidebar tab, per-row details, send-to-Todo owed.
 - [ ] **P4-15 (L) PR review and squash merge.** Review a PR with an agent in a terminal (upstream
   `PullRequestReviewModal`; review agent and model preferences), squash merge guarded by the reviewed
   head SHA (`gh pr merge --squash --match-head-commit`). *Tests:* U, UI. *Parity:* PR-2.
 - [ ] **P4-16 (L) Todos.** Built-in plugin (upstream `plugins/todos`): global and per-project lists,
   tags, PR links, reorder, the external `todos.jsonc` template (`ensure_todo_template`) and settings.
   *Tests:* U (store, file round-trip), UI. *Parity:* PER-1.
+  *Done (model):* target `AletheTodos`: `Todo`, `TodoScope`, `TodoRules`, `TodoSettings`; `@Observable`
+  `TodoStore` (upstream ordering: active above done, drags never cross) persisted via `PluginStorage`;
+  `ensure_todo_template` port (`alethe-todo.template.jsonc`) with a JSONC reader/writer; `TodosPlugin`
+  (`com.alethe.todos`, right tab `todos`, `todos.new`). Also P4-17's `PomodoroTimer` (Codable, injected
+  dates, `focusTodoId`). U 16. Views, app registration and string localization owed.
 - [ ] **P4-17 (M) Pomodoro.** Timer in the Todos panel and a toolbar pill (upstream `PomodoroWidget`),
   focus todo (`focusTodoId`), work/break lengths, the session surviving relaunch, a notification at the
   end (P3-11). *Tests:* U (timer state), UI. *Parity:* PER-2.
