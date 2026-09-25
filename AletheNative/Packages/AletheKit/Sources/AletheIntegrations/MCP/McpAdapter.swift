@@ -20,6 +20,8 @@ public enum McpConfigError: Error, Hashable, Sendable, CustomStringConvertible {
     case jsoncUnsupported
     /// The edit did not produce the expected document; nothing was changed.
     case invalidEdit
+    /// The file exists but could not be read.
+    case unreadable
 
     public var description: String {
         switch self {
@@ -31,6 +33,7 @@ public enum McpConfigError: Error, Hashable, Sendable, CustomStringConvertible {
         case .unsupportedDisable: "unsupported_disable"
         case .jsoncUnsupported: "jsonc_unsupported"
         case .invalidEdit: "invalid_edit"
+        case .unreadable: "unreadable"
         }
     }
 }
