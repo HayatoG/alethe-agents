@@ -44,7 +44,7 @@ public struct DelegateRequest: Hashable, Sendable {
 
 extension OrchestratorCore: OrchestratorToolHandler {
     public func callTool(name: String, arguments: OrderedJSONObject, planner: String?) async throws -> OrderedJSON {
-        try await dispatchTool(name: name, arguments: arguments, planner: planner)
+        try await withFitness(dispatchTool(name: name, arguments: arguments, planner: planner), tool: name, arguments: arguments)
     }
 
     /// The tools this core answers (upstream `dispatch_tool`).

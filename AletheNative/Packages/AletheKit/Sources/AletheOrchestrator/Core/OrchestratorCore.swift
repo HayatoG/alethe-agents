@@ -82,6 +82,8 @@ public actor OrchestratorCore {
     var terminations: [UInt64: Task<Void, Never>] = [:]
     var terminationCounter: UInt64 = 0
     var isShutDown = false
+    /// Per-agent usage fitness (P6-8, `OrchestratorCore+Fitness`).
+    var fitnessReadings: [String: AgentFitness] = [:]
 
     private var observers: [UInt64: AsyncStream<OrchestratorSnapshot>.Continuation] = [:]
     private var observerCounter: UInt64 = 0
