@@ -71,7 +71,9 @@ private struct FeatureOptions: View {
 
     var body: some View {
         switch feature {
-        case .browser, .graphify, .mcp, .playwright, .orchestrator, .gsdSync, .aiMemory, .prs:
+        case .aiMemory:
+            AiMemoryOptions()
+        case .browser, .graphify, .mcp, .playwright, .orchestrator, .gsdSync, .prs:
             EmptyView()
         }
     }

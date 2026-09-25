@@ -71,6 +71,8 @@ final class AppEnvironment {
     let dictation = DictationController()
     /// Logs, recent errors and the after-crash notice (P5-11).
     let diagnostics = DiagnosticsController()
+    /// ai-memory detection and its MCP server on agent launches (P5-18).
+    let aiMemory = AiMemoryController()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -196,6 +198,7 @@ final class AppEnvironment {
         self.profiles = profiles
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences
+        aiMemory.start(environment: self)
         followAppIcon()
         self.promptHistory = loadedHistory
         resources.start(environment: self)
