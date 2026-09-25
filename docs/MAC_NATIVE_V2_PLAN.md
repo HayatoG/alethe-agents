@@ -1,11 +1,26 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 3 complete and tested** (Phases 1–3 done). Test run 2026-09-25 after P3-18: package
-> 336/336; UI 67/67 (after fixes); smoke sidebar-drag, pane-drag, grid-drag pass (grid-drag intermittent
-> right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
-> where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
-> prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: Phase 6. Before it: run the package suite and `Scripts/uitest.sh` (Phase 4 round 2 and all Phase 5 tests are compiled, not run) and the owner's manual pass. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phases 0–5 implemented** (2026-09-25). Phases 0–3 tested (last run after P3-18: package
+> 336/336, UI 67/67, smoke scripts pass). Phase 4 round 1 ran the package suite (498 green); Phase 4
+> round 2 and all of Phase 5 were compiled only (owner decision) — see **Test debt** below.
+> Next: Phase 6 (Orchestrator v2), then 7 (Peripherals) and 8 (Release). Before Phase 6: clear the test
+> debt. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+>
+> **Test debt (2026-09-25).** Written and compiled, never run:
+> - Package suite (`swift test`): new or changed tests since `b8f5ab7` in AletheIntegrationsTests (19
+>   files), AletheModelTests (13), AletheFoundationTests (5), AletheMergeTests (4), AletheAgentsTests (2),
+>   AletheGitTests (2), AletheTodosTests (2), AletheGitControlTests (1), AletheExtensionHostTests (1).
+> - UI (`Scripts/uitest.sh`, not run since the P3 review): AgentLibrary, Appearance, CLIOpen,
+>   CrashNotice, DataSettings, ExtensionKit, FeatureToggles, GitControl, GraphifyView, GSDSync,
+>   McpManager, MergeCenter, Onboarding, OpenIn, Profiles, ProjectClone, ProjectSettings, SkillsBrowser,
+>   Todos, ToolbarSettings, Worktrees — plus every earlier UI test, and the three smoke scripts.
+> - Performance: GraphLayout at 3000 nodes (P5-23).
+> - Manual (cannot be automated): dictation with a real microphone (P3-17), prompt redraw after resize
+>   (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24), a real ExtensionKit extension
+>   loading and a contained crash (P4-19), profile switch / import / reset / erase relaunches (P5-9,
+>   P5-10), `alethe .` cold and warm (P5-8), the owner's pass over all Phase 4 and Phase 5 UI.
+> - Known: a rare `AletheTerminalTests` hang (1-minute limit, root cause open); the workspace tab close
+>   button's accessibility frame is off screen.
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
