@@ -36,14 +36,16 @@ final class TerminalRegistry {
     /// One saved-output file per tab, shared by every process the tab runs, so clearing, loading and
     /// appending stay in order on its queue.
     @ObservationIgnored private var scrollbacks: [TabID: ScrollbackFile] = [:]
-    /// Discovery of a new Codex session, per tab, until its id is found.
+    /// Discovery of a new session (Codex, OpenCode, Antigravity), per tab, until its id is found.
     @ObservationIgnored private var discoveries: [TabID: Task<Void, Never>] = [:]
+    /// Tabs whose launch waits on something first (a Cursor chat being created).
+    @ObservationIgnored private var preparing: Set<TabID> = []
 
     func view(for tab: TabID) -> TerminalPaneView? { views[tab] }
 
-    /// Starts the tab's process unless it already has one (running or ended).
+    /// Starts the tab's process unless it already has one (running or ended) or is being prepared.
     func ensureStarted(_ tab: PaneTab, in project: Project, environment: AppEnvironment) {
-        guard states[tab.id] == nil else { return }
+        guard states[tab.id] == nil, !preparing.contains(tab.id) else { return }
         start(tab, in: project, environment: environment)
     }
 
@@ -72,6 +74,7 @@ final class TerminalRegistry {
         states.removeValue(forKey: tab)
         generations.removeValue(forKey: tab)
         discoveries.removeValue(forKey: tab)?.cancel()
+        preparing.remove(tab)
         launches.removeValue(forKey: tab)
         retriedFresh.remove(tab)
         claims.release(owner: tab.rawValue)
@@ -162,11 +165,12 @@ final class TerminalRegistry {
     }
 
     /// Binds the Codex session this tab's process creates, once the CLI writes it to disk.
-    private func discoverSession(for tab: TabID, kind: AgentKind, cwd: String, before: Set<String>,
-                                 environment: AppEnvironment) {
+    private func discoverSession(for tab: TabID, kind: AgentKind, cwd: String, before beforeTask: Task<Set<String>, Never>,
+                                 executable: String?, environment: AppEnvironment) {
         discoveries[tab] = Task { [weak self, weak environment] in
+            let before = await beforeTask.value
             let found = await SessionResume.discover(sleep: { try? await Task.sleep(for: $0) }) {
-                let sessions = await Task.detached { CodexSessions.snapshot(cwd: cwd) }.value
+                let sessions = await Task.detached { await SessionResume.snapshot(kind, cwd: cwd, executable: executable) }.value
                 return self?.claims.claimDiscovered(kind, cwd: cwd, before: before, sessions: sessions,
                                                     owner: tab.rawValue)?.id
             }
@@ -178,6 +182,31 @@ final class TerminalRegistry {
 
     private func start(_ tab: PaneTab, in project: Project, environment: AppEnvironment, fresh: Bool = false) {
         hibernated.remove(tab.id)
+        let kind = AgentKind(rawValue: tab.agent)
+        let cwd = tab.workingDirectory ?? project.folder
+        // Cursor mints chat ids itself: create the chat first so the pane can always resume it
+        // (upstream `create_cursor_chat`); without one (signed out, CLI failing) it starts as is.
+        if kind == .cursor, tab.sessionID == nil, !preparing.contains(tab.id),
+           let executable = environment.launchers.resolve("cursor-agent", override: environment.preferences?.document.cliPaths?["cursor"]) {
+            preparing.insert(tab.id)
+            Task { [weak self, weak environment] in
+                let chat = await CursorChats.create(executable: executable, cwd: cwd)
+                guard let self, let environment else { return }
+                var prepared = tab
+                if let chat {
+                    prepared.sessionID = chat
+                    environment.workspace?.update { $0.updateTab(tab.id) { $0.sessionID = chat } }
+                }
+                // Still there and still waiting (not closed meanwhile)?
+                guard self.preparing.remove(tab.id) != nil, environment.workspace?.document.paneHolding(tab.id) != nil else { return }
+                self.startPrepared(prepared, in: project, environment: environment, fresh: fresh)
+            }
+            return
+        }
+        startPrepared(tab, in: project, environment: environment, fresh: fresh)
+    }
+
+    private func startPrepared(_ tab: PaneTab, in project: Project, environment: AppEnvironment, fresh: Bool) {
         let kind = AgentKind(rawValue: tab.agent)
         let cwd = tab.workingDirectory ?? project.folder
         discoveries.removeValue(forKey: tab.id)?.cancel()
@@ -192,9 +221,19 @@ final class TerminalRegistry {
         )
         do {
             let command = try environment.agentLauncher.command(for: request)
-            // Taken before the spawn so the session the process creates is the only new one.
-            let before = SessionResume.discoversNewSessions(kind) && command.sessionID == nil
-                ? Set(CodexSessions.snapshot(cwd: cwd).map(\.id)) : nil
+            // Taken before the spawn so the session the process creates is the only new one. Files
+            // are read right away; OpenCode's list needs its CLI, and OpenCode only records a session
+            // with the first message, so that snapshot may finish just after the spawn.
+            var before: Task<Set<String>, Never>?
+            if SessionResume.discoversNewSessions(kind) && command.sessionID == nil {
+                if kind == .opencode {
+                    let executable = command.executable
+                    before = Task.detached { Set(await SessionResume.snapshot(kind, cwd: cwd, executable: executable).map(\.id)) }
+                } else {
+                    let ids = Set(SessionResume.sessions(kind, cwd: cwd).map(\.id))
+                    before = Task { ids }
+                }
+            }
             let view = try TerminalPaneView(launch: command.ptyLaunch(size: PTYSize(columns: 80, rows: 24)),
                                             theme: environment.theme, fontSize: environment.terminalFontSize,
                                             forceKillNotice: String(localized: "terminal.forceKilled"),
@@ -236,7 +275,8 @@ final class TerminalRegistry {
                 environment.workspace?.update { $0.updateTab(tab.id) { $0.sessionID = command.sessionID } }
             }
             if let before {
-                discoverSession(for: tab.id, kind: kind, cwd: cwd, before: before, environment: environment)
+                discoverSession(for: tab.id, kind: kind, cwd: cwd, before: before, executable: command.executable,
+                                environment: environment)
             }
         } catch AgentLaunchError.launcherNotFound(let command) {
             states[tab.id] = .notFound(command: command)

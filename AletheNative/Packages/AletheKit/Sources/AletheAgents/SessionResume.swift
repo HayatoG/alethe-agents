@@ -17,13 +17,30 @@ public enum SessionResume {
         case .codex:
             guard let cwd else { return false }
             return CodexSessions.snapshot(cwd: cwd, homeDirectory: homeDirectory).contains { $0.id == sessionID }
+        case .antigravity:
+            return AntigravitySessions.snapshot(cwd: "", homeDirectory: homeDirectory).contains { $0.id == sessionID }
         default:
             return true
         }
     }
 
-    /// True for agents whose new conversation id is only known once the CLI writes it to disk.
-    public static func discoversNewSessions(_ kind: AgentKind) -> Bool { kind == .codex }
+    /// True for agents whose new conversation id is only known once the CLI records it (Cursor
+    /// instead creates its chat before the launch).
+    public static func discoversNewSessions(_ kind: AgentKind) -> Bool {
+        kind == .codex || kind == .opencode || kind == .antigravity
+    }
+
+    /// Sessions of an agent in a folder, newest first, for discovery (needs the CLI for OpenCode).
+    public static func snapshot(_ kind: AgentKind, cwd: String, executable: String?) async -> [SessionSnapshot] {
+        switch kind {
+        case .codex: return CodexSessions.snapshot(cwd: cwd)
+        case .antigravity: return AntigravitySessions.snapshot(cwd: cwd)
+        case .opencode:
+            guard let executable else { return [] }
+            return await OpenCodeSessions.snapshot(cwd: cwd, executable: executable)
+        default: return []
+        }
+    }
 
     /// Retry once without the saved conversation when a resumed agent exits right away.
     public static func shouldRetryFresh(resumed: Bool, elapsed: Duration, alreadyRetried: Bool) -> Bool {
@@ -64,6 +81,7 @@ public enum SessionResume {
         switch kind {
         case .claude: ClaudeSessions.snapshot(cwd: cwd)
         case .codex: CodexSessions.snapshot(cwd: cwd)
+        case .antigravity: AntigravitySessions.snapshot(cwd: cwd)
         default: []
         }
     }

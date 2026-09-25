@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-6. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-7. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1549,9 +1549,24 @@ ship; they run per the test cadence above.
   *Deviation:* upstream falls back to fixed lists when a CLI lists nothing, naming retired models
   (Claude 3.x, GPT-4o); the native picker leaves them out and takes any typed id instead.
   *Tests (written, not run — owner decision):* `ModelDiscoveryTests` (4), UI `ModelPickerTests`. Compiled.
-- [ ] **P3-6 (M) Resume for OpenCode, Antigravity and Cursor.** Session discovery on disk and resume
+- [x] **P3-6 (M) Resume for OpenCode, Antigravity and Cursor.** Session discovery on disk and resume
   arguments for the three (Cursor chat creation, upstream `create_cursor_chat`), joining Claude Code and
   Codex. *Tests:* U (fixtures per provider). *Parity:* SE-1.
+  *Done:* `AletheAgents/MoreSessions`: `OpenCodeSessions` (`opencode session list --format json
+  --max-count 50` run in the folder; entries of other directories skipped, `updated` in ms),
+  `AntigravitySessions` (`~/.gemini/antigravity-cli/cache/conversation_metadata.json`: conversations whose
+  `WorkspaceURIs` are the folder, inside it or around it; `UpdatedAt` or `last_modified_time`; preview
+  kept for P3-7), `CursorChats` (`status` must show a login — `create-chat` otherwise waits forever —
+  then `create-chat`, the id taken from the last line and accepted only as 16…64 hex characters and
+  dashes, since it becomes a spawn argument). `CLIOutput.run` gains a working directory. `SessionResume`:
+  Antigravity sessions are checked on disk before resuming; new sessions are discovered for Codex,
+  OpenCode and Antigravity (`snapshot(_:cwd:executable:)`), and `sessions` covers Antigravity, so Resume
+  Previous Conversations reaches it too. `TerminalRegistry`: a new Cursor tab first creates its chat
+  (off the main thread, the tab waiting in `preparing`), stores the id and launches with `--resume`, so
+  it resumes after relaunch; without a chat it starts as before. OpenCode's before-snapshot needs its
+  CLI and runs alongside the launch — OpenCode records a session only with the first message.
+  *Tests (written, not run — owner decision):* `MoreSessionsTests` (4, including upstream's Cursor id
+  cases). Compiled.
 - [ ] **P3-7 (M) Conversation history and recent chats.** A sheet per project listing Claude Code and
   Codex conversations (title, date, size), opening one in a new tab that resumes it; recent chats
   across projects. *Tests:* U (listing), UI. *Parity:* SE-3.
@@ -1684,7 +1699,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | AG-7 | Claude ↔ Codex handoff | P3 | Not started | |
 | AG-8 | Agent hook bridge | P3 | Not started | |
 | AG-9 | Model discovery | P3 | Done | P3-5; real listings + Claude aliases, no stale fallback lists; any id can be typed |
-| SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Partial | Claude + Codex (P1-10); OpenCode, Antigravity, Cursor in P3 |
+| SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Done | Claude + Codex (P1-10); OpenCode, Antigravity, Cursor (P3-6) |
 | SE-2 | Resume last session | P2 | Done | P2-26; Terminal › Resume Previous Conversations (Claude Code, Codex) |
 | SE-3 | Claude history + recent chats | P3 | Not started | |
 | SE-4 | Session/transcript cost | P3 | Not started | |
