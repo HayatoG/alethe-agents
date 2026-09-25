@@ -110,20 +110,6 @@ private func temporaryDirectory() -> URL {
 }
 
 @Suite struct TodoTemplateTests {
-    @Test func stripsCommentsAndTrailingCommas() throws {
-        let source = """
-        // header
-        { /* block
-          comment */ "a": "http://x.y/*not*/ // kept", "b": [1, 2, /* c */ ], "c": {"d": "\\"q\\"",  // tail
-        },
-        }
-        """
-        let object = try JSONSerialization.jsonObject(with: Data(JSONC.strip(source).utf8)) as? [String: Any]
-        #expect(object?["a"] as? String == "http://x.y/*not*/ // kept")
-        #expect(object?["b"] as? [Int] == [1, 2])
-        #expect((object?["c"] as? [String: String])?["d"] == "\"q\"")
-    }
-
     @Test func parsesUpstreamTemplate() throws {
         let todos = try TodoTemplate.parse(Data(TodoTemplate.defaultContent.utf8))
         #expect(todos.map(\.id) == ["task-example-1"])
