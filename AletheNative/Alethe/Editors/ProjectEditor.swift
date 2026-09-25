@@ -9,6 +9,8 @@ struct ProjectEditor: View {
     let undoManager: UndoManager?
     let editing: ProjectID?
     let initialLocation: ProjectLocation
+    /// Folder filled in for a new project (an `alethe` open request for an unknown folder).
+    var initialFolder: String? = nil
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focused: Bool
     @Environment(\.metrics) private var metrics
@@ -104,6 +106,7 @@ struct ProjectEditor: View {
 
     private func loadInitial() {
         location = initialLocation
+        if editing == nil, let initialFolder { folder = initialFolder }
         guard let editing, let project = workspace.document.project(editing) else { return }
         name = project.name
         folder = project.folder

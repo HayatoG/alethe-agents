@@ -14,6 +14,14 @@ enum TestSeeds {
             doc.addProject(name: "beta", folder: "/private/tmp", color: .blue, in: .group(work))
             doc.addProject(name: "client-site", folder: "/private/tmp", color: .teal, in: .group(clients))
             doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
+        case "cliOpen":
+            // Two projects in their own folders inside the throwaway data root, neither shown (P5-8).
+            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+            for name in ["api", "web"] {
+                let folder = URL(filePath: root).appending(path: name)
+                try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                doc.addProject(name: name, folder: folder.path, color: .teal)
+            }
         case "terminals":
             let project = doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
             doc.addPane(to: project, tab: PaneTab(agent: "claude"))

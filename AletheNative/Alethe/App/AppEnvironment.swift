@@ -42,6 +42,8 @@ final class AppEnvironment {
     var rightSidebarTab: String?
     /// Bumped to focus the new-todo field (the Todos plugin's "New Todo" command).
     var newTodoRequest = 0
+    /// Folders asked for (`alethe`, Finder, launch arguments) before the workspace loaded.
+    @ObservationIgnored private var pendingFolders: [URL] = []
 
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()
@@ -174,12 +176,50 @@ final class AppEnvironment {
         usage.start(environment: self)
         activity.start(environment: self, file: locations.activityStats(profile))
         dictation.start(environment: self)
+        let requested = pendingFolders
+        pendingFolders = []
+        requested.forEach(openFolder)
         NotificationCenter.default.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
                                                object: NSWorkspace.shared, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.systemReducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
             }
         }
+    }
+
+    /// An open request for a folder (TERM-11; upstream `cli_launch.rs`): the matching project is
+    /// shown, an unknown folder offers New Project with it filled in. A file stands for its folder.
+    func openFolder(_ url: URL) {
+        guard let workspace else {
+            pendingFolders.append(url)
+            return
+        }
+        let document = workspace.document
+        let candidates = document.projects.map { (id: $0.id, folder: $0.folder) }
+        let selected = document.workspace.selectedProjectID
+        Task {
+            // Resolving symlinks touches the disk: off the main thread.
+            let found: (folder: URL, project: ProjectID?)? = await Task.detached {
+                guard let folder = CLILaunch.directory(for: url) else { return nil }
+                return (folder, CLILaunch.match(folder: folder.path, in: candidates, preferred: selected))
+            }.value
+            guard let found else { return }
+            if let project = found.project {
+                self.workspace?.update { $0.open(project) }
+                showingHome = false
+            } else {
+                editorRequest = .newProject(.ungrouped, folder: found.folder.path)
+            }
+            NSApp.activate()
+        }
+    }
+
+    /// `--open-path <folder>` (or a bare path) on the command line, relative to the launch folder.
+    func openLaunchArguments() {
+        guard let raw = CLILaunch.pathArgument(in: CommandLine.arguments) else { return }
+        let cwd = URL(filePath: FileManager.default.currentDirectoryPath, directoryHint: .isDirectory)
+        let expanded = (raw as NSString).expandingTildeInPath
+        openFolder(expanded.hasPrefix("/") ? URL(filePath: expanded) : cwd.appending(path: expanded))
     }
 
     /// The saved output of a terminal tab (`scrollback/<tab>.bin` in the active profile).

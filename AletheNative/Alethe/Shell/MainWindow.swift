@@ -51,8 +51,9 @@ struct MainWindow: View {
     @ViewBuilder
     private func editor(for request: EditorRequest, workspace: WorkspaceModel) -> some View {
         switch request {
-        case .newProject(let location):
-            ProjectEditor(workspace: workspace, undoManager: undoManager, editing: nil, initialLocation: location)
+        case .newProject(let location, let folder):
+            ProjectEditor(workspace: workspace, undoManager: undoManager, editing: nil, initialLocation: location,
+                          initialFolder: folder)
         case .editProject(let id):
             ProjectEditor(workspace: workspace, undoManager: undoManager, editing: id, initialLocation: .ungrouped)
         case .newGroup(let parent):

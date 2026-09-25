@@ -499,6 +499,7 @@
 				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				CODE_SIGN_ENTITLEMENTS = Alethe/Alethe.entitlements;
+				INFOPLIST_FILE = "Alethe-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Alethe;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Alethe uses the microphone for dictation into terminals and fields. Speech is transcribed on this Mac.";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -527,6 +528,7 @@
 				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				CODE_SIGN_ENTITLEMENTS = Alethe/Alethe.entitlements;
+				INFOPLIST_FILE = "Alethe-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Alethe;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Alethe uses the microphone for dictation into terminals and fields. Speech is transcribed on this Mac.";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";

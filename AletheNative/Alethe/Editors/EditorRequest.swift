@@ -2,7 +2,8 @@ import AletheModel
 
 /// A sheet the main window should present.
 enum EditorRequest: Identifiable, Hashable {
-    case newProject(ProjectLocation)
+    /// New project in a location, optionally with its folder filled in (an `alethe` open request).
+    case newProject(ProjectLocation, folder: String? = nil)
     case editProject(ProjectID)
     case newGroup(parent: GroupID?)
     case editGroup(GroupID)
@@ -40,7 +41,7 @@ enum EditorRequest: Identifiable, Hashable {
 
     var id: String {
         switch self {
-        case .newProject: "newProject"
+        case .newProject(_, let folder): "newProject:\(folder ?? "")"
         case .editProject(let id): "editProject:\(id)"
         case .newGroup: "newGroup"
         case .editGroup(let id): "editGroup:\(id)"

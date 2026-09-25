@@ -3,7 +3,16 @@ import AletheModel
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    @MainActor weak var environment: AppEnvironment?
+    @MainActor weak var environment: AppEnvironment? {
+        didSet {
+            guard let environment else { return }
+            let folders = pendingFolders
+            pendingFolders = []
+            folders.forEach(environment.openFolder)
+        }
+    }
+    /// Open requests that arrived before the window's environment was attached (a cold start).
+    @MainActor private var pendingFolders: [URL] = []
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // One Alethe per user session: a second copy would own the same data files and terminals.
@@ -22,6 +31,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
         ImagePasteMonitor.install()
+    }
+
+    /// Folders (or files) opened with the app: `alethe` runs `open -a Alethe <folder>`, and Finder's
+    /// Open With or a drop on the Dock icon land here too, on a cold start and while running.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        MainActor.assumeIsolated {
+            let files = urls.filter(\.isFileURL)
+            if let environment {
+                files.forEach(environment.openFolder)
+            } else {
+                pendingFolders += files
+            }
+        }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

@@ -74,6 +74,7 @@ private struct GeneralSettings: View {
                 Text("settings.general.activity")
                 Text("settings.general.activity.help")
             }
+            CommandLineToolSection()
         }
         .formStyle(.grouped)
         .confirmationDialog(Text("settings.general.clearActivity.confirm"), isPresented: $confirmClear) {

@@ -26,6 +26,7 @@ struct AletheApp: App {
                 .task {
                     delegate.environment = environment
                     await environment.load()
+                    environment.openLaunchArguments()
                 }
         }
         .defaultSize(width: 1280, height: 800)
