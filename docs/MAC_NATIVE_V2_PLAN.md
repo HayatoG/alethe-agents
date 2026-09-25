@@ -1862,7 +1862,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   switcher, fetch/pull/push with progress, refresh via `GitWatcher`, Initialize Repository, inline errors,
   a file's diff in a new diff pane (repository paths made folder-relative, `7369910`). Not a PluginHost
   plugin yet; no branch creation; no U/UI tests yet.
-- [ ] **P4-6 (L) Commit graph.** Lanes laid out like upstream `GitGraph` (merges, branch and tag
+- [x] **P4-6 (L) Commit graph.** Lanes laid out like upstream `GitGraph` (merges, branch and tag
   labels, HEAD), a lazy list for long histories, commit detail (message, files, diff), actions:
   cherry-pick, revert, reset soft/mixed/hard (hard asks), branch from commit, copy SHA.
   *Tests:* U (lane layout, golden against upstream fixtures), UI. *Parity:* GIT-2.
@@ -1870,6 +1870,11 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   lane, extra parents open the first free lane, round-robin color per branch; rows carry lanes before/after,
   top/bottom edges, pass-throughs, refs; `append(_:hasMore:)` paginates with open lanes. Deliberate
   difference: a merge into an already-open lane draws its curve. U 11. Graph view, detail, actions owed.
+  *Done (UI, `65fe7e6`):* Git Control › History: Canvas lanes (edges, pass-throughs, merge curves; dot or
+  ring for merges), lane colors from agent/status tokens with lane 0 on the accent, up to 2 ref badges + "+N",
+  pages of 200 via `append`, commit detail (SHA, message, files), actions Copy SHA, Cherry-pick, Revert,
+  Branch from Commit, Reset Soft/Mixed/Hard (Hard asks). Open: a past commit's file diff (the diff pane
+  only diffs the working tree); U/UI tests.
 - [x] **P4-7 (S) Incoming/outgoing.** Commits ahead of and behind the upstream branch with fetch, as a
   Git Control section (upstream `IncomingOutgoing`). *Tests:* G, UI. *Parity:* GIT-3.
   *Done:* incoming/outgoing sections in Git Control (up to 50 each), refreshed after fetch.
@@ -1924,7 +1929,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   env only on success), abort, preflight abort, force cleanup (only under `.alethe/merge-envs`, flagged to
   confirm once), pending worktree changes committed with a confirmed message, worktree removal after
   merging (only under `.alethe/worktrees`). 16 tests (12 G). Sheets UI owed.
-- [ ] **P4-14 (M) Open pull requests.** A sidebar tab with the user's PRs (`gh search prs
+- [x] **P4-14 (M) Open pull requests.** A sidebar tab with the user's PRs (`gh search prs
   --involves=@me`; upstream `PullRequestsSidebar`): status and checks, open in the browser, send to a
   Todo (P4-16); a clear state when `gh` is missing or signed out. *Tests:* U (parsing), UI. *Parity:*
   PR-1.
@@ -1932,6 +1937,10 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   `gh auth status`, upstream's `gh search prs` list parsed purely; review decision, checks and head SHA come
   from a per-PR `gh pr view` (search cannot return them) merged in; `squashMergeArguments(pr:headSHA:)`
   builds the P4-15 guard. U 11. Sidebar tab, per-row details, send-to-Todo owed.
+  *Done (UI, `05c7d16`):* right sidebar Pull Requests tab: list off main, per-row checks/review/draft
+  loaded lazily, badges on status tokens, click opens the browser, menu Open / Copy URL / Send to Todo;
+  states for gh missing (`brew install gh`), signed out (`gh auth login`), no PRs, errors. Open: per-row
+  details are not cached across refreshes; UI tests.
 - [ ] **P4-15 (L) PR review and squash merge.** Review a PR with an agent in a terminal (upstream
   `PullRequestReviewModal`; review agent and model preferences), squash merge guarded by the reviewed
   head SHA (`gh pr merge --squash --match-head-commit`). *Tests:* U, UI. *Parity:* PR-2.

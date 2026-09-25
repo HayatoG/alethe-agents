@@ -202,6 +202,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a Docs tab listing the project's Markdown files. View › New Todo opens it.
 - Git Control (project context menu or History menu): stage, discard, commit with amend, switch branches,
   fetch/pull/push with progress, open a file's diff, and see incoming/outgoing commits.
+- Git Control › History: a commit graph with branch and tag badges, commit detail, and copy SHA,
+  cherry-pick, revert, branch from commit, and reset soft/mixed/hard (hard asks first).
+- Pull Requests tab in the right sidebar: your open GitHub pull requests with check and review status;
+  open in the browser, copy the URL, or send one to your Todos.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
