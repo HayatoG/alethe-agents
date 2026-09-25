@@ -1,0 +1,126 @@
+[
+    {
+        "name": "alethe_delegate",
+        "description": "Hand independent units of work to Codex or Claude workers that Alethe runs as separate processes. These are NOT your own subagents: they are a different agent on its own token budget, so their reading and writing costs you nothing but the task text. Prefer this over launching subagents of your own for the same work. They also outlive the turn, can be corrected mid-run with alethe_steer, and can each take an isolated git worktree. Returns job ids immediately; the workers run in parallel. Delegate when the work splits into units that each need their own reading and judgement, and there are at least two of them: one unit per area of the codebase, per service, per feature. Send every unit in ONE call so they run at the same time, and make each task self contained. Do NOT delegate work that is uniform across its inputs, that one command or script does in a single pass, or that is quicker to finish than to describe.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tasks": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "One self contained instruction per worker."
+                },
+                "agent": {
+                    "type": "string",
+                    "enum": ["codex", "claude"],
+                    "description": "Which CLI runs the worker. Defaults to codex. A Claude worker runs without an approval channel (bypasses permissions) and does not yet report a live diff. Each vendor meters a different set of windows - Codex a 5 hour and a weekly one, Claude those two plus a separate weekly budget for Opus - so how much room one has left says nothing about the other. Do not reason about that from here: every response these tools return carries a fitness block with the current reading and names the side with room in headroom. Read it and prefer that side when one is running out."
+                },
+                "cwd": { "type": "string", "description": "Working directory. Defaults to the lead's directory." },
+                "label": { "type": "string", "description": "A short name for this batch, in the user's words - what it is for, not how it is done. It is how the person watching tells one round of delegation from another." },
+                "isolate": {
+                    "type": "boolean",
+                    "description": "Give each worker its own detached git worktree. Use it whenever two units could touch the same files; without it parallel workers share one directory and can overwrite each other. Requires a git repository. The worktree path comes back with the job and is left in place for review."
+                },
+                "askForApproval": {
+                    "type": "boolean",
+                    "description": "Make each worker stop and ask you before it reaches outside its own working directory - the network, another folder, anything the sandbox would otherwise refuse. Work inside the directory still proceeds on its own. Use it whenever the work touches a repository that matters. A worker that is asking shows up as blocked and is answered with alethe_answer."
+                },
+                "webSearch": {
+                    "type": "boolean",
+                    "description": "Give each worker a live web search tool, on top of its shell and files. Use it for research: real cases, current facts, sources you can cite - not for work confined to a repository, where it adds nothing."
+                },
+                "timeoutSeconds": {
+                    "type": "number",
+                    "description": "Budget per worker before Alethe stops it, default 900. Pass 0 to let a worker run without a limit."
+                }
+            },
+            "required": ["tasks"]
+        }
+    },
+    {
+        "name": "alethe_check",
+        "description": "Collect what workers reported. With wait set it blocks until they settle. Process every delivery it returns before calling it again.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "wait": { "type": "boolean" },
+                "untilAllSettled": {
+                    "type": "boolean",
+                    "description": "Default true: block until every worker has settled, so you never report on a partial set. Set false only when you want to react to the first worker that finishes."
+                },
+                "timeoutMs": { "type": "number" }
+            }
+        }
+    },
+    {
+        "name": "alethe_status",
+        "description": "Snapshot of every worker without blocking: status, elapsed time, current plan and token usage.",
+        "inputSchema": { "type": "object", "properties": {} }
+    },
+    {
+        "name": "alethe_steer",
+        "description": "Correct a worker while its turn is still running, without killing it or losing its context. Use this instead of cancelling when the worker is heading the wrong way.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "jobId": { "type": "string" },
+                "message": { "type": "string" }
+            },
+            "required": ["jobId", "message"]
+        }
+    },
+    {
+        "name": "alethe_send",
+        "description": "Give a worker more work on its existing thread, keeping everything it already learned. If it is still busy the message waits and starts as its next turn, so you never have to interrupt it or poll for it to be free. Use alethe_steer instead when the turn it is running now is going the wrong way.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "jobId": { "type": "string" },
+                "message": { "type": "string" }
+            },
+            "required": ["jobId", "message"]
+        }
+    },
+    {
+        "name": "alethe_answer",
+        "description": "Answer the question a worker is stopped on. Until it is answered that worker does nothing and holds its slot. Decline lets it carry on down another path; abort ends its turn.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "jobId": { "type": "string" },
+                "decision": {
+                    "type": "string",
+                    "enum": ["accept", "acceptForSession", "decline", "abort"]
+                }
+            },
+            "required": ["jobId", "decision"]
+        }
+    },
+    {
+        "name": "alethe_cancel",
+        "description": "Interrupt running workers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": { "jobIds": { "type": "array", "items": { "type": "string" } } },
+            "required": ["jobIds"]
+        }
+    },
+    {
+        "name": "alethe_release",
+        "description": "Let go of settled workers you have no more work for. Account for every worker you started: either send it more work or release it.",
+        "inputSchema": {
+            "type": "object",
+            "properties": { "jobIds": { "type": "array", "items": { "type": "string" } } },
+            "required": ["jobIds"]
+        }
+    },
+    {
+        "name": "alethe_diff",
+        "description": "Read the unified diff a worker has produced so far.",
+        "inputSchema": {
+            "type": "object",
+            "properties": { "jobId": { "type": "string" } },
+            "required": ["jobId"]
+        }
+    }
+]

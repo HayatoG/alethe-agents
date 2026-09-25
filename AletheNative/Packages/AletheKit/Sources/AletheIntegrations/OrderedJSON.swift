@@ -377,3 +377,68 @@ extension OrderedJSON {
         try JSONDecoder().decode(type, from: Data(rendered().utf8))
     }
 }
+
+// MARK: - Compact rendering, literals and numbers
+
+extension OrderedJSON {
+    /// Single-line output in serde_json's `to_string` shape: no whitespace, key order kept.
+    public func compactRendered() -> String {
+        var output = ""
+        renderCompact(into: &output)
+        return output
+    }
+
+    private func renderCompact(into output: inout String) {
+        switch self {
+        case .array(let items):
+            output += "["
+            for (offset, item) in items.enumerated() {
+                if offset > 0 { output += "," }
+                item.renderCompact(into: &output)
+            }
+            output += "]"
+        case .object(let object):
+            output += "{"
+            for (offset, member) in object.members.enumerated() {
+                if offset > 0 { output += "," }
+                Self.renderString(member.key, into: &output)
+                output += ":"
+                member.value.renderCompact(into: &output)
+            }
+            output += "}"
+        case .string(let value): Self.renderString(value, into: &output)
+        default: render(into: &output, indent: 0)
+        }
+    }
+
+    /// serde_json's `as_u64`: only a non-negative integer literal qualifies.
+    public var uint64Value: UInt64? {
+        if case .number(let literal) = self { return UInt64(literal) }
+        return nil
+    }
+
+    public static func unsigned(_ value: UInt64) -> OrderedJSON { .number(String(value)) }
+
+    /// A float as serde_json writes one (`1.0`, `0.25`); NaN and infinities become `null` like
+    /// `json!` does.
+    public static func double(_ value: Double) -> OrderedJSON {
+        guard value.isFinite else { return .null }
+        if value == value.rounded(), abs(value) < 1e16 { return .number(String(Int64(value)) + ".0") }
+        return .number(String(value))
+    }
+}
+
+extension OrderedJSONObject: ExpressibleByDictionaryLiteral {
+    public init(dictionaryLiteral elements: (String, OrderedJSON)...) {
+        self.init(elements)
+    }
+}
+
+extension OrderedJSON: ExpressibleByStringLiteral, ExpressibleByBooleanLiteral, ExpressibleByIntegerLiteral,
+    ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral {
+    public init(stringLiteral value: String) { self = .string(value) }
+    public init(booleanLiteral value: Bool) { self = .bool(value) }
+    public init(integerLiteral value: Int) { self = .integer(value) }
+    public init(arrayLiteral elements: OrderedJSON...) { self = .array(elements) }
+    public init(dictionaryLiteral elements: (String, OrderedJSON)...) { self = .object(OrderedJSONObject(elements)) }
+}
