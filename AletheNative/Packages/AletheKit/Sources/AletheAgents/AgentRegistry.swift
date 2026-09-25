@@ -8,6 +8,11 @@ public struct AgentKind: RawRepresentable, Hashable, Sendable, Codable, CustomSt
     public static let codex = AgentKind(rawValue: "codex")
     public static let opencode = AgentKind(rawValue: "opencode")
     public static let cursor = AgentKind(rawValue: "cursor")
+    public static let copilot = AgentKind(rawValue: "copilot")
+    public static let antigravity = AgentKind(rawValue: "antigravity")
+    public static let mimo = AgentKind(rawValue: "mimo")
+    public static let freebuff = AgentKind(rawValue: "freebuff")
+    public static let kiro = AgentKind(rawValue: "kiro")
     public static let shell = AgentKind(rawValue: "shell")
 
     public var description: String { rawValue }
@@ -44,16 +49,22 @@ public struct AgentRegistry: Sendable {
         self.descriptors = descriptors
     }
 
-    /// Phase 1 agents; the rest of upstream's list arrives in Phase 3 (AG-1).
+    /// Upstream's agents in its order (`ALL_AGENT_TYPES`); `wsl` is Windows-only and not ported.
     public static let builtin = AgentRegistry(descriptors: [
         AgentDescriptor(kind: .claude, displayName: "Claude Code", cliCommand: "claude",
                         unrestrictedFlag: "--dangerously-skip-permissions"),
         AgentDescriptor(kind: .codex, displayName: "Codex", cliCommand: "codex",
                         unrestrictedFlag: "--dangerously-bypass-approvals-and-sandbox"),
-        AgentDescriptor(kind: .opencode, displayName: "OpenCode", cliCommand: "opencode",
-                        unrestrictedFlag: "--dangerously-skip-permissions"),
+        AgentDescriptor(kind: .copilot, displayName: "GitHub Copilot", cliCommand: "copilot", unrestrictedFlag: "--allow-all"),
         // `cursor-agent`, not the bare `agent` alias, which collides with other vendors' CLIs.
         AgentDescriptor(kind: .cursor, displayName: "Cursor", cliCommand: "cursor-agent", unrestrictedFlag: "--force"),
+        AgentDescriptor(kind: .antigravity, displayName: "Antigravity", cliCommand: "agy",
+                        unrestrictedFlag: "--dangerously-skip-permissions"),
+        AgentDescriptor(kind: .opencode, displayName: "OpenCode", cliCommand: "opencode",
+                        unrestrictedFlag: "--dangerously-skip-permissions"),
+        AgentDescriptor(kind: .mimo, displayName: "Mimo", cliCommand: "mimo", unrestrictedFlag: nil),
+        AgentDescriptor(kind: .freebuff, displayName: "Freebuff", cliCommand: "freebuff", unrestrictedFlag: nil),
+        AgentDescriptor(kind: .kiro, displayName: "Kiro CLI", cliCommand: "kiro-cli", unrestrictedFlag: "--trust-all-tools"),
         AgentDescriptor(kind: .shell, displayName: "Shell", cliCommand: nil, unrestrictedFlag: nil),
     ])
 

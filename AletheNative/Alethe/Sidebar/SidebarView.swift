@@ -1,3 +1,4 @@
+import AletheAgents
 import AletheDesign
 import AletheModel
 import SwiftUI
@@ -280,13 +281,6 @@ private struct TabContextMenu: View {
 /// Display names of agents (product names, not translated).
 enum AgentLabels {
     static func name(for agent: String) -> String {
-        switch agent {
-        case "claude": "Claude Code"
-        case "codex": "Codex"
-        case "opencode": "OpenCode"
-        case "cursor": "Cursor"
-        case "shell": "Shell"
-        default: agent
-        }
+        AgentRegistry.builtin.descriptor(for: AgentKind(rawValue: agent))?.displayName ?? agent
     }
 }

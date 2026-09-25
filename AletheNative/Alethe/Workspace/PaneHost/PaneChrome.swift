@@ -276,6 +276,10 @@ enum AgentTokens {
         case "codex": .agentCodex
         case "opencode": .agentOpencode
         case "cursor": .agentCursor
+        case "antigravity": .agentAntigravity
+        case "mimo": .agentMimo
+        case "freebuff": .agentFreebuff
+        case "kiro": .agentKiro
         default: .agentShell
         }
     }

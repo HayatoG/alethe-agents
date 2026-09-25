@@ -44,4 +44,20 @@ import Testing
     @Test func shellKeepsItsArguments() {
         #expect(AgentArguments.build(for: .shell, base: ["-x"], sessionID: "ignored") == AgentArguments(arguments: ["-x"]))
     }
+
+    @Test func antigravityResumesWithConversationAndDropsStaleFlags() {
+        let resumed = AgentArguments.build(for: .antigravity, base: ["--conversation", "old", "-c", "--x"], sessionID: "abc")
+        #expect(resumed.arguments == ["--conversation", "abc", "--x"])
+        #expect(AgentArguments.build(for: .antigravity, base: ["--continue"]).arguments.isEmpty)
+    }
+
+    @Test func kiroRunsItsFlagsUnderChat() {
+        #expect(AgentArguments.build(for: .kiro, base: ["--trust-all-tools"]).arguments == ["chat", "--trust-all-tools"])
+    }
+
+    @Test func agentsWithoutSessionsPassArgumentsThrough() {
+        for kind in [AgentKind.copilot, .mimo, .freebuff] {
+            #expect(AgentArguments.build(for: kind, base: ["--allow-all"]).arguments == ["--allow-all"])
+        }
+    }
 }

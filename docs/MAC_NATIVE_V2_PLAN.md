@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-1. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-2. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1468,10 +1468,22 @@ then usage and activity, then the Home dashboard that shows them with real data,
 Each task keeps older files decoding (optional fields or a migration). *Tests* list what the task must
 ship; they run per the test cadence above.
 
-- [ ] **P3-1 (M) Remaining agent types.** Copilot, Antigravity, MiMo, Freebuff and Kiro (upstream
+- [x] **P3-1 (M) Remaining agent types.** Copilot, Antigravity, MiMo, Freebuff and Kiro (upstream
   `agentProviders.ts`): CLI command, unrestricted flag, resume arguments, launcher lookup, agent
   tokens and icons, New Terminal sheet, Tauri import. `wsl` stays Won't port. *Tests:* U (descriptors,
   arguments), UI (sheet lists them). *Parity:* AG-1.
+  *Done:* `AgentRegistry.builtin` now lists upstream's agents in its order (`ALL_AGENT_TYPES`):
+  Claude Code, Codex, GitHub Copilot (`copilot`, `--allow-all`), Cursor, Antigravity (`agy`,
+  `--dangerously-skip-permissions`), OpenCode, Mimo (`mimo`, no unrestricted flag), Freebuff (`freebuff`,
+  none), Kiro CLI (`kiro-cli`, `--trust-all-tools`), Shell. `AgentArguments`: Antigravity resumes with
+  `--conversation <id>` (stale `--conversation`/`--continue`/`-c` dropped), Kiro runs everything under
+  `chat` (its flags are rejected bare); Copilot, Mimo and Freebuff pass arguments through. The launcher,
+  New Terminal sheet, Find/Jump and Tauri import read the registry, so they offer the new agents as they
+  are; `AgentLabels` now reads the registry's display names; agent color tokens for Antigravity, Mimo,
+  Freebuff and Kiro (Copilot has none upstream and uses the shell's). Resume of Antigravity sessions on
+  disk comes with P3-6.
+  *Tests (written, not run — owner decision):* `AgentRegistryTests` (roster, flags), `AgentArgumentsTests`
+  (+3), UI `AgentRosterTests` (the sheet offers all ten). Compiled.
 - [ ] **P3-2 (M) Settings › Agents.** Per-agent row: enable/disable (hidden from sheets and Find/Jump
   when off), detected CLI path and version, Choose… / Reset override. *Tests:* U, UI, HT. *Parity:*
   AG-6, AG-4.
@@ -1611,7 +1623,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SB-6 | Open in VS Code / Finder / browser | P5 | Not started | `NSWorkspace` |
 | SB-7 | Right sidebar | P4 | Not started | Inspector column |
 | SB-8 | View placement | P4 | Not started | |
-| AG-1 | 11 agent types | P1 (5), P3 | Partial | Claude, Codex, OpenCode, Cursor, shell (P1-8); `wsl`: Won't port (Windows-only) |
+| AG-1 | 11 agent types | P1 (5), P3 | Done | P3-1; ten agents; `wsl`: Won't port (Windows-only) |
 | AG-2 | Unrestricted flags | P1 | Done | Launch support (P1-8); per-terminal toggle in the New Terminal sheet (P1-9) |
 | AG-3 | New-terminal modal | P1, P3 | Partial | Basic sheet + first prompt (P1-9); grid picker, 9router, planner, repeat last in P3 |
 | AG-4 | Launcher resolution + override | P1, P3 | Partial | Resolver + `cliPaths` (P1-8); Choose CLI… on a missing CLI (P1-7); Settings page with AG-5 |

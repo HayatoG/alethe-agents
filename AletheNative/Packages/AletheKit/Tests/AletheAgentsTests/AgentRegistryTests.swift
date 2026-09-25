@@ -4,9 +4,12 @@ import Testing
 @Suite struct AgentRegistryTests {
     let registry = AgentRegistry.builtin
 
-    @Test func phaseOneAgentsAreRegistered() {
-        #expect(registry.kinds == [.claude, .codex, .opencode, .cursor, .shell])
+    @Test func upstreamAgentsAreRegisteredInItsOrder() {
+        #expect(registry.kinds == [.claude, .codex, .copilot, .cursor, .antigravity, .opencode, .mimo, .freebuff, .kiro, .shell])
         #expect(registry.descriptor(for: .cursor)?.cliCommand == "cursor-agent")
+        #expect(registry.descriptor(for: .antigravity)?.cliCommand == "agy")
+        #expect(registry.descriptor(for: .kiro)?.cliCommand == "kiro-cli")
+        #expect(registry.descriptor(for: .copilot)?.displayName == "GitHub Copilot")
         #expect(registry.descriptor(for: .shell)?.isShell == true)
     }
 
@@ -16,6 +19,11 @@ import Testing
         #expect(registry.descriptor(for: .opencode)?.unrestrictedFlag == "--dangerously-skip-permissions")
         #expect(registry.descriptor(for: .cursor)?.unrestrictedFlag == "--force")
         #expect(registry.descriptor(for: .shell)?.unrestrictedFlag == nil)
+        #expect(registry.descriptor(for: .copilot)?.unrestrictedFlag == "--allow-all")
+        #expect(registry.descriptor(for: .antigravity)?.unrestrictedFlag == "--dangerously-skip-permissions")
+        #expect(registry.descriptor(for: .kiro)?.unrestrictedFlag == "--trust-all-tools")
+        #expect(registry.descriptor(for: .mimo)?.unrestrictedFlag == nil)
+        #expect(registry.descriptor(for: .freebuff)?.unrestrictedFlag == nil)
     }
 
     @Test func parsesCaseInsensitivelyAndRejectsUnknown() {

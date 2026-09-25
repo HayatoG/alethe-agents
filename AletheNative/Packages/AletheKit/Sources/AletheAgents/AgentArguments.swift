@@ -35,6 +35,12 @@ public struct AgentArguments: Equatable, Sendable {
         case .opencode:
             let clean = stripping(base, flagsWithValue: ["--session", "-s"], flags: ["--continue", "-c", "--resume"])
             return AgentArguments(arguments: sessionID.map { ["--session", $0] + clean } ?? clean, sessionID: sessionID)
+        case .antigravity:
+            let clean = stripping(base, flagsWithValue: ["--conversation"], flags: ["--continue", "-c"])
+            return AgentArguments(arguments: sessionID.map { ["--conversation", $0] + clean } ?? clean, sessionID: sessionID)
+        case .kiro:
+            // kiro-cli takes flags such as --trust-all-tools only under `chat`; bare, it rejects them.
+            return AgentArguments(arguments: ["chat"] + base)
         case .cursor:
             // Cursor mints its own chat ids; a pane only ever attaches one it already holds.
             let clean = stripping(base, flagsWithValue: ["--resume"], flags: ["--continue"])
