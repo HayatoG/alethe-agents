@@ -1,0 +1,2 @@
+{"type":"system","subtype":"init","session_id":"fake-session-diff"}
+{"type":"result","is_error":false,"result":"CHANGED_FILE_OK","usage":{"input_tokens":1,"output_tokens":1}}

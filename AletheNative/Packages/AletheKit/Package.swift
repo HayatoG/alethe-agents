@@ -91,7 +91,11 @@ let package = Package(
             dependencies: ["AletheIntegrations", "AletheFoundation", "AletheGit", "AletheAgents"],
             resources: [.copy("Fixtures")]
         ),
-        .testTarget(name: "AletheOrchestratorTests", dependencies: ["AletheOrchestrator", "AletheIntegrations"]),
+        .testTarget(
+            name: "AletheOrchestratorTests",
+            dependencies: ["AletheOrchestrator", "AletheIntegrations", "AletheGit"],
+            resources: [.copy("Fixtures")]
+        ),
         .testTarget(name: "AletheExtensionHostTests", dependencies: ["AletheExtensionHost", "AlethePluginKit", "AletheExtensionSDK"]),
     ]
 )
