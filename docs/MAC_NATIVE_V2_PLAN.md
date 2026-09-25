@@ -528,6 +528,15 @@ module in the SDK (P3 wraps `Process`/`posix_spawn` itself).
   sandboxed, remote UI via `EXHostViewController`, crash-isolated. Rejected: in-process bundles (they
   require `disable-library-validation` and share the app's address space and permissions). The P4
   spike validates the flow end to end.
+- **P4-19 spike outcome (2026-09-25, `docs/SPIKE_P4-19_EXTENSIONKIT.md`):** the choice holds. The SDK
+  exposes everything needed: the host declares its point with `@AppExtensionPoint.Definition` (macOS 26.0),
+  extensions bind with `@AppExtensionPoint.Bind(host:name:)` (26.2), discovery via
+  `AppExtensionPoint.Monitor`, enable UI via `EXAppExtensionBrowserViewController`, remote UI via
+  `EXHostViewController`, XPC via `AppExtensionProcess`, crash signals via `onInterruption`. A scratch host +
+  extension type-checked at 26.0/26.2; a real signed extension loading end to end and a contained crash
+  are still unverified. Risk: the self-signed dev identity may be refused; production needs Developer ID +
+  notarization. `AletheExtensionHost` maps declared capabilities to `PluginCapability` and keeps the
+  first-enable consent ledger (U 10).
 
 ### ADR-10 — Keyboard routing
 - App shortcuts only through SwiftUI `Commands` / menu key equivalents using ⌘ (mapping in §6.3).
@@ -1989,6 +1998,10 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   through the host), capability prompts on first enable, crash isolation. Outcome recorded in ADR-9;
   in-process bundles stay rejected unless the spike fails. *Tests:* UI (sample loads, a crash is
   contained). *Parity:* EXT-3.
+  *Done (spike, `141ad74`, `25e0edc`):* API verdict recorded in ADR-9; `AletheExtensionHost` bridge
+  (capability mapping, API version check, third parties start disabled, Codable consent ledger that re-asks
+  only for new capabilities, `isAllowed` for XPC requests), U 10. Open: an Xcode extension-point + sample
+  extension target, the load and crash-containment UI tests.
 - [ ] **P4-20 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
 
 **Phase 4 exit criteria:** Git Control, the graph and the Merge Center cover upstream's flows on real
