@@ -176,4 +176,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Fixed: a restored agent terminal could open with lines of garbage such as `^[[?62;22;52c` and
   `ghostty 1.3.2`: replaying the saved output re-ran the previous program's terminal queries, and the new
   process echoed the answers.
+- Fixed: a restored terminal no longer draws the new session over the old screen (Claude Code's header
+  and prompt came out garbled); the old output moves into the history and the new session starts clean.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

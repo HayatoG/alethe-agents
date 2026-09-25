@@ -78,6 +78,7 @@ struct ReplayResetTests {
         for mode in ["\u{1b}[?1004l", "\u{1b}[?1l", "\u{1b}[?2004l", "\u{1b}[?1049l", "\u{1b}[=0;1u"] {
             #expect(reset.contains(mode))
         }
+        #expect(reset.hasSuffix("\u{1b}[22J\u{1b}[H"))
     }
 
     @Test func replayDropsTerminalQueries() {

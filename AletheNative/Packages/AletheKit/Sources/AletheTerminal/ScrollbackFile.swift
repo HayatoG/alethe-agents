@@ -109,14 +109,17 @@ public final class ScrollbackFile: @unchecked Sendable {
 
     /// Sequences that undo what a dead program left on: alternate screen, mouse reporting,
     /// bracketed paste, focus reporting, application cursor keys and keypad, the kitty keyboard
-    /// protocol and xterm's modifyOtherKeys, hidden cursor, colors. Written after a replay, before
+    /// protocol and xterm's modifyOtherKeys, hidden cursor, colors, then a clean screen. Written after a replay, before
     /// the new process draws, so a restored TUI's modes do not leak into the fresh shell or agent
     /// (a leaked focus-reporting mode made the terminal send `ESC [ O` to a process still in cooked
     /// mode, which echoed it as `^[[O`).
     public static let replayReset = Data((
         "\u{1b}[?1049l\u{1b}[?1000l\u{1b}[?1002l\u{1b}[?1003l\u{1b}[?1006l\u{1b}[?2004l"
             + "\u{1b}[?1004l\u{1b}[?1l\u{1b}>\u{1b}[<99u\u{1b}[=0;1u\u{1b}[>4;0m"
-            + "\u{1b}[?25h\u{1b}[0m\r\n").utf8)
+            // Last: the old screen scrolls into the history (ED 22) and the new program starts on a
+            // clear screen at the top. Drawn over the replayed screen, an inline TUI such as Claude
+            // Code moves the cursor up into the old lines and garbles both.
+            + "\u{1b}[?25h\u{1b}[0m\u{1b}[22J\u{1b}[H").utf8)
 }
 
 extension Duration {
