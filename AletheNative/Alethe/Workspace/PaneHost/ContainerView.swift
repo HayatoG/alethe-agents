@@ -70,7 +70,7 @@ final class ContainerView: NSView {
         lastSelected = isSelected
         self.isCollapsed = isCollapsed
         self.isFullscreen = isFullscreen
-        self.isolatedPane = project.panes.contains { $0.id == isolatedPane } ? isolatedPane : nil
+        self.isolatedPane = project.visiblePanes.contains { $0.id == isolatedPane } ? isolatedPane : nil
         self.onHeaderDrag = onHeaderDrag
         if liveColumns == nil, liveRows == nil { self.weights = weights }
         setAccessibilityIdentifier("container.\(project.name)")
@@ -78,20 +78,28 @@ final class ContainerView: NSView {
             project: project, isSelected: isSelected, isFullscreen: isFullscreen,
             onLayout: { context.setLayoutMode($0, for: project.id) },
             onDesignLayout: { context.designLayout(for: project.id) },
+            onGrid: { action in
+                switch action {
+                case .activate(let grid): context.activateGrid(grid, in: project.id)
+                case .new: context.newGrid(in: project.id)
+                case .rename(let grid): context.renameGrid(grid, in: project.id)
+                case .delete(let grid): context.deleteGrid(grid, in: project.id)
+                }
+            },
             onCollapse: { context.setCollapsed(project.id, true) },
             onFullscreen: { context.setFullscreen(isFullscreen ? nil : project.id) },
             onClose: { context.closeContainer(project.id) },
             onDrag: onHeaderDrag))
         configureStrip(project: project, context: context)
 
-        let ids = project.panes.map(\.id)
+        let ids = project.visiblePanes.map(\.id)
         if ids != order { animateNextLayout = !order.isEmpty }
         for (id, view) in panes where !ids.contains(id) {
             view.removeFromSuperview()
             panes.removeValue(forKey: id)
         }
         order = ids
-        for pane in project.panes {
+        for pane in project.visiblePanes {
             let view = panes[pane.id] ?? {
                 let view = PaneView(paneID: pane.id)
                 addSubview(view, positioned: .below, relativeTo: header)
@@ -104,7 +112,7 @@ final class ContainerView: NSView {
             }
         }
 
-        if project.panes.isEmpty {
+        if project.visiblePanes.isEmpty {
             let root = context.hosted(ProjectEmptyState(project: project))
             if let emptyState {
                 emptyState.rootView = root

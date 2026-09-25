@@ -293,17 +293,19 @@ extension WorkspaceDocument {
     /// grid also goes to the front of its recent grids (upstream `setProjectGridLayout`).
     public mutating func setGridLayout(_ layout: CustomGrid, for id: ProjectID, recordHistory: Bool = false) {
         guard let project = project(id) else { return }
-        let clean = layout.reconciled(project.panes.map(\.id.rawValue))
+        let clean = layout.reconciled(project.visiblePanes.map(\.id.rawValue))
         updateProject(id) { project in
-            project.gridLayout = clean
-            project.layoutMode = .grid
+            var arrangement = project.activeArrangement
+            arrangement.gridLayout = clean
+            arrangement.layoutMode = .grid
             if recordHistory {
-                var history = project.gridLayoutHistory ?? []
+                var history = arrangement.gridLayoutHistory ?? []
                 if history.first?.layout != clean {
                     history.insert(CustomGridHistoryEntry(layout: clean), at: 0)
                 }
-                project.gridLayoutHistory = Array(history.prefix(Self.maxGridLayoutHistory))
+                arrangement.gridLayoutHistory = Array(history.prefix(Self.maxGridLayoutHistory))
             }
+            project.activeArrangement = arrangement
         }
     }
 
@@ -314,36 +316,36 @@ extension WorkspaceDocument {
     public mutating func setTrackWeights(_ weights: GridWeights, for id: ProjectID) {
         guard let project = project(id) else { return }
         guard project.layout == .grid else {
-            workspace.gridWeights[id.rawValue] = weights
+            workspace.gridWeights[project.weightsKey] = weights
             return
         }
         var grid = effectiveGrid(of: project)
         if weights.columns.count == grid.cols { grid.colSizes = weights.columns }
         if weights.rows.count == grid.rows { grid.rowSizes = weights.rows }
-        updateProject(id) { $0.gridLayout = grid }
+        updateProject(id) { $0.activeArrangement.gridLayout = grid }
     }
 
     /// Moves a pane of a grid project to a slot (dragging a pane onto another pane or a free slot).
     public mutating func moveGridCell(_ pane: PaneID, toCol col: Int, row: Int) {
         guard let (project, _) = self.pane(pane), project.layout == .grid else { return }
-        let ids = project.panes.map(\.id.rawValue)
+        let ids = project.visiblePanes.map(\.id.rawValue)
         let grid = effectiveGrid(of: project).moving(ids, pane.rawValue, toCol: col, row: row)
-        updateProject(project.id) { $0.gridLayout = grid }
+        updateProject(project.id) { $0.activeArrangement.gridLayout = grid }
     }
 
     /// Grows a grid pane over the free slots next to it.
     public mutating func fillFreeSpace(_ pane: PaneID) {
         guard let (project, _) = self.pane(pane), project.layout == .grid else { return }
-        let ids = project.panes.map(\.id.rawValue)
+        let ids = project.visiblePanes.map(\.id.rawValue)
         let grid = effectiveGrid(of: project).fillingFreeSpace(ids, pane.rawValue)
-        updateProject(project.id) { $0.gridLayout = grid }
+        updateProject(project.id) { $0.activeArrangement.gridLayout = grid }
     }
 }
 
 extension Project {
-    /// The grid the panes are shown in: the saved grid fitted to the current panes, or rows of two.
+    /// The grid the shown panes sit in: the saved grid fitted to them, or rows of two.
     public var effectiveGrid: CustomGrid {
-        let ids = panes.map(\.id.rawValue)
-        return gridLayout?.reconciled(ids) ?? .auto(ids)
+        let ids = visiblePanes.map(\.id.rawValue)
+        return activeArrangement.gridLayout?.reconciled(ids) ?? .auto(ids)
     }
 }

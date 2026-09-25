@@ -73,6 +73,8 @@ final class PaneView: NSView {
             onToggleLane: { context.setLaneVisible(!pane.isLaneVisible, for: pane.id) },
             onToggleIsolation: { context.isolate(isIsolated ? nil : pane.id) },
             onFillFreeSpace: canFill(pane: pane, project: project) ? { context.fillFreeSpace(pane.id) } : nil,
+            gridTargets: GridTarget.all(for: pane, in: project),
+            onMoveToGrid: { context.movePane(pane.id, toGrid: $0) },
             onDrag: onDrag))
         configureLane(pane: pane, project: project, focused: focused, context: context)
 
@@ -341,7 +343,7 @@ final class PaneView: NSView {
 
     private func canFill(pane: Pane, project: Project) -> Bool {
         guard project.layout == .grid else { return false }
-        let grid = project.effectiveGrid, ids = project.panes.map(\.id.rawValue)
+        let grid = project.effectiveGrid, ids = project.visiblePanes.map(\.id.rawValue)
         return grid.fillingFreeSpace(ids, pane.id.rawValue) != grid
     }
 }

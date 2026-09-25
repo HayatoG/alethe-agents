@@ -93,4 +93,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   grid, and grow, shrink or drag each terminal's box into place. In the workspace, drag a terminal
   onto an empty slot or another terminal to move it, resize any row or column, and use Fill Free
   Space from a terminal's menu to let it take the room next to it.
+- Named grids: a project can keep several sets of terminals, each with its own layout — for
+  example “Review” beside the main one. Create one with New Grid… (layout menu or the project's
+  menu), switch from the grid menu in the project's header, move a terminal with Move to Grid, and
+  rename or delete a grid (keeping or closing its terminals). New terminals join the grid on screen.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

@@ -201,6 +201,16 @@ private struct ProjectContextMenu: View {
                     .disabled(doc.location(of: project.id) == .group(group.id))
             }
         }
+        Menu("sidebar.grids") {
+            Button("projectGrid.main") { actions.workspace.update { $0.activateGrid(nil, in: project.id) } }
+            ForEach(project.namedGrids) { grid in
+                Button { actions.workspace.update { $0.activateGrid(grid.id, in: project.id) } } label: { Text(verbatim: grid.name) }
+            }
+            Divider()
+            Button("projectGrid.newEllipsis") {
+                ProjectGridPrompts.createGrid(in: project.id, workspace: actions.workspace, undoManager: actions.undoManager)
+            }
+        }
         Divider()
         Button("sidebar.removeProject") { actions.remove(project.id) }
     }

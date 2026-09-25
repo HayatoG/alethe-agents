@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-19 (P2-1…P2-5 tested; P2-6…P2-19
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-20 (P2-1…P2-5 tested; P2-6…P2-20
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-20. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-21. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1295,8 +1295,27 @@ they run per the test cadence above.
   presets, geometry, document operations), UI `CustomGridTests` (preset + save + ⌘Z; grow from an
   edge), smoke `Scripts/smoke/grid-drag.sh` (pane onto a free slot, grid divider), `grid` UI seed.
   Compiled.
-- [ ] **P2-20 (M) Named project grids.** Several grids per project, switch and assign panes.
+- [x] **P2-20 (M) Named project grids.** Several grids per project, switch and assign panes.
   *Tests:* U, UI. *Parity:* WS-4.
+  *Done:* `AletheModel/ProjectGrids`: `ProjectGrid` (id, name, its own layout mode, custom grid and
+  recent grids), `Project.grids` / `activeGridID`, `Pane.gridID` (all optional: older files decode
+  unchanged). Panes with no grid form the main grid, whose layout stays in the project's own fields;
+  `Project.activeArrangement` reads and writes the shown grid's layout, so every layout operation
+  (P2-18, P2-19) works on the shown grid; `visiblePanes`, `weightsKey` (track sizes per grid).
+  Operations: `gridNameProblem` (empty, taken case-insensitively, or a main-grid name in either
+  language — upstream `validGridName`), `createGrid` (shown, empty), `renameGrid`, `activateGrid`,
+  `movePane(toGrid:)` (its cell dropped so it lands in the first free slot), `deleteGrid(closingPanes:)`
+  (keep → main grid, or close), `reveal` (activating a tab or isolating a pane shows its grid). New
+  panes join the shown grid. UI: container header grid menu (shown grid's name; switch, New / Rename /
+  Delete Grid…) once a project has a named grid, New Grid… in the layout menu before that; pane menu
+  Move to Grid; sidebar project menu Grids. Prompts are alerts with a validated name field; deleting
+  asks Keep Terminals / Close Terminals. The Tauri import carries grids, `activeGridId` and
+  `terminal.gridId` (the mirrored layout fields go to the main grid only when it is the active one).
+  *Deviations:* the sidebar does not list grids as tree nodes (upstream `ProjectGrids` rows); grids are
+  switched from the container header and the project menu. The active grid is per project, not part
+  of a workspace tab's snapshot.
+  *Tests (written, not run — owner decision 2026-09-24):* `ProjectGridsTests` (6), UI `ProjectGridsTests`
+  (create, switch, move a pane). Compiled.
 - [ ] **P2-21 (S) Flat mode and focus mode.** Flat workspace (no containers) and a focus overlay on one
   pane. *Tests:* UI. *Parity:* WS-2, WS-10.
 - [ ] **P2-22 (S) Empty workspace launcher.** Quick actions when nothing is open. *Tests:* UI, HT.
@@ -1376,7 +1395,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-1 | Project containers | P1, P2 | Done | Open, resize, close (P1-6); collapse, fullscreen, reorder, isolate (P2-16) |
 | WS-2 | Flat mode | P2 | Not started | |
 | WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto (P1-6), Spotlight and Sidebar (P2-18), project Custom grid + designer (P2-19); workspace/group scopes open |
-| WS-4 | Named project grids | P2 | Not started | |
+| WS-4 | Named project grids | P2 | Done | P2-20; switched from the container header and the project menu (no grid rows in the sidebar) |
 | WS-5 | Tabs, closed tabs, history | P2 | Done | P2-17; History menu (⌘[ ⌘] ⌃Tab ⇧⌘T), ⌥-click adds to the current tab |
 | WS-6 | Markdown pane | P2 | Done | P2-9; Mermaid as code (ADR-11) |
 | WS-7 | Image pane | P2 | Done | P2-10 |

@@ -121,6 +121,42 @@ struct PaneHostContext {
         }
     }
 
+    // MARK: - Named grids (P2-20)
+
+    func activateGrid(_ grid: ProjectGridID?, in project: ProjectID) {
+        workspace?.update { $0.activateGrid(grid, in: project) }
+    }
+
+    func newGrid(in project: ProjectID) {
+        guard let workspace else { return }
+        ProjectGridPrompts.createGrid(in: project, workspace: workspace, undoManager: undoManager())
+    }
+
+    func renameGrid(_ grid: ProjectGridID, in project: ProjectID) {
+        guard let workspace, let current = workspace.document.project(project)?.gridName(grid),
+              let name = ProjectGridPrompts.name(
+                title: String(localized: "projectGrid.rename.title"), initial: current,
+                action: String(localized: "projectGrid.rename"),
+                problem: { workspace.document.gridNameProblem($0, in: project, except: grid) }) else { return }
+        workspace.update(undoManager: undoManager(), actionName: String(localized: "undo.renameGrid")) {
+            $0.renameGrid(grid, in: project, to: name)
+        }
+    }
+
+    func deleteGrid(_ grid: ProjectGridID, in project: ProjectID) {
+        guard let workspace, let model = workspace.document.project(project), let name = model.gridName(grid),
+              let choice = ProjectGridPrompts.delete(grid: name, paneCount: model.panes(in: grid).count) else { return }
+        workspace.update(undoManager: undoManager(), actionName: String(localized: "undo.deleteGrid")) {
+            $0.deleteGrid(grid, in: project, closingPanes: choice == .closePanes)
+        }
+    }
+
+    func movePane(_ pane: PaneID, toGrid grid: ProjectGridID?) {
+        workspace?.update(undoManager: undoManager(), actionName: String(localized: "undo.move")) {
+            $0.movePane(pane, toGrid: grid)
+        }
+    }
+
     func designLayout(for project: ProjectID) {
         environment.editorRequest = .layoutDesigner(project)
     }

@@ -115,7 +115,7 @@ extension WorkspaceDocument {
         projects.removeAll { $0.id == id }
         forgetContainer(id)
         workspace.openProjectIDs.removeAll { $0 == id }
-        workspace.gridWeights.removeValue(forKey: id.rawValue)
+        workspace.gridWeights = workspace.gridWeights.filter { $0.key != id.rawValue && !$0.key.hasPrefix(id.rawValue + ":") }
         if workspace.selectedProjectID == id { workspace.selectedProjectID = nil }
         normalizeContainerWeights()
         repairNavigation()
@@ -140,10 +140,11 @@ extension WorkspaceDocument {
     /// Adds a pane with one tab to a project and opens/focuses it.
     @discardableResult
     public mutating func addPane(to projectID: ProjectID, tab: PaneTab) -> PaneID? {
-        guard project(projectID) != nil else { return nil }
-        let pane = Pane(tabs: [tab])
+        guard let project = project(projectID) else { return nil }
+        var pane = Pane(tabs: [tab])
+        pane.gridID = project.shownGridID
         updateProject(projectID) { $0.panes.append(pane) }
-        workspace.gridWeights.removeValue(forKey: projectID.rawValue)
+        workspace.gridWeights.removeValue(forKey: project.weightsKey)
         open(projectID)
         workspace.focusedPaneID = pane.id
         return pane.id
@@ -152,10 +153,11 @@ extension WorkspaceDocument {
     /// Adds a pane showing a file or page (not a terminal) and opens/focuses it.
     @discardableResult
     public mutating func addPane(to projectID: ProjectID, content: PaneContent) -> PaneID? {
-        guard !content.isTerminal, project(projectID) != nil else { return nil }
-        let pane = Pane(content: content)
+        guard !content.isTerminal, let project = project(projectID) else { return nil }
+        var pane = Pane(content: content)
+        pane.gridID = project.shownGridID
         updateProject(projectID) { $0.panes.append(pane) }
-        workspace.gridWeights.removeValue(forKey: projectID.rawValue)
+        workspace.gridWeights.removeValue(forKey: project.weightsKey)
         open(projectID)
         workspace.focusedPaneID = pane.id
         return pane.id
@@ -165,9 +167,9 @@ extension WorkspaceDocument {
         guard let (project, _) = pane(paneID) else { return }
         if workspace.isolatedPaneID == paneID { workspace.isolatedPaneID = nil }
         updateProject(project.id) { $0.panes.removeAll { $0.id == paneID } }
-        workspace.gridWeights.removeValue(forKey: project.id.rawValue)
+        workspace.gridWeights.removeValue(forKey: project.weightsKey)
         if workspace.focusedPaneID == paneID {
-            workspace.focusedPaneID = self.project(project.id)?.panes.last?.id
+            workspace.focusedPaneID = self.project(project.id)?.visiblePanes.last?.id
         }
     }
 
@@ -196,6 +198,7 @@ extension WorkspaceDocument {
     @discardableResult
     public mutating func addTab(_ tab: PaneTab, to paneID: PaneID) -> Bool {
         guard let (project, pane) = pane(paneID), pane.content.isTerminal else { return false }
+        reveal(paneID)
         updatePane(paneID) { pane in
             pane.tabs.append(tab)
             pane.activeTabID = tab.id
@@ -208,6 +211,7 @@ extension WorkspaceDocument {
     /// Shows a sub-tab in its pane and focuses the pane.
     public mutating func activateTab(_ tabID: TabID) {
         guard let (project, pane) = paneHolding(tabID) else { return }
+        reveal(pane.id)
         if pane.activeTab?.id != tabID { updatePane(pane.id) { $0.activeTabID = tabID } }
         workspace.focusedPaneID = pane.id
         workspace.selectedProjectID = project.id
@@ -309,8 +313,8 @@ extension WorkspaceDocument {
     /// Changes how a project arranges its panes; custom track sizes belong to one mode, so they reset.
     public mutating func setLayoutMode(_ mode: PaneLayoutMode, for id: ProjectID) {
         guard let project = project(id), project.layout != mode else { return }
-        updateProject(id) { $0.layoutMode = mode == .auto ? nil : mode }
-        workspace.gridWeights.removeValue(forKey: id.rawValue)
+        updateProject(id) { $0.activeArrangement.layoutMode = mode == .auto ? nil : mode }
+        workspace.gridWeights.removeValue(forKey: project.weightsKey)
     }
 
     /// Moves an open container to `index` among the open ones; its width moves with it.
@@ -353,6 +357,7 @@ extension WorkspaceDocument {
             workspace.fullscreenProjectID = nil
             return
         }
+        reveal(paneID)
         open(project.id)
         setFullscreen(project.id)
         workspace.isolatedPaneID = paneID

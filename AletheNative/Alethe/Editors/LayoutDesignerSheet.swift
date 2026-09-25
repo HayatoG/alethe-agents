@@ -21,7 +21,7 @@ struct LayoutDesignerSheet: View {
     static let maxTracks = 8
 
     private var project: Project? { workspace.document.project(projectID) }
-    private var ids: [String] { project?.panes.map(\.id.rawValue) ?? [] }
+    private var ids: [String] { project?.visiblePanes.map(\.id.rawValue) ?? [] }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -102,7 +102,7 @@ struct LayoutDesignerSheet: View {
                 }
                 heading("layoutDesigner.recent", symbol: "clock")
                     .padding(.top, metrics.space(.m))
-                let history = project?.gridLayoutHistory ?? []
+                let history = project?.activeArrangement.gridLayoutHistory ?? []
                 if history.isEmpty {
                     Text("layoutDesigner.noRecent")
                         .font(metrics.font(.footnote))

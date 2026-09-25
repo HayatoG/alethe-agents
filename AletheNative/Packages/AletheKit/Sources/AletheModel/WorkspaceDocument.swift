@@ -68,6 +68,8 @@ public struct Pane: Codable, Hashable, Sendable, Identifiable {
     /// The sub-tabs lane shown with a single tab (upstream `laneVisible`); nil means hidden. With
     /// several tabs the lane is always shown.
     public var laneVisible: Bool?
+    /// The named grid of the project holding the pane; nil is the main grid (P2-20).
+    public var gridID: ProjectGridID?
 
     public init(id: PaneID = .make(), content: PaneContent = .terminal, tabs: [PaneTab] = [],
                 activeTabID: TabID? = nil, laneVisible: Bool? = nil) {
@@ -99,6 +101,10 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
     public var gridLayout: CustomGrid?
     /// Recently saved custom grids, newest first (upstream `gridLayoutHistory`).
     public var gridLayoutHistory: [CustomGridHistoryEntry]?
+    /// Named grids besides the main one (upstream `project.grids`, P2-20).
+    public var grids: [ProjectGrid]?
+    /// The named grid shown; nil is the main grid.
+    public var activeGridID: ProjectGridID?
 
     public init(id: ProjectID = .make(), name: String, color: ProjectColor = .blue, folder: String,
                 panes: [Pane] = [], createdAt: Date = Date(), layoutMode: PaneLayoutMode? = nil) {
@@ -111,7 +117,8 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
         self.layoutMode = layoutMode
     }
 
-    public var layout: PaneLayoutMode { layoutMode ?? .auto }
+    /// The shown grid's layout.
+    public var layout: PaneLayoutMode { activeArrangement.layoutMode ?? .auto }
 }
 
 /// Relative track sizes of a pane grid; empty means equal sizes.

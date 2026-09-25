@@ -202,11 +202,31 @@ public enum TauriImport {
                 workspace.updateProject(created) { $0.createdAt = createdAt }
             }
             workspace.updateProject(created) { $0.panes = panes }
-            if let mode = (project["layoutMode"] as? String).flatMap(PaneLayoutMode.init(rawValue:)), mode != .auto {
+            if (project["activeGridId"] as? String).map({ $0 == "default" }) ?? true,
+               let mode = (project["layoutMode"] as? String).flatMap(PaneLayoutMode.init(rawValue:)), mode != .auto {
                 workspace.updateProject(created) { $0.layoutMode = mode }
             }
-            if let raw = project["gridLayout"], let grid = decodeGrid(raw) {
-                workspace.updateProject(created) { $0.gridLayout = grid.reconciled(panes.map(\.id.rawValue)) }
+            let named: [ProjectGrid] = (project["grids"] as? [[String: Any]] ?? []).compactMap { raw in
+                guard let id = raw["id"] as? String, id != "default", let gridName = raw["name"] as? String else { return nil }
+                return ProjectGrid(id: ProjectGridID(rawValue: id), name: gridName,
+                                   layoutMode: (raw["layoutMode"] as? String).flatMap(PaneLayoutMode.init(rawValue:)).flatMap { $0 == .auto ? nil : $0 },
+                                   gridLayout: raw["gridLayout"].flatMap(decodeGrid))
+            }
+            // Upstream mirrors the active named grid into the project's own layout fields; the
+            // main grid keeps them only when no named grid is active.
+            let activeNamed = (project["activeGridId"] as? String).flatMap { id in named.first { $0.id.rawValue == id } }
+            if !named.isEmpty {
+                let known = Set(named.map(\.id))
+                workspace.updateProject(created) { project in
+                    project.grids = named
+                    for index in project.panes.indices where project.panes[index].gridID.map({ !known.contains($0) }) == true {
+                        project.panes[index].gridID = nil
+                    }
+                    project.activeGridID = activeNamed?.id
+                }
+            }
+            if activeNamed == nil, let raw = project["gridLayout"], let grid = decodeGrid(raw) {
+                workspace.updateProject(created) { $0.gridLayout = grid.reconciled($0.panes(in: nil).map(\.id.rawValue)) }
             }
             report.panes += panes.count
             report.tabs += panes.reduce(0) { $0 + $1.tabs.count }
@@ -240,7 +260,9 @@ public enum TauriImport {
         guard !tabs.isEmpty else { return nil }
         // The terminal's id is kept, so its cell in an imported custom grid still finds it.
         let id = (terminal["id"] as? String).flatMap { $0.isEmpty ? nil : PaneID(rawValue: $0) } ?? .make()
-        return Pane(id: id, tabs: tabs, activeTabID: activeTab)
+        var pane = Pane(id: id, tabs: tabs, activeTabID: activeTab)
+        pane.gridID = (terminal["gridId"] as? String).flatMap { $0.isEmpty || $0 == "default" ? nil : ProjectGridID(rawValue: $0) }
+        return pane
     }
 
     private static func importPreferences(_ file: File, into preferences: inout PreferencesDocument, context: Context,

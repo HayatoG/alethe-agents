@@ -10,6 +10,7 @@ struct ContainerHeader: View {
     let isFullscreen: Bool
     let onLayout: (PaneLayoutMode) -> Void
     let onDesignLayout: () -> Void
+    let onGrid: (GridAction) -> Void
     let onCollapse: () -> Void
     let onFullscreen: () -> Void
     let onClose: () -> Void
@@ -27,6 +28,7 @@ struct ContainerHeader: View {
                 .foregroundStyle(theme[isSelected ? .textPrimary : .textSecondary])
                 .lineLimit(1)
             Spacer(minLength: 0)
+            if !project.namedGrids.isEmpty { gridMenu }
             layoutMenu
             if !isFullscreen {
                 headerButton("sidebar.left", label: "workspace.container.collapse", id: "container.collapse.\(project.name)",
@@ -63,6 +65,9 @@ struct ContainerHeader: View {
             .pickerStyle(.inline)
             Divider()
             Button("workspace.layout.design", action: onDesignLayout)
+            if project.namedGrids.isEmpty {
+                Button("projectGrid.newEllipsis") { onGrid(.new) }
+            }
         } label: {
             Image(systemName: project.layout.symbol)
                 .font(metrics.font(.caption).weight(.semibold))
@@ -76,6 +81,40 @@ struct ContainerHeader: View {
         .help(Text("workspace.layout"))
         .accessibilityLabel(Text("workspace.layout"))
         .accessibilityIdentifier("container.layout.\(project.name)")
+    }
+
+    /// Switches between the project's grids (upstream `ProjectGrids`), named after the shown one.
+    private var gridMenu: some View {
+        Menu {
+            Picker(selection: Binding(get: { project.shownGridID }, set: { onGrid(.activate($0)) })) {
+                Text("projectGrid.main").tag(ProjectGridID?.none)
+                ForEach(project.namedGrids) { grid in
+                    Text(verbatim: grid.name).tag(Optional(grid.id))
+                }
+            } label: {
+                EmptyView()
+            }
+            .pickerStyle(.inline)
+            Divider()
+            Button("projectGrid.newEllipsis") { onGrid(.new) }
+            if let shown = project.shownGridID {
+                Button("projectGrid.renameEllipsis") { onGrid(.rename(shown)) }
+                Button("projectGrid.deleteEllipsis") { onGrid(.delete(shown)) }
+            }
+        } label: {
+            HStack(spacing: metrics.space(.xs)) {
+                Image(systemName: "rectangle.3.group")
+                Text(verbatim: project.gridName(project.shownGridID) ?? String(localized: "projectGrid.main"))
+                    .lineLimit(1)
+            }
+            .font(metrics.font(.footnote).weight(.medium))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .foregroundStyle(theme[.textSecondary])
+        .help(Text("projectGrid.switch"))
+        .accessibilityLabel(Text("projectGrid.switch"))
+        .accessibilityIdentifier("container.grids.\(project.name)")
     }
 
     private func headerButton(_ symbol: String, label: LocalizedStringKey, id: String,
@@ -154,6 +193,9 @@ struct PaneHeader: View {
     let onToggleIsolation: () -> Void
     /// Grows the pane over the free grid slots next to it; nil outside a grid with room.
     let onFillFreeSpace: (() -> Void)?
+    /// The other grids of the project the pane can move to (empty: no named grids).
+    let gridTargets: [GridTarget]
+    let onMoveToGrid: (ProjectGridID?) -> Void
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
     @Environment(\.theme) private var theme
@@ -203,6 +245,15 @@ struct PaneHeader: View {
             if let onFillFreeSpace {
                 Button("pane.fillFreeSpace", action: onFillFreeSpace)
             }
+            if !gridTargets.isEmpty {
+                Menu("pane.moveToGrid") {
+                    ForEach(gridTargets) { target in
+                        Button { onMoveToGrid(target.grid) } label: {
+                            if let name = target.name { Text(verbatim: name) } else { Text("projectGrid.main") }
+                        }
+                    }
+                }
+            }
             Divider()
             Button("pane.close", action: onClose)
         }
@@ -240,5 +291,27 @@ extension PaneLayoutMode {
         case .sidebar: "rectangle.leadinghalf.inset.filled"
         case .grid: "square.grid.3x3"
         }
+    }
+}
+
+/// What the container header's grid menu asks for.
+enum GridAction {
+    case activate(ProjectGridID?)
+    case new
+    case rename(ProjectGridID)
+    case delete(ProjectGridID)
+}
+
+/// A grid a pane can move to (nil `grid`: the main one; nil `name`: shown as "Main").
+struct GridTarget: Identifiable {
+    let grid: ProjectGridID?
+    let name: String?
+    var id: String { grid?.rawValue ?? "" }
+
+    /// Every grid of the project except the pane's own.
+    static func all(for pane: Pane, in project: Project) -> [GridTarget] {
+        guard !project.namedGrids.isEmpty else { return [] }
+        let targets = [GridTarget(grid: nil, name: nil)] + project.namedGrids.map { GridTarget(grid: $0.id, name: $0.name) }
+        return targets.filter { $0.grid != project.shownGridID }
     }
 }
