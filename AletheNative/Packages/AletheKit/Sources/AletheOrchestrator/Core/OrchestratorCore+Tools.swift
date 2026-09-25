@@ -1,0 +1,196 @@
+import Foundation
+import AletheIntegrations
+
+/// What one `alethe_delegate` call asks for.
+public struct DelegateRequest: Hashable, Sendable {
+    public var tasks: [String]
+    /// Not validated here: an unconfigured agent fails its job later, through the normal delivery path.
+    public var agent: String
+    public var cwd: String
+    public var label: String?
+    /// nil runs without a budget.
+    public var timeoutMs: UInt64?
+
+    public init(
+        tasks: [String],
+        agent: String = WorkerAgent.codex,
+        cwd: String,
+        label: String? = nil,
+        timeoutMs: UInt64? = OrchestratorLimits.defaultJobTimeoutMs
+    ) {
+        self.tasks = tasks
+        self.agent = agent
+        self.cwd = cwd
+        self.label = label
+        self.timeoutMs = timeoutMs
+    }
+
+    /// The tool's arguments, as upstream reads them: `cwd` falls back to the process's folder,
+    /// `timeoutSeconds` 0 means no budget, the label is trimmed and dropped when empty.
+    public init(arguments: OrderedJSONObject) throws(OrchestratorToolError) {
+        let tasks = arguments["tasks"]?.arrayValue?.compactMap(\.stringValue) ?? []
+        guard !tasks.isEmpty else { throw OrchestratorToolError("tasks must contain at least one instruction") }
+        let cwd = arguments["cwd"]?.stringValue ?? FileManager.default.currentDirectoryPath
+        let agent = arguments["agent"]?.stringValue.flatMap { $0.isEmpty ? nil : $0 } ?? WorkerAgent.codex
+        let label = arguments["label"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let timeoutMs: UInt64? = switch arguments["timeoutSeconds"]?.uint64Value {
+        case 0: nil
+        case let seconds?: seconds.multipliedReportingOverflow(by: 1000).overflow ? .max : seconds * 1000
+        case nil: OrchestratorLimits.defaultJobTimeoutMs
+        }
+        self.init(tasks: tasks, agent: agent, cwd: cwd, label: label?.isEmpty == false ? label : nil, timeoutMs: timeoutMs)
+    }
+}
+
+extension OrchestratorCore: OrchestratorToolHandler {
+    public func callTool(name: String, arguments: OrderedJSONObject, planner: String?) async throws -> OrderedJSON {
+        try await dispatchTool(name: name, arguments: arguments, planner: planner)
+    }
+
+    /// The tools this core answers (upstream `dispatch_tool`).
+    func dispatchTool(name: String, arguments: OrderedJSONObject, planner: String?) async throws(OrchestratorToolError) -> OrderedJSON {
+        switch name {
+        case "alethe_delegate":
+            return try delegate(DelegateRequest(arguments: arguments), planner: planner)
+        case "alethe_check":
+            return await check(
+                wait: arguments["wait"]?.boolValue ?? false,
+                untilAllSettled: arguments["untilAllSettled"]?.boolValue ?? true,
+                timeoutMs: arguments["timeoutMs"]?.uint64Value ?? OrchestratorLimits.defaultCheckWaitMs
+            )
+        case "alethe_status":
+            return snapshot().json
+        case "alethe_cancel":
+            return ["cancelled": .array(cancel(Self.jobIDs(arguments)).map(OrderedJSON.string))]
+        case "alethe_release":
+            return ["released": .array(release(Self.jobIDs(arguments)).map(OrderedJSON.string))]
+        default:
+            throw OrchestratorToolError("unknown tool \(name)")
+        }
+    }
+
+    static func jobIDs(_ arguments: OrderedJSONObject) -> [String] {
+        arguments["jobIds"]?.arrayValue?.compactMap(\.stringValue) ?? []
+    }
+
+    // MARK: alethe_delegate
+
+    /// Queues one job per task as one run and starts as many as the limit allows. Returns the
+    /// tool's answer; the workers run on in the background.
+    public func delegate(_ request: DelegateRequest, planner: String?) throws(OrchestratorToolError) -> OrderedJSON {
+        guard !isShutDown else { throw OrchestratorToolError("the orchestrator is shutting down") }
+        guard !request.tasks.isEmpty else { throw OrchestratorToolError("tasks must contain at least one instruction") }
+        runCounter += 1
+        let runID = OrchestratorID.run(runCounter)
+        var created: [OrderedJSON] = []
+        for spec in request.tasks {
+            jobCounter += 1
+            let id = OrchestratorID.job(jobCounter)
+            jobs[id] = Job(
+                id: id,
+                plannerID: planner,
+                agent: request.agent,
+                runID: runID,
+                runLabel: request.label,
+                spec: spec,
+                cwd: request.cwd,
+                timeoutMs: request.timeoutMs
+            )
+            order.append(id)
+            queue.append(id)
+            created.append(["id": .string(id), "spec": .string(spec), "worktree": .null])
+        }
+        notify()
+        persist()
+        drainQueue()
+        return [
+            "accepted": .integer(created.count),
+            "runId": .string(runID),
+            "runningInParallel": true,
+            "concurrencyLimit": .integer(concurrencyLimit),
+            "isolated": false,
+            "timeoutSeconds": .optional(request.timeoutMs.map { $0 / 1000 }),
+            "jobs": .array(created),
+            "next": "call alethe_check with wait true",
+        ]
+    }
+
+    // MARK: alethe_check
+
+    /// Collects the deliveries. With `wait`, first waits until every worker settled (or, without
+    /// `untilAllSettled`, until the first delivery), at most `timeoutMs` (capped at 600 s).
+    public func check(wait: Bool, untilAllSettled: Bool = true, timeoutMs: UInt64 = OrchestratorLimits.defaultCheckWaitMs) async -> OrderedJSON {
+        if wait {
+            let clock = ContinuousClock()
+            let deadline = clock.now.advanced(by: .milliseconds(min(timeoutMs, OrchestratorLimits.maxWaitMs)))
+            while isBusy, untilAllSettled || deliveries.isEmpty, clock.now < deadline, !Task.isCancelled {
+                await waitForChange(until: deadline)
+            }
+        }
+        let collected = deliveries
+        deliveries.removeAll()
+        let pending = slots.count + queue.count
+        return [
+            "deliveries": .array(collected.map(\.json)),
+            "workersStillBusy": .integer(pending),
+            "note": pending > 0
+                ? "timed out with workers still running: call alethe_check again"
+                : "every worker settled",
+        ]
+    }
+
+    var isBusy: Bool { !slots.isEmpty || !queue.isEmpty }
+
+    // MARK: alethe_cancel / alethe_release
+
+    /// Stops each job that has not settled: the running turn is interrupted, the worker ended and
+    /// the job settled as cancelled (announced like any other outcome). Returns the ids cancelled.
+    @discardableResult
+    public func cancel(_ jobIDs: [String]) -> [String] {
+        var cancelled: [String] = []
+        for jobID in jobIDs {
+            guard var job = jobs[jobID], !job.settled else { continue }
+            if workers[jobID] != nil {
+                if job.agent == WorkerAgent.claude {
+                    // `cancel_queued` also clears the CLI's own queue, so nothing it holds starts a
+                    // turn between the abort and the teardown.
+                    let interrupt = ClaudeWorkerProtocol.cancel(&job)
+                    jobs[jobID] = job
+                    writeToWorker(jobID, interrupt)
+                } else if let interrupt = workers[jobID]?.codex?.interrupt() {
+                    writeToWorker(jobID, interrupt)
+                    syncRequestID(jobID)
+                }
+            }
+            finishTurn(jobID, status: .cancelled, outcome: "cancelled", text: "cancelled by the lead", terminal: true)
+            cancelled.append(jobID)
+        }
+        return cancelled
+    }
+
+    /// Lets go of each job that is not running a turn: its worker process ends, its record stays.
+    /// Returns the ids released.
+    @discardableResult
+    public func release(_ jobIDs: [String]) -> [String] {
+        var released: [String] = []
+        for jobID in jobIDs {
+            guard var job = jobs[jobID], job.status != .running else { continue }
+            teardownWorker(jobID)
+            queue.removeAll { $0 == jobID }
+            slots.remove(jobID)
+            job.status = .released
+            job.pending = nil
+            job.activeTurnID = nil
+            if job.endedAt == nil { job.endedAt = Self.nowMs() }
+            jobs[jobID] = job
+            released.append(jobID)
+        }
+        notify()
+        if !released.isEmpty {
+            persist()
+            signal()
+            drainQueue()
+        }
+        return released
+    }
+}
