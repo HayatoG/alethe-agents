@@ -195,6 +195,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   icons, git badges, rename/new/Trash and live refresh; each agent in its own git worktree or local copy
   with lock/unlock, auto-commit of pending work and cleanup; the Merge Center's prepare step (a separate
   merge copy, conflicts listed with a strategy each, and a ready prompt for an agent to resolve them).
+- Groundwork for the Merge Center's last steps (not in the interface yet): per-project build/test checks
+  and a health probe in the merge copy, then finalize, abort or force-clean it, committing pending worktree
+  work first.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

@@ -1899,9 +1899,19 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
 - [ ] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
   probe, contract check, branch testing (upstream `BranchTestingModal`), results kept per merge.
   *Tests:* G, UI. *Parity:* GIT-5.
+  *Done (model):* `MergeValidation` (per-project commands + suggested ones from `package.json`,
+  `Cargo.toml`, `Package.swift`, `go.mod`; sequential `/bin/sh -c`, stops at first failure, cancelable, no
+  commands = "unverified"; results Codable per merge) and `HealthProbe` (free port, poll URL, always kills).
+  G+U with P4-13. Open: upstream's contract check and the probe's terminal step are not ported; the probe
+  kills the shell but not servers it spawned (use the process-tree kill when wired in the app).
 - [ ] **P4-13 (L) Merge Center — finish.** Finalize, abort, preflight abort, force cleanup (asks once),
   confirm worktree commit (upstream `ConfirmWorktreeCommitModal`), worktree removal after merging.
   *Tests:* G, UI. *Parity:* GIT-5.
+  *Done (model):* `MergeFinish`: finalize (blocks on markers/unresolved files, validation + optional
+  probe, commit, fast-forward the checked-out target, reports nothing-to-integrate/diverged, removes the
+  env only on success), abort, preflight abort, force cleanup (only under `.alethe/merge-envs`, flagged to
+  confirm once), pending worktree changes committed with a confirmed message, worktree removal after
+  merging (only under `.alethe/worktrees`). 16 tests (12 G). Sheets UI owed.
 - [ ] **P4-14 (M) Open pull requests.** A sidebar tab with the user's PRs (`gh search prs
   --involves=@me`; upstream `PullRequestsSidebar`): status and checks, open in the browser, send to a
   Todo (P4-16); a clear state when `gh` is missing or signed out. *Tests:* U (parsing), UI. *Parity:*
