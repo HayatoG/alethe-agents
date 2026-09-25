@@ -2366,13 +2366,21 @@ cadence above.
   server to other agents with a report of skipped fields, reveal env values on request (never logged),
   every write through P5-1 with its backup; restore a backup. Needs P5-14. *Tests:* G (upstream's store
   cases in temporary homes), U (source picking, sync report). *Parity:* EXT-1.
-- [ ] **P5-22 (M) MCP health and registry.** Health (upstream `mcp_health.rs`): `claude mcp list`,
+- [x] **P5-22 (M) MCP health and registry.** Health (upstream `mcp_health.rs`): `claude mcp list`,
   `codex mcp list --json`, `opencode mcp list` parsed per server, 45 s timeout, none for Antigravity and
   Cursor (config only), no command or URL in the result. Registry search (upstream `mcp_catalog.rs`):
   `registry.modelcontextprotocol.io/v0/servers` with cursor paging, cached in
   `<profile>/mcp/registry-cache.json`, entries mapped to install options (npm → `npx`, PyPI → `uvx`,
   OCI → `docker`, NuGet → `dnx`, remote → HTTP with headers, env hints with the secret flag). Needs P5-14. *Tests:* U (upstream's
   parser cases for both). *Parity:* EXT-1.
+  *Done:* (`1aaed49`) `McpHealthParser` parses `claude mcp list`, `codex mcp list --json` and `opencode
+  mcp list` into name + status (Antigravity and Cursor are config-only); `McpHealthChecker` runs them
+  through `ExternalCommand` (45 s, cancelable, injectable runner/resolver). `McpRegistry` actor searches
+  `registry.modelcontextprotocol.io/v0/servers` with cursor paging (URLSession, 8 s), caches first pages
+  atomically in `<profile>/mcp/registry-cache.json` (20 newest queries) served with `staleSince` offline
+  (never for a cancellation); entries map to npx/uvx/docker/dnx or HTTP/SSE install options with
+  env/header hints flagged secret; `McpInstallOption.server(named:values:)` builds a writable server.
+  Upstream parser cases as goldens; tests stub CLIs and the network; written and compiled, NOT run.
 - [ ] **P5-23 (L) Graphify view.** Pane kind `graphify` (upstream `GraphifyView`, Cytoscape): a Canvas
   graph with a force layout computed off the main thread, pan, zoom, search, node detail with its source
   file opened in a pane, a snapshot timeline with the diff highlighted and rollback; Add Content › Graph
