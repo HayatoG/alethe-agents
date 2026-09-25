@@ -233,6 +233,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Fixed: the health probe stops every process its start command launched, not just the shell.
 - Third-party ExtensionKit extensions: listed in Settings › Plugins, ask for permission on first enable,
   add their own right-sidebar tab, and are isolated if they crash (a sample extension is included).
+- `alethe` command line tool (Settings › General › Command Line Tool): `alethe .` opens that folder in
+  Alethe, showing its project or offering to add it.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

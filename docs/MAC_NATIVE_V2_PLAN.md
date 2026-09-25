@@ -2144,7 +2144,7 @@ cadence above.
   Reveal in Finder (exists for projects; add terminals' folders), Open in Browser for the project's web
   URL (upstream `open_in_browser`); a clear message when VS Code is missing. *Tests:* U (resolution),
   UI (menu items). *Parity:* SB-6.
-- [ ] **P5-8 (M) `alethe` CLI shim.** Settings › General › Command Line Tool: install, reinstall when
+- [x] **P5-8 (M) `alethe` CLI shim.** Settings › General › Command Line Tool: install, reinstall when
   stale, uninstall, status (path, on PATH or not) — upstream `cli_shim.rs`: a POSIX script in
   `~/.local/bin` that opens the app with the folder, marked so a
   stale shim is detected. The app takes the target on cold start and while running
@@ -2153,6 +2153,14 @@ cadence above.
   A compiled `alethe` target (ADR-7) only if the script cannot cover it. *Tests:* U (shim text, quoting,
   target resolution with upstream's cases), UI (open request for a known folder selects the project).
   *Parity:* TERM-11.
+  *Done:* (`6b7c921`) Settings › General › Command Line Tool installs, reinstalls (stale: app path or
+  format marker changed) and removes `~/.local/bin/alethe`, asking first, no admin rights, never
+  deleting a file Alethe did not write; PATH checked against the login shell (5 s) with a copyable
+  `export` line. The shim runs `open -a <App> "$target"` (not `-na`: a second instance quits itself).
+  The app takes folder opens via `application(_:open:)` / `--open-path` (folders declared as an
+  Alternate document type in `Alethe-Info.plist`), showing the project or a prefilled New Project.
+  `CLIShim`/`CLILaunch` in `AletheFoundation` with upstream's target-resolution cases. Tests (U + UI
+  `CLIOpenTests`) written and compiled, NOT run.
 - [ ] **P5-9 (M) Profiles UI.** Settings › Profiles (upstream `ProfilesModal`, `profiles.rs`): list with
   summaries (projects, terminals, size on disk), create, rename, duplicate, delete (asks once; never the
   active one), switch (saves, then relaunches through `AppRelaunch` into the new profile); the toolbar
