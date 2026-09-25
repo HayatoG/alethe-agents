@@ -19,6 +19,8 @@ final class AppEnvironment {
     private(set) var workspace: WorkspaceModel?
     private(set) var preferences: PreferencesModel?
     private(set) var promptHistory: PromptHistoryModel?
+    /// Reviewed PR head SHAs and the review agent/model (P4-15).
+    private(set) var pullRequestReviews: PullRequestReviewsModel?
     private(set) var locations: DataLocations?
     /// Built-in plugins of the active profile (P4-2); created by `load`.
     private(set) var plugins: PluginHost?
@@ -120,7 +122,9 @@ final class AppEnvironment {
         async let workspace = WorkspaceModel.load(from: locations.workspace(profile))
         async let preferences = PreferencesModel.load(from: locations.preferences(profile))
         async let promptHistory = PromptHistoryModel.load(from: locations.promptHistory(profile))
+        async let reviews = PullRequestReviewsModel.load(from: locations.pullRequestReviews(profile))
         let (loadedWorkspace, loadedPreferences, loadedHistory) = await (workspace, preferences, promptHistory)
+        pullRequestReviews = await reviews
         loadedWorkspace.update { $0.repair() }
         if loadedPreferences.document.startClean == true { loadedWorkspace.update { $0.startClean() } }
         showingHome = loadedPreferences.document.startOnHome == true && !loadedWorkspace.document.projects.isEmpty
@@ -207,6 +211,7 @@ final class AppEnvironment {
         await workspace?.flush()
         await preferences?.flush()
         await promptHistory?.flush()
+        await pullRequestReviews?.flush()
         await profiles?.flush()
     }
 

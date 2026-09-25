@@ -7,6 +7,7 @@ import SwiftUI
 
 /// The user's open pull requests via `gh` (P4-14); details (checks, review, draft) load per row.
 struct PullRequestsView: View {
+    @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @State private var phase: Phase = .loading
     @State private var prs: [PullRequestSummary] = []
@@ -14,7 +15,7 @@ struct PullRequestsView: View {
     @State private var reload = 0
     @State private var reviewing: PullRequestSummary?
     @State private var merging: PullRequestSummary?
-    private let reviews = PullRequestReviewState.shared
+    private var reviews: PullRequestReviewState { environment.pullRequestReviewState }
 
     static let tabID = "pullRequests"
     static let tab = SidebarTabContribution(id: tabID, title: "Pull Requests", symbol: "arrow.triangle.pull", side: .right, viewID: tabID)

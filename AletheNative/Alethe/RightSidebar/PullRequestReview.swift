@@ -4,19 +4,25 @@ import AletheGit
 import AletheModel
 import SwiftUI
 
-/// Head SHAs recorded when a PR review started, plus the last review agent/model (P4-15). In memory
-/// only: a squash merge must follow a review from this launch.
-@MainActor @Observable
-final class PullRequestReviewState {
-    static let shared = PullRequestReviewState()
+/// Head SHAs recorded when a PR review started, plus the last review agent/model (P4-15), kept in
+/// the profile's `pull-request-reviews.json` so a merge guard and the choice survive relaunch.
+@MainActor
+struct PullRequestReviewState {
+    let document: PullRequestReviewsModel?
 
-    private(set) var reviewedHeads: [String: String] = [:]
-    var agent: AgentKind = .claude
-    var model = ""
+    func record(_ pr: PullRequestSummary, headSHA: String) {
+        document?.update { $0.record(pr.id, headSHA: headSHA, at: Date()) }
+    }
 
-    func record(_ pr: PullRequestSummary, headSHA: String) { reviewedHeads[pr.id] = headSHA }
-    func reviewedHead(_ pr: PullRequestSummary) -> String? { reviewedHeads[pr.id] }
-    func forget(_ pr: PullRequestSummary) { reviewedHeads[pr.id] = nil }
+    func reviewedHead(_ pr: PullRequestSummary) -> String? { document?.document.reviewedHead(pr.id) }
+    func forget(_ pr: PullRequestSummary) { document?.update { $0.forget(pr.id) } }
+
+    var agent: AgentKind { document?.document.agent.map(AgentKind.init(rawValue:)) ?? .claude }
+    var model: String { document?.document.model ?? "" }
+
+    func setPreference(agent: AgentKind, model: String) {
+        document?.update { $0.setPreference(agent: agent.rawValue, model: model) }
+    }
 
     /// Agent-facing prompt (upstream `pullRequestReviewPrompt`); never commits, pushes or merges.
     static func prompt(for pr: PullRequestSummary, headSHA: String) -> String {
@@ -90,7 +96,7 @@ struct PullRequestReviewSheet: View {
         .padding(metrics.space(.xl))
         .frame(width: metrics.size(480))
         .onAppear {
-            let state = PullRequestReviewState.shared
+            let state = environment.pullRequestReviewState
             agent = agents.contains(state.agent) ? state.agent : (agents.first ?? .claude)
             model = state.model
         }
@@ -121,10 +127,9 @@ struct PullRequestReviewSheet: View {
             $0.openInTab(project.id)
             $0.addPane(to: project.id, tab: tab)
         }
-        let state = PullRequestReviewState.shared
+        let state = environment.pullRequestReviewState
         state.record(pr, headSHA: headSHA)
-        state.agent = agent
-        state.model = trimmedModel
+        state.setPreference(agent: agent, model: trimmedModel)
         dismiss()
     }
 }
@@ -134,6 +139,7 @@ struct PullRequestMergeSheet: View {
     let pr: PullRequestSummary
     let headSHA: String
     var onMerged: () -> Void
+    @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
     @Environment(\.dismiss) private var dismiss
@@ -185,7 +191,7 @@ struct PullRequestMergeSheet: View {
         do {
             try await GitHubPullRequests().squashMerge(pr, headSHA: headSHA)
             merged = true
-            PullRequestReviewState.shared.forget(pr)
+            environment.pullRequestReviewState.forget(pr)
             onMerged()
         } catch GitHubPullRequestError.commandFailed(_, let stderr) where !stderr.isEmpty {
             error = stderr
@@ -193,4 +199,8 @@ struct PullRequestMergeSheet: View {
             self.error = error.localizedDescription
         }
     }
+}
+
+extension AppEnvironment {
+    var pullRequestReviewState: PullRequestReviewState { PullRequestReviewState(document: pullRequestReviews) }
 }
