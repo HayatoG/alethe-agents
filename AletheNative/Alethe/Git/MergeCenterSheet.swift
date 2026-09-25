@@ -364,11 +364,12 @@ final class MergeCenterModel {
         analysis = nil
         task = Task {
             // The analyzer runs git subprocesses; keep it off the main actor.
-            let outcome = await Task.detached {
+            let work = Task.detached {
                 do { return Result<MergeAnalysis, Error>.success(
                     try await MergeAnalyzer(root: root).analyze(source: source, target: target)) }
                 catch { return .failure(error) }
-            }.value
+            }
+            let outcome = await withTaskCancellationHandler { await work.value } onCancel: { work.cancel() }
             guard !Task.isCancelled else { return }
             switch outcome {
             case .success(let result): analysis = result
@@ -378,7 +379,7 @@ final class MergeCenterModel {
         }
     }
 
-    /// Stops waiting for the running analysis; its disposable worktree is torn down by the analyzer.
+    /// Cancels the running operation; the git process is terminated and temporary worktrees torn down.
     private var handle: MergeEnvHandle? {
         environment.map { MergeEnvHandle(id: $0.id, source: source, target: target, conflictPaths: conflicts.map(\.path)) }
     }
@@ -394,9 +395,12 @@ final class MergeCenterModel {
         running = true
         error = nil
         task = Task {
-            let outcome = await Task.detached { () -> Result<T, Error> in
+            // Detached so git runs off the main actor; cancellation is forwarded so the git
+            // process is terminated (GitRunner) and the environment torn down.
+            let work = Task.detached { () -> Result<T, Error> in
                 do { return .success(try await operation()) } catch { return .failure(error) }
-            }.value
+            }
+            let outcome = await withTaskCancellationHandler { await work.value } onCancel: { work.cancel() }
             guard !Task.isCancelled else { return }
             switch outcome {
             case .success(let value): apply(value)
