@@ -28,6 +28,8 @@ struct ConversationsSheet: View {
     @State private var filter = ""
     @State private var selection: Row.ID?
     @State private var unrestricted = false
+    @State private var cost: SessionCost?
+    @State private var costLoading = false
 
     private var project: Project? {
         initialProject.flatMap(workspace.document.project) ?? workspace.document.workspace.selectedProjectID.flatMap(workspace.document.project)
@@ -67,6 +69,12 @@ struct ConversationsSheet: View {
             Divider()
             content
                 .frame(height: metrics.size(360))
+            if selection != nil {
+                Divider()
+                SessionCostView(cost: cost, loading: costLoading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(metrics.space(.l))
+            }
             Divider()
             HStack {
                 if AgentRegistry.builtin.descriptor(for: agent)?.unrestrictedFlag != nil {
@@ -84,6 +92,7 @@ struct ConversationsSheet: View {
         }
         .frame(width: metrics.size(680))
         .task(id: "\(agent.rawValue)|\(allProjects)") { await load() }
+        .task(id: selection) { await loadCost() }
         .onAppear { unrestricted = environment.preferences?.document.alwaysStartUnrestricted ?? false }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("conversations")
@@ -156,6 +165,17 @@ struct ConversationsSheet: View {
                 .sorted { $0.summary.modifiedAt > $1.summary.modifiedAt }
         }.value
         rows = loaded
+    }
+
+    /// The selected conversation's tokens and cost, read off the main thread.
+    private func loadCost() async {
+        cost = nil
+        guard let id = selection, let row = visible.first(where: { $0.id == id }),
+              let folder = workspace.document.project(row.project)?.folder else { return }
+        costLoading = true
+        let kind = agent
+        cost = await Task.detached { await SessionCosts.cost(kind, sessionID: id, cwd: folder, openCodeExecutable: nil) }.value
+        costLoading = false
     }
 
     private func isOpen(_ row: Row) -> Bool {

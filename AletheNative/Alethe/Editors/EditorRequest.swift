@@ -22,6 +22,8 @@ enum EditorRequest: Identifiable, Hashable {
     case findJump
     /// Past conversations of a project (nil: the selected one; P3-7).
     case conversations(ProjectID?)
+    /// Tokens and cost of a tab's session (P3-8).
+    case sessionCost(TabID)
 
     var id: String {
         switch self {
@@ -37,6 +39,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .layoutDesigner(let id): "layoutDesigner:\(id)"
         case .findJump: "findJump"
         case .conversations: "conversations"
+        case .sessionCost(let tab): "sessionCost:\(tab)"
         }
     }
 }

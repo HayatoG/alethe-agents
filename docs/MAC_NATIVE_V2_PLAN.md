@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-8. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-9. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1584,9 +1584,22 @@ ship; they run per the test cadence above.
   Loading runs off the main thread.
   *Tests (written, not run — owner decision):* `ConversationHistoryTests` (4, fixture homes), UI
   `ConversationsTests`. Compiled.
-- [ ] **P3-8 (M) Session cost.** Token usage from transcripts with a pricing table (upstream
+- [x] **P3-8 (M) Session cost.** Token usage from transcripts with a pricing table (upstream
   `get_model_pricing`), OpenCode from `opencode.db` (SQLite, read-only), shown per tab and in history.
   *Tests:* U (fixtures, pricing). *Parity:* SE-4.
+  *Done:* `AletheAgents/SessionCost` ports `agent_cost.rs`: `ModelPricing` (USD per million tokens by
+  family — opus 5/25, sonnet 3/15, haiku 1/5 — cache writes 1.25× for 5 minutes and 2× for 1 hour, cache
+  reads 0.1×; the table upstream ships), `SessionCost` (priced per model and summed, nil when nothing
+  could be priced; the model with the most output named), `SessionCosts.claude` (every `message.usage`
+  per model, the 5 m / 1 h cache split or the older single count), `codex` (the last cumulative
+  `token_count`; tokens without a price), `openCode` (the `session` row of `opencode.db` through the
+  system SQLite, opened read-only; OpenCode's own cost kept), `openCodeDatabase` (`opencode db path`, then
+  its data folders), `transcript` (a Codex rollout found by file name, not by opening each). UI:
+  `SessionCostView` (total, tokens, per-model table), Terminal › Session Cost… and the pane menu for the
+  shown tab (`SessionCostSheet`, refreshable), and the selected conversation's cost under the
+  Conversations list. All reading runs off the main thread.
+  *Tests (written, not run — owner decision):* `SessionCostTests` (4, including a real SQLite fixture).
+  Compiled.
 - [ ] **P3-9 (L) Agent hook bridge.** A local HTTP endpoint on Network.framework (loopback, random port,
   per-launch token) receiving Claude Code hooks and Codex notifications, wired per launch without
   touching the user's own settings where the CLI allows it (upstream `agent_hooks_*`,
@@ -1716,7 +1729,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Done | Claude + Codex (P1-10); OpenCode, Antigravity, Cursor (P3-6) |
 | SE-2 | Resume last session | P2 | Done | P2-26; Terminal › Resume Previous Conversations (Claude Code, Codex) |
 | SE-3 | Claude history + recent chats | P3 | Done | P3-7; History › Conversations… ⌘Y, Claude Code + Codex, one or all projects |
-| SE-4 | Session/transcript cost | P3 | Not started | |
+| SE-4 | Session/transcript cost | P3 | Done | P3-8; Claude Code priced, Codex tokens, OpenCode from opencode.db (read-only) |
 | GIT-1 | Git Control | P4 | Not started | Built-in plugin |
 | GIT-2 | Commit graph | P4 | Not started | |
 | GIT-3 | Incoming/outgoing | P4 | Not started | |

@@ -32,6 +32,10 @@ struct TerminalCommands: Commands {
                 .keyboardShortcut(.downArrow, modifiers: [.command, .option])
                 .disabled(focusedTerminal == nil)
             Divider()
+            Button("menu.terminal.sessionCost") {
+                if let tab = focusedTab { environment.editorRequest = .sessionCost(tab.id) }
+            }
+            .disabled(focusedTab?.sessionID == nil)
             Button("menu.terminal.resumePrevious") { resumePrevious() }
                 .disabled(environment.terminals.running.isEmpty)
             Divider()
@@ -62,6 +66,11 @@ struct TerminalCommands: Commands {
             report.messageText = String(format: String(localized: "resumePrevious.done"), result.resumed, result.total)
         }
         report.runModal()
+    }
+
+    @MainActor private var focusedTab: PaneTab? {
+        guard let document = environment.workspace?.document, let pane = document.workspace.focusedPaneID else { return nil }
+        return document.pane(pane)?.pane.activeTab
     }
 
     @MainActor private var focusedTerminal: TerminalPaneView? {

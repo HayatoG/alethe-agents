@@ -199,6 +199,8 @@ struct PaneHeader: View {
     let isInFocusMode: Bool
     let onToggleFocus: () -> Void
     let onDisable: () -> Void
+    /// Session Cost… for the shown tab; nil when it has no session.
+    let onSessionCost: (() -> Void)?
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
     @Environment(\.theme) private var theme
@@ -259,6 +261,9 @@ struct PaneHeader: View {
                         }
                     }
                 }
+            }
+            if let onSessionCost {
+                Button("menu.terminal.sessionCost", action: onSessionCost)
             }
             Button("pane.disable", action: onDisable)
             Divider()

@@ -63,6 +63,8 @@ struct MainWindow: View {
             FindJumpSheet(workspace: workspace, undoManager: undoManager)
         case .conversations(let project):
             ConversationsSheet(workspace: workspace, undoManager: undoManager, initialProject: project)
+        case .sessionCost(let tab):
+            SessionCostSheet(workspace: workspace, tabID: tab)
         }
     }
 

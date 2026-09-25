@@ -78,6 +78,7 @@ final class PaneView: NSView {
             isInFocusMode: context.environment.focusModePaneID == pane.id,
             onToggleFocus: { context.setFocusMode(context.environment.focusModePaneID == pane.id ? nil : pane.id) },
             onDisable: { context.setDisabled(pane.id, true) },
+            onSessionCost: tab.sessionID == nil ? nil : { context.environment.editorRequest = .sessionCost(tab.id) },
             onDrag: onDrag))
         configureLane(pane: pane, project: project, focused: focused, context: context)
 
