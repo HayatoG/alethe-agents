@@ -1,11 +1,11 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 complete and tested** (Phase 1 complete). Test run 2026-09-24 after P2-28: package
+> Status: **Phase 3 in progress** (Phases 1 and 2 complete and tested). Test run 2026-09-24 after P2-28: package
 > 272/272; UI 55/55 (after fixes); smoke sidebar-drag, pane-drag, grid-drag all pass. Open: the workspace
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: Phase 3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-1. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1462,13 +1462,74 @@ they run per the test cadence above.
 parity, terminals survive relaunch with their scrollback, and idle terminals hibernate.
 
 ### Phase 3 — Agent ecosystem
-AG-1 remaining agents (copilot, antigravity, mimo, freebuff, kiro; wsl → not applicable); AG-5
-install/update/uninstall (L); AG-6 enable/disable; AG-7 handoff (L); AG-8 hook bridge (local HTTP via
-Network.framework) (L); AG-9 model discovery; SE-1 remaining providers (OpenCode, Antigravity, Cursor);
-SE-3 history + recent chats; SE-4 cost (SQLite read of `opencode.db`, transcript pricing); SB-5 live
-chat titles + busy/done glyphs; USE-1 usage pills + AI Usage + Codex reset credit (L); USE-2 activity
-tracking; HOME-1…5 Home dashboard with real data (L); SET-9 notifications (UserNotifications) with
-completion detection; PER-6 dictation with Apple SpeechAnalyzer (L).
+Order: the agent roster and its settings first (everything else keys on agent kinds), then sessions
+(resume, history, cost), then live agent state (hook bridge → titles, glyphs, notifications, handoff),
+then usage and activity, then the Home dashboard that shows them with real data, then dictation.
+Each task keeps older files decoding (optional fields or a migration). *Tests* list what the task must
+ship; they run per the test cadence above.
+
+- [ ] **P3-1 (M) Remaining agent types.** Copilot, Antigravity, MiMo, Freebuff and Kiro (upstream
+  `agentProviders.ts`): CLI command, unrestricted flag, resume arguments, launcher lookup, agent
+  tokens and icons, New Terminal sheet, Tauri import. `wsl` stays Won't port. *Tests:* U (descriptors,
+  arguments), UI (sheet lists them). *Parity:* AG-1.
+- [ ] **P3-2 (M) Settings › Agents.** Per-agent row: enable/disable (hidden from sheets and Find/Jump
+  when off), detected CLI path and version, Choose… / Reset override. *Tests:* U, UI, HT. *Parity:*
+  AG-6, AG-4.
+- [ ] **P3-3 (L) Install, update and uninstall agent CLIs.** Toolchain probe (npm, Homebrew, pipx,
+  curl installers per upstream `AgentInstall`), install/update/uninstall with a live log, version
+  check against the latest release. *Tests:* U (recipes, probe parsing), UI (dry-run seed). *Parity:*
+  AG-5.
+- [ ] **P3-4 (M) New Terminal sheet completion.** Repeat last (⌥⌘T, upstream `lastTerminalCreation`),
+  named-grid picker (P2-20), planner option; 9router moves with Phase 5 integrations. *Tests:* U, UI.
+  *Parity:* AG-3.
+- [ ] **P3-5 (M) Model discovery.** Models each provider offers (upstream `discover_provider_models`),
+  a model picker in the New Terminal sheet passed as the agent's model flag. *Tests:* U (parsers), UI.
+  *Parity:* AG-9.
+- [ ] **P3-6 (M) Resume for OpenCode, Antigravity and Cursor.** Session discovery on disk and resume
+  arguments for the three (Cursor chat creation, upstream `create_cursor_chat`), joining Claude Code and
+  Codex. *Tests:* U (fixtures per provider). *Parity:* SE-1.
+- [ ] **P3-7 (M) Conversation history and recent chats.** A sheet per project listing Claude Code and
+  Codex conversations (title, date, size), opening one in a new tab that resumes it; recent chats
+  across projects. *Tests:* U (listing), UI. *Parity:* SE-3.
+- [ ] **P3-8 (M) Session cost.** Token usage from transcripts with a pricing table (upstream
+  `get_model_pricing`), OpenCode from `opencode.db` (SQLite, read-only), shown per tab and in history.
+  *Tests:* U (fixtures, pricing). *Parity:* SE-4.
+- [ ] **P3-9 (L) Agent hook bridge.** A local HTTP endpoint on Network.framework (loopback, random port,
+  per-launch token) receiving Claude Code hooks and Codex notifications, wired per launch without
+  touching the user's own settings where the CLI allows it (upstream `agent_hooks_*`,
+  `codex_hooks_config_write`); events become each tab's state (working, waiting for input, done).
+  *Tests:* U (event parsing, config writing), P (endpoint round trip). *Parity:* AG-8.
+- [ ] **P3-10 (M) Live titles and busy/done glyphs.** Chat titles from the sessions (upstream
+  `get_*_session_title`) in the sidebar, lane and tab bar; working / waiting / done glyphs with unread
+  completion (upstream `completionUnread`). *Tests:* U, UI. *Parity:* SB-5.
+- [ ] **P3-11 (M) Notifications.** UserNotifications when an agent finishes or waits for input while its
+  pane is not in view, 5 s dedupe, clicking jumps to the tab; an in-app list for Home. *Tests:* U
+  (dedupe, routing), UI. *Parity:* SET-9, HOME-5 (data).
+- [ ] **P3-12 (L) Claude Code ↔ Codex handoff.** Prepare a handoff from one agent's conversation,
+  materialize it for the other and continue in a new sub-tab (upstream `HandoffModal`,
+  `prepare/materialize/complete_agent_handoff`, `handoffs/`). *Tests:* U (handoff documents), UI.
+  *Parity:* AG-7.
+- [ ] **P3-13 (L) AI usage.** Claude Code, Codex and Antigravity usage (limits, windows, resets) with
+  their caches, usage pills in the toolbar, the AI Usage sheet, Codex reset credit and a notification
+  when a limit resets (upstream `*UsageCache.ts`, `AiUsageModal`, `ResetCreditModal`). Tokens are read
+  where the CLIs keep them and never logged. *Tests:* U (parsers, cache), UI. *Parity:* USE-1.
+- [ ] **P3-14 (M) Activity tracking.** Active time per agent and project sampled into
+  `activity-stats.json` (upstream `activityTracker.ts`), summaries by day and agent, clear.
+  *Tests:* U (sampling, summaries). *Parity:* USE-2.
+- [ ] **P3-15 (L) Home dashboard.** Greeting, recent projects, quick actions, a mini-terminal quick
+  launch, activity graph and time analytics (P3-14), usage strip (P3-13), notifications (P3-11); ⇧⌘H
+  toggles Home ↔ workspace and a preference opens on Home. The ASCII background only if it passes the
+  motion and accessibility rules. *Tests:* U (greeting, summaries), UI, HT. *Parity:* HOME-1, HOME-2,
+  HOME-3, HOME-5.
+- [ ] **P3-16 (M) Setup walkthrough.** First-run steps on Home (agents found, a first project, a first
+  terminal), dismissible and resumable (upstream `SetupWalkthrough`). *Tests:* UI. *Parity:* HOME-4.
+- [ ] **P3-17 (L) Dictation.** Apple SpeechAnalyzer (ADR-7a) instead of Parakeet: microphone permission,
+  toggle and hold (Fn-Fn / ⌥⌘D, §6.3), text into the focused terminal or field, language from the
+  interface language. *Tests:* U (state machine), UI (permission-denied path). *Parity:* PER-6.
+- [ ] **P3-18 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+
+**Phase 3 exit criteria:** every agent upstream supports on macOS runs, installs and resumes; agents'
+state (working, waiting, done, cost, usage) shows live with notifications; Home shows real data.
 
 ### Phase 4 — Plugins, Git and review
 EXT-3 `AlethePluginKit` v1 (L) + plugin settings page; GIT-1 Git Control as a built-in plugin (L);
