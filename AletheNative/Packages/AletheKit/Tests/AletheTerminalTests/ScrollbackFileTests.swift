@@ -79,4 +79,16 @@ struct ReplayResetTests {
             #expect(reset.contains(mode))
         }
     }
+
+    @Test func replayDropsTerminalQueries() {
+        let esc = "\u{1b}"
+        let queries = [
+            "\(esc)[c", "\(esc)[>0c", "\(esc)[>q", "\(esc)[?u", "\(esc)[?2026$p", "\(esc)[6n", "\(esc)[?996n",
+            "\(esc)[14t", "\(esc)[16t", "\(esc)]11;?\u{07}", "\(esc)]4;1;?\(esc)\\", "\(esc)P+q544e\(esc)\\",
+            "\(esc)_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\(esc)\\",
+        ]
+        let kept = "\(esc)[1;32mhello\(esc)[0m \(esc)[2J\(esc)[?25l\(esc)[22;0t\(esc)]0;title\u{07}é\r\n"
+        let input = Data((queries.joined() + kept).utf8)
+        #expect(ScrollbackFile.withoutQueries(input) == Data(kept.utf8))
+    }
 }

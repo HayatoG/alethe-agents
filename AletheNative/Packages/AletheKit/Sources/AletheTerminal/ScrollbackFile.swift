@@ -84,6 +84,29 @@ public final class ScrollbackFile: @unchecked Sendable {
         try? data.suffix(cap).write(to: url, options: .atomic)
     }
 
+    /// Replayed output without the queries a program sent the terminal (device attributes,
+    /// XTVERSION, kitty keyboard and graphics, DECRQM, status and window reports, OSC color and DCS
+    /// capability queries). Replayed as-is, the terminal answers each one to the NEW process, which —
+    /// still in cooked mode while it starts — echoes the answers as text.
+    public static func withoutQueries(_ data: Data) -> Data {
+        // ISO Latin-1 maps every byte to one character, so matching and re-encoding keep bytes intact.
+        guard let text = String(data: data, encoding: .isoLatin1) else { return data }
+        let stripped = text.replacingOccurrences(of: queryPattern, with: "", options: .regularExpression)
+        return stripped.data(using: .isoLatin1) ?? data
+    }
+
+    static let queryPattern = [
+        #"\x{1B}\[[>=]?[0-9;]*c"#,                              // DA1 / DA2 / DA3
+        #"\x{1B}\[>[0-9;]*q"#,                                  // XTVERSION
+        #"\x{1B}\[\?u"#,                                        // kitty keyboard flags query
+        #"\x{1B}\[\??[0-9;]*\$p"#,                              // DECRQM
+        #"\x{1B}\[\??[0-9;]*n"#,                                 // DSR (status, cursor position, color scheme)
+        #"\x{1B}\[(?:11|13|14|15|16|18|19|20|21)(?:;[0-9]*)*t"#,  // XTWINOPS reports
+        #"\x{1B}\][0-9;]*;\?(?:\x{07}|\x{1B}\\)"#,             // OSC color queries (`;?`)
+        #"\x{1B}P[$+]q[^\x{1B}]*\x{1B}\\"#,                      // DECRQSS / XTGETTCAP
+        #"\x{1B}_G[^\x{1B}]*\x{1B}\\"#,                          // kitty graphics (answers with OK)
+    ].joined(separator: "|")
+
     /// Sequences that undo what a dead program left on: alternate screen, mouse reporting,
     /// bracketed paste, focus reporting, application cursor keys and keypad, the kitty keyboard
     /// protocol and xterm's modifyOtherKeys, hidden cursor, colors. Written after a replay, before
@@ -92,7 +115,7 @@ public final class ScrollbackFile: @unchecked Sendable {
     /// mode, which echoed it as `^[[O`).
     public static let replayReset = Data((
         "\u{1b}[?1049l\u{1b}[?1000l\u{1b}[?1002l\u{1b}[?1003l\u{1b}[?1006l\u{1b}[?2004l"
-            + "\u{1b}[?1004l\u{1b}[?1l\u{1b}>\u{1b}[=0;1u\u{1b}[>4;0m"
+            + "\u{1b}[?1004l\u{1b}[?1l\u{1b}>\u{1b}[<99u\u{1b}[=0;1u\u{1b}[>4;0m"
             + "\u{1b}[?25h\u{1b}[0m\r\n").utf8)
 }
 

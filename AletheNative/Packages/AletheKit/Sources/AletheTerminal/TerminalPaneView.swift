@@ -106,7 +106,7 @@ public final class TerminalPaneView: NSView {
         // The previous run's output first, then a reset of the modes it left on, then the new
         // process (upstream `attach_pty` replay). The session buffers it until the view attaches.
         if let restored = scrollback?.load(), !restored.isEmpty {
-            session.receive(restored + ScrollbackFile.replayReset)
+            session.receive(ScrollbackFile.withoutQueries(restored) + ScrollbackFile.replayReset)
             scrollback?.append(ScrollbackFile.replayReset)
         }
         let servers = servers

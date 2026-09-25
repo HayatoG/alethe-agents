@@ -173,4 +173,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Fixed: the agent choices on the empty workspace no longer squeeze into one row.
 - Fixed: a terminal restored after relaunch could start with a stray `^[[O` (and odd arrow keys) because
   the previous program's focus-reporting and key modes carried over to the new one.
+- Fixed: a restored agent terminal could open with lines of garbage such as `^[[?62;22;52c` and
+  `ghostty 1.3.2`: replaying the saved output re-ran the previous program's terminal queries, and the new
+  process echoed the answers.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
