@@ -171,4 +171,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or hold the keys and release. Transcription runs on this Mac (Apple's speech model, downloaded the first
   time) in the interface language; Esc cancels.
 - Fixed: the agent choices on the empty workspace no longer squeeze into one row.
+- Fixed: a terminal restored after relaunch could start with a stray `^[[O` (and odd arrow keys) because
+  the previous program's focus-reporting and key modes carried over to the new one.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

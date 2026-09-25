@@ -70,3 +70,13 @@ final class ScrollbackFilePerformanceTests: XCTestCase {
         }
     }
 }
+
+struct ReplayResetTests {
+    @Test func replayResetTurnsOffInputModes() {
+        let reset = String(decoding: ScrollbackFile.replayReset, as: UTF8.self)
+        // Focus reporting left on made the new process echo `^[[O`; cursor-key mode turns arrows into `ESC O A`.
+        for mode in ["\u{1b}[?1004l", "\u{1b}[?1l", "\u{1b}[?2004l", "\u{1b}[?1049l", "\u{1b}[=0;1u"] {
+            #expect(reset.contains(mode))
+        }
+    }
+}
