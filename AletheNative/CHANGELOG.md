@@ -198,6 +198,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Groundwork for the Merge Center's last steps (not in the interface yet): per-project build/test checks
   and a health probe in the merge copy, then finalize, abort or force-clean it, committing pending worktree
   work first.
+- Right sidebar (⌥⌘0): a Todo list (global and per project, `#tags`, drag to reorder, Pomodoro timer) and
+  a Docs tab listing the project's Markdown files. View › New Todo opens it.
+- Git Control (project context menu or History menu): stage, discard, commit with amend, switch branches,
+  fetch/pull/push with progress, open a file's diff, and see incoming/outgoing commits.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

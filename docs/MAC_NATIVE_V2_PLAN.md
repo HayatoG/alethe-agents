@@ -1830,9 +1830,15 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   built-ins then plugin themes. Settings › Plugins: name, version, capabilities, enable toggle, load error.
   `ViewPlacements` (side + order of contributed tabs) persisted in `plugins.json`, U 7; the drag UI comes
   with P4-3. Open: plugin settings pages, Tauri import still validates built-in theme ids only.
-- [ ] **P4-3 (M) Right sidebar.** An inspector column (⌥⌘0, width persisted; upstream `RightSidebar`)
+- [x] **P4-3 (M) Right sidebar.** An inspector column (⌥⌘0, width persisted; upstream `RightSidebar`)
   showing contributed tabs plus the project's Markdown docs and plans (list, open in a pane, recent
   history). GSD and MCP tabs arrive with Phase 5. *Tests:* UI, HT. *Parity:* SB-7.
+  *Done:* right sidebar (⌥⌘0, View menu; open state and width persisted) shows right-side plugin tabs in
+  `ViewPlacements` order through an app `viewID` registry. `TodosPlugin` registered: Todos tab (project and
+  global lists, add with `#tag`, done, inline rename, delete, drag reorder) with a Pomodoro pill (1 s tick);
+  View › New Todo reveals it. Docs tab: the project's `*.md` (3 levels, 200 files, skips hidden/build/deps)
+  open in a Markdown pane with undo. Open: tab drag between sidebars, tag editing, focus todo, phase-end
+  notification. Not run in UI tests yet.
 - [x] **P4-4 (L) Git layer.** `AletheGit` over the `git` CLI (upstream `git_control.rs`): repository
   discovery, status (porcelain v2 incl. renames, conflicts, submodules), diff and diff summary,
   branches, stage/unstage/discard, commit, pull/push/fetch with progress and credentials left to git,
@@ -1851,6 +1857,11 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   staged/unstaged/conflicts, stage or discard per file or all (discard asks), commit message with ⌘↩,
   amend, branch switcher, pull/push/fetch with status, diff of a file in the diff pane (P2), init for a
   folder without a repository. *Tests:* U, UI. *Parity:* GIT-1.
+  *Done:* Git Control is a sheet (project context menu, History menu): staged / unstaged+untracked /
+  conflicts, stage/unstage per file and all, discard behind a confirmation, commit (⌘↩) with amend, branch
+  switcher, fetch/pull/push with progress, refresh via `GitWatcher`, Initialize Repository, inline errors,
+  a file's diff in a new diff pane (repository paths made folder-relative, `7369910`). Not a PluginHost
+  plugin yet; no branch creation; no U/UI tests yet.
 - [ ] **P4-6 (L) Commit graph.** Lanes laid out like upstream `GitGraph` (merges, branch and tag
   labels, HEAD), a lazy list for long histories, commit detail (message, files, diff), actions:
   cherry-pick, revert, reset soft/mixed/hard (hard asks), branch from commit, copy SHA.
@@ -1859,8 +1870,9 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   lane, extra parents open the first free lane, round-robin color per branch; rows carry lanes before/after,
   top/bottom edges, pass-throughs, refs; `append(_:hasMore:)` paginates with open lanes. Deliberate
   difference: a merge into an already-open lane draws its curve. U 11. Graph view, detail, actions owed.
-- [ ] **P4-7 (S) Incoming/outgoing.** Commits ahead of and behind the upstream branch with fetch, as a
+- [x] **P4-7 (S) Incoming/outgoing.** Commits ahead of and behind the upstream branch with fetch, as a
   Git Control section (upstream `IncomingOutgoing`). *Tests:* G, UI. *Parity:* GIT-3.
+  *Done:* incoming/outgoing sections in Git Control (up to 50 each), refreshed after fetch.
 - [ ] **P4-8 (L) File explorer.** A sidebar tab (upstream `FileExplorer`): lazy tree with file-type
   icons, git badges (P4-4), rename, move to Trash (confirmation only when the Trash is unavailable),
   new file/folder, Quick Look on Space, open in a pane (Markdown, media, text, web), drag to a pane or
