@@ -20,6 +20,8 @@ enum EditorRequest: Identifiable, Hashable {
     case layoutDesigner(ProjectID)
     /// Find/Jump (⌘K; upstream `FindJumpModal`).
     case findJump
+    /// Past conversations of a project (nil: the selected one; P3-7).
+    case conversations(ProjectID?)
 
     var id: String {
         switch self {
@@ -34,6 +36,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .importTauri: "importTauri"
         case .layoutDesigner(let id): "layoutDesigner:\(id)"
         case .findJump: "findJump"
+        case .conversations: "conversations"
         }
     }
 }

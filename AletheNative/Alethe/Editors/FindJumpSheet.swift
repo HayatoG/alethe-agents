@@ -181,7 +181,7 @@ struct FindJumpSheet: View {
 /// Commands Find/Jump can run (upstream plugin `commandContributions`; native built-ins).
 enum JumpCommand: String, CaseIterable, Hashable {
     case newTerminal, newProject, newGroup, addContent, reopenTab, flatWorkspace, focusPane
-    case layoutAuto, layoutSpotlight, layoutSidebar, layoutGrid, designGrid, importTauri, settings
+    case layoutAuto, layoutSpotlight, layoutSidebar, layoutGrid, designGrid, importTauri, settings, conversations
 
     var title: String.LocalizationValue {
         switch self {
@@ -199,6 +199,7 @@ enum JumpCommand: String, CaseIterable, Hashable {
         case .designGrid: "workspace.layout.design"
         case .importTauri: "menu.file.importTauri"
         case .settings: "findJump.settings"
+        case .conversations: "menu.history.conversations"
         }
     }
 
@@ -217,6 +218,7 @@ enum JumpCommand: String, CaseIterable, Hashable {
         case .layoutGrid, .designGrid: PaneLayoutMode.grid.symbol
         case .importTauri: "square.and.arrow.down"
         case .settings: "gearshape"
+        case .conversations: "clock.arrow.circlepath"
         }
     }
 
@@ -229,6 +231,7 @@ enum JumpCommand: String, CaseIterable, Hashable {
         case .reopenTab: "⇧⌘T"
         case .focusPane: "⇧⌘F"
         case .settings: "⌘,"
+        case .conversations: "⌘Y"
         default: nil
         }
     }
@@ -266,6 +269,7 @@ enum JumpCommand: String, CaseIterable, Hashable {
         case .designGrid: if let selected { environment.editorRequest = .layoutDesigner(selected) }
         case .importTauri: environment.editorRequest = .importTauri
         case .settings: NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        case .conversations: environment.editorRequest = .conversations(nil)
         }
     }
 }

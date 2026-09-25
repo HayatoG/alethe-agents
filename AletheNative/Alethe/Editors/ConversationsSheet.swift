@@ -1,0 +1,184 @@
+import AletheAgents
+import AletheDesign
+import AletheModel
+import AppKit
+import SwiftUI
+
+/// Past conversations (upstream `ClaudeHistoryModal` + `RecentChatsModal`): Claude Code or Codex, for
+/// one project or all of them, newest first, filterable. Opening one shows the tab that already holds
+/// it, or starts a new terminal that resumes it.
+struct ConversationsSheet: View {
+    let workspace: WorkspaceModel
+    let undoManager: UndoManager?
+    let initialProject: ProjectID?
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    struct Row: Identifiable, Hashable {
+        let project: ProjectID
+        let summary: ConversationSummary
+        var id: String { summary.id }
+    }
+
+    @State private var agent: AgentKind = .claude
+    @State private var allProjects = false
+    @State private var rows: [Row]?
+    @State private var filter = ""
+    @State private var selection: Row.ID?
+    @State private var unrestricted = false
+
+    private var project: Project? {
+        initialProject.flatMap(workspace.document.project) ?? workspace.document.workspace.selectedProjectID.flatMap(workspace.document.project)
+            ?? workspace.document.projects.first
+    }
+
+    private var visible: [Row] {
+        let query = filter.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return rows ?? [] }
+        return (rows ?? []).filter { row in
+            [row.summary.title, row.summary.firstPrompt, row.summary.id].compactMap { $0 }
+                .contains { $0.localizedCaseInsensitiveContains(query) }
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: metrics.space(.l)) {
+                Picker(selection: $agent) {
+                    Text(verbatim: "Claude Code").tag(AgentKind.claude)
+                    Text(verbatim: "Codex").tag(AgentKind.codex)
+                } label: { EmptyView() }
+                    .pickerStyle(.segmented)
+                    .fixedSize()
+                    .accessibilityIdentifier("conversations.agent")
+                Picker(selection: $allProjects) {
+                    Text(verbatim: project?.name ?? "").tag(false)
+                    Text("conversations.allProjects").tag(true)
+                } label: { EmptyView() }
+                    .fixedSize()
+                    .accessibilityIdentifier("conversations.scope")
+                TextField(text: $filter) { Text("conversations.filter") }
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("conversations.filter")
+            }
+            .padding(metrics.space(.l))
+            Divider()
+            content
+                .frame(height: metrics.size(360))
+            Divider()
+            HStack {
+                if AgentRegistry.builtin.descriptor(for: agent)?.unrestrictedFlag != nil {
+                    Toggle("newTerminal.unrestricted", isOn: $unrestricted)
+                }
+                Spacer()
+                Button("editor.cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("conversations.open") { selection.flatMap { id in visible.first { $0.id == id } }.map(open) }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(selection == nil)
+                    .accessibilityIdentifier("conversations.open")
+            }
+            .padding(metrics.space(.l))
+        }
+        .frame(width: metrics.size(680))
+        .task(id: "\(agent.rawValue)|\(allProjects)") { await load() }
+        .onAppear { unrestricted = environment.preferences?.document.alwaysStartUnrestricted ?? false }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("conversations")
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if rows == nil {
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if visible.isEmpty {
+            Text("conversations.none")
+                .foregroundStyle(theme[.textTertiary])
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            List(visible, selection: $selection) { row in
+                rowView(row)
+                    .tag(row.id)
+                    .contextMenu {
+                        Button("conversations.open") { open(row) }
+                        Button("conversations.copyID") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(row.summary.id, forType: .string)
+                        }
+                    }
+            }
+            .contextMenu(forSelectionType: Row.ID.self) { _ in } primaryAction: { ids in
+                ids.first.flatMap { id in visible.first { $0.id == id } }.map(open)
+            }
+            .accessibilityIdentifier("conversations.list")
+        }
+    }
+
+    private func rowView(_ row: Row) -> some View {
+        let summary = row.summary
+        return VStack(alignment: .leading, spacing: metrics.space(.xxs)) {
+            Text(verbatim: summary.displayTitle ?? String(localized: "conversations.untitled"))
+                .font(metrics.font(.body).weight(.medium))
+                .lineLimit(1)
+            HStack(spacing: metrics.space(.m)) {
+                if allProjects, let name = workspace.document.project(row.project)?.name {
+                    Text(verbatim: name)
+                }
+                Text(summary.modifiedAt, format: .relative(presentation: .named))
+                if let count = summary.messageCount {
+                    Text(String(format: String(localized: "conversations.messages"), count))
+                }
+                Text(verbatim: ByteCountFormatter.string(fromByteCount: summary.sizeBytes, countStyle: .file))
+                if isOpen(row) {
+                    Label("conversations.isOpen", systemImage: "rectangle.on.rectangle")
+                        .foregroundStyle(theme[.accent])
+                }
+            }
+            .font(metrics.font(.footnote))
+            .foregroundStyle(theme[.textSecondary])
+        }
+        .padding(.vertical, metrics.space(.xxs))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("conversations.row.\(summary.id)")
+    }
+
+    // MARK: - Loading and opening
+
+    private func load() async {
+        rows = nil
+        selection = nil
+        let targets = (allProjects ? workspace.document.projects : project.map { [$0] } ?? []).map { ($0.id, $0.folder) }
+        let kind = agent
+        let loaded = await Task.detached {
+            targets.flatMap { id, folder in ConversationHistory.list(kind, cwd: folder).map { Row(project: id, summary: $0) } }
+                .sorted { $0.summary.modifiedAt > $1.summary.modifiedAt }
+        }.value
+        rows = loaded
+    }
+
+    private func isOpen(_ row: Row) -> Bool {
+        workspace.document.projects.contains { $0.panes.contains { $0.tabs.contains { $0.sessionID == row.summary.id } } }
+    }
+
+    /// The tab that holds the conversation, or a new terminal resuming it.
+    private func open(_ row: Row) {
+        let id = row.summary.id
+        if let tab = workspace.document.projects.lazy.flatMap(\.panes).flatMap(\.tabs).first(where: { $0.sessionID == id }) {
+            workspace.update { doc in
+                guard let project = doc.paneHolding(tab.id)?.project else { return }
+                doc.openInTab(project.id)
+                doc.activateTab(tab.id)
+            }
+        } else {
+            let unrestricted = unrestricted && AgentRegistry.builtin.descriptor(for: agent)?.unrestrictedFlag != nil
+            let tab = PaneTab(agent: agent.rawValue, sessionID: id, unrestricted: unrestricted)
+            workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newTerminal")) { doc in
+                doc.openInTab(row.project)
+                doc.addPane(to: row.project, tab: tab)
+            }
+        }
+        dismiss()
+    }
+}

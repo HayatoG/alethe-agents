@@ -174,6 +174,9 @@ private struct HistoryCommands: Commands {
             Button("menu.view.forward") { environment.workspace?.update { $0.navigateHistory(1) } }
                 .keyboardShortcut("]", modifiers: .command)
                 .disabled(document?.canGoForward != true)
+            Button("menu.history.conversations") { environment.editorRequest = .conversations(nil) }
+                .keyboardShortcut("y", modifiers: .command)
+                .disabled(environment.workspace?.document.projects.isEmpty ?? true)
             Divider()
             Button("menu.history.nextTab") { showTab(1) }
                 .keyboardShortcut(.tab, modifiers: .control)

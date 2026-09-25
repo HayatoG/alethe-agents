@@ -137,4 +137,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Antigravity) or Claude Code's aliases, or type any model id; leave it empty for the agent's default.
 - OpenCode, Antigravity and Cursor terminals now pick up their conversation again after Alethe
   restarts, like Claude Code and Codex. Resume Previous Conversations also covers Antigravity.
+- History › Conversations… (⌘Y) lists your past Claude Code and Codex conversations for the project
+  or for all projects, with titles, dates and sizes. Open one to pick it up in a new terminal — or to
+  jump to the tab where it is already open.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

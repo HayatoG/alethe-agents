@@ -232,6 +232,7 @@ private struct ProjectContextMenu: View {
                     .disabled(doc.location(of: project.id) == .group(group.id))
             }
         }
+        Button("menu.history.conversations") { environment.editorRequest = .conversations(project.id) }
         Menu("sidebar.grids") {
             Button("projectGrid.main") { actions.workspace.update { $0.activateGrid(nil, in: project.id) } }
             ForEach(project.namedGrids) { grid in

@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-7. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-8. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1567,9 +1567,23 @@ ship; they run per the test cadence above.
   CLI and runs alongside the launch — OpenCode records a session only with the first message.
   *Tests (written, not run — owner decision):* `MoreSessionsTests` (4, including upstream's Cursor id
   cases). Compiled.
-- [ ] **P3-7 (M) Conversation history and recent chats.** A sheet per project listing Claude Code and
+- [x] **P3-7 (M) Conversation history and recent chats.** A sheet per project listing Claude Code and
   Codex conversations (title, date, size), opening one in a new tab that resumes it; recent chats
   across projects. *Tests:* U (listing), UI. *Parity:* SE-3.
+  *Done:* `AletheAgents/ConversationHistory`: `JSONLReader` streams a JSONL file in 256 KB chunks,
+  skipping lines past 4 MB whole and stopping when asked (transcripts run to many MB). Claude Code
+  (upstream `list_claude_sessions`): every transcript of the project folder, with its `ai-title`, first
+  user prompt (240 characters) and user + assistant message count — byte probes on each line, a full
+  parse only for the lines that matter, as upstream avoids building every record. Codex: rollouts whose
+  `session_meta` names the folder, titled by the first real user turn (injected `<tag>` blocks skipped,
+  200 lines at most — upstream `get_codex_session_title`). `Editors/ConversationsSheet` (History ›
+  Conversations… ⌘Y, the project's sidebar menu, Find/Jump): Claude Code or Codex, this project or all
+  projects (upstream's recent chats), filter, newest first with relative date, messages and size, a mark
+  on conversations already open in a tab. Open (↩, double-click, menu) shows the tab holding the
+  conversation, or opens the project's tab with a new terminal resuming it (unrestricted toggle).
+  Loading runs off the main thread.
+  *Tests (written, not run — owner decision):* `ConversationHistoryTests` (4, fixture homes), UI
+  `ConversationsTests`. Compiled.
 - [ ] **P3-8 (M) Session cost.** Token usage from transcripts with a pricing table (upstream
   `get_model_pricing`), OpenCode from `opencode.db` (SQLite, read-only), shown per tab and in history.
   *Tests:* U (fixtures, pricing). *Parity:* SE-4.
@@ -1701,7 +1715,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | AG-9 | Model discovery | P3 | Done | P3-5; real listings + Claude aliases, no stale fallback lists; any id can be typed |
 | SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Done | Claude + Codex (P1-10); OpenCode, Antigravity, Cursor (P3-6) |
 | SE-2 | Resume last session | P2 | Done | P2-26; Terminal › Resume Previous Conversations (Claude Code, Codex) |
-| SE-3 | Claude history + recent chats | P3 | Not started | |
+| SE-3 | Claude history + recent chats | P3 | Done | P3-7; History › Conversations… ⌘Y, Claude Code + Codex, one or all projects |
 | SE-4 | Session/transcript cost | P3 | Not started | |
 | GIT-1 | Git Control | P4 | Not started | Built-in plugin |
 | GIT-2 | Commit graph | P4 | Not started | |
