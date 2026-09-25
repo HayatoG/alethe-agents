@@ -2003,6 +2003,11 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   only for new capabilities, `isAllowed` for XPC requests), U 10. Open: an Xcode extension-point + sample
   extension target, the load and crash-containment UI tests.
 - [ ] **P4-20 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+  *Partial review (2026-09-25 02:45):* package suite 498 green; strings gate ok; Debug app builds. The
+  process-spawning terminal suites got a one-minute time limit after a rare hang (1 in ~15 runs of
+  `AletheTerminalTests`, not reproduced under sampling) stalled a full run — root cause still open. Not
+  done: parity matrix statuses, upstream-watch, UI tests, and a manual pass of all Phase 4 UI (none of it
+  has been launched yet).
 
 **Phase 4 exit criteria:** Git Control, the graph and the Merge Center cover upstream's flows on real
 repositories; the file explorer, worktrees and PRs work from the sidebar; Todos, Pomodoro and the theme
