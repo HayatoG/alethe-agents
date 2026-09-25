@@ -2179,7 +2179,7 @@ cadence above.
   Alethe Data (ask once, relaunch), Open Data Folder. *Tests:* U (export/import round-trip in a temporary
   root, exclusions, a corrupt archive is refused before anything is removed), UI (dialogs, no action
   without confirmation). *Parity:* SET-4.
-- [ ] **P5-11 (L) Logs, diagnostics and crash report.** `os.Logger` per domain (terminal, agents, git,
+- [x] **P5-11 (L) Logs, diagnostics and crash report.** `os.Logger` per domain (terminal, agents, git,
   integrations, persistence; values `.private`); errors shown to the user are also recorded (upstream
   `logging.rs` `record_app_event`, `AuditModal`) and listed in Help › Diagnostics… (recent errors, export
   as JSON — SET-11 replaced); Export Logs (this run from `OSLogStore`, earlier runs from a small rotating
@@ -2188,6 +2188,15 @@ cadence above.
   launch offers the newest `DiagnosticReports/Alethe-*.ips` and MetricKit crash diagnostics to view or
   export. *Tests:* U (marker states, export assembly, secrets absent), UI (the after-crash notice with a
   seeded marker). *Parity:* SET-4, SET-11, USE-4.
+  *Done:* (`ac91d10`) `AletheFoundation/Diagnostics`: `os.Logger` per domain with private values;
+  warnings/errors kept in memory (300) and in rotating `alethe.log`; `spawn.log` records env names only;
+  `SecretRedactor` strips keys/tokens (sk-, GitHub, Slack, AWS, Google, JWT), Bearer headers, URL
+  passwords and secret-named `key=value` from logs and exports. Help › Diagnostics… (list, JSON export,
+  Clear), Export Logs… (zip with this run's OSLog entries), Open Logs Folder (`<data root>/logs/`,
+  shared by profiles). A clean-exit marker (`last_session.json`) drives an after-crash notice offering
+  the newest `Alethe-*.ips` and MetricKit data to view or save; never sent. User-visible errors across
+  Git, Files, Merge, PR review, Todos and web panes are recorded. Tests (U + UI `CrashNoticeTests`)
+  written and compiled, NOT run.
 - [x] **P5-12 (S) App icon themes.** Upstream's four (`elite-original`, `elite-pure-black`,
   `elite-indigo`, `elite-blush`; `src/assets/theme-icons/`) as app resources, picked in Settings ›
   Appearance and applied with `NSApp.applicationIconImage` (the bundle is never modified: it would break

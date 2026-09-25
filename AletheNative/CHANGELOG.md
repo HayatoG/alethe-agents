@@ -240,6 +240,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the previous Alethe.
 - Settings › Appearance › App Icon: four Dock icons (Elite Original, Pure Black, Indigo, Blush),
   imported from the previous Alethe.
+- Help › Diagnostics… (recent warnings and errors, JSON export), Export Logs… and Open Logs Folder, with
+  secrets removed; after an unexpected quit Alethe offers the crash report to view or save, never
+  sending it.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
