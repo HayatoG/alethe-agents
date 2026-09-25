@@ -2557,7 +2557,7 @@ above.
   write is dropped (the next transition rewrites everything), as upstream. P6-6 wires
   restore/persist/flush. Tests (upstream goldens ported at store level + file shape, corrupt file,
   coalescing) written and compiled, NOT run.
-- [ ] **P6-3 (M) Worker process host.** `WorkerProcess` actor: spawns a `Launcher` in the job's folder
+- [x] **P6-3 (M) Worker process host.** `WorkerProcess` actor: spawns a `Launcher` in the job's folder
   with a clean environment (the login-shell PATH the P3 launcher resolver builds) in its own process
   group; stdin/stdout pipes (`O_CLOEXEC`), stderr discarded like upstream; an ordered line writer that
   never runs inside the core's isolation (upstream `stage_rpc` + `send_rpc`: a full pipe blocks only its
@@ -2572,6 +2572,16 @@ above.
   `spawn.log` with environment names only, P5-11). Needs P6-1. *Tests:* U (arguments, a child ignoring
   SIGTERM is killed and reaped, a full pipe does not block another worker, stale-worker matching), P
   (spawn to first line). *Parity:* ORC-2.
+  *Done:* (`c8effd2`) `AletheOrchestrator/Worker`: `WorkerProcess` actor (posix_spawn in the job folder
+  as its own process group; close-on-exec pipes that never raise SIGPIPE; stderr to /dev/null; stdout as
+  an `AsyncStream` of JSON lines; `WorkerLineWriter` one ordered queue per worker; `terminate()` SIGTERM
+  to the group, SIGKILL to the tree after 2 s, then reap). `WorkerRegistry` records workers in
+  `<profile>/orchestrator-workers.json`; `terminateLeftovers()` matches pid, executable (recorded at
+  spawn and after the first line), start time and boot — never the command line.
+  `Launcher.codexAppServer`/`claudeHeadless` (+`--resume`), `WorkerLaunchers` (a missing CLI fails only
+  its jobs: "no worker launcher configured for agent X"), scrubbed `WorkerEnvironment`. New
+  `orchestrator` log domain; spawns in `spawn.log` with env names only. P6-9 calls
+  `terminateLeftovers()` at launch. Tests written and compiled, NOT run.
 - [x] **P6-4 (L) Codex app-server worker protocol.** A pure state machine from JSON lines to worker
   events and back (upstream `spawn_worker` handshake, `on_worker_message`, `on_worker_request`):
   `initialize` with `experimentalApi`, `initialized`, `thread/start` (approval policy `never` or the
@@ -2593,7 +2603,7 @@ above.
   `pump(lines:handle:write:)` writes one compact JSON message per call (framing is the host's). P6-6
   must copy `session.nextRequestID` back to the job and may ignore `requestFailed` like upstream. Tests
   (upstream goldens incl. a recorded transcript + units) written and compiled, NOT run.
-- [ ] **P6-5 (M) Claude Code stream-json worker protocol.** The same contract for Claude workers
+- [x] **P6-5 (M) Claude Code stream-json worker protocol.** The same contract for Claude workers
   (upstream `on_worker_message_claude`): the first user message is the first turn (no handshake),
   `--resume <session>` for an interrupted job; `system` `init` (session id) and `permission_denied`
   (reported: the stream has no approval channel, upstream runs `bypassPermissions`), `assistant` text
@@ -2604,6 +2614,14 @@ above.
   `a_claude_worker_picks_up_its_own_uncommitted_changes_as_a_diff`,
   `steering_a_running_claude_worker_interrupts_instead_of_waiting_out_the_turn`,
   `steering_a_settled_claude_worker_queues_the_next_turn` as transcript fixtures). *Parity:* ORC-2.
+  *Done:* (`d0b7073`) `ClaudeWorkerProtocol`: pure functions over `Job` (no handshake — the first user
+  message is the first turn; interrupted jobs resume with `--resume <session>`); `system` init (session
+  id) and `permission_denied`; assistant text (reply keeps the last 16 000 chars); `rate_limit_event` as
+  live quota; `result` (running and last-turn tokens, `total_cost_usd` summed, reply as fallback
+  summary). Steering queues the correction then interrupts (the aborted result is not announced); cancel
+  interrupts with `cancel_queued`; diff is `git diff HEAD` via `GitRunner`; `line(_:)` frames stdin.
+  Fixtures: 4 upstream transcripts + 1 hand-written. Tests (4 goldens + 13 units) written and compiled,
+  NOT run.
 - [ ] **P6-6 (L) Orchestrator core: queue and lifecycle.** `OrchestratorCore` actor (upstream `Core`):
   launchers by kind, concurrency limit (default 4, clamped 1…16), a FIFO queue drained as slots free,
   workers spawned through P6-3 with the P6-4/P6-5 protocol, deliveries with a sequence number,
@@ -2682,7 +2700,7 @@ above.
   `Alethe/Orchestrator/SubagentTracker.swift`. Needs P6-12. *Tests:* G
   (`orchestratorSubagents.test.ts`), U (hook parsing, settings with and without the feature). *Parity:*
   ORC-1 (subagents).
-- [ ] **P6-12 (M) Board model.** Pure ports in `AletheOrchestrator/Board`: runs and planners
+- [x] **P6-12 (M) Board model.** Pure ports in `AletheOrchestrator/Board`: runs and planners
   (`lib/orchestratorRuns.ts`: lanes and their order, counts, worst state, attention, `groupRuns`,
   `groupPlanners` with declared, orphaned and planner-less groups in a stable order,
   `aggregateAgentSpend`), the canvas layout (`lib/orchestratorGraph.ts`: one tree per run, planner → run
@@ -2691,6 +2709,13 @@ above.
   report; POSIX paths instead of drive letters), context share, elapsed time and token formatting. Needs
   P6-1. *Tests:* G (upstream `orchestratorRuns.test.ts` 25, `orchestratorGraph.test.ts` 30,
   `orchestratorMedia.test.ts` 5, Windows paths rewritten as POSIX). *Parity:* ORC-1.
+  *Done:* (`3e9a32e`) pure `AletheOrchestrator/Board`: `RunLane`/`RunCounts`/`RunAttention`,
+  `BoardRun.group`, `PlannerGroup.group` (declared planners with fixed en_US_POSIX collation, then gone
+  planners, then no planner), `AgentSpend.aggregate`; `BoardLayout` (media cards, `ConnectorStep` +
+  upstream SVG `d`, label point, fit/zoom/focus, scale 0.35…1.6, JavaScript rounding and number
+  printing); `BoardMedia` (≤4 items, POSIX `/` and `~/` paths); `BoardFormat`; `NativeSubagents.jobs`
+  (upstream `nativeSubagentJobs`, ready for P6-11). Tests (runs 25, graph 30, media 5, subagents 2 +
+  units) written and compiled, NOT run.
 - [x] **P6-13 (M) Orchestrator pane and entry points.** Pane kind `orchestrator`
   (`{"kind":"orchestrator"}`; old workspace files unaffected) in `ContentPaneRegistry` with
   `OrchestratorPaneView` (an empty state until P6-14); Add Content › Orchestration and project menu ›
@@ -2768,13 +2793,22 @@ above.
   `PlanningUpdated` from `.planning/` watchers for projects that the scheduler or autocommit `follow`
   (folders outside a git checkout rejected, as upstream). Tests (upstream bus/telemetry cases + ring,
   filter, redaction, JSON keys) written and compiled, NOT run.
-- [ ] **P6-19 (S) Event publishers.** The events upstream publishes outside the scheduler, from their
+- [x] **P6-19 (S) Event publishers.** The events upstream publishes outside the scheduler, from their
   native equivalents, with upstream's names and data keys: Merge Center analysis and conflict resolution
   (`merge_analyzer.rs`, `conflict_resolution.rs`), Graphify generation (`graphify.rs`), plugin load
   failures (`plugins.rs`), resource policy actions (`resource_manager.rs`; `supervisor.rs` timeouts and
   restarts only where P2-24 has an equivalent). Files: the owning app controllers only
   (`GraphifyController`, the Merge Center model, the plugin host wiring, `ResourceMonitor`). Needs
   P6-18. *Tests:* U (each publisher emits one event in upstream's shape). *Parity:* ORC-3.
+  *Done:* (`eafc49d`) `BusEvent` builders (`PublishedEvents`) and a non-blocking `EventOutbox` (holds
+  the newest 64 until a bus attaches). Publishers: Merge Center model
+  (Clean/Conflict/Requested/Validated/ValidationFailed/Merged/Aborted), `GraphifyController`
+  (`GraphUpdated` on generate/bootstrap/rollback), `ResourceMonitor` (`ResourceMetricsUpdated` each
+  pass; pressure mapped to Ok/Medium/Critical, `webview_mb` 0), plugin host and extension manager
+  (`PluginEnabled`/`PluginDisabled` + new `PluginFailed`). The plugin bus is attached from Settings ›
+  Plugins until P6-9 wires `plugins?.events.attach(multiagent.bus)` in `AppEnvironment`. Not ported:
+  supervisor events (no P2-24 equivalent), snapshot/prune events, PluginInstalled/Removed. Tests written
+  and compiled, NOT run.
 - [x] **P6-20 (M) Scheduler.** `AletheOrchestrator/Scheduler` (upstream `scheduler.rs`): tasks from the
   roadmap checkboxes of `.planning/task.md` (P5-20 `PlanningGate` parser) with ids derived from project
   and text, each depending on the one before; a reload keeps running, done and failed tasks and drops
