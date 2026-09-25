@@ -143,7 +143,7 @@ struct AppearanceSettings: View {
 
 /// The built-in themes as swatch tiles, in the Tauri app's picker order. Selecting one applies it
 /// everywhere at once, terminals included.
-private struct ThemeGrid: View {
+struct ThemeGrid: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics

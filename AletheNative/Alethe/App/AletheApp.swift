@@ -183,6 +183,8 @@ private struct ViewCommands: Commands {
                 environment.showingHome = true
             }
             .disabled(environment.workspace == nil)
+            Button("menu.help.showOnboarding") { environment.editorRequest = .onboarding }
+                .disabled(environment.workspace == nil)
             Divider()
             Button("menu.help.diagnostics") { environment.editorRequest = .diagnostics }
                 .disabled(environment.workspace == nil)

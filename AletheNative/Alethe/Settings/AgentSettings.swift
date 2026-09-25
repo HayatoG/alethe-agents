@@ -28,7 +28,7 @@ struct AgentSettings: View {
     }
 }
 
-private struct AgentSettingsRow: View {
+struct AgentSettingsRow: View {
     let agent: AgentDescriptor
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme

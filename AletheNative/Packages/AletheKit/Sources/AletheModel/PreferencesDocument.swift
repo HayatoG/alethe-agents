@@ -70,6 +70,13 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     /// The Graphify CLI (Settings › Features › Graphify, P5-17): a command name looked up like the
     /// agents' CLIs, or a path; nil is `graphify`.
     public var graphifyCommand: String?
+    /// The first-run sheet was finished or skipped (upstream `onboardingDone`; P5-26).
+    public var onboardingDone: Bool?
+    /// The first launch of this profile (upstream `firstLaunchAt`); welcome back counts days from it.
+    public var firstLaunchAt: Date?
+    /// The previous launch and the version it ran, for welcome back after an update or a long absence.
+    public var lastLaunchAt: Date?
+    public var lastSeenVersion: String?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

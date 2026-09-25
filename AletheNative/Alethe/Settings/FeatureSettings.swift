@@ -40,8 +40,10 @@ struct FeatureSettings: View {
     }
 }
 
-private struct FeatureRow: View {
+struct FeatureRow: View {
     let feature: Feature
+    /// The onboarding lists the toggles only; options stay in Settings.
+    var showsOptions = true
     @Environment(AppEnvironment.self) private var environment
 
     private var isOn: Binding<Bool> {
@@ -59,7 +61,7 @@ private struct FeatureRow: View {
             Text(feature.detail)
         }
         .accessibilityIdentifier("settings.feature.\(feature.rawValue)")
-        if isOn.wrappedValue {
+        if showsOptions, isOn.wrappedValue {
             FeatureOptions(feature: feature)
         }
     }

@@ -48,6 +48,10 @@ enum EditorRequest: Identifiable, Hashable {
     case skills
     /// The GSD Sync child session's activity (P5-24; upstream `GsdSyncActivityView`).
     case gsdSyncActivity(GSDSyncActivityTarget)
+    /// The first-run sheet (P5-26); Help › Show Onboarding… reopens it.
+    case onboarding
+    /// Welcome back after an update or a long absence (upstream `WelcomeModal`).
+    case welcome(WelcomeBack)
 
     var id: String {
         switch self {
@@ -75,6 +79,8 @@ enum EditorRequest: Identifiable, Hashable {
         case .crashNotice: "crashNotice"
         case .skills: "skills"
         case .gsdSyncActivity(let target): "gsdSyncActivity:\(target.sessionID)"
+        case .onboarding: "onboarding"
+        case .welcome: "welcome"
         }
     }
 }

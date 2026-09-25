@@ -9,6 +9,8 @@ import SwiftUI
 struct TauriImportSheet: View {
     let workspace: WorkspaceModel
     let undoManager: UndoManager?
+    /// Told what an import added (the onboarding's import step shows it).
+    var onImported: ((TauriImport.Report) -> Void)?
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
     @Environment(\.metrics) private var metrics
@@ -93,7 +95,7 @@ struct TauriImportSheet: View {
         }
         .navigationTitle(Text("import.title"))
         .onAppear {
-            profiles = Self.testProfiles ?? TauriDataLocation.defaultRoot().map { TauriDataLocation.profiles(root: $0) } ?? []
+            profiles = Self.availableProfiles()
             profileID = profiles.first?.id
             refreshPreview()
         }
@@ -223,6 +225,7 @@ struct TauriImportSheet: View {
             languageChanged = language != environment.launchLanguage
         }
         done = report
+        onImported?(report)
     }
 
     /// Drops the language when it is one the app does not offer or the one already chosen.
@@ -235,14 +238,17 @@ struct TauriImportSheet: View {
         return report
     }
 
-    /// `-AletheTauriProjectsFile <path>` (debug builds): one fixture file instead of the Tauri app's
-    /// profiles, for UI tests. Profile discovery itself is unit-tested.
-    private static var testProfiles: [TauriProfile]? {
+    /// The Tauri app's profiles on this Mac. Reads a few small files; the onboarding asks it once.
+    nonisolated static func availableProfiles() -> [TauriProfile] {
         #if DEBUG
+        // `-AletheTauriProjectsFile <path>`: one fixture file instead of the Tauri app's profiles, for
+        // UI tests. Under a test data root without it, the Mac's own Tauri data is never offered.
+        // Profile discovery itself is unit-tested.
         if let path = UserDefaults.standard.string(forKey: "AletheTauriProjectsFile") {
             return [TauriProfile(id: "test", name: "Test", projectsFile: URL(filePath: path), isActive: true)]
         }
+        if UserDefaults.standard.string(forKey: "AletheDataRoot") != nil { return [] }
         #endif
-        return nil
+        return TauriDataLocation.defaultRoot().map { TauriDataLocation.profiles(root: $0) } ?? []
     }
 }

@@ -103,6 +103,10 @@ struct MainWindow: View {
             SkillsSheet(store: environment.skillStore)
         case .gsdSyncActivity(let target):
             GSDSyncActivitySheet(target: target)
+        case .onboarding:
+            OnboardingSheet(workspace: workspace, undoManager: undoManager)
+        case .welcome(let welcome):
+            WelcomeBackSheet(welcome: welcome)
         }
     }
 
