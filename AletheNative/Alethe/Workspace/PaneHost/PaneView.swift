@@ -77,6 +77,7 @@ final class PaneView: NSView {
             onMoveToGrid: { context.movePane(pane.id, toGrid: $0) },
             isInFocusMode: context.environment.focusModePaneID == pane.id,
             onToggleFocus: { context.setFocusMode(context.environment.focusModePaneID == pane.id ? nil : pane.id) },
+            onDisable: { context.setDisabled(pane.id, true) },
             onDrag: onDrag))
         configureLane(pane: pane, project: project, focused: focused, context: context)
 
@@ -88,14 +89,17 @@ final class PaneView: NSView {
         let switched = tabID != nil && tabID != tab.id
         tabID = tab.id
         setAccessibilityIdentifier("pane.\(tab.title ?? tab.agent)")
-        environment.terminals.ensureStarted(tab, in: project, environment: environment)
-        attachTerminal(environment.terminals.view(for: tab.id))
-        followSearch(of: environment.terminals.view(for: tab.id))
+        // A disabled pane runs nothing (P2-23): no process, only the enable overlay.
+        if !pane.isDisabled { environment.terminals.ensureStarted(tab, in: project, environment: environment) }
+        attachTerminal(pane.isDisabled ? nil : environment.terminals.view(for: tab.id))
+        followSearch(of: pane.isDisabled ? nil : environment.terminals.view(for: tab.id))
         projectID = project.id
         observeOffer(for: tab.id)
 
-        if TerminalOverlay.isNeeded(for: environment.terminals.states[tab.id]) {
-            let root = context.hosted(TerminalOverlay(tab: tab, project: project))
+        if pane.isDisabled || TerminalOverlay.isNeeded(for: environment.terminals.states[tab.id]) {
+            let root = pane.isDisabled
+                ? context.hosted(DisabledPaneOverlay(onEnable: { context.setDisabled(pane.id, false) }))
+                : context.hosted(TerminalOverlay(tab: tab, project: project))
             if let overlay {
                 overlay.rootView = root
             } else {

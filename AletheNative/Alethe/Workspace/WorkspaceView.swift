@@ -25,6 +25,9 @@ struct WorkspaceView: View {
             environment.workspace?.update { $0.syncActiveTab() }
         }
         .onChange(of: allTabIDs) { _, tabs in environment.terminals.prune(keeping: tabs) }
+        .onChange(of: environment.workspace?.document.disabledTabIDs ?? []) { _, tabs in
+            for tab in tabs { environment.terminals.suspend(tab) }
+        }
         .onChange(of: allPaneIDs) { _, panes in
             environment.contentPanes.prune(keeping: panes)
             if let focus = environment.focusModePaneID, !panes.contains(focus) { environment.focusModePaneID = nil }

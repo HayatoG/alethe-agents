@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-22 (P2-1…P2-5 tested; P2-6…P2-22
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-23 (P2-1…P2-5 tested; P2-6…P2-23
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-23. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-24. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1342,8 +1342,22 @@ they run per the test cadence above.
   *Deviation:* upstream's Graphify toggle on the card is left for Graphify's own task.
   *Tests (written, not run — owner decision 2026-09-24):* UI `WorkspaceLauncherTests` (first run, quick
   actions, HT at three zoom levels). Compiled.
-- [ ] **P2-23 (M) Disable and suspend.** Disable a terminal or project, suspend a group (SIGSTOP/SIGCONT),
+- [x] **P2-23 (M) Disable and suspend.** Disable a terminal or project, suspend a group (SIGSTOP/SIGCONT),
   shown in the sidebar. *Tests:* U, UI. *Parity:* WS-14, SB-3.
+  *Done:* `Pane.disabled`, `ProjectGroup.suspended` (optional; older files decode unchanged).
+  `AletheModel/Suspension`: `setDisabled`, `setProjectDisabled` (every pane; disabling closes the
+  container), `suspendGroup` / `resumeGroup` (every project of the group and its subgroups),
+  `isProjectDisabled`, `isSuspended`, `projectIDs(inGroupTree:)`, `disabledTabIDs`. Runtime: a
+  disabled pane starts nothing and shows `DisabledPaneOverlay` (Enable); `WorkspaceView` suspends the
+  tabs of newly disabled panes through `TerminalRegistry.suspend` (process tree ended, saved output
+  kept), so enabling replays the output and resumes the agent session like a relaunch. UI: pane menu
+  Disable Terminal; sidebar tab menu Disable/Enable Terminal, project menu Disable/Enable Project,
+  group menu Suspend Group… (confirmation alert, upstream `SuspendGroupModal`) / Resume Group; disabled
+  terminals and projects dimmed with a pause icon, suspended groups marked. All undoable.
+  *Deviation:* the plan said SIGSTOP/SIGCONT; upstream ends the processes (`suspend_session` kills the
+  PTY tree and keeps the scrollback), which is what frees memory, so the native app does the same.
+  *Tests (written, not run — owner decision 2026-09-24):* `SuspensionTests` (4), UI `DisableTests`
+  (disable, enable, ⌘Z). Compiled.
 - [ ] **P2-24 (L) Resources: hibernation, priorities, RAM.** Memory per process tree, idle hibernation
   (scrollback kept, process resumed on focus), priorities, pressure handling, memory indicator.
   *Tests:* U (policy), P (memory per hibernated terminal). *Parity:* USE-3.
@@ -1427,7 +1441,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-11 | Add content | P2 | Done | Markdown (P2-9), image/video (P2-10), Git changes (P2-11), website (P2-12); orchestration with ORC-1 |
 | WS-12 | Link viewer overlay | P2 | Done | P2-14; sheet + link actions menu (⇧⌘-click) |
 | WS-13 | Empty workspace launcher | P2 | Done | P2-22; Find/Jump row added with P2-25 |
-| WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
+| WS-14 | Disable terminal/project, suspend group | P2 | Done | P2-23; processes end with output kept (upstream behavior, not SIGSTOP) |
 | TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); shell integration marks (P2-3); process-tree kill (P2-2); process-tree info later |
 | TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |
 | TERM-3 | Terminal search | P0 spike, P2 | Done | P2-4; Ghostty search is case-insensitive only |
@@ -1441,7 +1455,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-11 | `alethe` CLI shim | P5 | Not started | |
 | SB-1 | Project tree (Normal/Clean) | P1 | Partial | Tree, reorder, drag and drop, context menus (P1-4); Clean mode with UI-2 |
 | SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Partial | Name, color, folder, group (P1-5); clone, marker, git init, stack in P5 |
-| SB-3 | Groups (nested, suspend) | P1, P2 | Partial | Nested groups (P1-4/P1-5); suspend comes with WS-14 |
+| SB-3 | Groups (nested, suspend) | P1, P2 | Done | Nested groups (P1-4/P1-5); suspend and resume (P2-23) |
 | SB-4 | Export/import project config | P5 | Not started | |
 | SB-5 | Live chat title + busy/done glyph | P3 | Not started | |
 | SB-6 | Open in VS Code / Finder / browser | P5 | Not started | `NSWorkspace` |

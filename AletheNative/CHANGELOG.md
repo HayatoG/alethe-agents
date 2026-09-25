@@ -104,4 +104,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - When nothing is open, the workspace offers quick actions with their shortcuts — open the
   selected project, new terminal, new project, add content, reopen a closed tab. Before your first
   project, pick an agent and open a folder: Alethe makes it a project and starts the agent there.
+- Disable a terminal (its menu, or the sidebar) to stop it without losing it: nothing runs until you
+  enable it, and its output comes back. Disable a whole project the same way, or suspend a group
+  to stop every project in it and free their memory; Resume Group brings them back. All of it can
+  be undone with ⌘Z.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

@@ -15,6 +15,8 @@ public struct ProjectGroup: Codable, Hashable, Sendable, Identifiable {
     /// Projects directly in this group, in sidebar order.
     public var projectIDs: [ProjectID]
     public var isCollapsed: Bool
+    /// Suspended: every project under it is disabled (upstream `group.suspended`, P2-23).
+    public var suspended: Bool?
 
     public init(id: GroupID = .make(), name: String, color: ProjectColor? = nil, parentID: GroupID? = nil,
                 projectIDs: [ProjectID] = [], isCollapsed: Bool = false) {
@@ -70,6 +72,9 @@ public struct Pane: Codable, Hashable, Sendable, Identifiable {
     public var laneVisible: Bool?
     /// The named grid of the project holding the pane; nil is the main grid (P2-20).
     public var gridID: ProjectGridID?
+    /// Disabled: nothing runs until enabled again (upstream `terminal.disabled`, P2-23); nil is
+    /// enabled.
+    public var disabled: Bool?
 
     public init(id: PaneID = .make(), content: PaneContent = .terminal, tabs: [PaneTab] = [],
                 activeTabID: TabID? = nil, laneVisible: Bool? = nil) {

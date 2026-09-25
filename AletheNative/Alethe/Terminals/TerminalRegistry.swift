@@ -75,6 +75,12 @@ final class TerminalRegistry {
         claims.release(owner: tab.rawValue)
     }
 
+    /// A disabled terminal: its process ends, its saved output stays for when it is enabled again.
+    func suspend(_ tab: TabID) {
+        guard states[tab] != nil else { return }
+        close(tab, keepScrollback: true)
+    }
+
     func dismissPageOffer(for tab: TabID) {
         pageOffers.removeValue(forKey: tab)
     }

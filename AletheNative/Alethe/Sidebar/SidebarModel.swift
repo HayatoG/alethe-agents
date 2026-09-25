@@ -150,6 +150,41 @@ struct SidebarActions {
         }
     }
 
+    func setProjectDisabled(_ project: ProjectID, _ disabled: Bool) {
+        workspace.update(undoManager: undoManager,
+                         actionName: String(localized: disabled ? "undo.disableProject" : "undo.enableProject")) {
+            $0.setProjectDisabled(project, disabled)
+        }
+    }
+
+    func setTabDisabled(_ tab: TabID, _ disabled: Bool) {
+        guard let pane = workspace.document.paneHolding(tab)?.pane else { return }
+        workspace.update(undoManager: undoManager,
+                         actionName: String(localized: disabled ? "undo.disableTerminal" : "undo.enableTerminal")) {
+            $0.setDisabled(pane.id, disabled)
+        }
+    }
+
+    /// Suspending asks first: it ends every terminal of the group's projects (upstream
+    /// `SuspendGroupModal`).
+    func suspendGroup(_ group: ProjectGroup) {
+        let alert = NSAlert()
+        alert.messageText = String(format: String(localized: "suspendGroup.title"), group.name)
+        alert.informativeText = String(localized: "suspendGroup.message")
+        alert.addButton(withTitle: String(localized: "suspendGroup.confirm"))
+        alert.addButton(withTitle: String(localized: "editor.cancel"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        workspace.update(undoManager: undoManager, actionName: String(localized: "undo.suspendGroup")) {
+            $0.suspendGroup(group.id)
+        }
+    }
+
+    func resumeGroup(_ group: GroupID) {
+        workspace.update(undoManager: undoManager, actionName: String(localized: "undo.resumeGroup")) {
+            $0.resumeGroup(group)
+        }
+    }
+
     func setCollapsed(_ group: GroupID, _ collapsed: Bool) {
         workspace.update { $0.updateGroup(group) { $0.isCollapsed = collapsed } }
     }

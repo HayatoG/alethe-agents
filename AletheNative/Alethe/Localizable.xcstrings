@@ -3248,6 +3248,74 @@
         }
       }
     },
+    "pane.disable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable Terminal"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desativar Terminal"
+          }
+        }
+      }
+    },
+    "pane.disabled.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing runs here until you enable it; its output is kept."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada roda aqui até você ativá-lo; a saída fica guardada."
+          }
+        }
+      }
+    },
+    "pane.disabled.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal disabled"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal desativado"
+          }
+        }
+      }
+    },
+    "pane.enable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Terminal"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativar Terminal"
+          }
+        }
+      }
+    },
     "pane.fillFreeSpace" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3911,6 +3979,23 @@
         }
       }
     },
+    "sidebar.disableProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable Project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desativar Projeto"
+          }
+        }
+      }
+    },
     "sidebar.editGroup" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3941,6 +4026,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Editar Projeto…"
+          }
+        }
+      }
+    },
+    "sidebar.enableProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativar Projeto"
           }
         }
       }
@@ -4047,6 +4149,23 @@
         }
       }
     },
+    "sidebar.resumeGroup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume Group"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retomar Grupo"
+          }
+        }
+      }
+    },
     "sidebar.revealInFinder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4060,6 +4179,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mostrar no Finder"
+          }
+        }
+      }
+    },
+    "sidebar.suspendGroupEllipsis" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspend Group…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspender Grupo…"
+          }
+        }
+      }
+    },
+    "sidebar.suspended" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspended"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspenso"
           }
         }
       }
@@ -4162,6 +4315,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mostrar sub-abas"
+          }
+        }
+      }
+    },
+    "suspendGroup.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspend"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspender"
+          }
+        }
+      }
+    },
+    "suspendGroup.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every terminal of its projects stops and their workspaces close, freeing memory. Their output is kept, and Resume Group brings them back."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos os terminais dos seus projetos param e seus workspaces fecham, liberando memória. A saída fica guardada, e Retomar Grupo os traz de volta."
+          }
+        }
+      }
+    },
+    "suspendGroup.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspend “%@”?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspender “%@”?"
           }
         }
       }
@@ -5033,6 +5237,40 @@
         }
       }
     },
+    "undo.disableProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable Project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desativar Projeto"
+          }
+        }
+      }
+    },
+    "undo.disableTerminal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable Terminal"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desativar Terminal"
+          }
+        }
+      }
+    },
     "undo.editGroup" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5063,6 +5301,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Editar Projeto"
+          }
+        }
+      }
+    },
+    "undo.enableProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativar Projeto"
+          }
+        }
+      }
+    },
+    "undo.enableTerminal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Terminal"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativar Terminal"
           }
         }
       }
@@ -5233,6 +5505,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Renomear Grade"
+          }
+        }
+      }
+    },
+    "undo.resumeGroup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume Group"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retomar Grupo"
+          }
+        }
+      }
+    },
+    "undo.suspendGroup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspend Group"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspender Grupo"
           }
         }
       }

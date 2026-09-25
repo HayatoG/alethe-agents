@@ -95,6 +95,14 @@ struct PaneHostContext {
         workspace?.update { $0.setLayoutMode(mode, for: project) }
     }
 
+    /// Disabling ends the pane's processes (their output is kept); undoable.
+    func setDisabled(_ pane: PaneID, _ disabled: Bool) {
+        workspace?.update(undoManager: undoManager(),
+                          actionName: String(localized: disabled ? "undo.disableTerminal" : "undo.enableTerminal")) {
+            $0.setDisabled(pane, disabled)
+        }
+    }
+
     func isolate(_ pane: PaneID?) {
         workspace?.update { $0.isolate(pane) }
     }

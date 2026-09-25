@@ -82,6 +82,7 @@ private struct GroupRow: View {
     let actions: SidebarActions
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
 
     var body: some View {
         let doc = actions.workspace.document
@@ -107,7 +108,16 @@ private struct GroupRow: View {
             }
         } label: {
             Label {
-                Text(verbatim: group.name)
+                HStack(spacing: metrics.space(.xs)) {
+                    Text(verbatim: group.name)
+                        .foregroundStyle(theme[group.suspended == true ? .textTertiary : .textPrimary])
+                    if group.suspended == true {
+                        Image(systemName: "pause.circle.fill")
+                            .foregroundStyle(theme[.statusDisabled])
+                            .help(Text("sidebar.suspended"))
+                            .accessibilityLabel(Text("sidebar.suspended"))
+                    }
+                }
             } icon: {
                 Image(systemName: "folder")
                     .foregroundStyle(group.color.map { theme[$0.token] } ?? theme[.textSecondary])
@@ -120,6 +130,12 @@ private struct GroupRow: View {
                 Button("sidebar.editGroup") { environment.editorRequest = .editGroup(group.id) }
                 Button("sidebar.newProjectHere") { environment.editorRequest = .newProject(.group(group.id)) }
                 Button("sidebar.newSubgroup") { environment.editorRequest = .newGroup(parent: group.id) }
+                Divider()
+                if group.suspended == true {
+                    Button("sidebar.resumeGroup") { actions.resumeGroup(group.id) }
+                } else {
+                    Button("sidebar.suspendGroupEllipsis") { actions.suspendGroup(group) }
+                }
                 Divider()
                 Button("sidebar.deleteGroup") { actions.deleteGroup(group.id) }
             }
@@ -136,6 +152,10 @@ private struct ProjectRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
+    private var disabledTabs: Set<TabID> {
+        Set(project.panes.filter(\.isDisabled).flatMap { $0.tabs.map(\.id) })
+    }
+
     var body: some View {
         let tabs = project.panes.flatMap(\.tabs)
         Group {
@@ -144,11 +164,13 @@ private struct ProjectRow: View {
             } else {
                 DisclosureGroup {
                     ForEach(tabs) { tab in
+                        let disabled = disabledTabs.contains(tab.id)
                         Label {
                             Text(verbatim: tab.title ?? AgentLabels.name(for: tab.agent))
+                                .foregroundStyle(theme[disabled ? .textTertiary : .textPrimary])
                         } icon: {
-                            Image(systemName: tab.agent == "shell" ? "terminal" : "sparkles")
-                                .foregroundStyle(theme[.textSecondary])
+                            Image(systemName: disabled ? "pause.circle" : tab.agent == "shell" ? "terminal" : "sparkles")
+                                .foregroundStyle(theme[disabled ? .statusDisabled : .textSecondary])
                         }
                         .tag(SidebarItem.tab(tab.id))
                         .contextMenu { TabContextMenu(tab: tab, project: project, actions: actions) }
@@ -164,8 +186,10 @@ private struct ProjectRow: View {
     }
 
     private var label: some View {
-        Label {
+        let dimmed = actions.workspace.document.isProjectDisabled(project.id) || actions.workspace.document.isSuspended(project.id)
+        return Label {
             Text(verbatim: project.name)
+                .foregroundStyle(theme[dimmed ? .textTertiary : .textPrimary])
         } icon: {
             Circle()
                 .fill(theme[project.color.token])
@@ -212,6 +236,13 @@ private struct ProjectContextMenu: View {
             }
         }
         Divider()
+        if doc.isProjectDisabled(project.id) {
+            Button("sidebar.enableProject") { actions.setProjectDisabled(project.id, false) }
+        } else {
+            Button("sidebar.disableProject") { actions.setProjectDisabled(project.id, true) }
+                .disabled(project.panes.isEmpty)
+        }
+        Divider()
         Button("sidebar.removeProject") { actions.remove(project.id) }
     }
 }
@@ -225,6 +256,9 @@ private struct TabContextMenu: View {
     var body: some View {
         Button("terminal.restart") { environment.terminals.restart(tab, in: project, environment: environment) }
         if let pane = actions.workspace.document.paneHolding(tab.id)?.pane {
+            Button(pane.isDisabled ? LocalizedStringKey("pane.enable") : "pane.disable") {
+                actions.setTabDisabled(tab.id, !pane.isDisabled)
+            }
             Divider()
             Button("subtabs.newEllipsis") { environment.editorRequest = .newSubTab(pane.id) }
             Button(pane.isLaneVisible ? LocalizedStringKey("subtabs.hideLane") : "subtabs.showLane") {

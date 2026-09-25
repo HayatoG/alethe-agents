@@ -107,3 +107,33 @@ struct TerminalOverlay: View {
 func format(_ key: String.LocalizationValue, _ arguments: any CVarArg...) -> String {
     String(format: String(localized: key), arguments: arguments)
 }
+
+/// Over a disabled pane (upstream disabled terminal): nothing runs until it is enabled; the saved
+/// output comes back with it.
+struct DisabledPaneOverlay: View {
+    let onEnable: () -> Void
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    var body: some View {
+        VStack(spacing: metrics.space(.m)) {
+            Image(systemName: "pause.circle")
+                .font(metrics.font(.title1))
+                .foregroundStyle(theme[.statusDisabled])
+            Text("pane.disabled.title")
+                .font(metrics.font(.headline))
+                .foregroundStyle(theme[.textPrimary])
+            Text("pane.disabled.message")
+                .font(metrics.font(.footnote))
+                .foregroundStyle(theme[.textSecondary])
+                .multilineTextAlignment(.center)
+            Button("pane.enable", action: onEnable)
+                .accessibilityIdentifier("pane.enable")
+        }
+        .padding(metrics.space(.xl))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(theme[.bgSunken])
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("pane.disabled")
+    }
+}

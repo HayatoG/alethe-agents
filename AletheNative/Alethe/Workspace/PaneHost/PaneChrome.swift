@@ -198,6 +198,7 @@ struct PaneHeader: View {
     let onMoveToGrid: (ProjectGridID?) -> Void
     let isInFocusMode: Bool
     let onToggleFocus: () -> Void
+    let onDisable: () -> Void
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
     @Environment(\.theme) private var theme
@@ -259,6 +260,7 @@ struct PaneHeader: View {
                     }
                 }
             }
+            Button("pane.disable", action: onDisable)
             Divider()
             Button("pane.close", action: onClose)
         }
