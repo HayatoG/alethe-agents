@@ -42,6 +42,9 @@ struct WorkspaceView: View {
                 PaneHost(document: doc, terminalStates: environment.terminals.states,
                          terminalGenerations: environment.terminals.generations,
                          focusModePane: environment.focusModePaneID)
+            } else if let workspace = environment.workspace {
+                WorkspaceLauncher(workspace: workspace)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 emptyState
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

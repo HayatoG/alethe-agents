@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-21 (P2-1…P2-5 tested; P2-6…P2-21
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-22 (P2-1…P2-5 tested; P2-6…P2-22
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-22. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-23. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1330,8 +1330,18 @@ they run per the test cadence above.
   `AppEnvironment.focusModePaneID` (not saved, like upstream's UI store) and ends when its pane closes.
   *Tests (written, not run — owner decision 2026-09-24):* UI `FlatAndFocusTests` (flat on/off; focus by
   double-click, Esc, ⇧⌘F, backdrop click). Compiled.
-- [ ] **P2-22 (S) Empty workspace launcher.** Quick actions when nothing is open. *Tests:* UI, HT.
+- [x] **P2-22 (S) Empty workspace launcher.** Quick actions when nothing is open. *Tests:* UI, HT.
   *Parity:* WS-13.
+  *Done:* `Workspace/WorkspaceLauncher` replaces the empty state once the workspace is loaded
+  (upstream `WorkspaceEmptyState` and the no-project card). With projects: rows with their shortcut
+  keycaps — Open <selected project> (its workspace tab), New Terminal ⌘T, New Project ⌘N, Add Content
+  ⇧⌘A, Reopen Closed Tab ⇧⌘T when there is one. Before the first project: agent chips (enabled agents,
+  last one preselected), Open Folder as Project… (the folder's existing project is reused; the agent
+  starts in a new pane, unrestricted when the preference says so; undoable) and a link to the New
+  Project form. Find/Jump joins the rows with P2-25.
+  *Deviation:* upstream's Graphify toggle on the card is left for Graphify's own task.
+  *Tests (written, not run — owner decision 2026-09-24):* UI `WorkspaceLauncherTests` (first run, quick
+  actions, HT at three zoom levels). Compiled.
 - [ ] **P2-23 (M) Disable and suspend.** Disable a terminal or project, suspend a group (SIGSTOP/SIGCONT),
   shown in the sidebar. *Tests:* U, UI. *Parity:* WS-14, SB-3.
 - [ ] **P2-24 (L) Resources: hibernation, priorities, RAM.** Memory per process tree, idle hibernation
@@ -1416,7 +1426,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-10 | Focus mode | P2 | Done | P2-21; double-click header, ⇧⌘F, Esc/backdrop to leave |
 | WS-11 | Add content | P2 | Done | Markdown (P2-9), image/video (P2-10), Git changes (P2-11), website (P2-12); orchestration with ORC-1 |
 | WS-12 | Link viewer overlay | P2 | Done | P2-14; sheet + link actions menu (⇧⌘-click) |
-| WS-13 | Empty workspace launcher | P2 | Not started | |
+| WS-13 | Empty workspace launcher | P2 | Done | P2-22; Find/Jump row added with P2-25 |
 | WS-14 | Disable terminal/project, suspend group | P2 | Not started | |
 | TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); shell integration marks (P2-3); process-tree kill (P2-2); process-tree info later |
 | TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |

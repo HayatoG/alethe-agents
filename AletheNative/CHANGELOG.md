@@ -101,4 +101,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   without project headers. Each workspace tab remembers whether it is flat.
 - Focus mode: double-click a terminal's title bar (or View › Focus on Pane, ⇧⌘F) to float it over a
   blurred workspace; Esc or a click outside brings everything back.
+- When nothing is open, the workspace offers quick actions with their shortcuts — open the
+  selected project, new terminal, new project, add content, reopen a closed tab. Before your first
+  project, pick an agent and open a folder: Alethe makes it a project and starts the agent there.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
