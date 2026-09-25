@@ -1,0 +1,40 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "sample.app.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This app carries a sample Alethe extension. Enable it in Alethe › Settings › Plugins."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este app traz uma extensão de exemplo do Alethe. Ative-a em Alethe › Ajustes › Plugins."
+          }
+        }
+      }
+    },
+    "sample.app.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alethe Sample Extension"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensão de exemplo do Alethe"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

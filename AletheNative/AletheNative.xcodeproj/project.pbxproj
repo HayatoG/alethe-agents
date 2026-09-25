@@ -21,11 +21,15 @@
 		A1E70000000000000000000BB /* AletheFiles in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CB /* AletheFiles */; };
 		A1E70000000000000000000BD /* AletheGitControl in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CD /* AletheGitControl */; };
 		A1E70000000000000000000BE /* AletheExtensionHost in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CE /* AletheExtensionHost */; };
+		A1E7000000000000000E0041 /* AletheSampleSidebar.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = A1E7000000000000000E0002 /* AletheSampleSidebar.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A1E7000000000000000E0042 /* AletheExtensionSDK in Frameworks */ = {isa = PBXBuildFile; productRef = A1E7000000000000000E0043 /* AletheExtensionSDK */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A1E7000000000000000000D1 /* Alethe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Alethe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1E7000000000000000000D2 /* AletheUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AletheUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1E7000000000000000E0001 /* AletheSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AletheSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1E7000000000000000E0002 /* AletheSampleSidebar.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = AletheSampleSidebar.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -39,6 +43,16 @@
 			path = AletheUITests;
 			sourceTree = "<group>";
 		};
+		A1E7000000000000000E0011 /* SampleApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SampleApp;
+			sourceTree = "<group>";
+		};
+		A1E7000000000000000E0012 /* SidebarExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SidebarExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,7 +63,35 @@
 			remoteGlobalIDString = A1E700000000000000000201;
 			remoteInfo = Alethe;
 		};
+		A1E7000000000000000E0051 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1E700000000000000000501 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1E7000000000000000E0022;
+			remoteInfo = AletheSampleSidebar;
+		};
+		A1E7000000000000000E0053 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1E700000000000000000501 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1E7000000000000000E0021;
+			remoteInfo = AletheSample;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A1E7000000000000000E0034 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				A1E7000000000000000E0041 /* AletheSampleSidebar.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A1E7000000000000000000F1 /* Frameworks */ = {
@@ -80,6 +122,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1E7000000000000000E0032 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E7000000000000000E0036 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1E7000000000000000E0042 /* AletheExtensionSDK in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -88,6 +145,7 @@
 			children = (
 				A1E7000000000000000000E1 /* Alethe */,
 				A1E7000000000000000000E2 /* AletheUITests */,
+				A1E7000000000000000E0013 /* Samples */,
 				A1E700000000000000000102 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -97,8 +155,20 @@
 			children = (
 				A1E7000000000000000000D1 /* Alethe.app */,
 				A1E7000000000000000000D2 /* AletheUITests.xctest */,
+				A1E7000000000000000E0001 /* AletheSample.app */,
+				A1E7000000000000000E0002 /* AletheSampleSidebar.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A1E7000000000000000E0013 /* Samples */ = {
+			isa = PBXGroup;
+			children = (
+				A1E7000000000000000E0011 /* SampleApp */,
+				A1E7000000000000000E0012 /* SidebarExtension */,
+			);
+			name = Samples;
+			path = Samples/AletheSampleExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -153,6 +223,7 @@
 			);
 			dependencies = (
 				A1E700000000000000000901 /* PBXTargetDependency */,
+				A1E7000000000000000E0054 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A1E7000000000000000000E2 /* AletheUITests */,
@@ -161,6 +232,51 @@
 			productName = AletheUITests;
 			productReference = A1E7000000000000000000D2 /* AletheUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		A1E7000000000000000E0021 /* AletheSample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1E7000000000000000E0063 /* Build configuration list for PBXNativeTarget "AletheSample" */;
+			buildPhases = (
+				A1E7000000000000000E0031 /* Sources */,
+				A1E7000000000000000E0032 /* Frameworks */,
+				A1E7000000000000000E0033 /* Resources */,
+				A1E7000000000000000E0034 /* Embed ExtensionKit Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1E7000000000000000E0052 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A1E7000000000000000E0011 /* SampleApp */,
+			);
+			name = AletheSample;
+			productName = AletheSample;
+			productReference = A1E7000000000000000E0001 /* AletheSample.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A1E7000000000000000E0022 /* AletheSampleSidebar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1E7000000000000000E0066 /* Build configuration list for PBXNativeTarget "AletheSampleSidebar" */;
+			buildPhases = (
+				A1E7000000000000000E0035 /* Sources */,
+				A1E7000000000000000E0036 /* Frameworks */,
+				A1E7000000000000000E0037 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A1E7000000000000000E0012 /* SidebarExtension */,
+			);
+			name = AletheSampleSidebar;
+			packageProductDependencies = (
+				A1E7000000000000000E0043 /* AletheExtensionSDK */,
+			);
+			productName = AletheSampleSidebar;
+			productReference = A1E7000000000000000E0002 /* AletheSampleSidebar.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -178,6 +294,12 @@
 					A1E700000000000000000202 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = A1E700000000000000000201;
+					};
+					A1E7000000000000000E0021 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					A1E7000000000000000E0022 = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -201,6 +323,8 @@
 			targets = (
 				A1E700000000000000000201 /* Alethe */,
 				A1E700000000000000000202 /* AletheUITests */,
+				A1E7000000000000000E0021 /* AletheSample */,
+				A1E7000000000000000E0022 /* AletheSampleSidebar */,
 			);
 		};
 /* End PBXProject section */
@@ -214,6 +338,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A1E700000000000000000305 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E7000000000000000E0033 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E7000000000000000E0037 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -260,6 +398,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1E7000000000000000E0031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E7000000000000000E0035 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -267,6 +419,16 @@
 			isa = PBXTargetDependency;
 			target = A1E700000000000000000201 /* Alethe */;
 			targetProxy = A1E700000000000000000801 /* PBXContainerItemProxy */;
+		};
+		A1E7000000000000000E0052 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1E7000000000000000E0022 /* AletheSampleSidebar */;
+			targetProxy = A1E7000000000000000E0051 /* PBXContainerItemProxy */;
+		};
+		A1E7000000000000000E0054 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1E7000000000000000E0021 /* AletheSample */;
+			targetProxy = A1E7000000000000000E0053 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -410,6 +572,110 @@
 			};
 			name = Release;
 		};
+		A1E7000000000000000E0061 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Samples/AletheSampleExtension/SampleApp/AletheSample.entitlements;
+				CODE_SIGN_IDENTITY = "$(ALETHE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Alethe Sample";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kc1t.alethe.sample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		A1E7000000000000000E0062 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Samples/AletheSampleExtension/SampleApp/AletheSample.entitlements;
+				CODE_SIGN_IDENTITY = "$(ALETHE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Alethe Sample";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kc1t.alethe.sample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		A1E7000000000000000E0064 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Samples/AletheSampleExtension/SidebarExtension/AletheSampleSidebar.entitlements;
+				CODE_SIGN_IDENTITY = "$(ALETHE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Alethe Sample Sidebar";
+				EX_DISABLE_APPEXTENSION_ATTRIBUTES_GENERATION = YES;
+				INFOPLIST_FILE = "Samples/AletheSampleExtension/SidebarExtension-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				SKIP_INSTALL = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kc1t.alethe.sample.sidebar;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		A1E7000000000000000E0065 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Samples/AletheSampleExtension/SidebarExtension/AletheSampleSidebar.entitlements;
+				CODE_SIGN_IDENTITY = "$(ALETHE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Alethe Sample Sidebar";
+				EX_DISABLE_APPEXTENSION_ATTRIBUTES_GENERATION = YES;
+				INFOPLIST_FILE = "Samples/AletheSampleExtension/SidebarExtension-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				SKIP_INSTALL = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kc1t.alethe.sample.sidebar;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -436,6 +702,24 @@
 			buildConfigurations = (
 				A1E700000000000000000705 /* Debug */,
 				A1E700000000000000000706 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1E7000000000000000E0063 /* Build configuration list for PBXNativeTarget "AletheSample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1E7000000000000000E0061 /* Debug */,
+				A1E7000000000000000E0062 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1E7000000000000000E0066 /* Build configuration list for PBXNativeTarget "AletheSampleSidebar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1E7000000000000000E0064 /* Debug */,
+				A1E7000000000000000E0065 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -519,6 +803,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
 			productName = AletheExtensionHost;
+		};
+		A1E7000000000000000E0043 /* AletheExtensionSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
+			productName = AletheExtensionSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
