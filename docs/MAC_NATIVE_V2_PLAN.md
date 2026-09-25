@@ -5,7 +5,7 @@
 > right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
 > where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
 > prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: Phase 5. Before it: run the package suite and `Scripts/uitest.sh` (Phase 4 tests are compiled, not run) and the owner's manual pass. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P5-1. Before it: run the package suite and `Scripts/uitest.sh` (Phase 4 tests are compiled, not run) and the owner's manual pass. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -2059,13 +2059,222 @@ repositories; the file explorer, worktrees and PRs work from the sidebar; Todos,
 pack run as built-in plugins on the public API; a sample ExtensionKit plugin loads and is isolated.
 
 ### Phase 5 — Integrations
-EXT-1 MCP manager (config editors for Claude/Codex (TOML)/OpenCode/Cursor/Gemini, registry search,
-health, sync, backups) (3 × L); EXT-2 skills browser; EXT-4 agent library + economy agents; EXT-5
-Graphify (CLI integration, graph view, snapshots) (L); EXT-6 ai-memory wiring; EXT-7 GSD Sync (L);
-BR-3 Playwright MCP browser session; TERM-11 `alethe` CLI shim; SB-2 remaining (GitHub clone,
-`.alethe/project.json` marker, stack detection); SB-4 export/import project config; SB-6 open in VS
-Code/Finder/browser; SET-3 profiles UI; SET-4 backup/import/reset/logs (OSLog export); USE-4 crash
-report; SET-7 onboarding (incl. import); SET-2 feature toggles; UI-7 toolbar configuration.
+Order: groundwork first — the `AletheIntegrations` target with its config-file primitives, the
+comment-preserving TOML editor, feature toggles (every Phase 5 surface is gated by one) and per-launch
+MCP wiring — alongside the self-contained project, app-data and chrome tasks (clone and marker, project
+config export, open in, CLI shim, profiles, backup, logs and crash report, app icon, toolbar); then the
+integration services (MCP model and adapters, skills, agent library, Graphify, ai-memory, Playwright
+browser, GSD Sync); then the MCP store, health and registry and the Graphify and GSD views; last the MCP
+manager UI and onboarding, which show everything before them. Principles: every file read, CLI call and
+network request runs off the main thread and is cancelable, with a timeout for external CLIs (the user's
+`graphify`, `ai-memory`, `npx`, `opencode`, `claude`/`codex mcp`); config files outside the profile
+(`~/.claude.json`, `.mcp.json`, `~/.codex/config.toml`, `~/.cursor/mcp.json`, `opencode.json(c)`,
+`~/.gemini/…`, `.claude/agents`) are written atomically (tmp → rename) after a backup (10 per file,
+upstream `MAX_BACKUPS`), keep every key and comment Alethe does not own, and are re-read before each
+write so an outside edit is never overwritten blind; per-launch wiring (`--mcp-config`, `-c` overrides,
+as P3-9 did for hooks) is preferred over editing the user's or the project's files; destructive steps
+(uninstall, remove, rollback, reset, wipe, import over existing data) ask once, the rest applies at once
+with undo; secrets (MCP env values, tokens) are masked in the UI, revealed only on request, never
+logged (OSLog `.private`) and never written into backups outside the profile. Files the Tauri app wrote
+(`gerado pelo Alethe` markers, `.alethe/project.json`, `.alethe/graph-snapshots/`) stay recognized.
+Out of Phase 5: 9router (PER-5, Phase 7), planning audit and autocommit (ORC-3, Phase 6), the Agent
+Canvas palette (EXP-1, Won't port). *Tests* list what each task must ship; they run per the test
+cadence above.
+
+- [ ] **P5-1 (M) `AletheIntegrations` target and config-file primitives.** New package target (ADR-7)
+  with `ConfigFileWriter`: read with modification date, atomic write that refuses when the file changed
+  since it was read, backup first into `<profile>/config-backups/<agent>-<kind>/` pruned to 10 (upstream
+  `mcp_store.rs` `backup`/`prune_backups`/`atomic_write`), list and restore a backup; a JSON editor that
+  changes one key path and keeps the rest (upstream `json_upsert`/`json_remove` over `serde_json::Value`,
+  key order kept); the JSONC reader moved from `AletheTodos` (`TodoTemplate`) to `AletheFoundation` and
+  shared; `Secret.mask` (upstream `mask_secret`). No UI. *Tests:* U (write conflicts, backup rotation,
+  JSON edits keep unknown keys, JSONC). *Parity:* groundwork for EXT-1, EXT-4, EXT-5, EXT-6, EXT-7.
+- [ ] **P5-2 (L) Comment-preserving TOML editor.** In `AletheFoundation` (§10 risk): a table-level
+  document model that keeps comments, blank lines, key order and formatting byte for byte outside the
+  edited table; read tables, arrays, inline tables and strings; upsert and remove a table
+  (`[mcp_servers.<name>]` with its `env` subtable and inline forms), set one key (`enabled`). Upstream
+  uses `toml_edit` (`mcp_agents.rs` `codex_upsert`/`codex_remove`/`codex_set_enabled`,
+  `graphify_codex_config_write`). *Tests:* G (upstream's Codex cases plus `toml_edit` round-trip cases:
+  a file edited and edited back is unchanged; untouched tables byte-identical), U (malformed input is an
+  error with a line, never a partial write). *Parity:* groundwork for EXT-1.
+- [ ] **P5-3 (S) Feature toggles.** `PreferencesDocument.enabledFeatures` (browser, graphify, mcp,
+  playwright, orchestrator, gsdSync, aiMemory, prs; upstream `lib/features.ts` defaults: browser,
+  graphify, mcp and prs on), `Features.isOn(_:)`, Settings › Features (upstream `FeaturesPage`: title,
+  description, secondary ones under “Show more”, a slot under each feature for its options, used by
+  P5-17…P5-19). The web pane entry points and the Pull Requests tab are gated now; later tasks gate their
+  own surfaces. Imported from Tauri. *Tests:* U (defaults, decoding without the key), UI (turning PRs
+  off hides the tab). *Parity:* SET-2.
+- [ ] **P5-4 (M) Per-launch MCP wiring.** `AgentLaunchRequest.mcpServers` (name, command, arguments,
+  environment): Claude Code gets one `--mcp-config` file per launch in the P3-9 private folder (upstream
+  `graphify_mcp_config_path`, `ai_memory_mcp_config_path`, `playwright_mcp_config_path`); Codex gets
+  `-c mcp_servers.<name>.command=…`/`args=[…]` overrides instead of upstream's `.codex/config.toml`
+  write; OpenCode gets `OPENCODE_CONFIG` pointing at a per-launch file if it merges with the project's
+  config, otherwise upstream's `opencode.json` `mcp` entry through P5-1. Providers register with an
+  app-side `McpLaunchWiring` (Graphify, ai-memory, Playwright plug in later). *Tests:* U (arguments per
+  agent, ordering next to `--settings` and `resume`, quoting). *Parity:* groundwork for EXT-5, EXT-6,
+  BR-3.
+- [ ] **P5-5 (M) New project: clone, marker, git init, stack.** Project editor (upstream
+  `NewProjectModal`, `EditProjectModal`): Clone from GitHub (`normalize_github_url`, `git clone` with
+  progress through `AletheGit`, cancel removes the partial folder); `.alethe/project.json` read when a
+  folder is picked (offers to restore the saved name, color, agents and worktree settings) and written on
+  save (upstream `read/write_project_marker`, same shape); Initialize Git for a folder without a
+  repository; stack detection (`project_detector.rs`: web, desktop, backend, fullstack, CLI, unknown)
+  shown in the editor and feeding the Merge Center's suggested validation. *Tests:* U (URL
+  normalization, marker round-trip against an upstream file), G (stack fixtures from upstream's tests),
+  UI (clone of a local bare repository). *Parity:* SB-2.
+- [ ] **P5-6 (S) Export/import project config.** Project menu › Export Settings… / Import Settings…
+  (upstream `sidebarMenus.tsx`): the project's settings (not terminals or scrollback) as JSON through the
+  save/open panels; import shows what changes and applies with undo. *Tests:* U (round-trip, unknown
+  keys ignored), UI. *Parity:* SB-4.
+- [ ] **P5-7 (S) Open in VS Code, Finder, browser.** Project and terminal menus: Open in VS Code (the
+  `code` CLI through the launcher resolver, else `NSWorkspace` by bundle id; upstream `open_in_vscode`),
+  Reveal in Finder (exists for projects; add terminals' folders), Open in Browser for the project's web
+  URL (upstream `open_in_browser`); a clear message when VS Code is missing. *Tests:* U (resolution),
+  UI (menu items). *Parity:* SB-6.
+- [ ] **P5-8 (M) `alethe` CLI shim.** Settings › General › Command Line Tool: install, reinstall when
+  stale, uninstall, status (path, on PATH or not) — upstream `cli_shim.rs`: a POSIX script in
+  `~/.local/bin` that opens the app with the folder, marked so a
+  stale shim is detected. The app takes the target on cold start and while running
+  (`application(_:open:)`, arguments; upstream `cli_launch.rs` `resolve_target_dir`: `.`, relative paths,
+  a file → its folder, `-psn_` skipped) and shows the matching project or offers New Project prefilled.
+  A compiled `alethe` target (ADR-7) only if the script cannot cover it. *Tests:* U (shim text, quoting,
+  target resolution with upstream's cases), UI (open request for a known folder selects the project).
+  *Parity:* TERM-11.
+- [ ] **P5-9 (M) Profiles UI.** Settings › Profiles (upstream `ProfilesModal`, `profiles.rs`): list with
+  summaries (projects, terminals, size on disk), create, rename, duplicate, delete (asks once; never the
+  active one), switch (saves, then relaunches through `AppRelaunch` into the new profile); the toolbar
+  profile menu (UI-7). Model from P1-3. *Tests:* U (index operations, name normalization), UI (create,
+  rename, delete). *Parity:* SET-3.
+- [ ] **P5-10 (M) Backup, import, reset.** Settings › General › Data (upstream `backup.rs`,
+  `diagnostics.rs`): Export Backup (the active profile as a `.zip` through `ditto`/Apple Archive,
+  skipping runtime files as upstream `is_excluded_from_backup`), Import Backup (validates the archive,
+  shows what it holds, asks once, replaces the profile and relaunches), Reset Profile Data and Erase All
+  Alethe Data (ask once, relaunch), Open Data Folder. *Tests:* U (export/import round-trip in a temporary
+  root, exclusions, a corrupt archive is refused before anything is removed), UI (dialogs, no action
+  without confirmation). *Parity:* SET-4.
+- [ ] **P5-11 (L) Logs, diagnostics and crash report.** `os.Logger` per domain (terminal, agents, git,
+  integrations, persistence; values `.private`); errors shown to the user are also recorded (upstream
+  `logging.rs` `record_app_event`, `AuditModal`) and listed in Help › Diagnostics… (recent errors, export
+  as JSON — SET-11 replaced); Export Logs (this run from `OSLogStore`, earlier runs from a small rotating
+  file of warnings and errors, the spawn log; upstream `export_logs`), Open Logs Folder. Crash report
+  (upstream `crash_watch.rs`): a clean-exit marker in `last_session.json`; after an unclean exit the next
+  launch offers the newest `DiagnosticReports/Alethe-*.ips` and MetricKit crash diagnostics to view or
+  export. *Tests:* U (marker states, export assembly, secrets absent), UI (the after-crash notice with a
+  seeded marker). *Parity:* SET-4, SET-11, USE-4.
+- [ ] **P5-12 (S) App icon themes.** Upstream's four (`elite-original`, `elite-pure-black`,
+  `elite-indigo`, `elite-blush`; `src/assets/theme-icons/`) as app resources, picked in Settings ›
+  Appearance and applied with `NSApp.applicationIconImage` (the bundle is never modified: it would break
+  the signature); `appIconTheme` imported from Tauri. *Tests:* U (preference), HT (picker at three zoom
+  levels). *Parity:* UI-4.
+- [ ] **P5-13 (M) Toolbar configuration.** The window toolbar becomes customizable (SwiftUI
+  `.toolbar(id:)`, View › Customize Toolbar…; upstream `TopbarSettingsModal`): usage pills per provider,
+  memory, Pomodoro, notifications, profile, Home; visibility priorities on macOS 27 (ADR-7a).
+  P3-13's `usagePills` maps onto the pill items so AI Usage's toggles keep working; upstream `topbarShow*`
+  imported. Remote and 9router items arrive with Phase 7. Needs P5-9. *Tests:* U (migration of `usagePills`), UI
+  (hide and restore an item), HT. *Parity:* UI-7.
+- [ ] **P5-14 (L) MCP model and agent adapters.** `AletheIntegrations` port of `mcp_model.rs` and
+  `mcp_agents.rs`: `McpServer` (stdio, HTTP, SSE; command, arguments, env with literal or `${VAR}`
+  entries, headers, timeouts, enabled), scopes (global, project) and source kinds (user, local, project),
+  per-agent capabilities and unsupported fields; five adapters reading and writing their files — Claude
+  Code (`~/.claude.json` user and `projects.<folder>` local, `.mcp.json`), Codex (`~/.codex/config.toml`
+  and `.codex/config.toml` through P5-2), Cursor (`~/.cursor/mcp.json`, `.cursor/mcp.json`), OpenCode
+  (`opencode.json`/`.jsonc` `mcp`), Antigravity (`~/.gemini/config/mcp_config.json`, imports) — with
+  upstream's managed-key lists. Needs P5-1, P5-2. *Tests:* G (upstream's adapter cases and fixture
+  files per agent), U (unsupported fields, masking). *Parity:* EXT-1.
+- [ ] **P5-15 (M) Skills browser.** Service (upstream `skills.rs`): scan `~/.claude/skills`,
+  `~/.codex/skills` (bundled system skills marked, not removable), `~/.config/opencode/skill`,
+  `~/.gemini/skills` and the shared `~/.agents/skills` (symlinks resolved), frontmatter, file tree,
+  `.skill-lock.json` source; uninstall (asks once, bundled refused). Sheet (upstream `SkillsBrowser`):
+  agents, filter, detail with the `SKILL.md` rendered (AletheDocuments) and the files; P5-25 embeds it.
+  Needs P5-1, P5-3 (gated by mcp). *Tests:* U (frontmatter shapes, scan fixtures, name validation), UI.
+  *Parity:* EXT-2.
+- [ ] **P5-16 (M) Agent library and economy agents.** Service (upstream `agent_library.rs`,
+  `economy_agents.rs`, `lib/agentLibrary.ts`): the library templates and the economy (Haiku) agents as
+  data, listed, installed and removed under a project's `.claude/agents` or `~/.claude/agents`; only
+  files carrying the Alethe marker (upstream's wording or the new English one) are removed without asking.
+  Surface: Project menu › Agent Library… (upstream shows it only in the Agent Canvas POC, EXP-1): cost
+  and category, installed state, the economy toggle. Template text in English. Needs P5-1. *Tests:* U
+  (install/uninstall, marker detection, economy toggle), UI. *Parity:* EXT-4.
+- [ ] **P5-17 (L) Graphify service.** Port of `graphify.rs`: detect the CLI (`--version`, command
+  override in Settings › Features › Graphify), generate the graph (one run per repository at a time,
+  cancelable), read `graphify-out/graph.json` into nodes and edges off the main thread, snapshots in
+  `.alethe/graph-snapshots/` (snapshot, list, diff by node and edge sets, rollback asks once, prune);
+  `project.graphifyEnabled` in the project editor; the `graphify <root> --mcp` server added to launches
+  through P5-4. Needs P5-1, P5-3, P5-4. *Tests:* G (upstream graph fixtures and snapshot cases), U
+  (diff, prune). *Parity:* EXT-5.
+- [ ] **P5-18 (M) ai-memory wiring.** Port of `ai_memory.rs`: detect (`ai-memory --version`, endpoint
+  health), command override, the `ai-memory mcp` server added to Claude Code, Codex and OpenCode launches
+  through P5-4 when the aiMemory feature is on; status and a link to its docs in Settings › Features ›
+  ai-memory. Needs P5-3, P5-4. *Tests:* U (detection parsing, wiring on/off). *Parity:* EXT-6.
+- [ ] **P5-19 (L) Playwright MCP browser session.** Port of `browser_session.rs`: resolve a
+  Chromium-family browser (Chrome, Chromium, Edge, Brave; explicit path), launch it on a free loopback
+  debugging port with its profile inside the Alethe profile, ready when `/json/version` answers, killed
+  (process tree) on quit and when stale at launch — matched by executable, never by command line; status.
+  `playwrightBrowserMode` shared or dedicated and dedicated headless (Settings › Features › Playwright);
+  `npx -y @playwright/mcp@latest` with `--cdp-endpoint` (shared) or its own browser added through P5-4.
+  *Deviation:* the shared browser is not shown in the web pane (CDP engine Won't port, BR-1); it runs as
+  its own window unless headless. Needs P5-3, P5-4. *Tests:* U (arguments, loopback-only endpoint,
+  stale matching), P (start to ready). *Parity:* BR-3.
+- [ ] **P5-20 (L) GSD Sync service.** Ports of `planning_gate.rs` (planning status from
+  `.planning/status.md` and roadmap checkboxes; `.gsd-child-session`/`-busy`/`-error`/state; procedure),
+  `opencode_gsd_plugin.rs` (the `alethe-gsd-state.ts` plugin from upstream's asset, version marker, never
+  over a user-edited file; `opencode.json` plugin entry merged; `.opencode/alethe-gsd-config.json` model
+  chain from `gsdSyncModelChain`), the `.planning/` watcher (FSEvents; upstream `start/stop_gsd_watcher`),
+  `list_project_plans`, and `opencode export <child>` parsed into messages and parts. Needs P5-1.
+  *Tests:* G (upstream's plugin-write and status cases), U (export parsing). *Parity:* EXT-7.
+- [ ] **P5-21 (L) MCP store.** Port of `mcp_store.rs`: scan all agents and scopes with an mtime cache,
+  config paths, upsert, remove and enable/disable into the right source (upstream `pick_source`), sync a
+  server to other agents with a report of skipped fields, reveal env values on request (never logged),
+  every write through P5-1 with its backup; restore a backup. Needs P5-14. *Tests:* G (upstream's store
+  cases in temporary homes), U (source picking, sync report). *Parity:* EXT-1.
+- [ ] **P5-22 (M) MCP health and registry.** Health (upstream `mcp_health.rs`): `claude mcp list`,
+  `codex mcp list --json`, `opencode mcp list` parsed per server, 45 s timeout, none for Antigravity and
+  Cursor (config only), no command or URL in the result. Registry search (upstream `mcp_catalog.rs`):
+  `registry.modelcontextprotocol.io/v0/servers` with cursor paging, cached in
+  `<profile>/mcp/registry-cache.json`, entries mapped to install options (npm → `npx`, PyPI → `uvx`,
+  OCI → `docker`, NuGet → `dnx`, remote → HTTP with headers, env hints with the secret flag). Needs P5-14. *Tests:* U (upstream's
+  parser cases for both). *Parity:* EXT-1.
+- [ ] **P5-23 (L) Graphify view.** Pane kind `graphify` (upstream `GraphifyView`, Cytoscape): a Canvas
+  graph with a force layout computed off the main thread, pan, zoom, search, node detail with its source
+  file opened in a pane, a snapshot timeline with the diff highlighted and rollback; Add Content › Graph
+  and the project menu; generate when no graph exists. Needs P5-17. *Tests:* U (layout determinism for a
+  seed), UI (open, search, select), P (layout of upstream's largest fixture). *Parity:* EXT-5.
+- [ ] **P5-24 (M) GSD Sync UI.** Right sidebar GSD Sync tab, only when gsdSync is on and the project
+  runs OpenCode (upstream `useGsdSyncAvailable`): child sessions from one app-wide 5 s poll, busy and
+  error glyphs, planning status on the sidebar merge panel; the activity view (upstream
+  `GsdSyncActivityView`: messages, text, tool and reasoning parts, sticks to the bottom); model chain in
+  Settings › Features › GSD Sync. Needs P5-3, P5-20. *Tests:* UI (seeded `.planning/` folder), HT.
+  *Parity:* EXT-7.
+- [ ] **P5-25 (L) MCP manager UI.** Right sidebar MCP tab (upstream `McpPanel`: scope switch, server
+  rows per agent, live health) and the MCP manager sheet (upstream `McpManagerModal`: list and detail,
+  edit, per-agent enable with undo, sync to agents, reveal env, backups with restore, Skills from P5-15);
+  Add Server (upstream `AddServerFlow`: registry search or manual, env hints, target agents and scope);
+  first-use intro (`mcpOnboardingSeen`), `mcpDefaultScope`. Needs P5-3, P5-15, P5-21, P5-22. *Tests:* UI
+  (add, disable, sync on seeded temporary homes), HT. *Parity:* EXT-1.
+- [ ] **P5-26 (L) Onboarding and welcome.** First-run sheet (upstream `OnboardingModal`, keyboard-first,
+  skippable): name (the profile's display name, macOS first name as default), style and theme, agents
+  (detected, install through P3-3), features (P5-3), MCP (upstream `McpStep`: servers found per agent,
+  gaps, Sync All through P5-21), and the optional Tauri import with its summary (P1-12); `onboardingDone`;
+  Welcome back after an update or long absence (upstream `WelcomeModal`); hands over to the P3-16
+  walkthrough. Needs P5-3, P5-9, P5-21. *Tests:* UI (complete, skip, import offered only when Tauri data
+  exists), HT. *Parity:* SET-7.
+- [ ] **P5-27 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+
+Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
+beyond menus, Settings panes and string catalogs — rebase on conflicts):
+1. P5-1, P5-2, P5-3, P5-4, P5-5, P5-6, P5-7, P5-8, P5-9, P5-10, P5-11, P5-12 — no dependencies.
+2. P5-13 (needs P5-9 for its profile item), P5-14, P5-15, P5-16, P5-17, P5-18, P5-19, P5-20.
+3. P5-21, P5-22, P5-23, P5-24.
+4. P5-25, P5-26.
+5. P5-27.
+
+**Phase 5 exit criteria:** MCP servers of all five agents are listed, added from the registry, edited,
+enabled, synced and health-checked, with every external config written atomically after a backup and
+Codex's TOML comments intact; skills, the agent library, Graphify (view and snapshots), ai-memory,
+Playwright and GSD Sync work behind their feature toggles and reach agents through per-launch wiring;
+projects clone, restore from their marker, export and open in other apps; the `alethe` command opens
+folders; profiles, backup/import/reset, logs, crash report, app icon, toolbar and onboarding are in place;
+no secret appears in logs or exports.
 
 ### Phase 6 — Orchestrator v2
 ORC-2 port `orchestrator_core` (job model, workers, worktrees, approvals) with its tests as golden (3 × L);
