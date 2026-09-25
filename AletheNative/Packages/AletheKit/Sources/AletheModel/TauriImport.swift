@@ -47,7 +47,7 @@ public enum TauriImport {
     }
 
     public enum Preference: String, Hashable, Sendable, CaseIterable {
-        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features, appIcon, toolbar
+        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features, appIcon, toolbar, mcp
     }
 
     /// What the importer needs to know about the native app, injected to keep this module free of
@@ -333,6 +333,15 @@ public enum TauriImport {
                 preferences.setToolbarItem(item, shown: shown)
                 report.preferences.insert(.toolbar)
             }
+        }
+        if let scope = raw["mcpDefaultScope"] as? String, scope == "project" || scope == "global",
+           scope != preferences.mcpDefaultScope ?? "global" {
+            preferences.mcpDefaultScope = scope
+            report.preferences.insert(.mcp)
+        }
+        if raw["mcpOnboardingSeen"] as? Bool == true, preferences.mcpOnboardingSeen != true {
+            preferences.mcpOnboardingSeen = true
+            report.preferences.insert(.mcp)
         }
         if let language = raw["language"] as? String, !language.isEmpty { report.language = language }
     }

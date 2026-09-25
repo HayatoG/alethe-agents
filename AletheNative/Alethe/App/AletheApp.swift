@@ -219,6 +219,8 @@ private struct HistoryCommands: Commands {
             if environment.features.isOn(.mcp) {
                 Button("menu.history.skills") { environment.editorRequest = .skills }
                     .disabled(environment.workspace == nil)
+                Button("menu.history.mcp") { environment.editorRequest = .mcpManager(McpManagerRoute()) }
+                    .disabled(environment.mcp == nil || environment.workspace == nil)
             }
             if environment.hasPluginCommand(GitControlPlugin.openCommandID) {
                 Button("menu.git.control") { environment.performPluginCommand(GitControlPlugin.openCommandID) }

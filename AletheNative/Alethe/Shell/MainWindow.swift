@@ -107,6 +107,10 @@ struct MainWindow: View {
             OnboardingSheet(workspace: workspace, undoManager: undoManager)
         case .welcome(let welcome):
             WelcomeBackSheet(welcome: welcome)
+        case .mcpManager(let route):
+            McpManagerSheet(route: route)
+        case .mcpIntro:
+            McpIntroSheet()
         }
     }
 

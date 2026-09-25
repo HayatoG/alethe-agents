@@ -13,6 +13,7 @@ enum PluginViewRegistry {
         case PullRequestsView.tabID: "rightSidebar.pullRequests"
         case FilesView.tabID: "rightSidebar.files"
         case GSDSyncView.tabID: "rightSidebar.gsdSync"
+        case McpPanel.tabID: "rightSidebar.mcp"
         default: LocalizedStringKey(tab.title)
         }
     }
@@ -25,6 +26,7 @@ enum PluginViewRegistry {
         case PullRequestsView.tabID: PullRequestsView()
         case FilesView.tabID: FilesView()
         case GSDSyncView.tabID: GSDSyncView()
+        case McpPanel.tabID: McpPanel()
         default: ExtensionOrUnavailable(viewID: viewID)
         }
     }
@@ -73,9 +75,10 @@ struct RightSidebar: View {
     @Environment(AppEnvironment.self) private var environment
 
     private var tabs: [SidebarTabContribution] {
-        // The app's own tabs (Files, Docs, Pull Requests, GSD Sync) follow the plugin tabs.
+        // The app's own tabs (Files, Docs, Pull Requests, GSD Sync, MCP) follow the plugin tabs.
         let own = [FilesView.tab, DocsView.tab] + (environment.features.isOn(.prs) ? [PullRequestsView.tab] : [])
             + (environment.gsdSync.isAvailable(in: selectedProject) ? [GSDSyncView.tab] : [])
+            + (environment.features.isOn(.mcp) ? [McpPanel.tab] : [])
         let extensions = environment.extensions?.sidebarTabs ?? []
         guard let plugins = environment.plugins else { return extensions + own }
         return plugins.viewPlacements.arranged(plugins.contributions.sidebarTabs).right + extensions + own

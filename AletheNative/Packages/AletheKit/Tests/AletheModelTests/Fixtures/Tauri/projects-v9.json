@@ -313,6 +313,8 @@
     "topbarShowProfile": true,
     "topbarShowMemory": false,
     "topbarShowRouter9": false,
+    "mcpDefaultScope": "project",
+    "mcpOnboardingSeen": true,
     "enabledFeatures": {
       "browser": true,
       "graphify": true,

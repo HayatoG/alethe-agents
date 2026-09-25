@@ -131,6 +131,8 @@ enum TestSeeds {
             let project = doc.addProject(name: "gsdproj", folder: repo.path, color: .purple)
             if let pane = doc.addPane(to: project, tab: PaneTab(agent: "opencode")) { doc.setDisabled(pane, true) }
             doc.workspace.selectedProjectID = project
+        case "mcp":
+            seedMcp()
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"
@@ -192,6 +194,27 @@ enum TestSeeds {
         try? FileManager.default.createDirectory(at: motion.appending(path: "references"), withIntermediateDirectories: true)
         try? Data("notes".utf8).write(to: motion.appending(path: "references/timing.md"))
         _ = skill(".codex/skills/.system/imagegen", "---\ndescription: Generates images\n---\n\n# Images\n")
+    }
+
+    /// MCP configs in the `-AletheIntegrationsHome` folder (P5-25): Claude Code's `alpha` with a secret
+    /// env value, Codex's `beta`, an empty Cursor config, and the folders the other agents write to.
+    private static func seedMcp() {
+        guard let home = UserDefaults.standard.string(forKey: "AletheIntegrationsHome") else { return }
+        let root = URL(filePath: home, directoryHint: .isDirectory)
+        func write(_ path: String, _ text: String) {
+            let file = root.appending(path: path)
+            try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try? Data(text.utf8).write(to: file)
+        }
+        write(".claude.json", """
+            {"mcpServers": {"alpha": {"type": "stdio", "command": "npx", "args": ["-y", "alpha-mcp"],
+              "env": {"API_KEY": "sk-test-0123456789abcd"}}}}
+            """)
+        write(".codex/config.toml", "[mcp_servers.beta]\ncommand = \"uvx\"\nargs = [\"beta-mcp\"]\n")
+        write(".cursor/mcp.json", "{\"mcpServers\": {}}\n")
+        for folder in [".config/opencode", ".gemini/config"] {
+            try? FileManager.default.createDirectory(at: root.appending(path: folder), withIntermediateDirectories: true)
+        }
     }
 
     /// `repo` in the data root: `notes.txt` committed on `main`, then modified in the worktree.

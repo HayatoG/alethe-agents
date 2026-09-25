@@ -52,6 +52,10 @@ enum EditorRequest: Identifiable, Hashable {
     case onboarding
     /// Welcome back after an update or a long absence (upstream `WelcomeModal`).
     case welcome(WelcomeBack)
+    /// The MCP manager (P5-25), on a tab, a server or the add form.
+    case mcpManager(McpManagerRoute)
+    /// The one-time MCP intro (upstream `McpIntroModal`).
+    case mcpIntro
 
     var id: String {
         switch self {
@@ -81,6 +85,8 @@ enum EditorRequest: Identifiable, Hashable {
         case .gsdSyncActivity(let target): "gsdSyncActivity:\(target.sessionID)"
         case .onboarding: "onboarding"
         case .welcome: "welcome"
+        case .mcpManager: "mcpManager"
+        case .mcpIntro: "mcpIntro"
         }
     }
 }

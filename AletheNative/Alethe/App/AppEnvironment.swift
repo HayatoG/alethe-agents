@@ -137,6 +137,23 @@ final class AppEnvironment {
     /// The skills of every agent under the integrations home (P5-15).
     var skillStore: SkillStore { SkillStore(home: Self.integrationsHome) }
 
+    /// The MCP tab and manager of the active profile (P5-25); created by `load`.
+    private(set) var mcp: McpManagerModel?
+
+    /// The agents' MCP configs under the integrations home; `McpHome.current()` (which honors
+    /// `XDG_CONFIG_HOME`) unless a test home is set.
+    static var mcpHome: McpHome {
+        integrationsHomeOverridden ? McpHome(home: integrationsHome) : .current()
+    }
+
+    static var integrationsHomeOverridden: Bool {
+        #if DEBUG
+        return UserDefaults.standard.string(forKey: "AletheIntegrationsHome") != nil
+        #else
+        return false
+        #endif
+    }
+
     /// The home folder whose agent configs and skills the integrations read and write.
     /// `-AletheIntegrationsHome <path>` (debug builds) points it elsewhere, like upstream's
     /// `ALETHE_MCP_HOME`, so UI tests work on a seeded throwaway home.
@@ -225,6 +242,7 @@ final class AppEnvironment {
         self.preferences = loadedPreferences
         aiMemory.start(environment: self)
         gsdSync.start(environment: self, profileDirectory: locations.profileDirectory(profile))
+        mcp = makeMcpModel(profileDirectory: locations.profileDirectory(profile), preferences: loadedPreferences)
         followAppIcon()
         self.promptHistory = loadedHistory
         resources.start(environment: self)
@@ -236,6 +254,7 @@ final class AppEnvironment {
         requested.forEach(openFolder)
         if diagnostics.crashNotice != nil, editorRequest == nil, Self.showsCrashNotice { editorRequest = .crashNotice }
         greetLaunch()
+        offerMcpIntro()
         NotificationCenter.default.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
                                                object: NSWorkspace.shared, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -362,6 +381,49 @@ final class AppEnvironment {
     func openPluginSheet(_ id: String, project: ProjectID?) {
         guard let sheet = plugins?.contributions.sheets.first(where: { $0.id == id }) else { return }
         editorRequest = .pluginSheet(viewID: sheet.viewID, project: project)
+    }
+
+    private func makeMcpModel(profileDirectory: URL, preferences: PreferencesModel) -> McpManagerModel {
+        let model = McpManagerModel(
+            store: McpStore(home: Self.mcpHome, writer: ConfigFileWriter(profileDirectory: profileDirectory)),
+            registry: McpRegistry(profileDirectory: profileDirectory),
+            healthAvailable: !Self.integrationsHomeOverridden,
+            scope: preferences.document.mcpDefaultScope == McpScope.project.rawValue ? .project : .global
+        )
+        model.onScopeChange = { [weak preferences] scope in
+            preferences?.update { $0.mcpDefaultScope = scope == .global ? nil : scope.rawValue }
+        }
+        return model
+    }
+
+    /// Upstream `useMcpIntroPrompt`: the MCP intro, once, and only to someone with an agent config;
+    /// never over another sheet (it is offered again on the next launch).
+    private func offerMcpIntro() {
+        guard features.isOn(.mcp), preferences?.document.mcpOnboardingSeen != true, Self.showsMcpIntro,
+              let store = mcp?.store else { return }
+        // The onboarding has its own MCP step, so the intro would repeat it.
+        if case .onboarding = editorRequest {
+            preferences?.update { $0.mcpOnboardingSeen = true }
+            return
+        }
+        Task {
+            guard let snapshots = try? await store.scan(scope: .global, repository: nil) else { return }
+            if snapshots.contains(where: { $0.sources.contains(where: \.exists) }) {
+                if editorRequest == nil { editorRequest = .mcpIntro }
+            } else {
+                preferences?.update { $0.mcpOnboardingSeen = true }
+            }
+        }
+    }
+
+    /// With a test data root the intro would cover every UI test's window: it shows only when asked.
+    private static var showsMcpIntro: Bool {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "AletheDataRoot") != nil {
+            return UserDefaults.standard.bool(forKey: "AletheUITestMcpIntro")
+        }
+        #endif
+        return true
     }
 
     /// UI tests end the app without quitting it, so every relaunch would look like a crash: with a

@@ -163,6 +163,7 @@ struct TauriImportSheet: View {
             case .features: String(localized: "import.pref.features")
             case .appIcon: String(localized: "import.pref.appIcon")
             case .toolbar: String(localized: "import.pref.toolbar")
+            case .mcp: String(localized: "import.pref.mcp")
             }
         }
         if report.language != nil { names.append(String(localized: "import.pref.language")) }

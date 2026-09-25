@@ -79,6 +79,7 @@ import Testing
         #expect(prefs.usagePillProviders == ["codex"])
         #expect(!prefs.showsToolbarItem(.memory) && prefs.showsToolbarItem(.profile))
         #expect(prefs.toolbarItems == ["usage.codex": true, "memory": false])
+        #expect(prefs.mcpDefaultScope == "project" && prefs.mcpOnboardingSeen == true)
         #expect(report.preferences == Set(TauriImport.Preference.allCases))
         #expect(report.language == "pt-BR")
     }

@@ -329,7 +329,7 @@ struct SkillsBrowser: View {
     }
 }
 
-/// The browser on its own (History › Skills…), until the MCP manager (P5-25) hosts it.
+/// The browser on its own (History › Skills…); the MCP manager (P5-25) embeds it too.
 struct SkillsSheet: View {
     let store: SkillStore
     @Environment(\.dismiss) private var dismiss

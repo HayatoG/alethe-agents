@@ -77,6 +77,10 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     /// The previous launch and the version it ran, for welcome back after an update or a long absence.
     public var lastLaunchAt: Date?
     public var lastSeenVersion: String?
+    /// The MCP tab's scope, `global` or `project` (upstream `mcpDefaultScope`, P5-25); nil is global.
+    public var mcpDefaultScope: String?
+    /// The MCP intro was shown or dismissed (upstream `mcpOnboardingSeen`).
+    public var mcpOnboardingSeen: Bool?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,
