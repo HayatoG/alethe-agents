@@ -2517,7 +2517,7 @@ Every surface is gated by the `orchestrator` feature (P5-3). No new preference k
 mode turns on the existing feature. *Tests* list what each task must ship; they run per the test cadence
 above.
 
-- [ ] **P6-1 (M) `AletheOrchestrator` target, job model and MCP transport.** New package target (ADR-7;
+- [x] **P6-1 (M) `AletheOrchestrator` target, job model and MCP transport.** New package target (ADR-7;
   depends on AletheFoundation, AletheGit, AletheAgents, AletheIntegrations) with the types every later
   task uses: `JobStatus` (queued, running, blocked, done, failed, cancelled, released, interrupted;
   `settled`), `Job` with its snapshot and record in upstream's camelCase JSON (`Job::snapshot`,
@@ -2531,6 +2531,15 @@ above.
   `a_notification_gets_no_response_body`,
   `the_delegate_schema_points_at_the_live_reading_instead_of_quoting_numbers`), U (snapshot and record
   against upstream JSON). *Parity:* groundwork for ORC-2.
+  *Done:* (`b5f31c1`) target `AletheOrchestrator` (depends on Foundation, Git, Agents, Integrations):
+  limits, `WorkerAgent`, `JobStatus` (+`settled`), `Planner`, `Delivery`, `Launcher`, `job-NN`/`run-NN`
+  ids, `orchestratorTail`, `TokenCounts`; `Job` as plain data (process handles live in the P6-6 core)
+  with `snapshot`/`record` in upstream camelCase JSON and restore turning running/queued work into
+  interrupted (`approvalPolicy` kept as JSON text so Tauri files load; an unknown status reads as done);
+  MCP transport `OrchestratorMCP.handle` over `OrchestratorToolHandler` (initialize, tools/list,
+  tools/call with `isError`, ping, -32601, no reply to notifications) with the nine tool schemas
+  verbatim as a resource. `OrderedJSON` gained compact rendering, literals and unsigned/double helpers.
+  Tests (3 upstream goldens + model units) written and compiled, NOT run.
 - [ ] **P6-2 (S) Job store.** `OrchestratorJobStore` (upstream `set_store`/`restore`/`persist`):
   `<profile>/orchestrator-jobs.json` in upstream's v2 shape (`version`, job records, planners), so a
   file from the Tauri app loads; restore turns `running`/`queued` into `interrupted`, moves the job and
