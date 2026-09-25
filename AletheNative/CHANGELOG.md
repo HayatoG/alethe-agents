@@ -243,6 +243,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Help › Diagnostics… (recent warnings and errors, JSON export), Export Logs… and Open Logs Folder, with
   secrets removed; after an unexpected quit Alethe offers the crash report to view or save, never
   sending it.
+- Settings › Profiles: see each profile's projects, terminals and size; create, rename, duplicate,
+  delete (to the Trash) and switch profiles; a profile menu in the toolbar.
+- Settings › General › Data: export the profile as a `.zip` and import it back (contents shown first),
+  reset the profile or erase all data; a safety backup is saved first and the app relaunches to apply
+  it.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

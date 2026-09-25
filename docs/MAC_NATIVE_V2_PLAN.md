@@ -2095,7 +2095,7 @@ cadence above.
   `OrderedJSON` + `JSONConfigEditor` (key order and number spelling kept, managed-key upsert, throws
   `notAnObject` instead of replacing), `Secret.mask`; the JSONC reader moved to `AletheFoundation`
   (`TodoTemplate` uses it). Tests written and compiled, NOT run.
-- [ ] **P5-2 (L) Comment-preserving TOML editor.** In `AletheFoundation` (§10 risk): a table-level
+- [x] **P5-2 (L) Comment-preserving TOML editor.** In `AletheFoundation` (§10 risk): a table-level
   document model that keeps comments, blank lines, key order and formatting byte for byte outside the
   edited table; read tables, arrays, inline tables and strings; upsert and remove a table
   (`[mcp_servers.<name>]` with its `env` subtable and inline forms), set one key (`enabled`). Upstream
@@ -2103,6 +2103,14 @@ cadence above.
   `graphify_codex_config_write`). *Tests:* G (upstream's Codex cases plus `toml_edit` round-trip cases:
   a file edited and edited back is unchanged; untouched tables byte-identical), U (malformed input is an
   error with a line, never a partial write). *Parity:* groundwork for EXT-1.
+  *Done:* (`6a8a2a2`) `AletheFoundation/TOML`: parser that records every header, key line, blank line
+  and comment and enforces redefinition rules (errors give line/column, never quote the file);
+  `TOMLDocument` `upsertTable`/`removeTable`/`setValue`/`removeValue`: untouched text byte-identical,
+  changed values keep key spacing and trailing comments, tables keep section or inline form, new tables
+  after siblings, removal takes subtables and the comment above; each edit re-parses its result or
+  throws unchanged; arrays of tables refused. Tests (upstream Codex cases and
+  `graphify_codex_config_write` as goldens, round trips, CRLF, malformed input) written and compiled,
+  NOT run.
 - [x] **P5-3 (S) Feature toggles.** `PreferencesDocument.enabledFeatures` (browser, graphify, mcp,
   playwright, orchestrator, gsdSync, aiMemory, prs; upstream `lib/features.ts` defaults: browser,
   graphify, mcp and prs on), `Features.isOn(_:)`, Settings › Features (upstream `FeaturesPage`: title,
@@ -2167,18 +2175,31 @@ cadence above.
   Alternate document type in `Alethe-Info.plist`), showing the project or a prefilled New Project.
   `CLIShim`/`CLILaunch` in `AletheFoundation` with upstream's target-resolution cases. Tests (U + UI
   `CLIOpenTests`) written and compiled, NOT run.
-- [ ] **P5-9 (M) Profiles UI.** Settings › Profiles (upstream `ProfilesModal`, `profiles.rs`): list with
+- [x] **P5-9 (M) Profiles UI.** Settings › Profiles (upstream `ProfilesModal`, `profiles.rs`): list with
   summaries (projects, terminals, size on disk), create, rename, duplicate, delete (asks once; never the
   active one), switch (saves, then relaunches through `AppRelaunch` into the new profile); the toolbar
   profile menu (UI-7). Model from P1-3. *Tests:* U (index operations, name normalization), UI (create,
   rename, delete). *Parity:* SET-3.
-- [ ] **P5-10 (M) Backup, import, reset.** Settings › General › Data (upstream `backup.rs`,
+  *Done:* (`6e510c8`) profile index create/rename/delete/switch/duplicate (names trimmed, 64 chars,
+  case/accent-insensitive uniqueness; active or last profile not deletable). Settings › Profiles lists
+  projects, terminals and size on disk; delete asks once and moves to the Trash; switch asks once, saves
+  and relaunches. Toolbar `ProfileToolbarMenu` (reused by P5-13). The app now keeps the profile it
+  launched with, so quit-time scrollback/handoff files never land in the new profile. Tests (U 12, UI 2)
+  written and compiled, NOT run.
+- [x] **P5-10 (M) Backup, import, reset.** Settings › General › Data (upstream `backup.rs`,
   `diagnostics.rs`): Export Backup (the active profile as a `.zip` through `ditto`/Apple Archive,
   skipping runtime files as upstream `is_excluded_from_backup`), Import Backup (validates the archive,
   shows what it holds, asks once, replaces the profile and relaunches), Reset Profile Data and Erase All
   Alethe Data (ask once, relaunch), Open Data Folder. *Tests:* U (export/import round-trip in a temporary
   root, exclusions, a corrupt archive is refused before anything is removed), UI (dialogs, no action
   without confirmation). *Parity:* SET-4.
+  *Done:* (`3a11a19`) Settings › General › Data: export the active profile as a `.zip` (`ditto`, skips
+  temp/logs/caches, `alethe-backup.json` manifest, never inside the profile); import validates first
+  (unsafe paths and symlinks refused, staging folder, Finder archives accepted, Tauri or newer backups
+  explained) and shows the contents; Import / Reset Profile Data / Erase All Alethe Data ask once, save
+  a safety backup to `<data root>/safety-backups/` (10 kept) and relaunch; the operation applies at next
+  launch before anything loads (runs before diagnostics start). Tests (U 12, UI 2) written and compiled,
+  NOT run.
 - [x] **P5-11 (L) Logs, diagnostics and crash report.** `os.Logger` per domain (terminal, agents, git,
   integrations, persistence; values `.private`); errors shown to the user are also recorded (upstream
   `logging.rs` `record_app_event`, `AuditModal`) and listed in Help › Diagnostics… (recent errors, export
