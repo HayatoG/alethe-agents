@@ -1,0 +1,26 @@
+model = "gpt-5.6-sol"
+
+[projects."D:\\repo\\one"]
+trust_level = "trusted"
+
+[mcp_servers.discord]
+command = "npx"
+args = ["-y", "@quadslab.io/discord-mcp"]
+
+[mcp_servers.discord.env]
+DISCORD_GUILD_ID = "123"
+DISCORD_TOKEN = "a-live-secret-token-value"
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+
+[mcp_servers.swarm]
+command = "node"
+args = ["C:\\path\\server.js"]
+env = { NODE_ENV = "production", QUADRANT = "1" }
+env_vars = ["QUADRANT", "SESSION"]
+startup_timeout_sec = 30
+tool_timeout_sec = 120.0
+
+[[hooks.PreToolUse]]
+name = "gate"

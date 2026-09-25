@@ -1,0 +1,6 @@
+{
+  "mcpServers": {
+    "figma": { "url": "https://mcp.figma.com/sse" },
+    "github": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"], "env": { "GITHUB_TOKEN": "ghp-a-live-secret-token" } }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  // OpenCode with comments
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    /* hosted */
+    "remote-one": { "type": "remote", "url": "https://mcp.example/mcp", "headers": { "Authorization": "{env:REMOTE_TOKEN}" } },
+    "local-one": { "type": "local", "command": ["uvx", "tool"], "environment": { "MODE": "prod" }, },
+  },
+}

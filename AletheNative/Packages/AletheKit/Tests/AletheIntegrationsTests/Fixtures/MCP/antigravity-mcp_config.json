@@ -1,0 +1,6 @@
+{
+  "mcpServers": {
+    "codeagentswarm-tasks": { "command": "node", "args": ["tasks.js"] },
+    "figma": { "serverUrl": "ignored", "url": "https://mcp.figma.com/mcp" }
+  }
+}

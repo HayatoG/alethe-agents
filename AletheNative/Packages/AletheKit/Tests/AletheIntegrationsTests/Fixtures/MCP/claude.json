@@ -1,0 +1,18 @@
+{
+  "numStartups": 1871,
+  "installMethod": "global",
+  "mcpServers": {
+    "figma": { "type": "http", "url": "https://mcp.figma.com/mcp" },
+    "notes": { "type": "sse", "url": "https://notes.example/sse", "headers": { "Authorization": "Bearer a-live-header-secret" } }
+  },
+  "projects": {
+    "/Users/me/repo/": {
+      "allowedTools": [],
+      "mcpServers": {
+        "swarm": { "type": "stdio", "command": "node", "args": ["a.js"], "env": { "K": "V" }, "trustLevel": "always" }
+      }
+    },
+    "/Users/me/other": { "allowedTools": [] }
+  },
+  "tipsHistory": { "mcp": 3 }
+}

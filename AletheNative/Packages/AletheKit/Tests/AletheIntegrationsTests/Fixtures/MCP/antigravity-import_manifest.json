@@ -1,0 +1,7 @@
+{
+  "imports": [
+    { "name": "codeagentswarm", "source": "plugin" },
+    { "name": "  " },
+    { "source": "nameless" }
+  ]
+}
