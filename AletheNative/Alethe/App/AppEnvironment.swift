@@ -24,6 +24,8 @@ final class AppEnvironment {
     private(set) var locations: DataLocations?
     /// Built-in plugins of the active profile (P4-2); created by `load`.
     private(set) var plugins: PluginHost?
+    /// Third-party ExtensionKit extensions of the active profile (P4-19); created by `load`.
+    private(set) var extensions: ExtensionManager?
     /// Sheet requested by a menu, the sidebar or the workspace.
     var editorRequest: EditorRequest?
     /// The pane shown in focus mode (P2-21); not persisted.
@@ -147,6 +149,9 @@ final class AppEnvironment {
         }
         await plugins.load()
         self.plugins = plugins
+        let extensions = ExtensionManager(profileDirectory: locations.profileDirectory(profile))
+        self.extensions = extensions
+        Task { await extensions.start() }
         #if DEBUG
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
             loadedWorkspace.update { TestSeeds.apply(seed, to: &$0) }
@@ -206,6 +211,7 @@ final class AppEnvironment {
     func flush() async {
         await activity.finish()
         await plugins?.shutdown()
+        await extensions?.shutdown()
         terminals.terminateAll()
         terminals.hooks.stop()
         await workspace?.flush()

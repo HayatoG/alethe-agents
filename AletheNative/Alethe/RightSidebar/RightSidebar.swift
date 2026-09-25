@@ -23,7 +23,21 @@ enum PluginViewRegistry {
         case DocsView.tabID: DocsView()
         case PullRequestsView.tabID: PullRequestsView()
         case FilesView.tabID: FilesView()
-        default: ContentUnavailableView("rightSidebar.unavailable", systemImage: "puzzlepiece.extension")
+        default: ExtensionOrUnavailable(viewID: viewID)
+        }
+    }
+}
+
+/// A third-party extension's tab (P4-19), or a placeholder for an unknown `viewID`.
+private struct ExtensionOrUnavailable: View {
+    let viewID: String
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        if let identity = environment.extensions?.identity(forViewID: viewID) {
+            ExtensionTabView(identity: identity)
+        } else {
+            ContentUnavailableView("rightSidebar.unavailable", systemImage: "puzzlepiece.extension")
         }
     }
 
@@ -47,8 +61,9 @@ struct RightSidebar: View {
     private var tabs: [SidebarTabContribution] {
         // The app's own tabs (Files, Docs, Pull Requests) follow the plugin tabs.
         let own = [FilesView.tab, DocsView.tab, PullRequestsView.tab]
-        guard let plugins = environment.plugins else { return own }
-        return plugins.viewPlacements.arranged(plugins.contributions.sidebarTabs).right + own
+        let extensions = environment.extensions?.sidebarTabs ?? []
+        guard let plugins = environment.plugins else { return extensions + own }
+        return plugins.viewPlacements.arranged(plugins.contributions.sidebarTabs).right + extensions + own
     }
 
     private var selected: SidebarTabContribution? {

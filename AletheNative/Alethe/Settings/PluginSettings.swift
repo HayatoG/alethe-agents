@@ -3,7 +3,8 @@ import AlethePluginKit
 import SwiftUI
 
 /// Settings › Plugins (upstream `PluginsPage`): each built-in plugin with its version, declared
-/// capabilities, an enabled toggle and, when it failed to load, its error.
+/// capabilities, an enabled toggle and, when it failed to load, its error; then the third-party
+/// ExtensionKit extensions (P4-19).
 struct PluginSettings: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
@@ -21,6 +22,9 @@ struct PluginSettings: View {
                 }
             } footer: {
                 Text("settings.plugins.help")
+            }
+            if let extensions = environment.extensions {
+                ExtensionSettingsSection(manager: extensions)
             }
         }
         .formStyle(.grouped)

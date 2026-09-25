@@ -20,6 +20,7 @@
 		A1E70000000000000000000B9 /* AletheTodos in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000C9 /* AletheTodos */; };
 		A1E70000000000000000000BB /* AletheFiles in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CB /* AletheFiles */; };
 		A1E70000000000000000000BD /* AletheGitControl in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CD /* AletheGitControl */; };
+		A1E70000000000000000000BE /* AletheExtensionHost in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CE /* AletheExtensionHost */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +69,7 @@
 				A1E70000000000000000000B9 /* AletheTodos in Frameworks */,
 				A1E70000000000000000000BB /* AletheFiles in Frameworks */,
 				A1E70000000000000000000BD /* AletheGitControl in Frameworks */,
+				A1E70000000000000000000BE /* AletheExtensionHost in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,6 +135,7 @@
 				A1E70000000000000000000C9 /* AletheTodos */,
 				A1E70000000000000000000CB /* AletheFiles */,
 				A1E70000000000000000000CD /* AletheGitControl */,
+				A1E70000000000000000000CE /* AletheExtensionHost */,
 			);
 			productName = Alethe;
 			productReference = A1E7000000000000000000D1 /* Alethe.app */;
@@ -331,6 +334,7 @@
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				CODE_SIGN_ENTITLEMENTS = Alethe/Alethe.entitlements;
 				INFOPLIST_KEY_CFBundleDisplayName = Alethe;
@@ -358,6 +362,7 @@
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				EX_ENABLE_EXTENSION_POINT_GENERATION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				CODE_SIGN_ENTITLEMENTS = Alethe/Alethe.entitlements;
 				INFOPLIST_KEY_CFBundleDisplayName = Alethe;
@@ -509,6 +514,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
 			productName = AletheGitControl;
+		};
+		A1E70000000000000000000CE /* AletheExtensionHost */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
+			productName = AletheExtensionHost;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
