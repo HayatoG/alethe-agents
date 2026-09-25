@@ -1908,7 +1908,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   / `worktreeBranch` (optional, old `workspace.json` decodes, U 2); sidebar branch symbol + tooltip; tab
   menu Commit Worktree Changes… / Remove Worktree (asks once). Open: project `autoWorktree`/`worktreeMode`
   settings, lock/cleanup in the UI, UI tests.
-- [x] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
+- [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
   sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
   sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.
   *Done (model):* target `AletheMerge` ports `merge_analyzer.rs`: 12 path classes (Sentinel before
@@ -1923,7 +1923,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   writes `<id>.json` + `ALETHE_CONFLICT.md` (upstream prompt verbatim); `rebaseOntoTarget`, `preflightAbort`,
   `abort`; progress via `MergePrepareStep`; cancellation stops git and tears down (force-remove + prune).
   G+U 6. Sheet stage UI, agent terminal launch, Event Bus events owed.
-- [x] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
+- [ ] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
   probe, contract check, branch testing (upstream `BranchTestingModal`), results kept per merge.
   *Tests:* G, UI. *Parity:* GIT-5.
   *Done (model):* `MergeValidation` (per-project commands + suggested ones from `package.json`,
