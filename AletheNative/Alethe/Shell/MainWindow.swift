@@ -87,7 +87,7 @@ struct MainWindow: View {
             GitControlSheet(workspace: workspace, undoManager: undoManager,
                             projectID: project ?? workspace.document.workspace.selectedProjectID)
         case .mergeCenter(let project):
-            MergeCenterSheet(workspace: workspace,
+            MergeCenterSheet(workspace: workspace, undoManager: undoManager,
                              projectID: project ?? workspace.document.workspace.selectedProjectID)
         }
     }
