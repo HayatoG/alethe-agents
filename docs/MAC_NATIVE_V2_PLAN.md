@@ -1789,6 +1789,13 @@ ship; they run per the test cadence above.
 **Phase 3 exit criteria:** every agent upstream supports on macOS runs, installs and resumes; agents'
 state (working, waiting, done, cost, usage) shows live with notifications; Home shows real data.
 
+**After Phase 3 — relaunch fix (`cc34697`).** Owner report: after relaunch an agent terminal showed the
+previous run's screen stacked over the new one. Agent terminals now start clean (the resumed agent
+redraws its own conversation); only shells replay saved output (P2-7). The PTY spawns at the pane's real
+size (deferred spawn), focus reports are dropped while the TTY is cooked and echoing, and an exit that
+happens before the process source registers is still reaped (it hung eight PTY tests). Package suite
+green, app builds.
+
 ### Phase 4 — Plugins, Git and review
 Order: the plugin API and its host surfaces first (Git, Todos and the theme pack are built-in plugins on
 the public API, ADR-9), then Git — a `git` CLI layer, Git Control, the graph, incoming/outgoing — then
