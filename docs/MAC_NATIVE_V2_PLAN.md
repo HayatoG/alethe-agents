@@ -2390,11 +2390,20 @@ cadence above.
   (never for a cancellation); entries map to npx/uvx/docker/dnx or HTTP/SSE install options with
   env/header hints flagged secret; `McpInstallOption.server(named:values:)` builds a writable server.
   Upstream parser cases as goldens; tests stub CLIs and the network; written and compiled, NOT run.
-- [ ] **P5-23 (L) Graphify view.** Pane kind `graphify` (upstream `GraphifyView`, Cytoscape): a Canvas
+- [x] **P5-23 (L) Graphify view.** Pane kind `graphify` (upstream `GraphifyView`, Cytoscape): a Canvas
   graph with a force layout computed off the main thread, pan, zoom, search, node detail with its source
   file opened in a pane, a snapshot timeline with the diff highlighted and rollback; Add Content › Graph
   and the project menu; generate when no graph exists. Needs P5-17. *Tests:* U (layout determinism for a
   seed), UI (open, search, select), P (layout of upstream's largest fixture). *Parity:* EXT-5.
+  *Done:* (`af5ccfa`) pane kind `graphify` (`{"kind":"graphify"}`; old workspace files unaffected).
+  Canvas graph with a seeded force layout off main (cancelled on reload/close), pan, pinch and button
+  zoom, nodes colored by community from project color tokens; search lists matches and dims the rest;
+  node detail opens its source in a pane or the default app; snapshot timeline: take, compact (asks —
+  upstream did not), compare with added nodes/edges highlighted, rollback after asking once; generate
+  (cancelable) when no graph exists. Entry points Add Content › Code Graph and the project menu, gated
+  by the graphify feature. Tauri `graphify` panes are still skipped on import; no scroll-wheel zoom.
+  Tests (U layout determinism/cancel/communities/search, P layout at 3000 nodes, UI) written and
+  compiled, NOT run.
 - [x] **P5-24 (M) GSD Sync UI.** Right sidebar GSD Sync tab, only when gsdSync is on and the project
   runs OpenCode (upstream `useGsdSyncAvailable`): child sessions from one app-wide 5 s poll, busy and
   error glyphs, planning status on the sidebar merge panel; the activity view (upstream

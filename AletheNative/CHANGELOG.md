@@ -275,6 +275,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - GSD Sync: a right-sidebar tab lists the project's OpenCode child sessions with state and roadmap
   progress, planning status appears under the project, a read-only activity view follows the child
   session, and Settings › Features › GSD Sync edits the model fallback chain.
+- Code graph pane (Add Content or the project menu): pan, zoom, search and inspect a project's Graphify
+  graph, open a node's source, compare snapshots with the changes highlighted, roll back, or generate
+  the graph when there is none.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
