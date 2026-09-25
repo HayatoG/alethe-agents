@@ -12,6 +12,9 @@ struct SettingsView: View {
             Tab("settings.appearance.tab", systemImage: "paintpalette") {
                 AppearanceSettings()
             }
+            Tab("settings.resources.tab", systemImage: "memorychip") {
+                ResourceSettings()
+            }
         }
         .frame(width: 560)
         .scenePadding()

@@ -17,6 +17,9 @@ struct MainWindow: View {
                 .navigationSplitViewColumnWidth(min: metrics.size(200), ideal: metrics.size(240), max: metrics.size(360))
         } detail: {
             WorkspaceView()
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
+                }
         }
         .frame(minWidth: 800, minHeight: 500)
         .sheet(item: editorRequest) { request in

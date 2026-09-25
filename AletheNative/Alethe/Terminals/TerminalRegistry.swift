@@ -25,6 +25,8 @@ final class TerminalRegistry {
     private(set) var pageOffers: [TabID: URL] = [:]
     /// Bumped whenever a tab gets a new view (start, restart) so hosts swap it in.
     private(set) var generations: [TabID: Int] = [:]
+    /// Tabs ended to save memory (P2-24); each starts again, resuming its session, when shown.
+    private(set) var hibernated: Set<TabID> = []
     @ObservationIgnored private var views: [TabID: TerminalPaneView] = [:]
     @ObservationIgnored private var claims = SessionClaims()
     /// How each live process was started, for the early-exit fallback.
@@ -75,6 +77,19 @@ final class TerminalRegistry {
         claims.release(owner: tab.rawValue)
     }
 
+    /// Running terminals with their views, for the resource monitor.
+    var running: [(tab: TabID, view: TerminalPaneView)] {
+        states.compactMap { tab, state in state == .running ? views[tab].map { (tab, $0) } : nil }
+    }
+
+    /// Ends an idle hidden terminal to free its memory; its output is kept and it starts again when
+    /// shown (upstream parking, but resumed by itself).
+    func hibernate(_ tab: TabID) {
+        guard states[tab] == .running else { return }
+        close(tab, keepScrollback: true)
+        hibernated.insert(tab)
+    }
+
     /// A disabled terminal: its process ends, its saved output stays for when it is enabled again.
     func suspend(_ tab: TabID) {
         guard states[tab] != nil else { return }
@@ -88,6 +103,7 @@ final class TerminalRegistry {
     /// Closes terminals whose tabs no longer exist.
     func prune(keeping tabs: Set<TabID>) {
         for tab in Set(states.keys).subtracting(tabs) { close(tab) }
+        hibernated.formIntersection(tabs)
     }
 
     /// Quitting: every process ends, every scrollback is written for the next launch.
@@ -139,6 +155,7 @@ final class TerminalRegistry {
     }
 
     private func start(_ tab: PaneTab, in project: Project, environment: AppEnvironment, fresh: Bool = false) {
+        hibernated.remove(tab.id)
         let kind = AgentKind(rawValue: tab.agent)
         let cwd = tab.workingDirectory ?? project.folder
         discoveries.removeValue(forKey: tab.id)?.cancel()

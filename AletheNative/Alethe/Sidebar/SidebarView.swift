@@ -149,6 +149,7 @@ private struct GroupRow: View {
 private struct ProjectRow: View {
     let project: Project
     let actions: SidebarActions
+    @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
@@ -169,8 +170,11 @@ private struct ProjectRow: View {
                             Text(verbatim: tab.title ?? AgentLabels.name(for: tab.agent))
                                 .foregroundStyle(theme[disabled ? .textTertiary : .textPrimary])
                         } icon: {
-                            Image(systemName: disabled ? "pause.circle" : tab.agent == "shell" ? "terminal" : "sparkles")
+                            Image(systemName: disabled ? "pause.circle"
+                                  : environment.terminals.hibernated.contains(tab.id) ? "moon.zzz"
+                                  : tab.agent == "shell" ? "terminal" : "sparkles")
                                 .foregroundStyle(theme[disabled ? .statusDisabled : .textSecondary])
+                                .help(environment.terminals.hibernated.contains(tab.id) ? Text("sidebar.hibernated") : Text(verbatim: ""))
                         }
                         .tag(SidebarItem.tab(tab.id))
                         .contextMenu { TabContextMenu(tab: tab, project: project, actions: actions) }

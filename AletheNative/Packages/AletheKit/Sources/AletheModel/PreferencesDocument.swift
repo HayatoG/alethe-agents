@@ -23,6 +23,8 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var lastAgent: String?
     /// Per-agent CLI path overrides, keyed by agent kind; unset agents are resolved automatically.
     public var cliPaths: [String: String]?
+    /// When idle terminals may be hibernated (P2-24); nil is the default policy.
+    public var resourcePolicy: ResourcePolicy?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,
@@ -35,6 +37,8 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
         self.lastAgent = lastAgent
         self.cliPaths = cliPaths
     }
+
+    public var resources: ResourcePolicy { resourcePolicy ?? ResourcePolicy() }
 
     public mutating func zoom(by steps: Int) {
         let next = (uiScale + Double(steps) * Self.uiScaleStep) * 10

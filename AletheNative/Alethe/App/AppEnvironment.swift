@@ -23,6 +23,8 @@ final class AppEnvironment {
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()
     let terminals = TerminalRegistry()
+    /// Memory supervision of the terminals (P2-24).
+    let resources = ResourceMonitor()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -76,6 +78,7 @@ final class AppEnvironment {
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences
         self.promptHistory = loadedHistory
+        resources.start(environment: self)
     }
 
     /// The saved output of a terminal tab (`scrollback/<tab>.bin` in the active profile).

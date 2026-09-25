@@ -42,6 +42,12 @@ public final class TerminalPaneView: NSView {
     /// Whether the process ended through a double ⌃C, not by itself.
     public var wasForceKilled: Bool { forceKill.triggered }
 
+    /// The shell or agent process at the root of this terminal's process tree.
+    public var processID: pid_t { process.pid }
+    /// Time since the process last printed anything.
+    public var quietFor: Duration { activity.quietFor }
+    public let startedAt = Date()
+
     /// - Parameter forceKillNotice: line printed in the terminal when a double ⌃C kills the process.
     public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize,
                 forceKillNotice: String = "Force kill: process terminated", promptHistory: [String] = [],

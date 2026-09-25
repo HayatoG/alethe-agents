@@ -108,4 +108,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   enable it, and its output comes back. Disable a whole project the same way, or suspend a group
   to stop every project in it and free their memory; Resume Group brings them back. All of it can
   be undone with ⌘Z.
+- Memory: a toolbar indicator shows what your terminals use, turning amber or red as the Mac runs
+  short; click it for each terminal's share. Terminals that are not on screen run at background
+  priority. In Settings › Resources you can let Alethe hibernate idle hidden terminals — always
+  after an idle limit, or only when memory is critical. A hibernated terminal keeps its output and
+  picks up its session again as soon as you show it.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

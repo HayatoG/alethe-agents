@@ -2449,6 +2449,193 @@
         }
       }
     },
+    "memory.app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alethe"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alethe"
+          }
+        }
+      }
+    },
+    "memory.available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ free of %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ livres de %@"
+          }
+        }
+      }
+    },
+    "memory.hibernatedCount" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hibernated — each resumes when shown"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hibernados — cada um retoma ao aparecer"
+          }
+        }
+      }
+    },
+    "memory.indicator.accessibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminals use %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminais usam %@"
+          }
+        }
+      }
+    },
+    "memory.indicator.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory used by terminals"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memória usada pelos terminais"
+          }
+        }
+      }
+    },
+    "memory.noTerminals" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No terminal is running."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum terminal em execução."
+          }
+        }
+      }
+    },
+    "memory.pressure.critical" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory is critically low"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A memória está criticamente baixa"
+          }
+        }
+      }
+    },
+    "memory.pressure.normal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory is fine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memória tranquila"
+          }
+        }
+      }
+    },
+    "memory.pressure.warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory is getting low"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A memória está ficando baixa"
+          }
+        }
+      }
+    },
+    "memory.settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resource Settings…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes de Recursos…"
+          }
+        }
+      }
+    },
+    "memory.terminals" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminals"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminais"
+          }
+        }
+      }
+    },
     "menu.file.addContent" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3724,6 +3911,176 @@
         }
       }
     },
+    "resources.agentIdle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agents: %lld min"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agentes: %lld min"
+          }
+        }
+      }
+    },
+    "resources.idleLimits" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle limits"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limites de ociosidade"
+          }
+        }
+      }
+    },
+    "resources.mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle hidden terminals"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminais ocultos ociosos"
+          }
+        }
+      }
+    },
+    "resources.mode.idle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernate after their idle limit"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernar após o limite de ociosidade"
+          }
+        }
+      }
+    },
+    "resources.mode.idle.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminals not on screen are hibernated once idle past their limit. A hibernated terminal keeps its output and resumes its session when you show it."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminais fora da tela são hibernados após o limite de ociosidade. Um terminal hibernado mantém a saída e retoma a sessão quando você o mostra."
+          }
+        }
+      }
+    },
+    "resources.mode.manual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep running"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter rodando"
+          }
+        }
+      }
+    },
+    "resources.mode.manual.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alethe never ends a terminal on its own; the memory indicator turns red when the Mac runs short."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Alethe nunca encerra um terminal sozinho; o indicador de memória fica vermelho quando o Mac fica sem memória."
+          }
+        }
+      }
+    },
+    "resources.mode.pressure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernate when memory is critical"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernar quando a memória estiver crítica"
+          }
+        }
+      }
+    },
+    "resources.mode.pressure.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When memory is critically low, one idle terminal that is not on screen is hibernated at a time, shells first."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando a memória está criticamente baixa, um terminal ocioso fora da tela é hibernado por vez, shells primeiro."
+          }
+        }
+      }
+    },
+    "resources.shellIdle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shells: %lld min"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shells: %lld min"
+          }
+        }
+      }
+    },
     "settings.appearance.language" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3928,6 +4285,23 @@
         }
       }
     },
+    "settings.resources.tab" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resources"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recursos"
+          }
+        }
+      }
+    },
     "sidebar.addProject" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4060,6 +4434,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grades"
+          }
+        }
+      }
+    },
+    "sidebar.hibernated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernated to save memory; resumes when shown"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernado para poupar memória; retoma ao aparecer"
           }
         }
       }

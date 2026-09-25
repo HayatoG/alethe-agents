@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-23 (P2-1…P2-5 tested; P2-6…P2-23
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-24 (P2-1…P2-5 tested; P2-6…P2-24
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-24. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-25. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1358,9 +1358,32 @@ they run per the test cadence above.
   PTY tree and keeps the scrollback), which is what frees memory, so the native app does the same.
   *Tests (written, not run — owner decision 2026-09-24):* `SuspensionTests` (4), UI `DisableTests`
   (disable, enable, ⌘Z). Compiled.
-- [ ] **P2-24 (L) Resources: hibernation, priorities, RAM.** Memory per process tree, idle hibernation
+- [x] **P2-24 (L) Resources: hibernation, priorities, RAM.** Memory per process tree, idle hibernation
   (scrollback kept, process resumed on focus), priorities, pressure handling, memory indicator.
   *Tests:* U (policy), P (memory per hibernated terminal). *Parity:* USE-3.
+  *Done:* `AletheModel/ResourcePolicy` ports `resources.rs`: `ResourcePolicy` (modes manual — the
+  default, never ends a terminal —, pressure — upstream `smart-lru`, one idle hidden terminal per check
+  under critical pressure — and idle — native: every hidden terminal past its idle limit; idle limits
+  and spawn grace clamped to upstream's ranges), `MemoryPressure.level` (5 % / 10 % of RAM with 1.25×
+  hysteresis), `ResourceSupervision.candidates` (never mounted, focused, in spawn grace or recently
+  active; shells first, then least recently used, then largest), `WorkspaceDocument.mountedTabIDs`.
+  `PreferencesDocument.resourcePolicy` (optional). `AletheTerminal/SystemResources`: available memory
+  (`host_statistics64`), physical footprint per process (`proc_pid_rusage`) and per process tree,
+  background band for off-screen trees (`PRIO_DARWIN_BG`, undoable without privileges, unlike `nice`).
+  `TerminalPaneView` exposes `processID`, `quietFor`, `startedAt`. `Terminals/ResourceMonitor`: every
+  5 s and on macOS memory-pressure events (`DispatchSource.makeMemoryPressureSource`) it measures each
+  running terminal's tree, rates pressure, moves off-screen terminals to the background band and back,
+  and hibernates candidates when the policy allows. `TerminalRegistry.hibernate` ends the process and
+  keeps the output; a hibernated terminal starts again — replaying its output and resuming its agent
+  session — as soon as it is shown (upstream leaves a parked terminal for a manual restart). UI:
+  toolbar memory indicator (terminals' total, tinted by pressure) with a popover (pressure, free of
+  total, terminals and app memory, the 8 largest terminals, hibernated count, policy picker, Resource
+  Settings…); Settings › Resources (policy, idle limits); sidebar marks hibernated terminals.
+  *Deviations:* no memory history chart (upstream `MemoryAnalyticsModal` samples); spawn throttling
+  (`spawnConcurrency`) is not ported — terminals start only when shown.
+  *Tests (written, not run — owner decision 2026-09-24):* `ResourcePolicyTests` (9, the upstream cases
+  plus idle mode and mounted tabs), P `SystemResourcesTests` (memory sane; a spawned process tree is
+  measured and gives everything back once ended). Compiled.
 - [ ] **P2-25 (M) Find/Jump (⌘K).** Fuzzy search over projects, terminals and commands. *Tests:* U
   (ranking port), UI, HT. *Parity:* SET-10.
 - [ ] **P2-26 (S) Resume last session and close confirmation.** Reopen the last workspace or start
@@ -1498,7 +1521,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | ORC-3 | Scheduler, telemetry, planning audit | P6 | Not started | |
 | USE-1 | Usage pills + AI Usage + reset credit | P3 | Not started | |
 | USE-2 | Activity tracking | P3 | Not started | |
-| USE-3 | RAM control, hibernation, supervisor | P2 | Not started | |
+| USE-3 | RAM control, hibernation, supervisor | P2 | Done | P2-24; memory indicator + policy; hibernated terminals resume when shown; no history chart |
 | USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |
 | UI-1 | Themes (16 + 4) | P0, P1, P4 | Partial | 16 built-ins + picker (P1-11); theme packs in P4 |
 | UI-2 | Visual style normal/clean | P2 | Not started | Moved from P1 at the Phase 1 review |
