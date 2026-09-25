@@ -1,6 +1,7 @@
 import Darwin
 import Foundation
 import AletheFoundation
+import AletheGit
 import AletheIntegrations
 
 /// The delegation core (upstream `Core`): jobs, the FIFO queue drained as slots free, worker
@@ -23,6 +24,8 @@ public actor OrchestratorCore {
         /// A Claude worker's diff after a turn (upstream `git diff HEAD` in its folder).
         public var uncommittedDiff: @Sendable (_ cwd: String) async -> String?
         public var terminationGrace: Duration
+        /// Makes and removes `isolate` worktrees (P6-7).
+        public var worktrees: GitWorktrees
 
         public init(
             launchers: WorkerLaunchers = WorkerLaunchers(),
@@ -31,7 +34,8 @@ public actor OrchestratorCore {
             registry: WorkerRegistry? = nil,
             environment: @escaping @Sendable (Launcher) -> [String: String] = OrchestratorCore.defaultEnvironment,
             uncommittedDiff: @escaping @Sendable (String) async -> String? = { await ClaudeWorkerProtocol.uncommittedDiff(in: $0) },
-            terminationGrace: Duration = WorkerProcess.terminationGrace
+            terminationGrace: Duration = WorkerProcess.terminationGrace,
+            worktrees: GitWorktrees = GitWorktrees()
         ) {
             self.launchers = launchers
             self.concurrencyLimit = concurrencyLimit
@@ -40,6 +44,7 @@ public actor OrchestratorCore {
             self.environment = environment
             self.uncommittedDiff = uncommittedDiff
             self.terminationGrace = terminationGrace
+            self.worktrees = worktrees
         }
     }
 

@@ -10,19 +10,30 @@ public struct DelegateRequest: Hashable, Sendable {
     public var label: String?
     /// nil runs without a budget.
     public var timeoutMs: UInt64?
+    /// Codex workers stop and ask before reaching outside their workspace (P6-7).
+    public var askForApproval: Bool
+    public var webSearch: Bool
+    /// One git worktree per job, made before the batch is accepted (P6-7).
+    public var isolate: Bool
 
     public init(
         tasks: [String],
         agent: String = WorkerAgent.codex,
         cwd: String,
         label: String? = nil,
-        timeoutMs: UInt64? = OrchestratorLimits.defaultJobTimeoutMs
+        timeoutMs: UInt64? = OrchestratorLimits.defaultJobTimeoutMs,
+        askForApproval: Bool = false,
+        webSearch: Bool = false,
+        isolate: Bool = false
     ) {
         self.tasks = tasks
         self.agent = agent
         self.cwd = cwd
         self.label = label
         self.timeoutMs = timeoutMs
+        self.askForApproval = askForApproval
+        self.webSearch = webSearch
+        self.isolate = isolate
     }
 
     /// The tool's arguments, as upstream reads them: `cwd` falls back to the process's folder,
@@ -38,7 +49,12 @@ public struct DelegateRequest: Hashable, Sendable {
         case let seconds?: seconds.multipliedReportingOverflow(by: 1000).overflow ? .max : seconds * 1000
         case nil: OrchestratorLimits.defaultJobTimeoutMs
         }
-        self.init(tasks: tasks, agent: agent, cwd: cwd, label: label?.isEmpty == false ? label : nil, timeoutMs: timeoutMs)
+        self.init(
+            tasks: tasks, agent: agent, cwd: cwd, label: label?.isEmpty == false ? label : nil, timeoutMs: timeoutMs,
+            askForApproval: arguments["askForApproval"]?.boolValue ?? false,
+            webSearch: arguments["webSearch"]?.boolValue ?? false,
+            isolate: arguments["isolate"]?.boolValue ?? false
+        )
     }
 }
 
@@ -51,7 +67,7 @@ extension OrchestratorCore: OrchestratorToolHandler {
     func dispatchTool(name: String, arguments: OrderedJSONObject, planner: String?) async throws(OrchestratorToolError) -> OrderedJSON {
         switch name {
         case "alethe_delegate":
-            return try delegate(DelegateRequest(arguments: arguments), planner: planner)
+            return try await delegate(DelegateRequest(arguments: arguments), planner: planner)
         case "alethe_check":
             return await check(
                 wait: arguments["wait"]?.boolValue ?? false,
@@ -64,6 +80,8 @@ extension OrchestratorCore: OrchestratorToolHandler {
             return ["cancelled": .array(cancel(Self.jobIDs(arguments)).map(OrderedJSON.string))]
         case "alethe_release":
             return ["released": .array(release(Self.jobIDs(arguments)).map(OrderedJSON.string))]
+        case "alethe_steer", "alethe_send", "alethe_answer", "alethe_diff":
+            return try followUpTool(name: name, arguments: arguments)
         default:
             throw OrchestratorToolError("unknown tool \(name)")
         }
@@ -76,16 +94,28 @@ extension OrchestratorCore: OrchestratorToolHandler {
     // MARK: alethe_delegate
 
     /// Queues one job per task as one run and starts as many as the limit allows. Returns the
-    /// tool's answer; the workers run on in the background.
-    public func delegate(_ request: DelegateRequest, planner: String?) throws(OrchestratorToolError) -> OrderedJSON {
+    /// tool's answer; the workers run on in the background. Ids are reserved first; worktrees
+    /// (`isolate`) are made outside the actor's isolation, and the batch is accepted whole or not
+    /// at all.
+    public func delegate(_ request: DelegateRequest, planner: String?) async throws(OrchestratorToolError) -> OrderedJSON {
         guard !isShutDown else { throw OrchestratorToolError("the orchestrator is shutting down") }
         guard !request.tasks.isEmpty else { throw OrchestratorToolError("tasks must contain at least one instruction") }
         runCounter += 1
         let runID = OrchestratorID.run(runCounter)
-        var created: [OrderedJSON] = []
-        for spec in request.tasks {
+        let ids = request.tasks.map { _ in
             jobCounter += 1
-            let id = OrchestratorID.job(jobCounter)
+            return OrchestratorID.job(jobCounter)
+        }
+        let workspaces = try await workspaces(for: ids, request: request)
+        guard !isShutDown else {
+            await Self.removeWorktrees(workspaces, repo: request.cwd, worktrees: configuration.worktrees)
+            throw OrchestratorToolError("the orchestrator is shutting down")
+        }
+        let policy = CodexApprovalPolicy.policy(askForApproval: request.askForApproval)
+        var created: [OrderedJSON] = []
+        for (index, spec) in request.tasks.enumerated() {
+            let id = ids[index]
+            let workspace = workspaces[index]
             jobs[id] = Job(
                 id: id,
                 plannerID: planner,
@@ -93,12 +123,16 @@ extension OrchestratorCore: OrchestratorToolHandler {
                 runID: runID,
                 runLabel: request.label,
                 spec: spec,
-                cwd: request.cwd,
-                timeoutMs: request.timeoutMs
+                cwd: workspace.cwd,
+                worktree: workspace.worktree,
+                timeoutMs: request.timeoutMs,
+                approvalPolicy: policy.approvalPolicy,
+                sandbox: policy.sandbox,
+                webSearch: request.webSearch
             )
             order.append(id)
             queue.append(id)
-            created.append(["id": .string(id), "spec": .string(spec), "worktree": .null])
+            created.append(["id": .string(id), "spec": .string(spec), "worktree": .optional(workspace.worktree)])
         }
         notify()
         persist()
@@ -108,7 +142,7 @@ extension OrchestratorCore: OrchestratorToolHandler {
             "runId": .string(runID),
             "runningInParallel": true,
             "concurrencyLimit": .integer(concurrencyLimit),
-            "isolated": false,
+            "isolated": .bool(request.isolate),
             "timeoutSeconds": .optional(request.timeoutMs.map { $0 / 1000 }),
             "jobs": .array(created),
             "next": "call alethe_check with wait true",
