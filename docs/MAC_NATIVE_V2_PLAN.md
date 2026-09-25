@@ -1,8 +1,11 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-27 (P2-1…P2-5 tested; P2-6…P2-27
-> compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-28. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Status: **Phase 2 complete — compiled, tests not run** (Phase 1 complete). P2-1…P2-5 tested; P2-6…P2-28
+> compiled, their tests written but never run (owner decision 2026-09-24): the full package and UI runs
+> are owed before Phase 3. Manual checks owed: prompt redraw after resize (P2-3), image paste and drops
+> (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container
+> reorder drag (P2-16), grid drags (P2-19), hibernation and resume (P2-24), quit confirmation (P2-26).
+> Next: the owed test run, then Phase 3. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -615,7 +618,7 @@ Principles from the apple-design guidance, translated to SwiftUI/AppKit.
 |---|---|---|
 | Ctrl+T / Ctrl+Alt+T / Ctrl+Shift+T | ⌘T / ⌥⌘T / ⇧⌘T | New terminal / repeat last / reopen closed tab |
 | Ctrl+W | ⌘W | Close pane (window when last) |
-| Ctrl+P | ⌘K (and ⇧⌘P) | Find/Jump + commands |
+| Ctrl+P | ⌘K | Find/Jump + commands (P2-25) |
 | Ctrl+Shift+P / Ctrl+Shift+G | ⌘N / ⇧⌘N | New project / new group |
 | Ctrl+Shift+A | ⇧⌘A | Add content |
 | Ctrl+Shift+H | ⇧⌘H | Home ↔ workspace |
@@ -630,6 +633,8 @@ Principles from the apple-design guidance, translated to SwiftUI/AppKit.
 | Ctrl+↑/↓ (prompt history) | ⌥⌘↑ / ⌥⌘↓ | Prompt history (P2-6; ⌃↑/⌃↓ belong to Mission Control) |
 | — | ⌘↑ / ⌘↓ | Previous / next prompt mark (P2-3) |
 | — | ⌘F / ⌘G / ⇧⌘G | Terminal search |
+| — | ⇧⌘↩ / ⌥⌘↩ | Show the pane / the project alone (P2-16) |
+| — | ⇧⌘F, Esc | Focus mode on / off (P2-21) |
 | — | ⌘, | Settings |
 
 ## 7. Execution plan
@@ -1431,7 +1436,18 @@ they run per the test cadence above.
   app does not have yet; here it governs the app's own motion.
   *Tests (written, not run — owner decision 2026-09-24):* `VisualStyleTests` (4), UI `VisualStyleTests`
   (Clean compacts the sidebar and persists with reduced motion; HT at three zoom levels). Compiled.
-- [ ] **P2-28 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+- [x] **P2-28 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+  *Done:* `AletheNative/CHANGELOG.md` covers every Phase 2 task. Matrix (§8): every row scheduled for
+  Phase 2 is Done except WS-3, Partial — the designer's group and workspace scopes (a workspace-wide
+  grid of containers) are left open. §6.3 gains ⇧⌘↩ / ⌥⌘↩ and ⇧⌘F; ⌘K is Find/Jump without the ⇧⌘P
+  alias. upstream-watch `2f3e5ed..origin/main` (2026-09-24): 0 commits — nothing to triage, baseline
+  stays `2f3e5ed` (the run rewrote the same-day report with an empty range; the original was kept).
+  *Full test run: not done* — owner decision 2026-09-24: continue through P2-28 without running tests.
+  Owed before Phase 3: the package tests (P2-6…P2-27 written, never run) and the UI suite with its
+  three smoke scripts (`grid-drag.sh` new in P2-19); manual checks listed in the status line.
+  *Phase 2 exit check:* terminal and workspace rows at parity (WS-3's two scopes aside); terminals
+  survive relaunch with their scrollback (P2-7); idle hidden terminals hibernate when the policy
+  allows, resuming when shown (P2-24). Everything compiled; nothing verified by running tests.
 
 **Phase 2 exit criteria:** every terminal and workspace feature of the parity rows above works at
 parity, terminals survive relaunch with their scrollback, and idle terminals hibernate.
