@@ -26,6 +26,18 @@ enum PluginViewRegistry {
         default: ExtensionOrUnavailable(viewID: viewID)
         }
     }
+
+    /// The sheet a `SheetContribution` names, for a project.
+    @MainActor @ViewBuilder
+    static func sheet(for viewID: String, workspace: WorkspaceModel, undoManager: UndoManager?,
+                      projectID: ProjectID?) -> some View {
+        switch viewID {
+        case GitControlPlugin.viewID:
+            GitControlSheet(workspace: workspace, undoManager: undoManager, projectID: projectID)
+        default:
+            ContentUnavailableView("rightSidebar.unavailable", systemImage: "puzzlepiece.extension")
+        }
+    }
 }
 
 /// A third-party extension's tab (P4-19), or a placeholder for an unknown `viewID`.
