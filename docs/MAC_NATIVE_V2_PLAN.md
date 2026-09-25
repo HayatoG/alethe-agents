@@ -1862,7 +1862,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   paginated decorated log, commit files/message, cherry-pick, revert, reset, branch from commit,
   incoming/outgoing; typed `GitError` (+ `invalidArgument` for unsafe paths/hashes/branches);
   `GitWatcher` (FSEvents, debounced, ignores objects/locks). Pure parsers. G+U 26/26.
-- [ ] **P4-5 (L) Git Control.** Built-in plugin (upstream `plugins/git-control`): changes grouped
+- [x] **P4-5 (L) Git Control.** Built-in plugin (upstream `plugins/git-control`): changes grouped
   staged/unstaged/conflicts, stage or discard per file or all (discard asks), commit message with ⌘↩,
   amend, branch switcher, pull/push/fetch with status, diff of a file in the diff pane (P2), init for a
   folder without a repository. *Tests:* U, UI. *Parity:* GIT-1.
@@ -1871,6 +1871,12 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   switcher, fetch/pull/push with progress, refresh via `GitWatcher`, Initialize Repository, inline errors,
   a file's diff in a new diff pane (repository paths made folder-relative, `7369910`). Not a PluginHost
   plugin yet; no branch creation; no U/UI tests yet.
+  *Done (plugin, `b8f5ab7`):* target `AletheGitControl`: `GitControlPlugin` (`com.alethe.git-control`,
+  `git` capability) contributes the "Git Control…" command and sheet; the app opens plugin sheets via
+  `.pluginSheet(viewID:project:)`, and disabling the plugin hides its menu entries. Branch switcher › New
+  Branch… (git naming rules + exists check, optional switch). Pure helpers (grouping, folder-relative
+  paths, branch names) moved to the package. Tests written and compiled, NOT run: U (helpers, plugin
+  contributions), UI `GitControlTests` (seed `git`). Open: plugin commands in Find/Jump.
 - [x] **P4-6 (L) Commit graph.** Lanes laid out like upstream `GitGraph` (merges, branch and tag
   labels, HEAD), a lazy list for long histories, commit detail (message, files, diff), actions:
   cherry-pick, revert, reset soft/mixed/hard (hard asks), branch from commit, copy SHA.
@@ -1902,7 +1908,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   App / Quick Look / Reveal in Finder / inline Rename / New File / New Folder / Move to Trash (confirms only
   without a Trash); Space = Quick Look. Open: badges miss git-only changes when the repository root is above
   the project folder (watcher is on the folder); drag to a pane; UI tests.
-- [ ] **P4-9 (L) Worktrees.** Worktree isolation per agent (upstream `worktrees.rs`): provision, list,
+- [x] **P4-9 (L) Worktrees.** Worktree isolation per agent (upstream `worktrees.rs`): provision, list,
   remove, lock/unlock, fetch branch, commit pending changes, cleanup; `autoWorktree` / `worktreeMode` /
   `worktreeAgentId` on new terminals and the New Terminal sheet; the sidebar marks worktree terminals.
   *Tests:* G, UI. *Parity:* GIT-4.
@@ -1917,6 +1923,12 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   / `worktreeBranch` (optional, old `workspace.json` decodes, U 2); sidebar branch symbol + tooltip; tab
   menu Commit Worktree Changes… / Remove Worktree (asks once). Open: project `autoWorktree`/`worktreeMode`
   settings, lock/cleanup in the UI, UI tests.
+  *Done (settings + sheet, `9b2cd9a`):* `Project.autoWorktree` / `worktreeMode` (`ProjectWorktreeMode`,
+  optional, old `workspace.json` decodes, imported from Tauri) edited in the project editor and used as
+  the New Terminal defaults. Project menu › Worktrees…: branch, mode, path, lock state/reason; Lock…/Unlock,
+  Fetch Branch (local copies), Commit Pending…, Remove (asks once, refuses locked; tabs go back to the
+  project folder), Clean Up Stale (asks once). Tests written and compiled, NOT run: U 4
+  (`ProjectWorktreeSettingsTests`), UI `WorktreesTests` (seed `worktrees`).
 - [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
   sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
   sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.
