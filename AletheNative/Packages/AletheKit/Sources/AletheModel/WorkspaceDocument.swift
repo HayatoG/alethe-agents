@@ -44,10 +44,16 @@ public struct PaneTab: Codable, Hashable, Sendable, Identifiable {
     /// Prompt sent to a new session when it starts.
     public var initialPrompt: String?
     public var createdAt: Date
+    /// Agent id of the tab's own worktree (upstream `worktreeAgentId`, P4-9); nil when the tab runs
+    /// in the project folder. Absent in older files.
+    public var worktreeAgentID: String?
+    /// Branch of that worktree (`alethe/agent-<id>`), shown in the sidebar.
+    public var worktreeBranch: String?
 
     public init(id: TabID = .make(), agent: String, title: String? = nil, workingDirectory: String? = nil,
                 sessionID: String? = nil, unrestricted: Bool = false, extraArguments: [String] = [],
-                initialPrompt: String? = nil, createdAt: Date = Date()) {
+                initialPrompt: String? = nil, createdAt: Date = Date(),
+                worktreeAgentID: String? = nil, worktreeBranch: String? = nil) {
         self.id = id
         self.agent = agent
         self.title = title
@@ -57,6 +63,8 @@ public struct PaneTab: Codable, Hashable, Sendable, Identifiable {
         self.extraArguments = extraArguments
         self.initialPrompt = initialPrompt
         self.createdAt = createdAt
+        self.worktreeAgentID = worktreeAgentID
+        self.worktreeBranch = worktreeBranch
     }
 }
 

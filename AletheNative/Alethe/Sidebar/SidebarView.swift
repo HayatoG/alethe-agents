@@ -1,6 +1,8 @@
 import AletheAgents
 import AletheDesign
+import AletheGit
 import AletheModel
+import AppKit
 import SwiftUI
 
 /// Projects organized in nested groups, with each project's terminals underneath.
@@ -175,6 +177,14 @@ private struct ProjectRow: View {
                                     .foregroundStyle(theme[disabled ? .textTertiary : .textPrimary])
                                     .lineLimit(1)
                                 AgentStatusGlyph(tab: tab.id)
+                                if let branch = tab.worktreeBranch {
+                                    Image(systemName: "arrow.triangle.branch")
+                                        .font(metrics.font(.footnote))
+                                        .foregroundStyle(theme[.textTertiary])
+                                        .help(Text(verbatim: String(format: String(localized: "sidebar.worktree"), branch)))
+                                        .accessibilityLabel(Text(verbatim: String(format: String(localized: "sidebar.worktree"), branch)))
+                                        .accessibilityIdentifier("sidebar.tab.worktree")
+                                }
                             }
                         } icon: {
                             Image(systemName: disabled ? "pause.circle"
@@ -279,8 +289,75 @@ private struct TabContextMenu: View {
             }
             .disabled(pane.tabs.count > 1)
         }
+        if let agentID = tab.worktreeAgentID {
+            Divider()
+            Button("worktree.commitEllipsis") { WorktreeActions.commit(agentID, project: project) }
+            Button("worktree.remove") {
+                WorktreeActions.remove(agentID, tab: tab.id, project: project, workspace: actions.workspace)
+            }
+        }
         Divider()
         Button("terminal.close") { actions.closeTab(tab.id) }
+    }
+}
+
+/// Worktree actions of an agent tab (P4-9); git runs off the main thread, failures show an alert.
+@MainActor
+enum WorktreeActions {
+    static func commit(_ agentID: String, project: Project) {
+        let alert = NSAlert()
+        alert.messageText = String(localized: "worktree.commit.title")
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
+        field.placeholderString = GitWorktrees.defaultCommitMessage
+        field.setAccessibilityIdentifier("worktree.commit.message")
+        alert.informativeText = String(localized: "worktree.commit.message")
+        alert.accessoryView = field
+        alert.addButton(withTitle: String(localized: "worktree.commit.confirm"))
+        alert.addButton(withTitle: String(localized: "editor.cancel"))
+        alert.window.initialFirstResponder = field
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let message = field.stringValue
+        let repo = URL(filePath: project.folder)
+        Task {
+            do {
+                let committed = try await GitWorktrees().commitPending(repo: repo, agentId: agentID, message: message)
+                if !committed { inform(String(localized: "worktree.nothingToCommit"), text: "") }
+            } catch {
+                inform(String(localized: "worktree.failed"), text: NewTerminalSheet.describe(error))
+            }
+        }
+    }
+
+    static func remove(_ agentID: String, tab: TabID, project: Project, workspace: WorkspaceModel) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(localized: "worktree.remove.title")
+        alert.informativeText = String(localized: "worktree.remove.detail")
+        alert.addButton(withTitle: String(localized: "worktree.remove"))
+        alert.addButton(withTitle: String(localized: "editor.cancel"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let repo = URL(filePath: project.folder)
+        Task {
+            do {
+                try await GitWorktrees().remove(repo: repo, agentId: agentID, force: true)
+                workspace.update {
+                    $0.updateTab(tab) {
+                        $0.worktreeAgentID = nil
+                        $0.worktreeBranch = nil
+                        $0.workingDirectory = nil
+                    }
+                }
+            } catch {
+                inform(String(localized: "worktree.failed"), text: NewTerminalSheet.describe(error))
+            }
+        }
+    }
+
+    private static func inform(_ title: String, text: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = text
+        alert.runModal()
     }
 }
 

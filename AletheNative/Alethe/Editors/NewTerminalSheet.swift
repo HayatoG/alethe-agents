@@ -1,5 +1,6 @@
 import AletheAgents
 import AletheDesign
+import AletheGit
 import AletheModel
 import AppKit
 import SwiftUI
@@ -28,6 +29,11 @@ struct NewTerminalSheet: View {
     /// Model passed with the agent's model flag (P3-5); empty is the agent's default.
     @State private var model = ""
     @State private var models: [String] = []
+    /// Run the agent in its own worktree (P4-9); shells never get one.
+    @State private var ownWorktree = false
+    @State private var worktreeMode: WorktreeMode = .gitWorktree
+    @State private var provisioning = false
+    @State private var worktreeError: String?
 
     private var registry: AgentRegistry { .builtin }
     private var agents: [AgentKind] { registry.enabledKinds(environment.preferences?.document.enabledAgents) }
@@ -114,6 +120,29 @@ struct NewTerminalSheet: View {
             }
 
             if descriptor?.isShell == false {
+                Toggle(isOn: $ownWorktree) {
+                    Text("newTerminal.worktree")
+                    Text("newTerminal.worktree.detail").font(metrics.font(.footnote))
+                }
+                .accessibilityIdentifier("newTerminal.worktree")
+                if ownWorktree {
+                    Picker(selection: $worktreeMode) {
+                        Text("newTerminal.worktree.mode.gitWorktree").tag(WorktreeMode.gitWorktree)
+                        Text("newTerminal.worktree.mode.localCopy").tag(WorktreeMode.localCopy)
+                    } label: { Text("newTerminal.worktree.mode") }
+                        .accessibilityIdentifier("newTerminal.worktreeMode")
+                }
+                if let worktreeError {
+                    VStack(alignment: .leading, spacing: metrics.space(.xs)) {
+                        Text("newTerminal.worktree.failed")
+                        Text(verbatim: worktreeError).font(metrics.font(.footnote).monospaced())
+                    }
+                    .foregroundStyle(theme[.statusStopped])
+                    .accessibilityIdentifier("newTerminal.worktreeError")
+                }
+            }
+
+            if descriptor?.isShell == false {
                 LabeledContent("newTerminal.prompt") {
                     TextEditor(text: $prompt)
                         .font(metrics.font(.body))
@@ -141,7 +170,7 @@ struct NewTerminalSheet: View {
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button(targetPane == nil ? LocalizedStringKey("newTerminal.create") : "newSubTab.add") { create() }
-                    .disabled(problem != nil)
+                    .disabled(problem != nil || provisioning)
                     .accessibilityIdentifier("editor.confirm")
             }
         }
@@ -203,15 +232,43 @@ struct NewTerminalSheet: View {
 
     private func create() {
         guard let project else { return }
+        worktreeError = nil
+        guard descriptor?.isShell == false, ownWorktree else { return add(in: project, worktree: nil) }
+        // Provision before the tab exists, so the agent starts inside the worktree.
+        let repo = URL(filePath: expanded(folder)).standardizedFileURL
+        let tabID = TabID.make()
+        let mode = worktreeMode
+        provisioning = true
+        Task {
+            do {
+                let info = try await GitWorktrees().provision(repo: repo, agentId: tabID.rawValue, mode: mode)
+                provisioning = false
+                add(in: project, worktree: info, tabID: tabID)
+            } catch {
+                provisioning = false
+                worktreeError = Self.describe(error)
+            }
+        }
+    }
+
+    static func describe(_ error: Error) -> String {
+        if case let GitError.commandFailed(_, stderr) = error, !stderr.isEmpty { return stderr }
+        return String(describing: error)
+    }
+
+    private func add(in project: Project, worktree: WorktreeInfo?, tabID: TabID = .make()) {
         let path = URL(filePath: expanded(folder)).standardizedFileURL.path
         let projectFolder = URL(filePath: project.folder).standardizedFileURL.path
         let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         let tab = PaneTab(
+            id: tabID,
             agent: agent.rawValue,
-            workingDirectory: path == projectFolder ? nil : path,
+            workingDirectory: worktree?.path ?? (path == projectFolder ? nil : path),
             unrestricted: descriptor?.unrestrictedFlag != nil && unrestricted,
             extraArguments: ModelDiscovery.arguments([], model: model, for: agent),
-            initialPrompt: descriptor?.isShell == false && !text.isEmpty ? text : nil
+            initialPrompt: descriptor?.isShell == false && !text.isEmpty ? text : nil,
+            worktreeAgentID: worktree?.agentId,
+            worktreeBranch: worktree?.branch
         )
         if let targetPane {
             workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newSubTab")) {
@@ -225,7 +282,7 @@ struct NewTerminalSheet: View {
                 $0.addPane(to: project.id, tab: tab)
             }
             environment.preferences?.update {
-                $0.lastTerminalCreation = TerminalCreation(agent: tab.agent, folder: tab.workingDirectory,
+                $0.lastTerminalCreation = TerminalCreation(agent: tab.agent, folder: worktree == nil ? tab.workingDirectory : nil,
                                                            unrestricted: tab.unrestricted, extraArguments: tab.extraArguments)
             }
         }
