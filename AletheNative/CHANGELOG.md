@@ -272,6 +272,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the command.
 - Playwright browser (Settings › Features): agents get the Playwright MCP server, attaching to a browser
   Alethe starts (Shared) or opening their own (Dedicated).
+- GSD Sync: a right-sidebar tab lists the project's OpenCode child sessions with state and roadmap
+  progress, planning status appears under the project, a read-only activity view follows the child
+  session, and Settings › Features › GSD Sync edits the model fallback chain.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

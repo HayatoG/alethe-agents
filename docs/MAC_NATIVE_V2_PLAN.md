@@ -2395,12 +2395,20 @@ cadence above.
   file opened in a pane, a snapshot timeline with the diff highlighted and rollback; Add Content › Graph
   and the project menu; generate when no graph exists. Needs P5-17. *Tests:* U (layout determinism for a
   seed), UI (open, search, select), P (layout of upstream's largest fixture). *Parity:* EXT-5.
-- [ ] **P5-24 (M) GSD Sync UI.** Right sidebar GSD Sync tab, only when gsdSync is on and the project
+- [x] **P5-24 (M) GSD Sync UI.** Right sidebar GSD Sync tab, only when gsdSync is on and the project
   runs OpenCode (upstream `useGsdSyncAvailable`): child sessions from one app-wide 5 s poll, busy and
   error glyphs, planning status on the sidebar merge panel; the activity view (upstream
   `GsdSyncActivityView`: messages, text, tool and reasoning parts, sticks to the bottom); model chain in
   Settings › Features › GSD Sync. Needs P5-3, P5-20. *Tests:* UI (seeded `.planning/` folder), HT.
   *Parity:* EXT-7.
+  *Done:* (`c3c601e`) app-wide 5 s poll in `GSDSyncController` via `GSDSyncService.sessions(for:)` (off
+  main, cancelable, one read per checkout); right sidebar GSD Sync tab only while gsdSync is on and the
+  selected project has an OpenCode tab (busy/error/idle glyphs, roadmap progress); planning status rows
+  under the project in the left sidebar; `GSDSyncActivitySheet` polls `opencode export` every 5 s and
+  follows the bottom; Settings › Features › GSD Sync edits the model chain; `TerminalRegistry` installs
+  the plugin before an OpenCode tab starts; child errors go to the notification list. Deviation: no per-
+  project `gsdWatcherEnabled` (the feature switch plus an OpenCode tab is the gate). Tests (U + UI + HT
+  at 90/100/120 %) written and compiled, NOT run.
 - [ ] **P5-25 (L) MCP manager UI.** Right sidebar MCP tab (upstream `McpPanel`: scope switch, server
   rows per agent, live health) and the MCP manager sheet (upstream `McpManagerModal`: list and detail,
   edit, per-agent enable with undo, sync to agents, reveal env, backups with restore, Skills from P5-15);
