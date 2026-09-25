@@ -24,7 +24,8 @@ public enum TauriImport {
         case projectAlreadyAdded(project: String)
         /// Hidden in the Tauri app; the native app has no archive yet.
         case projectArchived(project: String)
-        /// A pane that is not a terminal (markdown, web, file, diff…), not available natively yet.
+        /// A pane that is not a terminal or an orchestrator board (markdown, web, file, diff…), not
+        /// imported yet.
         case paneKind(project: String, kind: String)
         /// A tab whose agent the native app does not run (yet).
         case agent(project: String, agent: String)
@@ -191,7 +192,11 @@ public enum TauriImport {
             var panes: [Pane] = []
             for terminal in terminals {
                 if let kind = terminal["kind"] as? String, kind != "terminal" {
-                    report.skipped.append(.paneKind(project: name, kind: kind))
+                    if kind == PaneContent.Kind.orchestrator.rawValue {
+                        panes.append(orchestratorPane(from: terminal))
+                    } else {
+                        report.skipped.append(.paneKind(project: name, kind: kind))
+                    }
                     continue
                 }
                 if let pane = pane(from: terminal, folder: folder, project: name, context: context, report: &report) {
@@ -235,6 +240,37 @@ public enum TauriImport {
             }
             report.panes += panes.count
             report.tabs += panes.reduce(0) { $0 + $1.tabs.count }
+        }
+    }
+
+    /// An orchestrator board (upstream `createOrchestratorPane`): no tabs, so only its id and grid
+    /// are kept. Upstream's `paneGroups` stacking is not imported; the board keeps its place in order.
+    static func orchestratorPane(from terminal: [String: Any]) -> Pane {
+        let id = (terminal["id"] as? String).flatMap { $0.isEmpty ? nil : PaneID(rawValue: $0) } ?? .make()
+        var pane = Pane(id: id, content: .orchestrator)
+        pane.gridID = (terminal["gridId"] as? String).flatMap { $0.isEmpty || $0 == "default" ? nil : ProjectGridID(rawValue: $0) }
+        return pane
+    }
+
+    // MARK: - Orchestrator history
+
+    /// Upstream `orchestrator_store_path`: the job history beside `projects.json` in a profile.
+    public static let orchestratorJobsFileName = "orchestrator-jobs.json"
+
+    /// Copies the Tauri profile's orchestrator job history into `profileDirectory` when that profile
+    /// has none yet; an existing history is never replaced. True when a file was copied.
+    @discardableResult
+    public static func copyOrchestratorJobs(from projectsFile: URL, into profileDirectory: URL,
+                                            fileManager: FileManager = .default) -> Bool {
+        let source = projectsFile.deletingLastPathComponent().appending(path: orchestratorJobsFileName)
+        let target = profileDirectory.appending(path: orchestratorJobsFileName)
+        guard fileManager.fileExists(atPath: source.path), !fileManager.fileExists(atPath: target.path) else { return false }
+        do {
+            try fileManager.createDirectory(at: profileDirectory, withIntermediateDirectories: true)
+            try fileManager.copyItem(at: source, to: target)
+            return true
+        } catch {
+            return false
         }
     }
 

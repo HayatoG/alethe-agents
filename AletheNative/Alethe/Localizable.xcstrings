@@ -188,6 +188,40 @@
         }
       }
     },
+    "addContent.orchestrator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orquestração"
+          }
+        }
+      }
+    },
+    "addContent.orchestrator.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch the workers agents delegate to"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acompanhe os workers para quem os agentes delegam"
+          }
+        }
+      }
+    },
     "addContent.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14434,6 +14468,23 @@
         }
       }
     },
+    "newTerminal.createOrchestration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar orquestração"
+          }
+        }
+      }
+    },
     "newTerminal.folder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14451,6 +14502,23 @@
         }
       }
     },
+    "newTerminal.goal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goal"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetivo"
+          }
+        }
+      }
+    },
     "newTerminal.grid" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14464,6 +14532,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grade"
+          }
+        }
+      }
+    },
+    "newTerminal.mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open as"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir como"
+          }
+        }
+      }
+    },
+    "newTerminal.mode.orchestration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orquestração"
+          }
+        }
+      }
+    },
+    "newTerminal.mode.orchestration.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One planner commanding several agents, with the board beside it."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um planner comandando vários agentes, com o quadro ao lado."
+          }
+        }
+      }
+    },
+    "newTerminal.mode.terminal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal"
+          }
+        }
+      }
+    },
+    "newTerminal.mode.terminal.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs and splits, one agent per pane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abas e divisões, um agente por painel."
           }
         }
       }
@@ -14532,6 +14685,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Padrão do Agente"
+          }
+        }
+      }
+    },
+    "newTerminal.planner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planner"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planner"
           }
         }
       }
@@ -15671,6 +15841,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Instale o Visual Studio Code ou adicione o comando `code` ao PATH (no VS Code: Paleta de Comandos › Shell Command: Install 'code' command in PATH)."
+          }
+        }
+      }
+    },
+    "orchestrator.addToProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar orquestração"
+          }
+        }
+      }
+    },
+    "orchestrator.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fechar"
+          }
+        }
+      }
+    },
+    "orchestrator.empty.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask an agent to delegate, and every worker Alethe starts shows up here as it runs."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peça a um agente para delegar, e cada worker que a Alethe iniciar aparece aqui enquanto roda."
+          }
+        }
+      }
+    },
+    "orchestrator.empty.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No workers yet."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum worker ainda."
+          }
+        }
+      }
+    },
+    "orchestrator.featureOff" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orchestration is turned off in Settings › Features."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A orquestração está desativada em Ajustes › Recursos."
+          }
+        }
+      }
+    },
+    "orchestrator.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orquestração"
+          }
+        }
+      }
+    },
+    "orchestrator.turnOn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn On Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativar orquestração"
           }
         }
       }
@@ -24392,6 +24681,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Novo Grupo"
+          }
+        }
+      }
+    },
+    "undo.newOrchestration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Orchestration"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nova orquestração"
           }
         }
       }

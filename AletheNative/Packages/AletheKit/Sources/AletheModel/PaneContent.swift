@@ -14,9 +14,11 @@ public enum PaneContent: Hashable, Sendable {
     case web(url: String, options: WebPaneOptions)
     /// The project repository's Graphify code graph (upstream `graphify` pane, P5-23).
     case graphify
+    /// The orchestrator board: planners, runs and workers (upstream `orchestrator` pane, P6-13).
+    case orchestrator
 
     public enum Kind: String, Codable, CaseIterable, Sendable {
-        case terminal, markdown, image, video, diff, web, graphify
+        case terminal, markdown, image, video, diff, web, graphify, orchestrator
     }
 
     public var kind: Kind {
@@ -28,6 +30,7 @@ public enum PaneContent: Hashable, Sendable {
         case .diff: .diff
         case .web: .web
         case .graphify: .graphify
+        case .orchestrator: .orchestrator
         }
     }
 
@@ -72,6 +75,7 @@ extension PaneContent: Codable {
             self = .web(url: try container.decodeIfPresent(String.self, forKey: .url) ?? "",
                         options: try container.decodeIfPresent(WebPaneOptions.self, forKey: .options) ?? WebPaneOptions())
         case .graphify: self = .graphify
+        case .orchestrator: self = .orchestrator
         }
     }
 
@@ -79,7 +83,7 @@ extension PaneContent: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(kind, forKey: .kind)
         switch self {
-        case .terminal, .graphify: break
+        case .terminal, .graphify, .orchestrator: break
         case .markdown(let path), .image(let path), .video(let path):
             try container.encode(path, forKey: .path)
         case .diff(let path, let staged):

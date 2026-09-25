@@ -6,9 +6,9 @@ import AppKit
 import SwiftUI
 
 /// New Terminal sheet (⌘T): agent, project, folder, unrestricted mode and an optional first prompt.
-/// Upstream: `NewTerminalModal` (basic form; grid picker, 9router and planner come later). With a
-/// `targetPane` it is upstream's `NewSubTabModal`: the tab joins that pane, in the folder of the
-/// pane's active tab.
+/// Upstream: `NewTerminalModal`. With a `targetPane` it is upstream's `NewSubTabModal`: the tab joins
+/// that pane, in the folder of the pane's active tab. Orchestration mode (upstream `SessionMode`,
+/// P6-13) opens a Claude Code or Codex planner with the orchestrator board beside it.
 struct NewTerminalSheet: View {
     let workspace: WorkspaceModel
     let undoManager: UndoManager?
@@ -19,6 +19,13 @@ struct NewTerminalSheet: View {
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
+    /// Upstream `SessionMode`: a plain terminal, or a planner with the orchestrator board.
+    enum SessionMode: Hashable { case terminal, orchestration }
+
+    /// Upstream `PLANNER_AGENTS`: the agents that can drive the orchestrator's tools.
+    static let plannerAgents: [AgentKind] = [.claude, .codex]
+
+    @State private var mode: SessionMode = .terminal
     @State private var agent: AgentKind = .claude
     @State private var projectID: ProjectID?
     @State private var folder = ""
@@ -39,11 +46,31 @@ struct NewTerminalSheet: View {
     private var agents: [AgentKind] { registry.enabledKinds(environment.preferences?.document.enabledAgents) }
     private var project: Project? { projectID.flatMap { workspace.document.project($0) } }
     private var descriptor: AgentDescriptor? { registry.descriptor(for: agent) }
+    private var plannerAgents: [AgentKind] { agents.filter(Self.plannerAgents.contains) }
+    /// Offered for a new pane when a planner agent is enabled; choosing it turns the feature on.
+    private var canOrchestrate: Bool { targetPane == nil && !plannerAgents.isEmpty }
+    private var orchestrating: Bool { canOrchestrate && mode == .orchestration }
+    private var modeAgents: [AgentKind] { orchestrating ? plannerAgents : agents }
 
     var body: some View {
         Form {
+            if canOrchestrate {
+                Picker(selection: $mode) {
+                    Text("newTerminal.mode.terminal").tag(SessionMode.terminal)
+                    Text("newTerminal.mode.orchestration").tag(SessionMode.orchestration)
+                } label: {
+                    Text("newTerminal.mode")
+                    Text(orchestrating ? LocalizedStringKey("newTerminal.mode.orchestration.detail") : "newTerminal.mode.terminal.detail")
+                }
+                .pickerStyle(.radioGroup)
+                .accessibilityIdentifier("newTerminal.mode")
+                .onChange(of: mode) { _, _ in
+                    if !modeAgents.contains(agent) { agent = modeAgents.first ?? agent }
+                }
+            }
+
             Picker(selection: $agent) {
-                ForEach(agents, id: \.self) { kind in
+                ForEach(modeAgents, id: \.self) { kind in
                     Label {
                         Text(verbatim: AgentLabels.name(for: kind.rawValue))
                     } icon: {
@@ -51,7 +78,7 @@ struct NewTerminalSheet: View {
                     }
                     .tag(kind)
                 }
-            } label: { Text("newTerminal.agent") }
+            } label: { Text(orchestrating ? LocalizedStringKey("newTerminal.planner") : "newTerminal.agent") }
                 .pickerStyle(.radioGroup)
                 .accessibilityIdentifier("newTerminal.agent")
 
@@ -144,7 +171,7 @@ struct NewTerminalSheet: View {
             }
 
             if descriptor?.isShell == false {
-                LabeledContent("newTerminal.prompt") {
+                LabeledContent(orchestrating ? LocalizedStringKey("newTerminal.goal") : "newTerminal.prompt") {
                     TextEditor(text: $prompt)
                         .font(metrics.font(.body))
                         .frame(minHeight: metrics.size(70))
@@ -170,7 +197,8 @@ struct NewTerminalSheet: View {
                 Button("editor.cancel") { dismiss() }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button(targetPane == nil ? LocalizedStringKey("newTerminal.create") : "newSubTab.add") { create() }
+                Button(targetPane != nil ? LocalizedStringKey("newSubTab.add")
+                       : orchestrating ? "newTerminal.createOrchestration" : "newTerminal.create") { create() }
                     .disabled(problem != nil || provisioning)
                     .accessibilityIdentifier("editor.confirm")
             }
@@ -284,10 +312,22 @@ struct NewTerminalSheet: View {
             }
         } else {
             let grid = gridID
-            workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newTerminal")) {
+            let orchestration = orchestrating
+            // The planner's launch reads the feature (its MCP wiring): turn it on before the tab exists.
+            if orchestration, environment.features.isOn(.orchestrator) == false {
+                environment.preferences?.update { $0.features.set(.orchestrator, on: true) }
+            }
+            let actionName = orchestration ? String(localized: "undo.newOrchestration") : String(localized: "undo.newTerminal")
+            workspace.update(undoManager: undoManager, actionName: actionName) {
                 // New panes join the shown grid: show the chosen one first.
                 if grid != $0.project(project.id)?.shownGridID { $0.activateGrid(grid, in: project.id) }
-                $0.addPane(to: project.id, tab: tab)
+                let planner = $0.addPane(to: project.id, tab: tab)
+                // No pane groups here (upstream stacks the two): the board goes right after the
+                // planner, beside it in the layout, and the planner keeps the keyboard.
+                if orchestration, let planner {
+                    $0.addPane(to: project.id, content: .orchestrator)
+                    $0.workspace.focusedPaneID = planner
+                }
             }
             environment.preferences?.update {
                 $0.lastTerminalCreation = TerminalCreation(agent: tab.agent, folder: worktree == nil ? tab.workingDirectory : nil,

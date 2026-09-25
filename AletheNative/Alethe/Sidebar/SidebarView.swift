@@ -280,6 +280,15 @@ private struct ProjectContextMenu: View {
             }
             .accessibilityIdentifier("graphify.openInProject")
         }
+        if environment.features.isOn(.orchestrator) {
+            // Upstream `menu.addOrchestrator` always adds a board, like Add Content.
+            Button("orchestrator.addToProject") {
+                actions.workspace.update(undoManager: actions.undoManager, actionName: String(localized: "undo.addContent")) {
+                    $0.addPane(to: project.id, content: .orchestrator)
+                }
+            }
+            .accessibilityIdentifier("orchestrator.addToProject")
+        }
         Menu("sidebar.grids") {
             Button("projectGrid.main") { actions.workspace.update { $0.activateGrid(nil, in: project.id) } }
             ForEach(project.namedGrids) { grid in

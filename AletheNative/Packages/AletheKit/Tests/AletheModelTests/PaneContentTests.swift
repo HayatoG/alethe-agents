@@ -9,7 +9,7 @@ import Testing
             .terminal, .markdown(path: "/p/README.md"), .image(path: "/p/a.png"), .video(path: "/p/v.mov"),
             .diff(path: nil, staged: false), .diff(path: "src/a.swift", staged: true), .web(url: "http://localhost:3000", options: WebPaneOptions()),
             .web(url: "https://a.dev/", options: WebPaneOptions(resourceMode: .keepAlive, javascriptEnabled: false, zoom: 1.25)),
-            .graphify,
+            .graphify, .orchestrator,
         ]
         for content in contents {
             let data = try JSONEncoder().encode(content)
@@ -26,6 +26,15 @@ import Testing
         let decoded = try JSONDecoder().decode(PaneContent.self, from: Data(#"{"kind":"graphify","path":"/ignored"}"#.utf8))
         #expect(decoded == .graphify)
         #expect(Pane(content: .graphify, tabs: [PaneTab(agent: "shell")]).tabs.isEmpty)
+    }
+
+    @Test func anOrchestratorPaneIsStoredByKindAlone() throws {
+        let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(PaneContent.orchestrator)) as? [String: String]
+        #expect(object == ["kind": "orchestrator"])
+        #expect(PaneContent.orchestrator.filePath == nil && !PaneContent.orchestrator.isTerminal)
+        let decoded = try JSONDecoder().decode(PaneContent.self, from: Data(#"{"kind":"orchestrator"}"#.utf8))
+        #expect(decoded == .orchestrator)
+        #expect(Pane(content: .orchestrator, tabs: [PaneTab(agent: "shell")]).tabs.isEmpty)
     }
 
     @Test func version1WorkspaceMigratesEveryPaneToATerminal() async throws {

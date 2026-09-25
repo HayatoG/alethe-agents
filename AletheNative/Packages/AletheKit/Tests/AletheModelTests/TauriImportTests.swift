@@ -178,4 +178,54 @@ import Testing
         #expect(profiles.map(\.isActive) == [true, false, false])
         #expect(TauriDataLocation.profiles(root: root.appending(path: "missing")).isEmpty)
     }
+
+    /// Upstream `createOrchestratorPane` boards (P6-13): imported as `orchestrator` panes, in place and
+    /// grid, instead of being skipped.
+    @Test func mapsOrchestratorPanes() throws {
+        let json = #"""
+        {"version":9,"projects":[{"id":"p1","name":"orch","defaultCwd":"/Users/example/orch",
+          "grids":[{"id":"g1","name":"Board"}],
+          "terminals":[
+            {"id":"t1","name":"Claude","cwd":"/Users/example/orch","kind":"terminal","activeTabId":"s1",
+             "tabs":[{"id":"s1","type":"claude"}]},
+            {"id":"orchestrator-abc","name":"Orchestration","cwd":"/Users/example/orch","tabs":[],"activeTabId":"",
+             "kind":"orchestrator","gridId":"g1"},
+            {"id":"m1","kind":"markdown","filePath":"/Users/example/orch/README.md","tabs":[]}
+          ]}]}
+        """#
+        var workspace = WorkspaceDocument()
+        var preferences = PreferencesDocument()
+        let report = TauriImport.apply(try TauriImport.File(data: Data(json.utf8)), to: &workspace,
+                                       preferences: &preferences, context: Self.context)
+        let project = try #require(workspace.projects.first)
+        #expect(project.panes.map(\.content) == [.terminal, .orchestrator])
+        let board = project.panes[1]
+        #expect(board.id == PaneID(rawValue: "orchestrator-abc") && board.tabs.isEmpty)
+        #expect(board.gridID == ProjectGridID(rawValue: "g1"))
+        #expect(report.skipped == [.paneKind(project: "orch", kind: "markdown")])
+        #expect(report.panes == 2 && report.tabs == 1)
+    }
+
+    /// Upstream's job history beside `projects.json` is copied once into a profile that has none.
+    @Test func copiesTheOrchestratorHistoryOnlyWhenTheProfileHasNone() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: "alethe-tauri-jobs-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let tauri = root.appending(path: "tauri/profiles/default")
+        try FileManager.default.createDirectory(at: tauri, withIntermediateDirectories: true)
+        let projectsFile = tauri.appending(path: "projects.json")
+        try Data("{}".utf8).write(to: projectsFile)
+        let native = root.appending(path: "native/profiles/default")
+
+        #expect(!TauriImport.copyOrchestratorJobs(from: projectsFile, into: native), "nothing to copy")
+
+        let history = Data(#"{"version":2,"jobs":[],"planners":[]}"#.utf8)
+        try history.write(to: tauri.appending(path: TauriImport.orchestratorJobsFileName))
+        #expect(TauriImport.copyOrchestratorJobs(from: projectsFile, into: native))
+        let copied = native.appending(path: "orchestrator-jobs.json")
+        #expect(try Data(contentsOf: copied) == history)
+
+        try Data(#"{"version":2,"jobs":[{"id":"job-01"}]}"#.utf8).write(to: tauri.appending(path: "orchestrator-jobs.json"))
+        #expect(!TauriImport.copyOrchestratorJobs(from: projectsFile, into: native), "an existing history is kept")
+        #expect(try Data(contentsOf: copied) == history)
+    }
 }

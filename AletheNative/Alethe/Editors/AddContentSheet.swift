@@ -75,15 +75,20 @@ struct AddContentSheet: View {
                symbol: "point.3.connected.trianglepath.dotted") { _ in
             .graphify
         },
+        Option(kind: .orchestrator, title: "addContent.orchestrator", detail: "addContent.orchestrator.detail",
+               symbol: "flowchart") { _ in
+            .orchestrator
+        },
     ]
 
     /// The options whose feature is on: web pages need the browser feature (P5-3), the code graph
-    /// the graphify one.
+    /// the graphify one, the orchestrator board the orchestrator one.
     static func options(for features: Features) -> [Option] {
         options.filter { option in
             switch option.kind {
             case .web: features.isOn(.browser)
             case .graphify: features.isOn(.graphify)
+            case .orchestrator: features.isOn(.orchestrator)
             default: true
             }
         }

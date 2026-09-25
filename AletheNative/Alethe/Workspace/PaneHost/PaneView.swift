@@ -181,6 +181,10 @@ final class PaneView: NSView {
                                                                 controller: graphify)
             view = context.hosted(GraphifyPaneView(model: model, project: project.id, isFocused: focused,
                                                    onClose: { context.closePane(pane.id) }, onDrag: onDrag))
+        case .orchestrator:
+            setAccessibilityIdentifier("pane.orchestrator")
+            view = context.hosted(OrchestratorPaneView(isFocused: focused, onClose: { context.closePane(pane.id) },
+                                                       onDrag: onDrag))
         case .terminal:
             view = AnyView(EmptyView())
         }

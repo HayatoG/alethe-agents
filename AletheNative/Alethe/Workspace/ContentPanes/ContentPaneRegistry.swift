@@ -6,7 +6,8 @@ import Observation
 
 /// Open file-backed panes (Markdown, image, video, diff, web, graph), one model per pane, kept while the pane exists so a
 /// draft or a scroll position survives layout changes. The terminal counterpart is
-/// `TerminalRegistry`.
+/// `TerminalRegistry`. Orchestrator boards keep no model here: their state is the app's
+/// orchestrator service, shared by every board (P6-9).
 @MainActor
 final class ContentPaneRegistry {
     private var markdown: [PaneID: MarkdownFile] = [:]

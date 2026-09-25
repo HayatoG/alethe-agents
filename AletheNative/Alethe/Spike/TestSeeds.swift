@@ -122,6 +122,9 @@ enum TestSeeds {
             try? Data(graph.utf8).write(to: repo.appending(path: "graphify-out/graph.json"))
             try? Data(older.utf8).write(to: repo.appending(path: ".alethe/graph-snapshots/1750000000000.json"))
             _ = doc.addProject(name: "graphrepo", folder: repo.path, color: .purple)
+        case "orchestrator":
+            // One project, no panes; the orchestrator feature is turned on below (P6-13).
+            doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
         case "skills":
             seedSkills()
         case "gsdSync":
@@ -148,6 +151,8 @@ enum TestSeeds {
         switch name {
         case "gsdSync":
             preferences.features.set(.gsdSync, on: true)
+        case "orchestrator":
+            preferences.features.set(.orchestrator, on: true)
         default:
             break
         }

@@ -220,6 +220,9 @@ struct TauriImportSheet: View {
             report = TauriImport.apply(file, to: &doc, preferences: &prefs, context: context)
         }
         if prefs != preferences.document { preferences.update { $0 = prefs } }
+        if let profile, let locations = environment.locations, let profileID = environment.profileID {
+            TauriImport.copyOrchestratorJobs(from: profile.projectsFile, into: locations.profileDirectory(profileID))
+        }
         report = languageAdjusted(report)
         if let code = report.language, let language = AppLanguage(rawValue: code) {
             LanguageSetting().set(language)
