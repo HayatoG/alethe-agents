@@ -1878,7 +1878,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
 - [x] **P4-7 (S) Incoming/outgoing.** Commits ahead of and behind the upstream branch with fetch, as a
   Git Control section (upstream `IncomingOutgoing`). *Tests:* G, UI. *Parity:* GIT-3.
   *Done:* incoming/outgoing sections in Git Control (up to 50 each), refreshed after fetch.
-- [ ] **P4-8 (L) File explorer.** A sidebar tab (upstream `FileExplorer`): lazy tree with file-type
+- [x] **P4-8 (L) File explorer.** A sidebar tab (upstream `FileExplorer`): lazy tree with file-type
   icons, git badges (P4-4), rename, move to Trash (confirmation only when the Trash is unavailable),
   new file/folder, Quick Look on Space, open in a pane (Markdown, media, text, web), drag to a pane or
   grid slot, reveal in Finder, live refresh (FSEvents). *Tests:* U (tree model, badges), UI.
@@ -1888,6 +1888,11 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   kind per file (upstream map; HTML/PDF open in the web pane), git badges with upstream priorities and
   folder aggregation, validated rename/new/Trash (`.trashUnavailable` lets the UI confirm a permanent
   delete). Upstream hides nothing; only `.DS_Store` is hidden by default. U 13. Sidebar tab UI owed.
+  *Done (UI, `32cecdb`, `f4a1148`):* right sidebar Files tab: lazy tree, icons, git badges on status
+  tokens, live refresh, click opens the matching pane (else the default app), menu Open / Open with Default
+  App / Quick Look / Reveal in Finder / inline Rename / New File / New Folder / Move to Trash (confirms only
+  without a Trash); Space = Quick Look. Open: badges miss git-only changes when the repository root is above
+  the project folder (watcher is on the folder); drag to a pane; UI tests.
 - [ ] **P4-9 (L) Worktrees.** Worktree isolation per agent (upstream `worktrees.rs`): provision, list,
   remove, lock/unlock, fetch branch, commit pending changes, cleanup; `autoWorktree` / `worktreeMode` /
   `worktreeAgentId` on new terminals and the New Terminal sheet; the sidebar marks worktree terminals.
