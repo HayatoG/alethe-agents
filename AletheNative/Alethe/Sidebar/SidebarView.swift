@@ -245,6 +245,10 @@ private struct ProjectContextMenu: View {
         Divider()
         Button("sidebar.editProject") { environment.editorRequest = .editProject(project.id) }
         Button("sidebar.revealInFinder") { actions.revealInFinder(project) }
+        Button("projectSettings.exportEllipsis") { ProjectSettingsTransfer.export(project) }
+        Button("projectSettings.importEllipsis") {
+            ProjectSettingsTransfer.importSettings(into: project.id, workspace: actions.workspace, undoManager: actions.undoManager)
+        }
         Menu("sidebar.moveToGroup") {
             Button("sidebar.ungrouped") { actions.move(project.id, to: .ungrouped) }
                 .disabled(doc.location(of: project.id) == .ungrouped)
