@@ -95,6 +95,10 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
     public var createdAt: Date
     /// How the panes are arranged; nil means Auto (P2-18; absent in older files).
     public var layoutMode: PaneLayoutMode?
+    /// The custom grid of the Grid layout, cells keyed by pane id (P2-19).
+    public var gridLayout: CustomGrid?
+    /// Recently saved custom grids, newest first (upstream `gridLayoutHistory`).
+    public var gridLayoutHistory: [CustomGridHistoryEntry]?
 
     public init(id: ProjectID = .make(), name: String, color: ProjectColor = .blue, folder: String,
                 panes: [Pane] = [], createdAt: Date = Date(), layoutMode: PaneLayoutMode? = nil) {

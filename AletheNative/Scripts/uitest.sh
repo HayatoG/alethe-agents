@@ -21,4 +21,5 @@ xcodebuild \
 if [[ $# -eq 0 ]]; then
   Scripts/smoke/sidebar-drag.sh
   Scripts/smoke/pane-drag.sh
+  Scripts/smoke/grid-drag.sh
 fi

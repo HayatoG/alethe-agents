@@ -88,4 +88,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   between Auto, Spotlight (the first terminal large, the others stacked beside it) and Sidebar (the
   others in a narrow list, the first terminal large). Each project keeps its own layout, and the
   splits stay resizable.
+- Custom grids: choose Custom Grid in a project's layout menu, or Design Grid… to draw one — set the
+  columns and rows, start from a preset (balanced, columns, rows, focus left or top) or a recent
+  grid, and grow, shrink or drag each terminal's box into place. In the workspace, drag a terminal
+  onto an empty slot or another terminal to move it, resize any row or column, and use Fill Free
+  Space from a terminal's menu to let it take the room next to it.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

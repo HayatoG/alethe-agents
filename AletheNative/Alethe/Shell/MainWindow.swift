@@ -54,6 +54,8 @@ struct MainWindow: View {
             LinkPreviewSheet(target: target)
         case .importTauri:
             TauriImportSheet(workspace: workspace, undoManager: undoManager)
+        case .layoutDesigner(let project):
+            LayoutDesignerSheet(workspace: workspace, undoManager: undoManager, projectID: project)
         }
     }
 

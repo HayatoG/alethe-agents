@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-18 (P2-1…P2-5 tested; P2-6…P2-18
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-19 (P2-1…P2-5 tested; P2-6…P2-19
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-19. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-20. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1269,8 +1269,32 @@ they run per the test cadence above.
   View › Project Layout for the selected project. Switching modes animates the panes to their places.
   *Tests (written, not run — owner decision 2026-09-24):* `PaneLayoutModeTests` (5), UI
   `LayoutModeTests` (Spotlight/Sidebar/Auto frames; HT: picker at three zoom levels). Compiled.
-- [ ] **P2-19 (L) Custom grid + layout designer.** Cell merge/split, drag handles, per-scope layout
+- [x] **P2-19 (L) Custom grid + layout designer.** Cell merge/split, drag handles, per-scope layout
   history. *Tests:* U (port of `gridLayout` cases), UI; drag smoke script. *Parity:* WS-3.
+  *Done:* `AletheModel/CustomGrid` ports `lib/gridLayout.ts` (`auto`, `reconciled`, `occupancy`,
+  `freeCells`, `freeSpan`, `expanding`, `fillingFreeSpace`, `moving`, plus `resized` for the steppers)
+  and `lib/layoutPresets.ts` (`CustomGridPreset`: balanced, columns, rows, focus left, focus top). Named
+  `CustomGrid` because SwiftUI already has a `GridLayout`. `PaneLayoutMode.grid`; `Project.gridLayout`
+  (cells keyed by pane id) and `gridLayoutHistory` (8 most recent, same grid kept once), optional
+  fields. `setGridLayout(recordHistory:)`, `setTrackWeights` (a grid keeps its track sizes in the grid,
+  the other layouts in `gridWeights`), `moveGridCell`, `fillFreeSpace`. `PaneGridGeometry` grid mode:
+  spanning frames, dashed free slots, and dividers only where a boundary separates two cells
+  (`.gridColumn` / `.gridRow` per run), so a spanning pane is never crossed by a handle; the live
+  resize code is shared through `Divider.track`. `ContainerView`: free slots drawn (highlighted under
+  a dragged pane); dropping a pane on another pane or a slot moves its cell (swap when occupied).
+  `Editors/LayoutDesignerSheet` (upstream `LayoutDesignerModal`): column/row steppers (1…8), Auto
+  Arrange, Fill Free Space, presets and recent grids, a canvas where boxes are selected, grown or
+  shrunk from their edges (+/− only where it applies) and dragged onto slots; Save is undoable.
+  Layout menu: Custom Grid and Design Grid…; pane header menu: Fill Free Space. The Tauri import keeps
+  terminal ids as pane ids and carries `gridLayout`.
+  *Deviations:* the group and workspace scopes of the designer are not ported (no group workspace
+  yet; a workspace-wide grid of containers is left for later — WS-3 stays Partial). Upstream's live
+  edge-drag handles on grid cells are replaced by the designer's edge buttons, Fill Free Space and
+  track dividers.
+  *Tests (written, not run — owner decision 2026-09-24):* `CustomGridTests` (14: the upstream cases,
+  presets, geometry, document operations), UI `CustomGridTests` (preset + save + ⌘Z; grow from an
+  edge), smoke `Scripts/smoke/grid-drag.sh` (pane onto a free slot, grid divider), `grid` UI seed.
+  Compiled.
 - [ ] **P2-20 (M) Named project grids.** Several grids per project, switch and assign panes.
   *Tests:* U, UI. *Parity:* WS-4.
 - [ ] **P2-21 (S) Flat mode and focus mode.** Flat workspace (no containers) and a focus overlay on one
@@ -1351,7 +1375,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | HOME-5 | Notifications list | P3 | Not started | |
 | WS-1 | Project containers | P1, P2 | Done | Open, resize, close (P1-6); collapse, fullscreen, reorder, isolate (P2-16) |
 | WS-2 | Flat mode | P2 | Not started | |
-| WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto (P1-6), Spotlight and Sidebar (P2-18) |
+| WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto (P1-6), Spotlight and Sidebar (P2-18), project Custom grid + designer (P2-19); workspace/group scopes open |
 | WS-4 | Named project grids | P2 | Not started | |
 | WS-5 | Tabs, closed tabs, history | P2 | Done | P2-17; History menu (⌘[ ⌘] ⌃Tab ⇧⌘T), ⌥-click adds to the current tab |
 | WS-6 | Markdown pane | P2 | Done | P2-9; Mermaid as code (ADR-11) |

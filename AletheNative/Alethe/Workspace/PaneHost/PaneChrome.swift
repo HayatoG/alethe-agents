@@ -9,6 +9,7 @@ struct ContainerHeader: View {
     let isSelected: Bool
     let isFullscreen: Bool
     let onLayout: (PaneLayoutMode) -> Void
+    let onDesignLayout: () -> Void
     let onCollapse: () -> Void
     let onFullscreen: () -> Void
     let onClose: () -> Void
@@ -60,6 +61,8 @@ struct ContainerHeader: View {
                 EmptyView()
             }
             .pickerStyle(.inline)
+            Divider()
+            Button("workspace.layout.design", action: onDesignLayout)
         } label: {
             Image(systemName: project.layout.symbol)
                 .font(metrics.font(.caption).weight(.semibold))
@@ -149,6 +152,8 @@ struct PaneHeader: View {
     let onNewSubTab: () -> Void
     let onToggleLane: () -> Void
     let onToggleIsolation: () -> Void
+    /// Grows the pane over the free grid slots next to it; nil outside a grid with room.
+    let onFillFreeSpace: (() -> Void)?
     /// Translation of an ongoing header drag, in the header's coordinates; nil when it ends.
     let onDrag: (CGSize?) -> Void
     @Environment(\.theme) private var theme
@@ -195,6 +200,9 @@ struct PaneHeader: View {
             Button(isLaneVisible ? LocalizedStringKey("subtabs.hideLane") : "subtabs.showLane", action: onToggleLane)
                 .disabled(isLaneVisible && !canHideLane)
             Button(isIsolated ? LocalizedStringKey("pane.showAll") : "pane.showAlone", action: onToggleIsolation)
+            if let onFillFreeSpace {
+                Button("pane.fillFreeSpace", action: onFillFreeSpace)
+            }
             Divider()
             Button("pane.close", action: onClose)
         }
@@ -221,6 +229,7 @@ extension PaneLayoutMode {
         case .auto: "workspace.layout.auto"
         case .spotlight: "workspace.layout.spotlight"
         case .sidebar: "workspace.layout.sidebar"
+        case .grid: "workspace.layout.grid"
         }
     }
 
@@ -229,6 +238,7 @@ extension PaneLayoutMode {
         case .auto: "square.grid.2x2"
         case .spotlight: "rectangle.righthalf.inset.filled"
         case .sidebar: "rectangle.leadinghalf.inset.filled"
+        case .grid: "square.grid.3x3"
         }
     }
 }

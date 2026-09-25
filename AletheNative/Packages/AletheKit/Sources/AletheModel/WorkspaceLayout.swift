@@ -8,11 +8,13 @@ public enum PaneLayoutMode: String, Codable, CaseIterable, Sendable {
     case spotlight
     /// The others stacked in a narrow list on the left, the first pane large on the right.
     case sidebar
+    /// The project's custom grid (`Project.gridLayout`, P2-19).
+    case grid
 
     /// Default column shares of the two tracks (upstream panel `defaultSize`).
     var defaultColumns: [Double] {
         switch self {
-        case .auto: []
+        case .auto, .grid: []
         case .spotlight: [0.65, 0.35]
         case .sidebar: [0.22, 0.78]
         }
@@ -95,19 +97,36 @@ public struct PaneGridGeometry: Equatable, Sendable {
         case column(row: Int)
         /// Between row `index` and the next one (in Spotlight and Sidebar: of the stack).
         case row(Int)
+        /// A custom grid's boundary after column `boundary` (0-based), one piece per run of rows it
+        /// separates.
+        case gridColumn(boundary: Int, segment: Int)
+        /// A custom grid's boundary after row `boundary` (0-based), one piece per run of columns.
+        case gridRow(boundary: Int, segment: Int)
+    }
+
+    /// A free slot of a custom grid (1-based), where a pane can be dropped.
+    public struct Slot: Equatable, Sendable {
+        public var col: Int
+        public var row: Int
+        public var frame: CGRect
     }
 
     public var paneFrames: [CGRect]
     public var dividers: [Divider: CGRect]
     public var columnSizes: [CGFloat]
     public var rowSizes: [CGFloat]
+    public var freeSlots: [Slot] = []
 
     /// - Parameter handle: thickness of a divider's hit area, centered on its gap.
     public init(count: Int, in rect: CGRect, weights: GridWeights, gap: CGFloat, handle: CGFloat,
-                mode: PaneLayoutMode = .auto) {
+                mode: PaneLayoutMode = .auto, grid: CustomGrid? = nil, ids: [String] = []) {
+        if mode == .grid, let grid, count > 1 {
+            self = Self.custom(grid: grid, ids: ids, in: rect, weights: weights, gap: gap, handle: handle)
+            return
+        }
         paneFrames = []
         dividers = [:]
-        if mode != .auto, count > 1 {
+        if mode == .spotlight || mode == .sidebar, count > 1 {
             // Two columns: the main pane and a stack of the others (upstream Spotlight/Sidebar).
             let columnWeights = weights.columns.count == 2 ? weights.columns : mode.defaultColumns
             columnSizes = TrackMath.sizes(count: 2, weights: columnWeights, total: rect.width, gap: gap)
@@ -151,5 +170,63 @@ public struct PaneGridGeometry: Equatable, Sendable {
                 dividers[.row(row)] = CGRect(x: rect.minX, y: center - handle / 2, width: rect.width, height: handle)
             }
         }
+    }
+
+    /// A custom grid: cells span tracks; dividers only where a boundary separates two different
+    /// cells (or a cell and a free slot), so a spanning pane is never crossed by a handle.
+    private static func custom(grid: CustomGrid, ids: [String], in rect: CGRect, weights: GridWeights, gap: CGFloat,
+                               handle: CGFloat) -> PaneGridGeometry {
+        var result = PaneGridGeometry(count: 0, in: rect, weights: GridWeights(), gap: gap, handle: handle)
+        let columnSizes = TrackMath.sizes(count: grid.cols, weights: weights.columns.count == grid.cols ? weights.columns : grid.colSizes ?? [],
+                                      total: rect.width, gap: gap)
+        let rowSizes = TrackMath.sizes(count: grid.rows, weights: weights.rows.count == grid.rows ? weights.rows : grid.rowSizes ?? [],
+                                   total: rect.height, gap: gap)
+        let columnX = TrackMath.offsets(columnSizes, gap: gap, origin: rect.minX)
+        let rowY = TrackMath.offsets(rowSizes, gap: gap, origin: rect.minY)
+        func frame(col: Int, row: Int, colSpan: Int, rowSpan: Int) -> CGRect {
+            let lastCol = min(grid.cols, col + colSpan - 1), lastRow = min(grid.rows, row + rowSpan - 1)
+            return CGRect(x: columnX[col - 1], y: rowY[row - 1],
+                          width: columnX[lastCol - 1] + columnSizes[lastCol - 1] - columnX[col - 1],
+                          height: rowY[lastRow - 1] + rowSizes[lastRow - 1] - rowY[row - 1])
+        }
+        result.columnSizes = columnSizes
+        result.rowSizes = rowSizes
+        result.paneFrames = ids.map { id in
+            grid.cells[id].map { frame(col: $0.col, row: $0.row, colSpan: $0.colSpan, rowSpan: $0.rowSpan) } ?? .zero
+        }
+        let occupancy = grid.occupancy(ids)
+        result.freeSlots = grid.freeCells(ids).map { Slot(col: $0.col, row: $0.row, frame: frame(col: $0.col, row: $0.row, colSpan: 1, rowSpan: 1)) }
+        func separates(_ a: String?, _ b: String?) -> Bool { a != b && (a != nil || b != nil) }
+        for boundary in 0..<max(0, grid.cols - 1) {
+            let center = columnX[boundary + 1] - gap / 2
+            var segment = 0, start: Int?
+            for row in 0...grid.rows {
+                let split = row < grid.rows && separates(occupancy[row][boundary], occupancy[row][boundary + 1])
+                if split, start == nil { start = row }
+                if !split, let first = start {
+                    let top = rowY[first], bottom = rowY[row - 1] + rowSizes[row - 1]
+                    result.dividers[.gridColumn(boundary: boundary, segment: segment)] =
+                        CGRect(x: center - handle / 2, y: top, width: handle, height: bottom - top)
+                    segment += 1
+                    start = nil
+                }
+            }
+        }
+        for boundary in 0..<max(0, grid.rows - 1) {
+            let center = rowY[boundary + 1] - gap / 2
+            var segment = 0, start: Int?
+            for col in 0...grid.cols {
+                let split = col < grid.cols && separates(occupancy[boundary][col], occupancy[boundary + 1][col])
+                if split, start == nil { start = col }
+                if !split, let first = start {
+                    let left = columnX[first], right = columnX[col - 1] + columnSizes[col - 1]
+                    result.dividers[.gridRow(boundary: boundary, segment: segment)] =
+                        CGRect(x: left, y: center - handle / 2, width: right - left, height: handle)
+                    segment += 1
+                    start = nil
+                }
+            }
+        }
+        return result
     }
 }

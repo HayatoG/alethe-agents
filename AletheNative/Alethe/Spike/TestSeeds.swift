@@ -22,6 +22,11 @@ enum TestSeeds {
             let web = doc.addProject(name: "web", folder: "/private/tmp", color: .teal)
             for title in ["one", "two", "three"] { doc.addPane(to: api, tab: PaneTab(agent: "shell", title: title)) }
             doc.addPane(to: web, tab: PaneTab(agent: "shell", title: "four"))
+        case "grid":
+            // Three panes in a 2×2 custom grid: one, two on top, three below with a free slot beside it.
+            let api = doc.addProject(name: "api", folder: "/private/tmp", color: .orange)
+            let panes = ["one", "two", "three"].compactMap { doc.addPane(to: api, tab: PaneTab(agent: "shell", title: $0)) }
+            doc.setGridLayout(.auto(panes.map(\.rawValue)), for: api)
         case "subtabs":
             let project = doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
             let pane = doc.addPane(to: project, tab: PaneTab(agent: "shell", title: "one"))

@@ -59,7 +59,9 @@ final class PaneHostView: NSView {
             }()
             view.configure(project: project, isSelected: state.selectedProjectID == id,
                            focusedPane: state.focusedPaneID,
-                           weights: state.gridWeights[id.rawValue] ?? GridWeights(),
+                           weights: project.layout == .grid
+                               ? GridWeights(columns: project.effectiveGrid.colSizes ?? [], rows: project.effectiveGrid.rowSizes ?? [])
+                               : state.gridWeights[id.rawValue] ?? GridWeights(),
                            isCollapsed: collapsed.contains(id),
                            isFullscreen: state.fullscreenProjectID == id,
                            isolatedPane: state.fullscreenProjectID == id ? state.isolatedPaneID : nil,

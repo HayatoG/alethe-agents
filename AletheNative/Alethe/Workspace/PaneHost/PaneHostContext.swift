@@ -105,6 +105,23 @@ struct PaneHostContext {
     }
 
     func setGridWeights(_ weights: GridWeights, for project: ProjectID) {
-        workspace?.update { $0.workspace.gridWeights[project.rawValue] = weights }
+        workspace?.update { $0.setTrackWeights(weights, for: project) }
+    }
+
+    /// Dropping a grid pane on another pane or a free slot.
+    func moveGridCell(_ pane: PaneID, toCol col: Int, row: Int) {
+        workspace?.update(undoManager: undoManager(), actionName: String(localized: "undo.move")) {
+            $0.moveGridCell(pane, toCol: col, row: row)
+        }
+    }
+
+    func fillFreeSpace(_ pane: PaneID) {
+        workspace?.update(undoManager: undoManager(), actionName: String(localized: "undo.layout")) {
+            $0.fillFreeSpace(pane)
+        }
+    }
+
+    func designLayout(for project: ProjectID) {
+        environment.editorRequest = .layoutDesigner(project)
     }
 }

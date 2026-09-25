@@ -16,6 +16,8 @@ enum EditorRequest: Identifiable, Hashable {
     case previewLink(LinkPreviewTarget)
     /// Import from the Tauri app's data.
     case importTauri
+    /// Custom grid designer for a project (upstream `LayoutDesignerModal`).
+    case layoutDesigner(ProjectID)
 
     var id: String {
         switch self {
@@ -28,6 +30,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .addContent: "addContent"
         case .previewLink(let target): "previewLink:\(target)"
         case .importTauri: "importTauri"
+        case .layoutDesigner(let id): "layoutDesigner:\(id)"
         }
     }
 }

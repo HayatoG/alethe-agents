@@ -205,6 +205,9 @@ public enum TauriImport {
             if let mode = (project["layoutMode"] as? String).flatMap(PaneLayoutMode.init(rawValue:)), mode != .auto {
                 workspace.updateProject(created) { $0.layoutMode = mode }
             }
+            if let raw = project["gridLayout"], let grid = decodeGrid(raw) {
+                workspace.updateProject(created) { $0.gridLayout = grid.reconciled(panes.map(\.id.rawValue)) }
+            }
             report.panes += panes.count
             report.tabs += panes.reduce(0) { $0 + $1.tabs.count }
         }
@@ -235,7 +238,9 @@ public enum TauriImport {
             tabs.append(created)
         }
         guard !tabs.isEmpty else { return nil }
-        return Pane(tabs: tabs, activeTabID: activeTab)
+        // The terminal's id is kept, so its cell in an imported custom grid still finds it.
+        let id = (terminal["id"] as? String).flatMap { $0.isEmpty ? nil : PaneID(rawValue: $0) } ?? .make()
+        return Pane(id: id, tabs: tabs, activeTabID: activeTab)
     }
 
     private static func importPreferences(_ file: File, into preferences: inout PreferencesDocument, context: Context,
@@ -335,6 +340,12 @@ public enum TauriImport {
         default: return .pink
         }
     }
+
+    /// Upstream grids key cells by terminal id, which the import keeps as the pane id.
+    private static func decodeGrid(_ raw: Any) -> CustomGrid? {
+        guard JSONSerialization.isValidJSONObject(raw), let data = try? JSONSerialization.data(withJSONObject: raw) else { return nil }
+        return try? JSONDecoder().decode(CustomGrid.self, from: data)
+    }
 }
 
 // MARK: - Locating the Tauri app's data
@@ -387,4 +398,5 @@ public enum TauriDataLocation {
         }
         return found.filter(\.isActive) + found.filter { !$0.isActive }
     }
+
 }

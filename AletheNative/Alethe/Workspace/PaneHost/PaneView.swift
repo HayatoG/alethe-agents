@@ -72,6 +72,7 @@ final class PaneView: NSView {
             onNewSubTab: { context.newSubTab(in: pane.id) },
             onToggleLane: { context.setLaneVisible(!pane.isLaneVisible, for: pane.id) },
             onToggleIsolation: { context.isolate(isIsolated ? nil : pane.id) },
+            onFillFreeSpace: canFill(pane: pane, project: project) ? { context.fillFreeSpace(pane.id) } : nil,
             onDrag: onDrag))
         configureLane(pane: pane, project: project, focused: focused, context: context)
 
@@ -336,5 +337,11 @@ final class PaneView: NSView {
             findBar.frame = CGRect(x: content.frame.maxX - width - inset, y: content.frame.minY + inset,
                                    width: width, height: size.height)
         }
+    }
+
+    private func canFill(pane: Pane, project: Project) -> Bool {
+        guard project.layout == .grid else { return false }
+        let grid = project.effectiveGrid, ids = project.panes.map(\.id.rawValue)
+        return grid.fillingFreeSpace(ids, pane.id.rawValue) != grid
     }
 }
