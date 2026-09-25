@@ -5,7 +5,7 @@
 > right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
 > where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
 > prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P4-1. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P4-2 (P4-1 done). Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1806,13 +1806,20 @@ user's `git` and `gh` (no libgit2), off the main thread, cancelable. Destructive
 plugins (catalog, local install, `plugin_*` storage for JS) stay Won't port; third parties go through
 ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the test cadence above.
 
-- [ ] **P4-1 (L) `AlethePluginKit` v1.** Versioned Swift API (ADR-9): `AlethePlugin` with a manifest (id,
+- [x] **P4-1 (L) `AlethePluginKit` v1.** Versioned Swift API (ADR-9): `AlethePlugin` with a manifest (id,
   version, name, capabilities) and `activate(context:)`; contribution points — sidebar tab (left or
   right), command (menu and Find/Jump), theme, pane kind, sheet, settings page, agent provider; declared
   capabilities enforced by the context (git, filesystem read/write, terminal input, network, storage);
   per-plugin storage (`plugin-data/<id>.json`, atomic, debounced); a host registry with enable/disable
   that survives relaunch and isolates a failing plugin. Built-ins register statically.
   *Tests:* U (registry, capabilities, storage). *Parity:* EXT-3 (partial).
+  *Done:* target `AlethePluginKit`: `@MainActor` `AlethePlugin` with a static `PluginManifest` (id,
+  version, name, capabilities, `apiVersion` 1.0, `enabledByDefault`) and `activate`/`deactivate`;
+  `PluginContext` collects contributions (views referenced by `viewID`, no UI in the package); services
+  in `PluginServices` throw `undeclaredCapability` unless declared; `PluginStorage` actor writes
+  `plugin-data/<id>.json` debounced via tmp + rename; `PluginHost` persists enable/disable in
+  `plugins.json` and marks a plugin failed (invalid/duplicate id, incompatible API, `activate` throws)
+  without affecting others. U 16/16. App wiring comes with P4-2.
 - [ ] **P4-2 (M) Plugins settings and view placement.** Settings › Plugins (upstream `PluginsPage`):
   each plugin with version, capabilities, enabled toggle and its error; plugin settings pages. View
   placement (upstream `viewPlacement.ts`): move a contributed tab between the left sidebar and the

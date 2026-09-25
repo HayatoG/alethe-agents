@@ -178,6 +178,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   process echoed the answers.
 - Fixed: a restored terminal no longer draws the new session over the old screen (Claude Code's header
   and prompt came out garbled); the old output moves into the history and the new session starts clean.
+- Plugin foundation: built-in plugins can add sidebar tabs, commands, themes, pane kinds, sheets,
+  settings pages and agent providers, use only the host features they declare, and are turned on or off
+  with the choice kept after relaunch; a plugin that fails to start does not affect the others.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
