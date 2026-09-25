@@ -2,7 +2,7 @@ import Foundation
 
 /// Outcome of booting the project's start command in the merge environment (upstream `HealthProbeResult`).
 /// A warning signal only: it never blocks a merge.
-public struct HealthProbeResult: Codable, Equatable, Sendable {
+public struct HealthProbeResult: Codable, Hashable, Sendable {
     public var started: Bool
     public var responded: Bool
     public var statusCode: Int?
@@ -31,7 +31,7 @@ public enum HealthProbeError: Error, Equatable, Sendable {
 
 /// Port of upstream `health_probe`: runs `sh -c <start>` with `PORT` set to a free port, polls
 /// `http://127.0.0.1:<port><path>` until it answers, the process exits or the timeout elapses, then
-/// always terminates the process.
+/// always kills the process tree it started (`GroupProcess`).
 public struct HealthProbe: Sendable {
     public static let maxOutputTail = 8 * 1024
 
@@ -76,27 +76,17 @@ public struct HealthProbe: Sendable {
         let port = try Self.freePort()
         let buffer = OutputBuffer()
 
-        let process = Process()
-        process.executableURL = shell
-        process.arguments = ["-c", startCommand]
-        process.currentDirectoryURL = directory
         var env = ProcessInfo.processInfo.environment
         env["PORT"] = String(port)
-        process.environment = env
-        process.standardInput = FileHandle.nullDevice
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        pipe.fileHandleForReading.readabilityHandler = { handle in
+        let process = try GroupProcess.spawn(shell: shell, command: startCommand, directory: directory, environment: env)
+        process.output.readabilityHandler = { handle in
             let data = handle.availableData
             if data.isEmpty { handle.readabilityHandler = nil } else { buffer.append(data) }
         }
-        do { try process.run() } catch { throw HealthProbeError.spawnFailed(error.localizedDescription) }
+        // Always: the server and everything it started, even processes in their own groups.
         defer {
-            if process.isRunning {
-                process.terminate()
-            }
-            pipe.fileHandleForReading.readabilityHandler = nil
+            process.killTree()
+            process.output.readabilityHandler = nil
         }
 
         var responded = false

@@ -92,6 +92,10 @@ struct MainWindow: View {
                              projectID: project ?? workspace.document.workspace.selectedProjectID)
         case .worktrees(let project):
             WorktreesSheet(workspace: workspace, projectID: project ?? workspace.document.workspace.selectedProjectID)
+        case .branchTesting(let project):
+            BranchTestingSheet(folder: (project ?? workspace.document.workspace.selectedProjectID)
+                .flatMap { workspace.document.project($0) }
+                .map { URL(filePath: $0.folder, directoryHint: .isDirectory) })
         }
     }
 

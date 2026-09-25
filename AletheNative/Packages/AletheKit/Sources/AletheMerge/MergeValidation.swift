@@ -40,7 +40,7 @@ public struct ValidationSettings: Codable, Equatable, Sendable {
 }
 
 /// One command's captured run.
-public struct ValidationStepResult: Codable, Equatable, Sendable {
+public struct ValidationStepResult: Codable, Hashable, Sendable {
     public var command: String
     public var exitCode: Int32
     public var output: String
@@ -50,7 +50,7 @@ public struct ValidationStepResult: Codable, Equatable, Sendable {
 }
 
 /// The outcome of a validation pipeline (upstream `ValidationResult`), kept per merge.
-public struct ValidationReport: Codable, Equatable, Sendable {
+public struct ValidationReport: Codable, Hashable, Sendable {
     public enum Status: String, Codable, Sendable {
         case passed, failed, cancelled
         /// No command configured: nothing was checked (not a blocker, but never shown as "validated").

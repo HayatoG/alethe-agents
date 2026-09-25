@@ -56,6 +56,8 @@ public struct MergeFinishOutcome: Codable, Equatable, Sendable {
     public var stage: Stage
     public var output: String
     public var validation: ValidationReport?
+    /// API contract warnings (upstream shield layer 3); `nil` when the check did not run.
+    public var contractWarnings: [ContractWarning]? = nil
 
     public var validationRan: Bool { validation?.ranAnyCommand ?? false }
 }
@@ -94,8 +96,15 @@ public struct MergeFinisher: Sendable {
     /// Markers → stage everything → validation pipeline; never commits (upstream `merge_validate`).
     public func validate(_ env: MergeEnvHandle, settings: ValidationSettings) async throws -> MergeFinishOutcome {
         let dir = try existingDirectory(env)
-        return try await validateAndStage(env, dir: dir, settings: settings)
+        var outcome = try await validateAndStage(env, dir: dir, settings: settings)
             ?? MergeFinishOutcome(merged: false, stage: .validated, output: "", validation: nil)
+        if outcome.stage == .validated { outcome.contractWarnings = Self.contractWarnings(in: dir) }
+        return outcome
+    }
+
+    /// Best-effort: a failing check is an empty list, never a blocker (upstream `unwrap_or_default`).
+    static func contractWarnings(in dir: URL) -> [ContractWarning] {
+        (try? ContractCheck.check(root: dir)) ?? []
     }
 
     /// Returns a blocking outcome, or a `.validated` one carrying the report.
@@ -139,6 +148,8 @@ public struct MergeFinisher: Sendable {
             throw MergeFinishError.environmentNotFound
         }
         guard outcome.stage == .validated else { return outcome }
+        let contract = Self.contractWarnings(in: dir)
+        outcome.contractWarnings = contract
 
         if let probe = healthProbe, let command = settings.healthCheckCommand,
            !command.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -184,7 +195,8 @@ public struct MergeFinisher: Sendable {
         }
 
         await teardown(env, deleteBranch: "-d")
-        return MergeFinishOutcome(merged: true, stage: .merged, output: message, validation: outcome.validation)
+        return MergeFinishOutcome(merged: true, stage: .merged, output: message, validation: outcome.validation,
+                                  contractWarnings: contract)
     }
 
     // MARK: Abort / cleanup

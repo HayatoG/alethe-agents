@@ -14,6 +14,7 @@ struct MergeCenterSheet: View {
     @State private var model: MergeCenterModel?
     @State private var confirmAbort = false
     @State private var confirmCleanup = false
+    @State private var testingBranch = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
@@ -79,6 +80,9 @@ struct MergeCenterSheet: View {
         }
         .confirmationDialog("merge.cleanup.confirm", isPresented: $confirmCleanup) {
             Button("merge.cleanup", role: .destructive) { model.forceCleanup() }
+        }
+        .sheet(isPresented: $testingBranch) {
+            BranchTestingSheet(folder: model.folder, initialBranch: model.source)
         }
     }
 
@@ -174,10 +178,35 @@ struct MergeCenterSheet: View {
                 Button("merge.continue") { model.stage = .finish }
                     .accessibilityIdentifier("merge.continue")
             }
-            if let note = model.note { outputBox(note) } else { Spacer() }
+            outcomeDetails(model)
         }
         .padding(metrics.space(.l))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// The last validate/finalize outcome: its message, each command, the probe and the contract check.
+    @ViewBuilder
+    private func outcomeDetails(_ model: MergeCenterModel) -> some View {
+        if model.note != nil || model.outcome != nil {
+            ScrollView {
+                VStack(alignment: .leading, spacing: metrics.space(.m)) {
+                    if let note = model.note {
+                        Text(verbatim: note)
+                            .font(.caption.monospaced())
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier("merge.output")
+                    }
+                    if let outcome = model.outcome {
+                        ValidationStepsView(steps: outcome.validation?.steps ?? [])
+                        if let probe = outcome.validation?.healthProbe { HealthProbeSummaryView(result: probe) }
+                        if let warnings = outcome.contractWarnings { ContractWarningsView(warnings: warnings) }
+                    }
+                }
+            }
+        } else {
+            Spacer()
+        }
     }
 
     // MARK: Finish
@@ -198,7 +227,7 @@ struct MergeCenterSheet: View {
                 Label("merge.merged", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(theme[.statusActive])
             }
-            if let note = model.note { outputBox(note) } else { Spacer() }
+            outcomeDetails(model)
         }
         .padding(metrics.space(.l))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -258,9 +287,14 @@ struct MergeCenterSheet: View {
                 }
                 Spacer()
             }
-            if model.analysis != nil, !model.running {
-                Button("merge.prepare") { model.prepare() }
-                    .accessibilityIdentifier("merge.prepare")
+            HStack {
+                if model.analysis != nil, !model.running {
+                    Button("merge.prepare") { model.prepare() }
+                        .accessibilityIdentifier("merge.prepare")
+                }
+                Button("menu.merge.branchTesting") { testingBranch = true }
+                    .disabled(model.source.isEmpty || model.running)
+                    .accessibilityIdentifier("merge.testBranch")
             }
             Divider()
             if let analysis = model.analysis {
@@ -330,6 +364,8 @@ final class MergeCenterModel {
     /// Output of the last prepare / rebase / validate / finish step.
     private(set) var note: String?
     private(set) var merged = false
+    /// The last validate/finalize outcome, for its structured results.
+    private(set) var outcome: MergeFinishOutcome?
     private(set) var analysis: MergeAnalysis?
     private(set) var loading = true
     private(set) var running = false
@@ -444,6 +480,7 @@ final class MergeCenterModel {
         let settings = settings
         perform({ try await MergeFinisher(root: root).validate(handle, settings: settings) }) { outcome in
             self.note = Self.describe(outcome)
+            self.outcome = outcome
         }
     }
 
@@ -452,6 +489,7 @@ final class MergeCenterModel {
         let settings = settings
         perform({ try await MergeFinisher(root: root).finalize(handle, settings: settings) }) { outcome in
             self.note = Self.describe(outcome)
+            self.outcome = outcome
             self.merged = outcome.merged
             if outcome.merged { self.environment = nil }
         }
@@ -466,17 +504,14 @@ final class MergeCenterModel {
         environment = nil
         conflicts = []
         note = nil
+        outcome = nil
         merged = false
         stage = .analyze
     }
 
+    /// The outcome's headline; commands, probe and contract warnings render separately.
     private static func describe(_ outcome: MergeFinishOutcome) -> String {
-        var lines = ["[\(outcome.stage.rawValue)] \(outcome.output)"]
-        for step in outcome.validation?.steps ?? [] {
-            lines.append("$ \(step.command)  (exit \(step.exitCode), \(step.durationMs) ms)")
-            if !step.output.isEmpty { lines.append(step.output) }
-        }
-        return lines.joined(separator: "\n")
+        "[\(outcome.stage.rawValue)] \(outcome.output)"
     }
 
     func cancel() {
