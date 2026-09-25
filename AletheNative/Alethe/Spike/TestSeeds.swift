@@ -53,22 +53,14 @@ enum TestSeeds {
             doc.addPane(to: project, content: .image(path: file.path))
         case "diff":
             // A throwaway repository with one uncommitted change.
-            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
-            let repo = URL(filePath: root).appending(path: "repo")
-            try? FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
-            let file = repo.appending(path: "notes.txt")
-            try? Data("alpha\nbeta\n".utf8).write(to: file)
-            for arguments in [["init", "-q"], ["add", "."], ["commit", "-q", "-m", "seed"]] {
-                let git = Process()
-                git.executableURL = URL(filePath: "/usr/bin/git")
-                git.arguments = ["-C", repo.path, "-c", "user.name=seed", "-c", "user.email=seed@local",
-                                 "-c", "commit.gpgsign=false"] + arguments
-                try? git.run()
-                git.waitUntilExit()
-            }
-            try? Data("alpha\nbeta two\ngamma\n".utf8).write(to: file)
+            let repo = seedRepository()
             let project = doc.addProject(name: "repo", folder: repo.path, color: .green)
             doc.addPane(to: project, content: .diff(path: nil, staged: false))
+        case "git":
+            // The same repository plus an untracked file, for Git Control (P4-5).
+            let repo = seedRepository()
+            try? Data("draft\n".utf8).write(to: repo.appending(path: "draft.txt"))
+            _ = doc.addProject(name: "repo", folder: repo.path, color: .green)
         case "web":
             // Port 9 (discard) is closed on a Mac: the page fails fast without touching the network.
             let project = doc.addProject(name: "site", folder: "/private/tmp", color: .blue)
@@ -81,6 +73,25 @@ enum TestSeeds {
         default:
             break
         }
+    }
+
+    /// `repo` in the data root: `notes.txt` committed on `main`, then modified in the worktree.
+    private static func seedRepository() -> URL {
+        let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+        let repo = URL(filePath: root).appending(path: "repo")
+        try? FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
+        let file = repo.appending(path: "notes.txt")
+        try? Data("alpha\nbeta\n".utf8).write(to: file)
+        for arguments in [["init", "-q", "-b", "main"], ["add", "."], ["commit", "-q", "-m", "seed"]] {
+            let git = Process()
+            git.executableURL = URL(filePath: "/usr/bin/git")
+            git.arguments = ["-C", repo.path, "-c", "user.name=seed", "-c", "user.email=seed@local",
+                             "-c", "commit.gpgsign=false"] + arguments
+            try? git.run()
+            git.waitUntilExit()
+        }
+        try? Data("alpha\nbeta two\ngamma\n".utf8).write(to: file)
+        return repo
     }
 }
 #endif

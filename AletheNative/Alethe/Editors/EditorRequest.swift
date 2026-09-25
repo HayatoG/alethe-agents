@@ -28,8 +28,8 @@ enum EditorRequest: Identifiable, Hashable {
     case handoff(TabID)
     /// AI usage of the providers (P3-13).
     case aiUsage
-    /// Git Control of a project (nil: the selected one; P4-5).
-    case gitControl(ProjectID?)
+    /// A sheet contributed by a plugin, by its `viewID`, for a project (nil: the selected one).
+    case pluginSheet(viewID: String, project: ProjectID?)
     /// Merge Center of a project (nil: the selected one; P4-10…P4-13).
     case mergeCenter(ProjectID?)
 
@@ -50,7 +50,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .sessionCost(let tab): "sessionCost:\(tab)"
         case .handoff(let tab): "handoff:\(tab)"
         case .aiUsage: "aiUsage"
-        case .gitControl: "gitControl"
+        case .pluginSheet(let viewID, _): "pluginSheet:\(viewID)"
         case .mergeCenter: "mergeCenter"
         }
     }

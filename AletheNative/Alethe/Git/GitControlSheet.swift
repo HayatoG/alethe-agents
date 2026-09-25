@@ -1,11 +1,13 @@
 import AletheDesign
 import AletheGit
+import AletheGitControl
 import AletheModel
 import SwiftUI
 
 /// Git Control (P4-5; upstream `plugins/git-control`) for a project's folder: changes grouped
 /// staged / unstaged / conflicts, stage and discard, commit with amend, branch switcher, and
-/// fetch / pull / push. Clicking a file opens its diff in a diff pane of the project.
+/// fetch / pull / push. Clicking a file opens its diff in a diff pane of the project. Rendered for
+/// the `GitControlPlugin` sheet contribution.
 struct GitControlSheet: View {
     let workspace: WorkspaceModel
     let undoManager: UndoManager?
@@ -14,6 +16,7 @@ struct GitControlSheet: View {
     @State private var pendingDiscard: GitStatusEntry?
     @State private var tab = Tab.changes
     @State private var history: GitHistoryModel?
+    @State private var creatingBranch = false
 
     private enum Tab: Hashable { case changes, history }
     @Environment(\.dismiss) private var dismiss
@@ -143,6 +146,9 @@ struct GitControlSheet: View {
                         Button(item.name) { model.switchBranch(item.name) }
                             .disabled(item.isCurrent)
                     }
+                    if !model.branches.isEmpty { Divider() }
+                    Button("git.newBranch.menu") { creatingBranch = true }
+                        .accessibilityIdentifier("git.newBranch")
                 } label: {
                     Label {
                         if let head = branch?.head {
@@ -155,8 +161,11 @@ struct GitControlSheet: View {
                     }
                 }
                 .fixedSize()
-                .disabled(model.busy || model.branches.isEmpty)
+                .disabled(model.busy || model.status?.branch.oid == nil)
                 .accessibilityIdentifier("git.branch")
+                .sheet(isPresented: $creatingBranch) {
+                    NewBranchSheet(model: model)
+                }
                 if let branch, branch.ahead > 0 || branch.behind > 0 {
                     Text(verbatim: "↑\(branch.ahead) ↓\(branch.behind)")
                         .font(metrics.font(.caption).monospacedDigit())
@@ -200,9 +209,10 @@ struct GitControlSheet: View {
 
     private func changes(_ model: GitControlModel) -> some View {
         let status = model.status
-        let conflicts = status?.conflicts ?? []
-        let staged = status?.staged ?? []
-        let unstaged = status?.entries.filter { $0.isUnstaged || $0.isUntracked } ?? []
+        let groups = GitChangeGroups(status)
+        let conflicts = groups.conflicts
+        let staged = groups.staged
+        let unstaged = groups.unstaged
         return List {
             if status?.isClean ?? true {
                 Text("git.clean")
@@ -383,6 +393,68 @@ struct GitControlSheet: View {
         workspace.update(undoManager: undoManager, actionName: String(localized: "undo.addContent")) {
             _ = $0.addPane(to: projectID, content: .diff(path: model?.folderRelativePath(entry.path) ?? entry.path, staged: staged))
         }
+        dismiss()
+    }
+}
+
+/// A new branch from the current HEAD, with its name validated as it is typed and an optional switch.
+private struct NewBranchSheet: View {
+    let model: GitControlModel
+    @State private var name = ""
+    @State private var switchTo = true
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    private var issue: GitBranchName.Issue? { model.branchNameIssue(name) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: metrics.space(.m)) {
+            Text("git.newBranch.title").font(metrics.font(.headline))
+            if let head = model.status?.branch.head {
+                Text(verbatim: format("git.newBranch.from", head))
+                    .font(metrics.font(.caption))
+                    .foregroundStyle(theme[.textSecondary])
+            }
+            TextField("git.newBranch.name", text: $name)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit(create)
+                .accessibilityIdentifier("git.newBranch.name")
+            if let message = issueMessage {
+                Text(message)
+                    .font(metrics.font(.caption))
+                    .foregroundStyle(theme[.statusStopped])
+                    .accessibilityIdentifier("git.newBranch.issue")
+            }
+            Toggle("git.newBranch.switch", isOn: $switchTo)
+                .accessibilityIdentifier("git.newBranch.switch")
+            HStack {
+                Spacer()
+                Button("editor.cancel", role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("git.newBranch.create", action: create)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(issue != nil)
+                    .accessibilityIdentifier("git.newBranch.create")
+            }
+        }
+        .padding(metrics.space(.l))
+        .frame(width: metrics.size(340))
+        .accessibilityIdentifier("git.newBranch.sheet")
+    }
+
+    /// Nothing while the field is empty; the rule broken otherwise.
+    private var issueMessage: LocalizedStringKey? {
+        switch issue {
+        case .invalid: "git.newBranch.invalid"
+        case .exists: "git.newBranch.exists"
+        case .empty, nil: nil
+        }
+    }
+
+    private func create() {
+        guard issue == nil else { return }
+        model.createBranch(name, switchTo: switchTo)
         dismiss()
     }
 }

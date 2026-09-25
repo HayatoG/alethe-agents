@@ -1,4 +1,5 @@
 import AletheGit
+import AletheGitControl
 import Foundation
 import Observation
 
@@ -112,6 +113,18 @@ final class GitControlModel {
 
     func switchBranch(_ name: String) { perform { try await self.repository?.switchBranch(name) } }
 
+    /// The problem with a new branch name, or nil when it can be created.
+    func branchNameIssue(_ name: String) -> GitBranchName.Issue? {
+        GitBranchName.issue(name.trimmingCharacters(in: .whitespacesAndNewlines), existing: branches.map(\.name))
+    }
+
+    /// A new branch at HEAD, switching to it when asked.
+    func createBranch(_ name: String, switchTo: Bool) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard branchNameIssue(name) == nil else { return }
+        perform { try await self.repository?.createBranch(name, switchTo: switchTo) }
+    }
+
     var canCommit: Bool {
         guard !busy, let status else { return false }
         let hasMessage = !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -181,15 +194,9 @@ final class GitControlModel {
         }
     }
 
-    /// A repository-relative path made relative to `folder` (the diff pane runs git there), with `..`
-    /// when the project is a subfolder of the repository and the file lies outside it.
+    /// A repository-relative path made relative to `folder` (see `GitControlPaths.folderRelative`).
     func folderRelativePath(_ repositoryPath: String) -> String {
         guard let root else { return repositoryPath }
-        let target = root.appending(path: repositoryPath).standardizedFileURL.resolvingSymlinksInPath().pathComponents
-        let base = folder.standardizedFileURL.resolvingSymlinksInPath().pathComponents
-        var common = 0
-        while common < min(target.count, base.count), target[common] == base[common] { common += 1 }
-        let parts = Array(repeating: "..", count: base.count - common) + target[common...]
-        return parts.joined(separator: "/")
+        return GitControlPaths.folderRelative(repositoryPath, root: root, folder: folder)
     }
 }

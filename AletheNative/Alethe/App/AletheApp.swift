@@ -2,6 +2,7 @@ import AletheAgents
 import AletheDesign
 import AletheFoundation
 import AletheModel
+import AletheGitControl
 import AletheTodos
 import SwiftUI
 
@@ -206,8 +207,10 @@ private struct HistoryCommands: Commands {
             Button("menu.history.conversations") { environment.editorRequest = .conversations(nil) }
                 .keyboardShortcut("y", modifiers: .command)
                 .disabled(environment.workspace?.document.projects.isEmpty ?? true)
-            Button("menu.git.control") { environment.editorRequest = .gitControl(nil) }
-                .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
+            if environment.hasPluginCommand(GitControlPlugin.openCommandID) {
+                Button("menu.git.control") { environment.performPluginCommand(GitControlPlugin.openCommandID) }
+                    .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
+            }
             Button("menu.merge.center") { environment.editorRequest = .mergeCenter(nil) }
                 .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
             Divider()

@@ -1,6 +1,7 @@
 import AletheAgents
 import AletheDesign
 import AletheGit
+import AletheGitControl
 import AletheModel
 import AppKit
 import SwiftUI
@@ -247,7 +248,9 @@ private struct ProjectContextMenu: View {
             }
         }
         Button("menu.history.conversations") { environment.editorRequest = .conversations(project.id) }
-        Button("menu.git.control") { environment.editorRequest = .gitControl(project.id) }
+        if environment.hasPluginCommand(GitControlPlugin.openCommandID) {
+            Button("menu.git.control") { environment.openPluginSheet(GitControlPlugin.sheetID, project: project.id) }
+        }
         Button("menu.merge.center") { environment.editorRequest = .mergeCenter(project.id) }
         Menu("sidebar.grids") {
             Button("projectGrid.main") { actions.workspace.update { $0.activateGrid(nil, in: project.id) } }

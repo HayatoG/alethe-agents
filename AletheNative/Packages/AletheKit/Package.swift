@@ -19,6 +19,7 @@ let package = Package(
         .library(name: "AletheThemePack", targets: ["AletheThemePack"]),
         .library(name: "AletheMerge", targets: ["AletheMerge"]),
         .library(name: "AletheTodos", targets: ["AletheTodos"]),
+        .library(name: "AletheGitControl", targets: ["AletheGitControl"]),
         .library(name: "AletheFiles", targets: ["AletheFiles"]),
         .library(name: "AletheExtensionHost", targets: ["AletheExtensionHost"]),
     ],
@@ -46,6 +47,7 @@ let package = Package(
         ),
         .target(name: "AletheMerge", dependencies: ["AletheGit"]),
         .target(name: "AletheTodos", dependencies: ["AlethePluginKit", "AletheFoundation"]),
+        .target(name: "AletheGitControl", dependencies: ["AlethePluginKit", "AletheGit"]),
         .target(name: "AletheFiles", dependencies: ["AletheGit"]),
         .target(name: "AletheExtensionHost", dependencies: ["AlethePluginKit"]),
         .target(name: "CAlethePTY"),
@@ -68,6 +70,7 @@ let package = Package(
         .testTarget(name: "AletheThemePackTests", dependencies: ["AletheThemePack", "AletheDesign", "AlethePluginKit"]),
         .testTarget(name: "AletheMergeTests", dependencies: ["AletheMerge", "AletheGit"]),
         .testTarget(name: "AletheTodosTests", dependencies: ["AletheTodos", "AlethePluginKit"]),
+        .testTarget(name: "AletheGitControlTests", dependencies: ["AletheGitControl", "AletheGit", "AlethePluginKit"]),
         .testTarget(name: "AletheFilesTests", dependencies: ["AletheFiles", "AletheGit"]),
         .testTarget(name: "AletheExtensionHostTests", dependencies: ["AletheExtensionHost", "AlethePluginKit"]),
     ]

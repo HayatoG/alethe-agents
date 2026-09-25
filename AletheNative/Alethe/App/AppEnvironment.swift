@@ -1,6 +1,7 @@
 import AletheAgents
 import AletheDesign
 import AletheFoundation
+import AletheGitControl
 import AletheModel
 import AlethePluginKit
 import AletheTodos
@@ -135,6 +136,9 @@ final class AppEnvironment {
             self.rightSidebarVisible = true
             self.newTodoRequest += 1
         }
+        GitControlPlugin.onOpen = { [weak self] in
+            self?.openPluginSheet(GitControlPlugin.sheetID, project: nil)
+        }
         await plugins.load()
         self.plugins = plugins
         #if DEBUG
@@ -204,7 +208,23 @@ final class AppEnvironment {
     }
 
     /// Plugins compiled into the app, in registration order.
-    static let builtinPlugins: [any AlethePlugin.Type] = [ThemePackPlugin.self, TodosPlugin.self]
+    static let builtinPlugins: [any AlethePlugin.Type] = [ThemePackPlugin.self, TodosPlugin.self, GitControlPlugin.self]
+
+    /// Whether an active plugin contributes the command `id`.
+    func hasPluginCommand(_ id: String) -> Bool {
+        plugins?.contributions.commands.contains { $0.id == id } == true
+    }
+
+    /// Runs an active plugin's command; nothing when its plugin is disabled.
+    func performPluginCommand(_ id: String) {
+        plugins?.contributions.commands.first { $0.id == id }?.perform()
+    }
+
+    /// Presents an active plugin's sheet for a project (nil: the selected one).
+    func openPluginSheet(_ id: String, project: ProjectID?) {
+        guard let sheet = plugins?.contributions.sheets.first(where: { $0.id == id }) else { return }
+        editorRequest = .pluginSheet(viewID: sheet.viewID, project: project)
+    }
 
     /// `-AletheDataRoot <path>` (debug builds) points the app at another data folder: UI tests and
     /// manual experiments never touch the real one.

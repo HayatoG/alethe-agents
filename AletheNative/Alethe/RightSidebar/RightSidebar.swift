@@ -1,4 +1,6 @@
 import AlethePluginKit
+import AletheGitControl
+import AletheModel
 import AletheTodos
 import SwiftUI
 
@@ -22,6 +24,18 @@ enum PluginViewRegistry {
         case PullRequestsView.tabID: PullRequestsView()
         case FilesView.tabID: FilesView()
         default: ContentUnavailableView("rightSidebar.unavailable", systemImage: "puzzlepiece.extension")
+        }
+    }
+
+    /// The sheet a `SheetContribution` names, for a project.
+    @MainActor @ViewBuilder
+    static func sheet(for viewID: String, workspace: WorkspaceModel, undoManager: UndoManager?,
+                      projectID: ProjectID?) -> some View {
+        switch viewID {
+        case GitControlPlugin.viewID:
+            GitControlSheet(workspace: workspace, undoManager: undoManager, projectID: projectID)
+        default:
+            ContentUnavailableView("rightSidebar.unavailable", systemImage: "puzzlepiece.extension")
         }
     }
 }

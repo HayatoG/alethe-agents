@@ -83,9 +83,9 @@ struct MainWindow: View {
             HandoffSheet(workspace: workspace, undoManager: undoManager, tabID: tab)
         case .aiUsage:
             AIUsageSheet()
-        case .gitControl(let project):
-            GitControlSheet(workspace: workspace, undoManager: undoManager,
-                            projectID: project ?? workspace.document.workspace.selectedProjectID)
+        case .pluginSheet(let viewID, let project):
+            PluginViewRegistry.sheet(for: viewID, workspace: workspace, undoManager: undoManager,
+                                     projectID: project ?? workspace.document.workspace.selectedProjectID)
         case .mergeCenter(let project):
             MergeCenterSheet(workspace: workspace, undoManager: undoManager,
                              projectID: project ?? workspace.document.workspace.selectedProjectID)
