@@ -1,17 +1,23 @@
+import AletheDesign
 import AletheModel
 import AletheTodos
+import AppKit
 import SwiftUI
 
 /// The Todos plugin's `todos` view (P4-16): the global list and the selected project's list.
 struct TodosView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.theme) private var theme
     @State private var draft = ""
     @State private var addToProject = true
     @State private var editingID: String?
     @State private var editingTitle = ""
+    @State private var taggingID: String?
+    @State private var tagDraft = ""
+    @State private var showingSettings = false
     @FocusState private var focus: Field?
 
-    private enum Field: Hashable { case draft, rename }
+    private enum Field: Hashable { case draft, rename, tags }
 
     private var project: Project? {
         environment.workspace.flatMap { model in
@@ -20,7 +26,7 @@ struct TodosView: View {
     }
 
     var body: some View {
-        if let store = TodosPlugin.activeStore {
+        if let store = environment.todoStore {
             VStack(spacing: 0) {
                 PomodoroPill(store: store)
                     .padding(.top, 8)
@@ -34,6 +40,7 @@ struct TodosView: View {
                 .listStyle(.sidebar)
             }
             .onChange(of: environment.newTodoRequest) { focus = .draft }
+            .sheet(isPresented: $showingSettings) { TodosSettingsSheet(store: store) }
         } else {
             ContentUnavailableView("todos.disabled", systemImage: "checklist")
         }
@@ -45,11 +52,21 @@ struct TodosView: View {
                 .textFieldStyle(.roundedBorder)
                 .focused($focus, equals: .draft)
                 .onSubmit { add(store) }
+                .accessibilityIdentifier("todos.newField")
             if project != nil {
                 Toggle(isOn: $addToProject) { Image(systemName: "folder") }
                     .toggleStyle(.button)
                     .help("todos.new.toProject")
             }
+            Button {
+                showingSettings = true
+            } label: {
+                Image(systemName: "gearshape")
+            }
+            .buttonStyle(.borderless)
+            .help("todos.settings")
+            .accessibilityLabel(Text("todos.settings"))
+            .accessibilityIdentifier("todos.settingsButton")
         }
         .padding(8)
     }
@@ -98,18 +115,62 @@ struct TodosView: View {
                         .foregroundStyle(todo.done ? .secondary : .primary)
                         .onTapGesture(count: 2) { beginRename(todo) }
                 }
-                if !todo.tags.isEmpty {
+                if taggingID == todo.id {
+                    TextField("todos.tags.placeholder", text: $tagDraft)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
+                        .focused($focus, equals: .tags)
+                        .onSubmit { commitTags(store) }
+                        .onExitCommand { taggingID = nil }
+                        .accessibilityIdentifier("todos.tagsField")
+                } else if !todo.tags.isEmpty {
                     Text(todo.tags.map { "#" + $0 }.joined(separator: " "))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
             Spacer(minLength: 0)
+            if store.pomodoro.focusTodoId == todo.id {
+                Image(systemName: "scope")
+                    .foregroundStyle(theme[.accent])
+                    .help("pomodoro.focusedTodo")
+                    .accessibilityLabel(Text("pomodoro.focusedTodo"))
+            }
+            if let url = todo.prURL {
+                Button { NSWorkspace.shared.open(url) } label: { Image(systemName: "arrow.triangle.pull") }
+                    .buttonStyle(.borderless)
+                    .help("todos.openPullRequest")
+                    .accessibilityLabel(Text("todos.openPullRequest"))
+            }
         }
-        .contextMenu {
-            Button("todos.rename") { beginRename(todo) }
-            Button("todos.delete", role: .destructive) { store.delete(todo.id) }
+        .contextMenu { menu(store, todo) }
+    }
+
+    @ViewBuilder
+    private func menu(_ store: TodoStore, _ todo: Todo) -> some View {
+        Button("todos.rename") { beginRename(todo) }
+        Button("todos.editTags") { beginTags(todo) }
+        if !todo.done {
+            if store.pomodoro.focusTodoId == todo.id {
+                Button("pomodoro.clearFocus") { store.setFocus(nil) }
+            } else {
+                Button("pomodoro.setFocus") { store.setFocus(todo.id) }
+            }
         }
+        Divider()
+        if todo.projectID != nil {
+            Button("todos.moveToGlobal") { store.move(todo.id, to: .global) }
+        }
+        if let project, todo.projectID != project.id.rawValue {
+            Button(String(format: String(localized: "todos.moveToProject"), project.name)) {
+                store.move(todo.id, to: .project(project.id.rawValue))
+            }
+        }
+        if let url = todo.prURL {
+            Button("todos.openPullRequest") { NSWorkspace.shared.open(url) }
+        }
+        Divider()
+        Button("todos.delete", role: .destructive) { store.delete(todo.id) }
     }
 
     private func add(_ store: TodoStore) {
@@ -130,5 +191,17 @@ struct TodosView: View {
     private func commitRename(_ store: TodoStore) {
         if let editingID { store.rename(editingID, to: editingTitle) }
         editingID = nil
+    }
+
+    private func beginTags(_ todo: Todo) {
+        tagDraft = todo.tags.map { "#" + $0 }.joined(separator: " ")
+        taggingID = todo.id
+        focus = .tags
+    }
+
+    /// Replaces the tags with the field's words (`#` optional); an empty field clears them.
+    private func commitTags(_ store: TodoStore) {
+        if let taggingID { store.setTags(taggingID, [tagDraft]) }
+        taggingID = nil
     }
 }

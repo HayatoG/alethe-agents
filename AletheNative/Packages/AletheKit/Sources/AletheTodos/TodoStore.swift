@@ -18,6 +18,8 @@ public final class TodoStore {
     /// The Pomodoro session, persisted so it survives relaunch.
     public private(set) var pomodoro = PomodoroTimer()
     public private(set) var isLoaded = false
+    /// A phase that ended while the app was closed, reported once by `tickPomodoro()`.
+    @ObservationIgnored private var pendingPhaseEnd: PomodoroTimer.Phase?
 
     @ObservationIgnored private let storage: PluginStorage?
     @ObservationIgnored private let now: @Sendable () -> Date
@@ -36,9 +38,11 @@ public final class TodoStore {
         todos = Self.renumbered(stored ?? [])
         settings = storedSettings ?? TodoSettings()
         var timer = ((try? await storage.decode(PomodoroTimer.self, forKey: Self.pomodoroKey)) ?? nil) ?? PomodoroTimer()
-        // A phase that ended while the app was closed surfaces as finished.
-        timer.tick(now: now())
+        // A phase that ended while the app was closed surfaces as finished (and is notified once).
+        pendingPhaseEnd = timer.tick(now: now())
+        timer.validateFocus(against: todos)
         pomodoro = timer
+        if pendingPhaseEnd != nil { persistPomodoro() }
         isLoaded = true
     }
 
@@ -144,9 +148,11 @@ public final class TodoStore {
         write(todos)
     }
 
+    /// Applies a settings change; Pomodoro lengths are clamped to `TodoSettings.minuteRange`.
     public func updateSettings(_ change: (inout TodoSettings) -> Void) {
         var next = settings
         change(&next)
+        next = next.clamped()
         guard next != settings else { return }
         settings = next
         let snapshot = next
@@ -161,10 +167,33 @@ public final class TodoStore {
         let result = change(&next, settings.pomodoroLengths, now())
         if next != pomodoro {
             pomodoro = next
-            let snapshot = next
-            enqueue { storage in try? await storage.encode(snapshot, forKey: Self.pomodoroKey) }
+            persistPomodoro()
         }
         return result
+    }
+
+    /// Advances the session. Returns the phase that just ended, including one that ended while the
+    /// app was closed (reported once, on the first tick after `load`).
+    @discardableResult
+    public func tickPomodoro() -> PomodoroTimer.Phase? {
+        if let pending = pendingPhaseEnd {
+            pendingPhaseEnd = nil
+            return pending
+        }
+        return updatePomodoro { timer, _, now in timer.tick(now: now) }
+    }
+
+    /// Makes an active todo the Pomodoro focus; nil (or a completed/missing todo) clears it.
+    public func setFocus(_ id: String?) {
+        updatePomodoro { timer, _, _ in
+            timer.focusTodoId = id
+            timer.validateFocus(against: todos)
+        }
+    }
+
+    /// The focused todo, if it is still active.
+    public var focusTodo: Todo? {
+        pomodoro.focusTodoId.flatMap(todo(id:)).flatMap { $0.done ? nil : $0 }
     }
 
     /// Waits for queued writes and flushes the storage file.
@@ -188,6 +217,13 @@ public final class TodoStore {
         todos = Self.renumbered(next)
         let snapshot = todos
         enqueue { storage in try? await storage.encode(snapshot, forKey: Self.todosKey) }
+        // A completed or deleted todo stops being the focus.
+        if pomodoro.focusTodoId != nil { updatePomodoro { timer, _, _ in timer.validateFocus(against: snapshot) } }
+    }
+
+    private func persistPomodoro() {
+        let snapshot = pomodoro
+        enqueue { storage in try? await storage.encode(snapshot, forKey: Self.pomodoroKey) }
     }
 
     /// Chains writes so they reach the storage actor in order.
@@ -210,18 +246,26 @@ public final class TodoStore {
 }
 
 extension TodoStore {
+    /// The template file inside `settings.storagePath`.
+    public var templateURL: URL? {
+        let path = settings.storagePath.trimmingCharacters(in: .whitespaces)
+        return path.isEmpty ? nil : URL(filePath: path, directoryHint: .isDirectory).appending(path: TodoTemplate.fileName)
+    }
+
     /// Creates the template in `settings.storagePath` when missing and returns its URL.
-    public func ensureTemplate() throws -> URL {
-        try TodoTemplate.ensure(in: URL(filePath: settings.storagePath, directoryHint: .isDirectory))
+    public func ensureTemplate(using files: TodoFileAccess) async throws -> URL {
+        guard let templateURL else { throw TodoTemplate.TemplateError.emptyDirectory }
+        return try await TodoTemplate.ensure(in: templateURL.deletingLastPathComponent(), using: files)
     }
 
     /// Replaces the list with the todos read from a JSONC file.
-    public func importTemplate(from url: URL) throws {
-        replaceAll(try TodoTemplate.parse(Data(contentsOf: url)))
+    public func importTemplate(from url: URL, using files: TodoFileAccess) async throws {
+        let todos = try TodoTemplate.parse(try await files.read(url), now: now())
+        replaceAll(todos)
     }
 
     /// Writes the list back to a JSONC file.
-    public func exportTemplate(to url: URL) throws {
-        try TodoTemplate.render(todos).write(to: url, options: .atomic)
+    public func exportTemplate(to url: URL, using files: TodoFileAccess) async throws {
+        try await files.write(TodoTemplate.render(todos), url)
     }
 }

@@ -91,6 +91,11 @@ public final class PluginHost {
         records.first { $0.id == id }
     }
 
+    /// The live instance of an active plugin.
+    public func instance(for id: String) -> (any AlethePlugin)? {
+        instances[id]
+    }
+
     public func contributions(of id: String) -> PluginContributions? {
         contexts[id]?.contributions
     }

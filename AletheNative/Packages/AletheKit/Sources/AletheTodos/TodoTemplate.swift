@@ -55,6 +55,20 @@ public enum TodoTemplate {
         return url
     }
 
+    /// `ensure` through a file-access service (the plugin's filesystem capability): an existing file
+    /// is kept; a missing one is written with the default content. The writer creates the folder.
+    @discardableResult
+    public static func ensure(in directory: URL, using files: TodoFileAccess) async throws -> URL {
+        guard !directory.path.trimmingCharacters(in: .whitespaces).isEmpty else { throw TemplateError.emptyDirectory }
+        let url = directory.appending(path: fileName)
+        do {
+            _ = try await files.read(url)
+        } catch where TodoFileAccess.isMissingFile(error) {
+            try await files.write(Data(defaultContent.utf8), url)
+        }
+        return url
+    }
+
     // MARK: Reading
 
     /// One entry of the file's `todos` array. Only `title` is required.
@@ -121,6 +135,26 @@ public enum TodoTemplate {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         let body = String(decoding: try encoder.encode(document), as: UTF8.self)
         return Data("// Alethe Todo list. Order in \"todos\" is the visible order.\n\(body)\n".utf8)
+    }
+}
+
+/// Reads and writes whole files. The Todos plugin builds it from its context's filesystem
+/// capability, so every template access is checked against the manifest.
+public struct TodoFileAccess: Sendable {
+    public var read: @Sendable (URL) async throws -> Data
+    public var write: @Sendable (Data, URL) async throws -> Void
+
+    public init(read: @escaping @Sendable (URL) async throws -> Data, write: @escaping @Sendable (Data, URL) async throws -> Void) {
+        self.read = read
+        self.write = write
+    }
+
+    /// True for "no such file" errors from Foundation or POSIX.
+    public static func isMissingFile(_ error: any Error) -> Bool {
+        if let cocoa = error as? CocoaError, cocoa.code == .fileReadNoSuchFile || cocoa.code == .fileNoSuchFile { return true }
+        if let posix = error as? POSIXError, posix.code == .ENOENT { return true }
+        let ns = error as NSError
+        return ns.domain == NSPOSIXErrorDomain && ns.code == Int(ENOENT)
     }
 }
 

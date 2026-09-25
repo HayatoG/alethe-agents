@@ -129,11 +129,11 @@ final class AppEnvironment {
         Self.removeOrphanScrollback(in: locations.scrollback(profile), keeping: tabs)
         Handoff.pruneOld(in: locations.handoffs(profile))
         // Plugins load before the preferences are published, so a pack theme applies on the first frame.
-        let plugins = PluginHost(plugins: Self.builtinPlugins, dataRoot: locations.profileDirectory(profile))
+        let plugins = PluginHost(plugins: Self.builtinPlugins, dataRoot: locations.profileDirectory(profile),
+                                 services: Self.pluginServices)
         TodosPlugin.onNewTodo = { [weak self] in
             guard let self else { return }
-            self.rightSidebarTab = TodosPlugin.sidebarTabID
-            self.rightSidebarVisible = true
+            self.showTodos()
             self.newTodoRequest += 1
         }
         GitControlPlugin.onOpen = { [weak self] in
@@ -206,6 +206,32 @@ final class AppEnvironment {
         await promptHistory?.flush()
         await profiles?.flush()
     }
+
+    /// The Todos plugin's store while it is enabled. Reading `plugins` first makes views observe
+    /// enabling and disabling (the store itself is a static of the plugin).
+    var todoStore: TodoStore? {
+        guard plugins?.record(for: TodosPlugin.manifest.id)?.state == .active else { return nil }
+        return TodosPlugin.activeStore
+    }
+
+    /// Opens the right sidebar on the Todos tab.
+    func showTodos() {
+        rightSidebarTab = TodosPlugin.sidebarTabID
+        rightSidebarVisible = true
+    }
+
+    /// Host services behind plugin capabilities. File access is whole-file; writes create the folder.
+    private static let pluginServices = PluginServices(
+        readFile: { url in
+            try await Task.detached { try Data(contentsOf: url) }.value
+        },
+        writeFile: { data, url in
+            try await Task.detached {
+                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try data.write(to: url, options: .atomic)
+            }.value
+        }
+    )
 
     /// Plugins compiled into the app, in registration order.
     static let builtinPlugins: [any AlethePlugin.Type] = [ThemePackPlugin.self, TodosPlugin.self, GitControlPlugin.self]

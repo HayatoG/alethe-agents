@@ -156,32 +156,10 @@ private func temporaryDirectory() -> URL {
         try TodoTemplate.ensure(in: directory)
         #expect(try String(contentsOf: url, encoding: .utf8).hasPrefix("// custom"))
     }
-
-    @MainActor
-    @Test func storeTemplateRoundTrip() throws {
-        let directory = temporaryDirectory()
-        let store = TodoStore(storage: nil)
-        store.updateSettings { $0.storagePath = directory.path }
-        let url = try store.ensureTemplate()
-        try store.importTemplate(from: url)
-        #expect(store.todos.map(\.title) == ["Example task"])
-        store.add(title: "Written back", tags: ["io"], scope: .project("p"), prURL: URL(string: "https://g/2"))
-        store.toggle("task-example-1")
-        try store.exportTemplate(to: url)
-
-        let other = TodoStore(storage: nil)
-        try other.importTemplate(from: url)
-        #expect(other.todos.map(\.id) == store.todos.map(\.id))
-        #expect(other.todos.map(\.title) == store.todos.map(\.title))
-        #expect(other.todos.map(\.done) == store.todos.map(\.done))
-        #expect(other.todos.map(\.tags) == store.todos.map(\.tags))
-        #expect(other.todos.map(\.projectID) == store.todos.map(\.projectID))
-        #expect(other.todos.map(\.prURL) == store.todos.map(\.prURL))
-    }
 }
 
 @MainActor
-@Suite struct TodosPluginTests {
+@Suite(.serialized) struct TodosPluginTests {
     @Test func activationContributesTabAndCommand() async throws {
         let host = PluginHost(plugins: [TodosPlugin.self], dataRoot: temporaryDirectory())
         await host.load()
@@ -202,6 +180,48 @@ private func temporaryDirectory() -> URL {
         try await host.setEnabled(false, for: TodosPlugin.manifest.id)
         #expect(TodosPlugin.activeStore == nil)
         #expect(host.contributions.sidebarTabs.isEmpty)
+    }
+
+    @Test func templateFilesGoThroughTheFilesystemCapability() async throws {
+        let files = MemoryFiles()
+        let services = PluginServices(
+            readFile: { url in try await files.read(url) },
+            writeFile: { data, url in await files.write(data, url) }
+        )
+        let host = PluginHost(plugins: [TodosPlugin.self], dataRoot: temporaryDirectory(), services: services)
+        await host.load()
+        let plugin = try #require(host.instance(for: TodosPlugin.manifest.id) as? TodosPlugin)
+        let store = try #require(plugin.store)
+        await store.load()
+
+        await #expect(throws: TodoTemplate.TemplateError.emptyDirectory) { try await plugin.ensureTemplate() }
+        store.updateSettings { $0.storagePath = "/virtual/todos" }
+        let url = try await plugin.ensureTemplate()
+        #expect(url.path == "/virtual/todos/\(TodoTemplate.fileName)")
+        #expect(await files.writes == [url.path])
+
+        try await plugin.importTemplate()
+        #expect(store.todos.map(\.title) == ["Example task"])
+        #expect(await files.writes == [url.path])
+
+        store.add(title: "Exported", tags: ["io"], scope: .project("p"))
+        #expect(try await plugin.exportTemplate() == url)
+        #expect(await files.writes == [url.path, url.path])
+        let exported = try TodoTemplate.parse(try await files.read(url))
+        #expect(exported.map(\.title) == ["Example task", "Exported"])
+        #expect(exported.last?.projectID == "p")
+
+        try await host.setEnabled(false, for: TodosPlugin.manifest.id)
+        await #expect(throws: TodosPlugin.TemplateAccessError.inactive) { try await plugin.ensureTemplate() }
+    }
+
+    @Test func pluginWithoutFileServicesCannotTouchTheTemplate() async throws {
+        let host = PluginHost(plugins: [TodosPlugin.self], dataRoot: temporaryDirectory())
+        await host.load()
+        let plugin = try #require(host.instance(for: TodosPlugin.manifest.id) as? TodosPlugin)
+        plugin.store?.updateSettings { $0.storagePath = "/virtual/none" }
+        await #expect(throws: PluginError.serviceUnavailable(.filesystemRead)) { try await plugin.ensureTemplate() }
+        try await host.setEnabled(false, for: TodosPlugin.manifest.id)
     }
 }
 

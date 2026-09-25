@@ -107,6 +107,19 @@ public struct TodoSettings: Hashable, Sendable, Codable {
         self.pomodoroLongBreakMinutes = pomodoroLongBreakMinutes
     }
 
+    /// Upstream clamps every Pomodoro length to 1…120 minutes.
+    public static let minuteRange = 1...120
+
+    /// The settings with every Pomodoro length inside `minuteRange`.
+    public func clamped() -> TodoSettings {
+        func clamp(_ value: Int) -> Int { min(Self.minuteRange.upperBound, max(Self.minuteRange.lowerBound, value)) }
+        var next = self
+        next.pomodoroWorkMinutes = clamp(pomodoroWorkMinutes)
+        next.pomodoroShortBreakMinutes = clamp(pomodoroShortBreakMinutes)
+        next.pomodoroLongBreakMinutes = clamp(pomodoroLongBreakMinutes)
+        return next
+    }
+
     public var pomodoroLengths: PomodoroLengths {
         PomodoroLengths(
             work: TimeInterval(pomodoroWorkMinutes * 60),
