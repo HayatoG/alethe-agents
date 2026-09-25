@@ -129,6 +129,12 @@ private struct ViewCommands: Commands {
             Button("menu.view.actualSize") { environment.preferences?.update { $0.uiScale = 1 } }
                 .keyboardShortcut("0", modifiers: .command)
             Divider()
+            Button(environment.showingHome ? LocalizedStringKey("menu.view.showWorkspace") : "menu.view.showHome") {
+                environment.showingHome.toggle()
+            }
+            .keyboardShortcut("h", modifiers: [.command, .shift])
+            .disabled(environment.workspace == nil)
+            Divider()
             Button(isolated ? LocalizedStringKey("menu.view.showAllPanes") : "menu.view.showPaneAlone") {
                 environment.workspace?.update { $0.isolate(isolated ? nil : $0.workspace.focusedPaneID) }
             }

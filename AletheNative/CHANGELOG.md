@@ -161,4 +161,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Alethe keeps activity statistics — time with it open and in use, and time agents spent working, in
   parallel or in the background, per agent and project — on this Mac for Home. Settings › General clears
   them.
+- Home (⇧⌘H or the house button in the toolbar): a greeting, a quick launch that starts an agent with a
+  prompt in any project, recent projects, AI usage, a 13-week activity graph with your streak, where your
+  time went (active, agents working, in the background) and notifications. Settings › General can open
+  Alethe on Home.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

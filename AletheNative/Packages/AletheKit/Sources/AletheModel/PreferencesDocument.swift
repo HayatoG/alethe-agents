@@ -42,6 +42,8 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var usagePills: [String]?
     /// Notify when a usage limit resets (upstream `notifyOnLimitReset`); nil means yes.
     public var notifyLimitReset: Bool?
+    /// Open on Home instead of the workspace (upstream `alwaysStartOnHome`; P3-15).
+    public var startOnHome: Bool?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

@@ -90,6 +90,17 @@ final class ActivityTracker {
         _ = await store.append(batch)
     }
 
+    /// A summary that includes what has not been written yet (upstream flushes before reading).
+    func currentSummary(dates: [String]) async -> ActivityTotals {
+        sample()
+        var summary = await store?.summary(dates: dates) ?? ActivityTotals()
+        let filter = Set(dates)
+        var unsaved = ActivityTotals()
+        for sample in pending where filter.isEmpty || filter.contains(sample.date) { unsaved.apply(sample) }
+        summary.add(unsaved)
+        return summary
+    }
+
     func summary(dates: [String]) async -> ActivityTotals {
         await store?.summary(dates: dates) ?? ActivityTotals()
     }

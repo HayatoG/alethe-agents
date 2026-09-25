@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-15. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-16. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1708,11 +1708,30 @@ ship; they run per the test cadence above.
   background and before quitting, off the main thread through `ActivityStore`; a failed write keeps the
   last 360 samples. Settings › General › Clear Statistics (with confirmation).
   *Tests (written, not run — owner decision):* `ActivityStatsTests` (4; ran once while writing them). Compiled.
-- [ ] **P3-15 (L) Home dashboard.** Greeting, recent projects, quick actions, a mini-terminal quick
+- [x] **P3-15 (L) Home dashboard.** Greeting, recent projects, quick actions, a mini-terminal quick
   launch, activity graph and time analytics (P3-14), usage strip (P3-13), notifications (P3-11); ⇧⌘H
   toggles Home ↔ workspace and a preference opens on Home. The ASCII background only if it passes the
   motion and accessibility rules. *Tests:* U (greeting, summaries), UI, HT. *Parity:* HOME-1, HOME-2,
   HOME-3, HOME-5.
+  *Done:* `Home/HomeView` (upstream `HomeView`), all real data: greeting by hour (`Greeting`) with the
+  macOS user's first name and the date; the quick launch (a prompt field that grows while focused, agent,
+  project and permission mode; ⌘↩ opens a new terminal of that agent in the project with the prompt as its
+  first input and shows the workspace); recent projects (`WorkspaceDocument.recentProjectIDs`: navigation
+  history newest first, then open and tab-bar projects, then sidebar order; up to 6 cards that open the
+  project in its tab); start actions (new terminal, project, group, Find/Jump); the usage strip (P3-13 —
+  providers without a toolbar pill are read only on request, since the Keychain may prompt); the activity
+  graph (`AletheAgents/ActivityDays`, upstream `get_multi_agent_activity`: Claude Code messages, Codex
+  rollouts and OpenCode messages per UTC day over 13 weeks, intensity in quartiles of the busiest day,
+  streak); time analytics (P3-14: today / 7 / 30 days / all — active, agents working, background, idle,
+  by agent, top projects; includes samples not yet written); the notifications list (P3-11); repository
+  links. ⇧⌘H (View › Show Home / Show Workspace) and a toolbar house button switch; opening a terminal
+  from Home returns to the workspace; Settings › General › Open on Home. Entrance in three staggered
+  steps, none under reduced motion; colors from theme tokens only.
+  *Deviation:* the ASCII background is not ported — decorative, animated, and it would compete with the
+  text under reduced transparency and contrast settings; no avatar (the name comes from macOS); Now
+  Playing waits for Spotify (Phase 7).
+  *Tests (written, not run — owner decision):* `HomeDataTests` (2), `ActivityDaysTests` (2) (ran once
+  while writing them); UI `HomeTests` (⇧⌘H toggles; quick launch opens a terminal). Compiled.
 - [ ] **P3-16 (M) Setup walkthrough.** First-run steps on Home (agents found, a first project, a first
   terminal), dismissible and resumable (upstream `SetupWalkthrough`). *Tests:* UI. *Parity:* HOME-4.
 - [ ] **P3-17 (L) Dictation.** Apple SpeechAnalyzer (ADR-7a) instead of Parakeet: microphone permission,
@@ -1765,11 +1784,11 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 
 | ID | Feature | Phase | Status | Notes |
 |---|---|---|---|---|
-| HOME-1 | Home dashboard | P3 | Not started | ASCII background only if it passes the motion/accessibility rules |
-| HOME-2 | Mini-terminal quick launch | P3 | Not started | |
-| HOME-3 | Activity graph / time analytics / usage strip | P3 | Not started | |
+| HOME-1 | Home dashboard | P3 | Done | P3-15; no ASCII background (see P3-15 deviation), no avatar |
+| HOME-2 | Mini-terminal quick launch | P3 | Done | P3-15; quick launch picks a project instead of a folder |
+| HOME-3 | Activity graph / time analytics / usage strip | P3 | Done | P3-15 |
 | HOME-4 | Setup walkthrough | P3 | Not started | |
-| HOME-5 | Notifications list | P3 | Not started | |
+| HOME-5 | Notifications list | P3 | Done | P3-11 list, shown on Home in P3-15 |
 | WS-1 | Project containers | P1, P2 | Done | Open, resize, close (P1-6); collapse, fullscreen, reorder, isolate (P2-16) |
 | WS-2 | Flat mode | P2 | Done | P2-21; View › Flat Workspace, saved per workspace tab |
 | WS-3 | Layouts Auto/Spotlight/Sidebar/Custom | P1 (Auto), P2 | Partial | Auto (P1-6), Spotlight and Sidebar (P2-18), project Custom grid + designer (P2-19); workspace/group scopes open |

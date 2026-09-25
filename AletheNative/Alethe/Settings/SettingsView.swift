@@ -41,6 +41,11 @@ private struct GeneralSettings: View {
                 Text("settings.general.startClean.help")
             }
             .accessibilityIdentifier("settings.startClean")
+            Toggle(isOn: optional(\.startOnHome, default: false)) {
+                Text("settings.general.startOnHome")
+                Text("settings.general.startOnHome.help")
+            }
+            .accessibilityIdentifier("settings.startOnHome")
             Toggle(isOn: optional(\.confirmQuit, default: true)) {
                 Text("settings.general.confirmQuit")
                 Text("settings.general.confirmQuit.help")

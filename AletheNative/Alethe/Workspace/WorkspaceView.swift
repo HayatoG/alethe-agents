@@ -38,11 +38,25 @@ struct WorkspaceView: View {
             environment.contentPanes.prune(keeping: panes)
             if let focus = environment.focusModePaneID, !panes.contains(focus) { environment.focusModePaneID = nil }
         }
+        // A terminal opened from Home (its sheets, the quick launch) shows the workspace.
+        .onChange(of: environment.workspace?.document.workspace.focusedPaneID) { _, pane in
+            if pane != nil { environment.showingHome = false }
+        }
         .onChange(of: environment.theme) { _, _ in applyAppearance() }
         .onChange(of: environment.terminalFontSize) { _, _ in applyAppearance() }
     }
 
     private var content: some View {
+        VStack(spacing: 0) {
+            if environment.showingHome, let workspace = environment.workspace {
+                HomeView(workspace: workspace)
+            } else {
+                workspaceContent
+            }
+        }
+    }
+
+    private var workspaceContent: some View {
         VStack(spacing: 0) {
             if let workspace = environment.workspace, !workspace.document.workspace.tabs.isEmpty {
                 WorkspaceTabBar(workspace: workspace)

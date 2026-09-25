@@ -20,6 +20,8 @@ final class AppEnvironment {
     var editorRequest: EditorRequest?
     /// The pane shown in focus mode (P2-21); not persisted.
     var focusModePaneID: PaneID?
+    /// Home instead of the workspace (P3-15; ⇧⌘H).
+    var showingHome = false
 
     /// Launcher lookups are cached across terminals; hits are re-checked on disk.
     let launchers = LauncherCache()
@@ -81,6 +83,7 @@ final class AppEnvironment {
         let (loadedWorkspace, loadedPreferences, loadedHistory) = await (workspace, preferences, promptHistory)
         loadedWorkspace.update { $0.repair() }
         if loadedPreferences.document.startClean == true { loadedWorkspace.update { $0.startClean() } }
+        showingHome = loadedPreferences.document.startOnHome == true && !loadedWorkspace.document.projects.isEmpty
         let tabs = Set(loadedWorkspace.document.projects.flatMap(\.panes).flatMap(\.tabs).map(\.id))
         if loadedHistory.document.histories.keys.contains(where: { !tabs.contains(TabID(rawValue: $0)) }) {
             loadedHistory.update { $0.prune(keeping: tabs) }
