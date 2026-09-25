@@ -5,7 +5,7 @@
 > right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
 > where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
 > prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P5-1. Before it: run the package suite and `Scripts/uitest.sh` (Phase 4 tests are compiled, not run) and the owner's manual pass. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: Phase 6. Before it: run the package suite and `Scripts/uitest.sh` (Phase 4 round 2 and all Phase 5 tests are compiled, not run) and the owner's manual pass. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -2453,7 +2453,13 @@ cadence above.
   `WelcomeBackSheet` (upstream `WelcomeModal`, not on every launch). Deviation: import right after the
   name. UI tests only see it with `-AletheUITestOnboarding`/`-AletheUITestWelcome`. Tests (U 7, UI 3)
   written and compiled, NOT run.
-- [ ] **P5-27 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+- [x] **P5-27 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+  *Done (review, 2026-09-25):* all Phase 5 tasks implemented by parallel agents and integrated into
+  `mac-native-v2`. Owner rule for this phase: compile only — package `swift build --build-tests`, app
+  `build.sh Debug` and UI `build-for-testing` succeed and the strings gate passes; every Phase 5 test is
+  written and compiled but NOT run (nor are Phase 4 round-2 tests). Parity rows updated. Notable merges:
+  `0305be9` (two `ExternalCommand` runners unified). Owed: run the package suite and `Scripts/uitest.sh`,
+  a manual pass of all Phase 5 UI, and the open points in each task's Done note.
 
 Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
 beyond menus, Settings panes and string catalogs — rebase on conflicts):
@@ -2525,13 +2531,13 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-8 | Restart / command-not-found overlays | P1 | Done | Install button comes with AG-5 |
 | TERM-9 | Double ^C force-kill | P2 | Done | P2-2; kills the whole process tree |
 | TERM-10 | Scrollback persistence + reattach | P2 | Done | P2-7; replay limited to the last 1 MiB by GhosttyKit |
-| TERM-11 | `alethe` CLI shim | P5 | Not started | |
+| TERM-11 | `alethe` CLI shim | P5 | Done | P5-8; `~/.local/bin/alethe` shell shim, folder open requests |
 | SB-1 | Project tree (Normal/Clean) | P1 | Done | Tree, reorder, drag and drop, context menus (P1-4); Clean compact mode (P2-27) |
-| SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Partial | Name, color, folder, group (P1-5); clone, marker, git init, stack in P5 |
+| SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Done | P1-5 basics; P5-5 clone, `.alethe/project.json` marker, git init, stack detection |
 | SB-3 | Groups (nested, suspend) | P1, P2 | Done | Nested groups (P1-4/P1-5); suspend and resume (P2-23) |
-| SB-4 | Export/import project config | P5 | Not started | |
+| SB-4 | Export/import project config | P5 | Done | P5-6; upstream key names, both directions |
 | SB-5 | Live chat title + busy/done glyph | P3 | Done | P3-10; titles from transcripts, working / needs-input / unread-done glyphs |
-| SB-6 | Open in VS Code / Finder / browser | P5 | Not started | `NSWorkspace` |
+| SB-6 | Open in VS Code / Finder / browser | P5 | Done | P5-7; VS Code/Insiders/VSCodium, Finder, repository page |
 | SB-7 | Right sidebar | P4 | Done | P4-3; ⌥⌘0, plugin tabs + Files, Docs, Pull Requests; extension tabs (P4-19) |
 | SB-8 | View placement | P4 | Partial | P4-2 model + persistence; no drag UI between sidebars yet |
 | AG-1 | 11 agent types | P1 (5), P3 | Done | P3-1; ten agents; `wsl`: Won't port (Windows-only) |
@@ -2558,36 +2564,36 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | FS-2 | Folder browser | P1 | Replaced | `NSOpenPanel` + Finder drops (P1-4, P1-5) |
 | BR-1 | Web pane | P2 | Done | P2-12, WKWebView (private); CDP engine: Won't port |
 | BR-2 | Agent page offer | P2 | Done | P2-15; from terminal output (no shared CDP browser) |
-| BR-3 | Playwright MCP browser session | P5 | Not started | |
-| EXT-1 | MCP manager | P5 | Not started | |
-| EXT-2 | Skills browser | P5 | Not started | |
+| BR-3 | Playwright MCP browser session | P5 | Done | P5-19; shared browser in its own window (no CDP pane) or headless |
+| EXT-1 | MCP manager | P5 | Done | P5-1/2/14/21/22/25; five agents, registry, health, sync, backups; no paste-JSON add |
+| EXT-2 | Skills browser | P5 | Done | P5-15; History › Skills… and embedded in the MCP manager |
 | EXT-3 | Plugin system | P4 | Done | `AlethePluginKit` + built-ins (P4-1/2); ExtensionKit third parties (P4-19, unverified end to end); JS plugins: Won't port |
-| EXT-4 | Agent library + economy agents | P5 | Not started | |
-| EXT-5 | Graphify | P5 | Not started | |
-| EXT-6 | ai-memory wiring | P5 | Not started | |
-| EXT-7 | GSD Sync | P5 | Not started | |
+| EXT-4 | Agent library + economy agents | P5 | Done | P5-16; Project menu › Agent Library… (upstream only had it in the Agent Canvas POC) |
+| EXT-5 | Graphify | P5 | Done | P5-17/23; per-launch MCP wiring (no writes to project agent configs), graph pane, snapshots |
+| EXT-6 | ai-memory wiring | P5 | Done | P5-18; per-launch MCP wiring |
+| EXT-7 | GSD Sync | P5 | Done | P5-20/24; no per-project `gsdWatcherEnabled` |
 | ORC-1 | Orchestrator board | P6 | Not started | |
 | ORC-2 | Orchestrator MCP tools + core | P6 | Not started | Swift stdio binary |
 | ORC-3 | Scheduler, telemetry, planning audit | P6 | Not started | |
 | USE-1 | Usage pills + AI Usage + reset credit | P3 | Done | P3-13; pills opt-in per provider, in-memory cache |
 | USE-2 | Activity tracking | P3 | Done | P3-14; same file format as upstream |
 | USE-3 | RAM control, hibernation, supervisor | P2 | Done | P2-24; memory indicator + policy; hibernated terminals resume when shown; no history chart |
-| USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |
+| USE-4 | Crash report | P5 | Done | P5-11; clean-exit marker, `.ips` + MetricKit offered, never sent |
 | UI-1 | Themes (16 + 4) | P0, P1, P4 | Done | 16 built-ins + picker (P1-11); Theme Pack plugin (P4-18) |
 | UI-2 | Visual style normal/clean | P2 | Done | P2-27; Clean theme transform + compact sidebar |
 | UI-3 | Motion preference | P2 | Done | P2-27; preference or macOS Reduce Motion |
-| UI-4 | App icon themes | P5 | Not started | `NSApp.applicationIconImage` |
+| UI-4 | App icon themes | P5 | Done | P5-12; runtime Dock icon only (bundle icon unchanged) |
 | UI-5 | UI zoom | P1 | Done | Font + metric scale only; View menu + Settings (P1-11) |
 | UI-6 | Window opacity | — | Won't port | Win32-only upstream; Mac uses materials |
-| UI-7 | Toolbar configuration | P5 | Not started | Native toolbar customization |
+| UI-7 | Toolbar configuration | P5 | Done | P5-13; `.toolbar(id:)` + Settings › Toolbar |
 | UI-8 | i18n EN + pt-BR | P0, P1 | Done | String Catalogs (P0-4); language setting + relaunch (P1-11) |
 | SET-1 | Preferences | P1, ongoing | Partial | Settings scene with Appearance (P1-1, P1-11); other panes land with their features |
-| SET-2 | Feature toggles | P5 | Not started | |
-| SET-3 | Profiles | P1 (base), P5 | Partial | Default profile + folder layout (P1-3); profile UI in P5 |
-| SET-4 | Backup/import/reset/logs | P5 | Not started | |
+| SET-2 | Feature toggles | P5 | Done | P5-3 |
+| SET-3 | Profiles | P1 (base), P5 | Done | P1-3 base; P5-9 Settings › Profiles + toolbar menu |
+| SET-4 | Backup/import/reset/logs | P5 | Done | P5-10 backup/import/reset/erase; P5-11 logs and diagnostics |
 | SET-5 | GitHub gist sync | P7 | Not started | |
 | SET-6 | Cloud sync | — | Won't port | Upstream server not shipped (localhost default); revisit if it ships |
-| SET-7 | Onboarding + welcome | P5 | Not started | Tauri import done as File menu item (P1-12); onboarding offers it in P5 |
+| SET-7 | Onboarding + welcome | P5 | Done | P5-26; onboarding + welcome back (after an update or 7 days away) |
 | SET-8 | Updater + What's New | P8 | Not started | Sparkle |
 | SET-9 | Notifications | P3 | Done | P3-11; agent done / needs-input, UserNotifications in the background, toolbar list |
 | SET-10 | Find/Jump | P2 | Done | P2-25; ⌘K, fuzzy ranking (upstream substring), terminals + projects + commands |
