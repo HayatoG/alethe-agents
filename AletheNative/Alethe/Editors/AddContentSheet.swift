@@ -71,11 +71,22 @@ struct AddContentSheet: View {
         Option(kind: .diff, title: "addContent.diff", detail: "addContent.diff.detail", symbol: "plusminus") { _ in
             .diff(path: nil, staged: false)
         },
+        Option(kind: .graphify, title: "addContent.graphify", detail: "addContent.graphify.detail",
+               symbol: "point.3.connected.trianglepath.dotted") { _ in
+            .graphify
+        },
     ]
 
-    /// The options whose feature is on: web pages need the browser feature (P5-3).
+    /// The options whose feature is on: web pages need the browser feature (P5-3), the code graph
+    /// the graphify one.
     static func options(for features: Features) -> [Option] {
-        options.filter { $0.kind != .web || features.isOn(.browser) }
+        options.filter { option in
+            switch option.kind {
+            case .web: features.isOn(.browser)
+            case .graphify: features.isOn(.graphify)
+            default: true
+            }
+        }
     }
 
     private var target: Project? {

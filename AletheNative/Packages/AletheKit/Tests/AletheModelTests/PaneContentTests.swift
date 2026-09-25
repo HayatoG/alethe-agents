@@ -9,6 +9,7 @@ import Testing
             .terminal, .markdown(path: "/p/README.md"), .image(path: "/p/a.png"), .video(path: "/p/v.mov"),
             .diff(path: nil, staged: false), .diff(path: "src/a.swift", staged: true), .web(url: "http://localhost:3000", options: WebPaneOptions()),
             .web(url: "https://a.dev/", options: WebPaneOptions(resourceMode: .keepAlive, javascriptEnabled: false, zoom: 1.25)),
+            .graphify,
         ]
         for content in contents {
             let data = try JSONEncoder().encode(content)
@@ -16,6 +17,15 @@ import Testing
         }
         let terminal = try JSONSerialization.jsonObject(with: JSONEncoder().encode(PaneContent.terminal)) as? [String: String]
         #expect(terminal == ["kind": "terminal"])
+    }
+
+    @Test func aGraphPaneIsStoredByKindAlone() throws {
+        let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(PaneContent.graphify)) as? [String: String]
+        #expect(object == ["kind": "graphify"])
+        #expect(PaneContent.graphify.filePath == nil && !PaneContent.graphify.isTerminal)
+        let decoded = try JSONDecoder().decode(PaneContent.self, from: Data(#"{"kind":"graphify","path":"/ignored"}"#.utf8))
+        #expect(decoded == .graphify)
+        #expect(Pane(content: .graphify, tabs: [PaneTab(agent: "shell")]).tabs.isEmpty)
     }
 
     @Test func version1WorkspaceMigratesEveryPaneToATerminal() async throws {

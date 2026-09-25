@@ -12,9 +12,11 @@ public enum PaneContent: Hashable, Sendable {
     /// (`--staged`) instead of the working tree.
     case diff(path: String?, staged: Bool)
     case web(url: String, options: WebPaneOptions)
+    /// The project repository's Graphify code graph (upstream `graphify` pane, P5-23).
+    case graphify
 
     public enum Kind: String, Codable, CaseIterable, Sendable {
-        case terminal, markdown, image, video, diff, web
+        case terminal, markdown, image, video, diff, web, graphify
     }
 
     public var kind: Kind {
@@ -25,6 +27,7 @@ public enum PaneContent: Hashable, Sendable {
         case .video: .video
         case .diff: .diff
         case .web: .web
+        case .graphify: .graphify
         }
     }
 
@@ -68,6 +71,7 @@ extension PaneContent: Codable {
         case .web:
             self = .web(url: try container.decodeIfPresent(String.self, forKey: .url) ?? "",
                         options: try container.decodeIfPresent(WebPaneOptions.self, forKey: .options) ?? WebPaneOptions())
+        case .graphify: self = .graphify
         }
     }
 
@@ -75,7 +79,7 @@ extension PaneContent: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(kind, forKey: .kind)
         switch self {
-        case .terminal: break
+        case .terminal, .graphify: break
         case .markdown(let path), .image(let path), .video(let path):
             try container.encode(path, forKey: .path)
         case .diff(let path, let staged):

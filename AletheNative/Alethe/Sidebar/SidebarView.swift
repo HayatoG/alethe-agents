@@ -274,6 +274,12 @@ private struct ProjectContextMenu: View {
         Button("worktrees.manageEllipsis") { environment.editorRequest = .worktrees(project.id) }
         Button("menu.merge.branchTesting") { environment.editorRequest = .branchTesting(project.id) }
         Button("agentLibrary.openEllipsis") { environment.editorRequest = .agentLibrary(project.id) }
+        if environment.features.isOn(.graphify) {
+            Button("graphify.openInProject") {
+                environment.open(.graphify, in: project.id, actionName: String(localized: "undo.addContent"))
+            }
+            .accessibilityIdentifier("graphify.openInProject")
+        }
         Menu("sidebar.grids") {
             Button("projectGrid.main") { actions.workspace.update { $0.activateGrid(nil, in: project.id) } }
             ForEach(project.namedGrids) { grid in

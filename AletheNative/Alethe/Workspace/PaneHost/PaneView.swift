@@ -174,8 +174,14 @@ final class PaneView: NSView {
                     context.setContent(.web(url: page?.url?.absoluteString ?? url, options: $0), for: pane.id)
                 },
                 onClose: { context.closePane(pane.id) }, onDrag: onDrag))
-        default:
-            // Kinds whose pane task has not landed yet are never created (Add Content hides them).
+        case .graphify:
+            setAccessibilityIdentifier("pane.graphify")
+            let graphify = context.environment.graphify
+            let model = context.environment.contentPanes.graph(for: pane.id, root: graphify.root(for: project.folder),
+                                                                controller: graphify)
+            view = context.hosted(GraphifyPaneView(model: model, project: project.id, isFocused: focused,
+                                                   onClose: { context.closePane(pane.id) }, onDrag: onDrag))
+        case .terminal:
             view = AnyView(EmptyView())
         }
         if let contentHost {

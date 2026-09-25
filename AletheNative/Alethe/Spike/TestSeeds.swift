@@ -109,6 +109,19 @@ enum TestSeeds {
             // Port 9 (discard) is closed on a Mac: the page fails fast without touching the network.
             let project = doc.addProject(name: "site", folder: "/private/tmp", color: .blue)
             doc.addPane(to: project, content: .web(url: "http://127.0.0.1:9/", options: WebPaneOptions()))
+        case "graphify":
+            // A repository with a Graphify graph and one older, smaller snapshot; no pane yet (P5-23).
+            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+            let repo = URL(filePath: root).appending(path: "graphrepo")
+            let graph = #"{"nodes":[{"id":"alpha","label":"alpha","source_file":"README.md","community":0},{"id":"beta","label":"beta","community":0},{"id":"delta","label":"delta","community":1},{"id":"epsilon","label":"epsilon","community":1}],"edges":[{"source":"alpha","target":"beta"},{"source":"beta","target":"delta"},{"source":"delta","target":"epsilon"}]}"#
+            let older = #"{"nodes":[{"id":"alpha"},{"id":"beta"}],"edges":[{"source":"alpha","target":"beta"}]}"#
+            for folder in [".git", "graphify-out", ".alethe/graph-snapshots"] {
+                try? FileManager.default.createDirectory(at: repo.appending(path: folder), withIntermediateDirectories: true)
+            }
+            try? Data("# Graph\n".utf8).write(to: repo.appending(path: "README.md"))
+            try? Data(graph.utf8).write(to: repo.appending(path: "graphify-out/graph.json"))
+            try? Data(older.utf8).write(to: repo.appending(path: ".alethe/graph-snapshots/1750000000000.json"))
+            _ = doc.addProject(name: "graphrepo", folder: repo.path, color: .purple)
         case "skills":
             seedSkills()
         case "gsdSync":

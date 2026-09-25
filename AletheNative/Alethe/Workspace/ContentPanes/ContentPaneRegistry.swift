@@ -4,7 +4,7 @@ import AVFoundation
 import Foundation
 import Observation
 
-/// Open file-backed panes (Markdown, image, video), one model per pane, kept while the pane exists so a
+/// Open file-backed panes (Markdown, image, video, diff, web, graph), one model per pane, kept while the pane exists so a
 /// draft or a scroll position survives layout changes. The terminal counterpart is
 /// `TerminalRegistry`.
 @MainActor
@@ -14,6 +14,7 @@ final class ContentPaneRegistry {
     private var players: [PaneID: (path: String, player: AVPlayer)] = [:]
     private var diffs: [PaneID: DiffModel] = [:]
     private var pages: [PaneID: WebPageModel] = [:]
+    private var graphs: [PaneID: GraphifyPaneModel] = [:]
     private var memoryPressure: (any DispatchSourceMemoryPressure)?
 
     func page(for pane: PaneID, url: String, options: WebPaneOptions) -> WebPageModel {
@@ -45,6 +46,14 @@ final class ContentPaneRegistry {
         }
         let model = DiffModel(folder: folder, path: path, staged: staged)
         diffs[pane] = model
+        return model
+    }
+
+    func graph(for pane: PaneID, root: URL, controller: GraphifyController) -> GraphifyPaneModel {
+        if let model = graphs[pane], model.root == root.standardizedFileURL { return model }
+        graphs[pane]?.cancel()
+        let model = GraphifyPaneModel(root: root, controller: controller)
+        graphs[pane] = model
         return model
     }
 
@@ -83,6 +92,10 @@ final class ContentPaneRegistry {
             images.removeValue(forKey: pane)
         }
         for pane in diffs.keys where !panes.contains(pane) { diffs.removeValue(forKey: pane) }
+        for (pane, model) in graphs where !panes.contains(pane) {
+            model.cancel()
+            graphs.removeValue(forKey: pane)
+        }
         for (pane, page) in pages where !panes.contains(pane) {
             page.release()
             pages.removeValue(forKey: pane)

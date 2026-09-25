@@ -39,7 +39,7 @@ extension AppEnvironment {
     }
 
     /// Shows `content` in the project: focuses a pane already showing it, or adds one (undoable).
-    func open(_ content: PaneContent, in project: ProjectID) {
+    func open(_ content: PaneContent, in project: ProjectID, actionName: String = String(localized: "undo.openLink")) {
         guard let workspace else { return }
         if let existing = workspace.document.project(project)?.panes.first(where: { $0.content == content }) {
             workspace.update {
@@ -48,7 +48,7 @@ extension AppEnvironment {
             }
             return
         }
-        workspace.update(undoManager: NSApp.keyWindow?.undoManager, actionName: String(localized: "undo.openLink")) {
+        workspace.update(undoManager: NSApp.keyWindow?.undoManager, actionName: actionName) {
             $0.addPane(to: project, content: content)
         }
     }
