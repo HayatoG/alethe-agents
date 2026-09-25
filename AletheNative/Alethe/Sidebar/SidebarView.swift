@@ -245,6 +245,10 @@ private struct ProjectContextMenu: View {
         Divider()
         Button("sidebar.editProject") { environment.editorRequest = .editProject(project.id) }
         Button("sidebar.revealInFinder") { actions.revealInFinder(project) }
+        Button("openIn.vscode") { OpenInActions.vsCode(project.folder, launchers: environment.launchers) }
+            .accessibilityIdentifier("openIn.vscode")
+        Button("openIn.browser") { OpenInActions.browser(project) }
+            .accessibilityIdentifier("openIn.browser")
         Button("projectSettings.exportEllipsis") { ProjectSettingsTransfer.export(project) }
         Button("projectSettings.importEllipsis") {
             ProjectSettingsTransfer.importSettings(into: project.id, workspace: actions.workspace, undoManager: actions.undoManager)
@@ -295,6 +299,10 @@ private struct TabContextMenu: View {
 
     var body: some View {
         Button("terminal.restart") { environment.terminals.restart(tab, in: project, environment: environment) }
+        Button("openIn.vscode") {
+            OpenInActions.vsCode(tab.workingDirectory ?? project.folder, launchers: environment.launchers)
+        }
+        Button("sidebar.revealInFinder") { OpenInActions.revealInFinder(tab.workingDirectory ?? project.folder) }
         if let pane = actions.workspace.document.paneHolding(tab.id)?.pane {
             Button(pane.isDisabled ? LocalizedStringKey("pane.enable") : "pane.disable") {
                 actions.setTabDisabled(tab.id, !pane.isDisabled)

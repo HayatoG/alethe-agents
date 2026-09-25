@@ -66,6 +66,14 @@ struct GitCloneTests {
         #expect(GitCloneURL.webURL(forRemote: "file:///tmp/origin.git") == nil)
     }
 
+    @Test func projectWebURLPrefersTheCloneURLThenOrigin() {
+        #expect(GitCloneURL.projectWebURL(cloneURL: "https://github.com/a/b.git", originRemote: "git@github.com:c/d.git")?
+            .absoluteString == "https://github.com/a/b")
+        #expect(GitCloneURL.projectWebURL(cloneURL: nil, originRemote: "git@github.com:c/d.git")?.absoluteString
+            == "https://github.com/c/d")
+        #expect(GitCloneURL.projectWebURL(cloneURL: "/tmp/origin.git", originRemote: nil) == nil)
+    }
+
     @Test func parsesProgressLines() {
         #expect(GitCloneProgress.parse("Receiving objects:  45% (450/1000)") == GitCloneProgress(phase: "Receiving objects", percent: 45))
         #expect(GitCloneProgress.parse("remote: Counting objects: 100% (3/3), done.") == GitCloneProgress(phase: "Counting objects", percent: 100))

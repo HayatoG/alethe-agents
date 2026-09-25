@@ -9929,6 +9929,125 @@
         }
       }
     },
+    "openIn.browser" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in Browser"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir no navegador"
+          }
+        }
+      }
+    },
+    "openIn.browser.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This project has no web address."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este projeto não tem endereço web."
+          }
+        }
+      }
+    },
+    "openIn.browser.none.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It was not cloned from a hosted repository and has no “origin” remote on GitHub or another host."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ele não foi clonado de um repositório hospedado e não tem um remote “origin” no GitHub ou em outro host."
+          }
+        }
+      }
+    },
+    "openIn.vscode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in VS Code"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir no VS Code"
+          }
+        }
+      }
+    },
+    "openIn.vscode.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VS Code could not be opened."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível abrir o VS Code."
+          }
+        }
+      }
+    },
+    "openIn.vscode.missing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VS Code was not found."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O VS Code não foi encontrado."
+          }
+        }
+      }
+    },
+    "openIn.vscode.missing.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Visual Studio Code, or add its `code` command to your PATH (in VS Code: Command Palette › Shell Command: Install 'code' command in PATH)."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instale o Visual Studio Code ou adicione o comando `code` ao PATH (no VS Code: Paleta de Comandos › Shell Command: Install 'code' command in PATH)."
+          }
+        }
+      }
+    },
     "pageOffer.dismiss" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -83,6 +83,13 @@ public enum GitCloneURL {
     }
 }
 
+extension GitCloneURL {
+    /// The page Open in Browser shows for a project (P5-5 clone URL first, else its `origin`).
+    public static func projectWebURL(cloneURL: String?, originRemote: String?) -> URL? {
+        cloneURL.flatMap(webURL(forRemote:)) ?? originRemote.flatMap(webURL(forRemote:))
+    }
+}
+
 /// One line of `git clone --progress` (`Receiving objects:  45% (450/1000)`).
 public struct GitCloneProgress: Equatable, Sendable {
     public var phase: String
