@@ -31,6 +31,8 @@ final class GitControlModel {
     var amend = false
 
     private var repository: GitRepository?
+    /// The repository's top level; status paths are relative to it, not to `folder`.
+    private(set) var root: URL?
     private var watcher: GitWatcher?
     private var watchTask: Task<Void, Never>?
 
@@ -43,6 +45,7 @@ final class GitControlModel {
         do {
             let root = try await GitRepository.discover(folder)
             let repository = GitRepositories.shared.repository(at: root)
+            self.root = root
             self.repository = repository
             watch(root)
             await refresh()
@@ -88,6 +91,7 @@ final class GitControlModel {
     func initialize() {
         perform {
             let root = try await GitRepository.initialize(self.folder)
+            self.root = root
             self.repository = GitRepositories.shared.repository(at: root)
             self.watch(root)
         }
@@ -175,5 +179,17 @@ final class GitControlModel {
         case .invalidArgument(let detail): format("git.error.invalid", detail)
         case nil: error.localizedDescription
         }
+    }
+
+    /// A repository-relative path made relative to `folder` (the diff pane runs git there), with `..`
+    /// when the project is a subfolder of the repository and the file lies outside it.
+    func folderRelativePath(_ repositoryPath: String) -> String {
+        guard let root else { return repositoryPath }
+        let target = root.appending(path: repositoryPath).standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        let base = folder.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        var common = 0
+        while common < min(target.count, base.count), target[common] == base[common] { common += 1 }
+        let parts = Array(repeating: "..", count: base.count - common) + target[common...]
+        return parts.joined(separator: "/")
     }
 }

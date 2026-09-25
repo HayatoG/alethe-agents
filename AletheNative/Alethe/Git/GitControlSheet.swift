@@ -351,7 +351,7 @@ struct GitControlSheet: View {
     private func openDiff(_ entry: GitStatusEntry, staged: Bool) {
         guard let projectID else { return }
         workspace.update(undoManager: undoManager, actionName: String(localized: "undo.addContent")) {
-            _ = $0.addPane(to: projectID, content: .diff(path: entry.path, staged: staged))
+            _ = $0.addPane(to: projectID, content: .diff(path: model?.folderRelativePath(entry.path) ?? entry.path, staged: staged))
         }
         dismiss()
     }
