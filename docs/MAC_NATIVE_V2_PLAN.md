@@ -1903,6 +1903,11 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   `.opencode/`, `opencode.json`), cleanup (drops orphan dirs, then prune); typed `GitWorktreeError`;
   `WorktreeSettings` (`autoWorktree`, `worktreeMode`, agent id; shells never). U+G 10. New Terminal /
   sidebar UI owed.
+  *Done (UI, `869c499`):* New Terminal › "Run in its own worktree" (agents only; worktree or local copy)
+  provisions before the tab exists (the tab id is the agent id), inline errors; `PaneTab.worktreeAgentID`
+  / `worktreeBranch` (optional, old `workspace.json` decodes, U 2); sidebar branch symbol + tooltip; tab
+  menu Commit Worktree Changes… / Remove Worktree (asks once). Open: project `autoWorktree`/`worktreeMode`
+  settings, lock/cleanup in the UI, UI tests.
 - [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
   sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
   sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.
