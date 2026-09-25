@@ -55,8 +55,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   typed in, ready for an agent to open. Files and images dragged onto a terminal paste as their paths.
 - Prompt history per terminal: ⌥⌘↑ / ⌥⌘↓ (Terminal › Older / Newer Prompt from History) bring back
   what you sent before, and each terminal remembers its last 50 prompts across relaunches.
-- Terminal output survives quitting: when Alethe reopens, each terminal shows what it had on screen
-  above the new session. Terminal › Clear Scrollback (⌥⌘K) erases it; restarting a terminal starts it
+- Terminal output survives quitting: when Alethe reopens, each shell terminal shows what it had on
+  screen above the new session (agent terminals start clean; the agent redraws its own conversation). Terminal › Clear Scrollback (⌥⌘K) erases it; restarting a terminal starts it
   clean, and closing it deletes what was saved.
 - Markdown panes: File › Add Content… (⇧⌘A) › README or Markdown shows a Markdown file beside your
   terminals, with tables, task lists and code blocks, and reloads it whenever an agent or editor
@@ -178,4 +178,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   process echoed the answers.
 - Fixed: a restored terminal no longer draws the new session over the old screen (Claude Code's header
   and prompt came out garbled); the old output moves into the history and the new session starts clean.
+- Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
+  screen stacked above the new one; only shell terminals bring their saved output back.
+- Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
+  fragments behind when it redraws, and a starting program no longer echoes `^[[I` / `^[[O` when the
+  window gains or loses focus.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

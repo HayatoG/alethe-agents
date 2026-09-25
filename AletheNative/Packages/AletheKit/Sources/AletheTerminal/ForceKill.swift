@@ -73,6 +73,8 @@ public enum ProcessTree {
 
     /// SIGKILLs `root`'s tree, children first so none is re-parented and missed, then its group.
     public static func kill(_ root: pid_t) {
+        // 0 (not spawned yet) would mean every process and the app's own group.
+        guard root > 0 else { return }
         for pid in descendants(of: root, parents: currentParents()).reversed() {
             Darwin.kill(pid, SIGKILL)
         }

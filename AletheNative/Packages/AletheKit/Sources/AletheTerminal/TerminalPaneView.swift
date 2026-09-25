@@ -52,7 +52,8 @@ public final class TerminalPaneView: NSView {
     public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize,
                 forceKillNotice: String = "Force kill: process terminated", promptHistory: [String] = [],
                 scrollback: ScrollbackFile? = nil) throws {
-        let process = try PTYProcess(launch)
+        // Spawned at the view's real size (first viewport), not the launch's placeholder.
+        let process = try PTYProcess(launch, spawnNow: false)
         self.process = process
         let tap = TerminalIOTap()
         self.tap = tap
@@ -60,6 +61,7 @@ public final class TerminalPaneView: NSView {
         self.history = history
         self.scrollback = scrollback
         let forceKill = forceKill
+        let spawner = DeferredSpawn()
         let notice = Data("\r\n\u{1b}[33m[\(forceKillNotice)]\u{1b}[0m\r\n".utf8)
         session = InMemoryTerminalSession(
             write: { data in
@@ -73,12 +75,14 @@ public final class TerminalPaneView: NSView {
                 process.write(data)
             },
             resize: { viewport in
-                process.resizeCoalesced(PTYSize(
+                let size = PTYSize(
                     columns: viewport.columns,
                     rows: viewport.rows,
                     widthPixels: UInt16(clamping: viewport.widthPixels),
                     heightPixels: UInt16(clamping: viewport.heightPixels)
-                ))
+                )
+                if spawner.spawnIfNeeded(size) { return }
+                process.resizeCoalesced(size)
             }
         )
         controller = TerminalController(theme: TerminalAppearance.terminalTheme(for: theme, fontSize: fontSize))
@@ -123,7 +127,12 @@ public final class TerminalPaneView: NSView {
             activity.finish()
             Task { @MainActor in self?.onExit?(code) }
         }
-        process.start()
+        spawner.configure(process: process, fallback: launch.size) { [weak self] code in
+            session.receive(Data("\r\n\u{1b}[31m[\(String(cString: strerror(code)))]\u{1b}[0m\r\n".utf8))
+            Task { @MainActor in self?.onExit?(127) }
+        }
+        // A view that is never shown (a hidden tab) still starts, at the launch's size.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { spawner.spawnIfNeeded(nil) }
     }
 
     @available(*, unavailable)
@@ -402,3 +411,40 @@ private final class TerminalActivity: Sendable {
     var quietFor: Duration { state.withLock { $0.last.duration(to: .now) } }
     var isRunning: Bool { state.withLock { $0.running } }
 }
+
+/// Starts a view's process once, at the first real size (or the fallback).
+private final class DeferredSpawn: @unchecked Sendable {
+    private let lock = NSLock()
+    private var process: PTYProcess?
+    private var fallback = PTYSize(columns: 80, rows: 24)
+    private var failed: (@Sendable (Int32) -> Void)?
+    private var done = false
+
+    func configure(process: PTYProcess, fallback: PTYSize, failed: @escaping @Sendable (Int32) -> Void) {
+        lock.withLock {
+            self.process = process
+            self.fallback = fallback
+            self.failed = failed
+        }
+    }
+
+    /// True when this call spawned the process (the size is then already applied).
+    @discardableResult
+    func spawnIfNeeded(_ size: PTYSize?) -> Bool {
+        let claim: (PTYProcess, PTYSize, (@Sendable (Int32) -> Void)?)? = lock.withLock {
+            guard !done, let process, size.map({ $0.columns > 0 && $0.rows > 0 }) ?? true else { return nil }
+            done = true
+            return (process, size ?? fallback, failed)
+        }
+        guard let (process, size, failed) = claim else { return false }
+        do {
+            try process.spawn(size: size)
+        } catch PTYError.spawnFailed(let code) {
+            failed?(code)
+        } catch {
+            failed?(EIO)
+        }
+        return true
+    }
+}
+

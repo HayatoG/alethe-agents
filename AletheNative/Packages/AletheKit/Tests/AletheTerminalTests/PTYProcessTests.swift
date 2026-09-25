@@ -41,6 +41,61 @@ import Testing
         #expect(result.output.contains("/private/tmp"))
     }
 
+    @Test func deferredSpawnUsesTheGivenSizeAndFlushesEarlyInput() async throws {
+        let process = try PTYProcess(PTYLaunch(
+            executable: "/bin/sh",
+            arguments: ["sh", "-c", "stty size; read line; echo got-$line"],
+            environment: ["PATH": "/usr/bin:/bin"],
+            workingDirectory: nil,
+            size: PTYSize(columns: 80, rows: 24)
+        ), spawnNow: false)
+        #expect(!process.isSpawned)
+        process.write(Data("typed\n".utf8))  // before the child exists
+        let collected = Collected()
+        let code: Int32 = try await withCheckedThrowingContinuation { continuation in
+            process.onOutput = { collected.append($0) }
+            process.onExit = { continuation.resume(returning: $0) }
+            do { try process.spawn(size: PTYSize(columns: 131, rows: 37)) } catch { continuation.resume(throwing: error) }
+        }
+        #expect(code == 0)
+        #expect(collected.string.contains("37 131"))
+        #expect(collected.string.contains("got-typed"))
+    }
+
+    @Test func terminatingBeforeSpawnNeverStartsTheChild() throws {
+        let process = try PTYProcess(PTYLaunch(
+            executable: "/bin/sh", arguments: ["sh", "-c", "exit 0"], environment: [:], workingDirectory: nil,
+            size: PTYSize(columns: 80, rows: 24)), spawnNow: false)
+        process.terminate()
+        try process.spawn(size: PTYSize(columns: 80, rows: 24))
+        #expect(!process.isSpawned)
+        #expect(process.pid == 0)
+    }
+
+    @Test func focusReportsAreDroppedWhileTheTTYEchoes() async throws {
+        // `cat` in cooked mode echoes whatever arrives; the focus report must not reach it.
+        let launch = PTYLaunch(
+            executable: "/bin/sh",
+            arguments: ["sh", "-c", "head -c 6"],
+            environment: ["PATH": "/usr/bin:/bin"],
+            workingDirectory: nil,
+            size: PTYSize(columns: 80, rows: 24)
+        )
+        #expect(PTYProcess.isFocusReport(Data("\u{1b}[I".utf8)))
+        #expect(!PTYProcess.isFocusReport(Data("\u{1b}[A".utf8)))
+        let process = try PTYProcess(launch)
+        let collected = Collected()
+        _ = await withCheckedContinuation { continuation in
+            process.onOutput = { collected.append($0) }
+            process.onExit = { continuation.resume(returning: $0) }
+            process.start()
+            process.write(Data("\u{1b}[I".utf8))
+            process.write(Data("abcdef\n".utf8))  // cooked mode: `head` sees the line at the newline
+        }
+        #expect(!collected.string.contains("^[[I"))
+        #expect(collected.string.contains("abcdef"))
+    }
+
     @Test func terminateKillsAChildThatIgnoresHangup() async throws {
         let process = try PTYProcess(PTYLaunch(
             executable: "/bin/sh",

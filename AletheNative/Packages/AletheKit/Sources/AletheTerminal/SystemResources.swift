@@ -46,12 +46,14 @@ public enum SystemResources {
     /// Footprint of `root` and every descendant (agents run node, git, language servers below the
     /// shell).
     public static func treeFootprintMB(of root: pid_t, parents: [pid_t: pid_t]) -> Double {
-        ProcessTree.descendants(of: root, parents: parents).reduce(0) { $0 + footprintMB(of: $1) }
+        guard root > 0 else { return 0 }
+        return ProcessTree.descendants(of: root, parents: parents).reduce(0) { $0 + footprintMB(of: $1) }
     }
 
     /// Puts a process tree in the background band (lower CPU and I/O priority) or back to normal.
     /// Unlike `nice`, this can be undone without privileges.
     public static func setBackground(_ background: Bool, tree root: pid_t, parents: [pid_t: pid_t]) {
+        guard root > 0 else { return }
         for pid in ProcessTree.descendants(of: root, parents: parents) {
             setpriority(PRIO_DARWIN_PROCESS, UInt32(pid), background ? PRIO_DARWIN_BG : 0)
         }

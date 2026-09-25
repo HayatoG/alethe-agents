@@ -43,8 +43,15 @@ public enum PTYError: Error, Equatable {
 /// Output is read on a private queue and delivered in chunks of up to 64 KiB — batching before
 /// crossing into the renderer is what keeps throughput high. All callbacks run on that queue.
 public final class PTYProcess: @unchecked Sendable {
-    public let pid: pid_t
-    private let masterFD: Int32
+    /// 0 until the child is spawned (see `init(_:spawnNow:)`); never signalled while 0, since
+    /// `kill(-0, …)` would hit the app's own process group.
+    public private(set) var pid: pid_t = 0
+    private var masterFD: Int32 = -1
+    private let launch: PTYLaunch
+    /// Written before the spawn (typed ahead); flushed once the child exists.
+    private var pendingInput: [Data] = []
+    /// Terminated before it was ever spawned.
+    private var cancelled = false
     private let queue: DispatchQueue
     private var readSource: DispatchSourceRead?
     private var exitSource: DispatchSourceProcess?
@@ -54,27 +61,65 @@ public final class PTYProcess: @unchecked Sendable {
     public var onOutput: (@Sendable (Data) -> Void)?
     public var onExit: (@Sendable (Int32) -> Void)?
 
-    public init(_ launch: PTYLaunch, scrollbackCapacity: Int = ScrollbackRing.defaultCapacity) throws {
+    /// `spawnNow: false` waits for `spawn(size:)`, so the child starts at its view's real size: a TUI
+    /// that first draws at a placeholder size and then redraws on SIGWINCH leaves fragments behind.
+    public init(_ launch: PTYLaunch, scrollbackCapacity: Int = ScrollbackRing.defaultCapacity, spawnNow: Bool = true) throws {
         queue = DispatchQueue(label: "alethe.pty", qos: .userInteractive)
+        queue.setSpecific(key: Self.queueKey, value: ObjectIdentifier(queue))
         scrollback = ScrollbackRing(capacity: scrollbackCapacity)
+        self.launch = launch
+        if spawnNow { try spawnChild(size: launch.size) }
+    }
 
+    public var isSpawned: Bool { onQueue { pid > 0 } }
+
+    private static let queueKey = DispatchSpecificKey<ObjectIdentifier>()
+
+    /// Runs on `queue`, directly when already there (callbacks such as `onOutput` run on it).
+    private func onQueue<T>(_ body: () -> T) -> T {
+        DispatchQueue.getSpecific(key: Self.queueKey) == ObjectIdentifier(queue) ? body() : queue.sync(execute: body)
+    }
+
+    /// Spawns the child at `size` and starts reading; no-op once spawned or after `terminate`.
+    /// Call after `onOutput`/`onExit` are set.
+    public func spawn(size: PTYSize) throws {
+        let go = onQueue { pid == 0 && !cancelled }
+        guard go else { return }
+        try spawnChild(size: size)
+        start()
+    }
+
+    private func spawnChild(size: PTYSize) throws {
         var master: Int32 = -1
         let env = launch.environment.map { "\($0.key)=\($0.value)" }
+        let launch = launch
         let spawned: pid_t = withCStringArray(launch.arguments) { argv in
             withCStringArray(env) { envp in
                 alethe_pty_spawn(
                     launch.executable, argv, envp, launch.workingDirectory,
-                    launch.size.columns, launch.size.rows, &master
+                    size.columns, size.rows, &master
                 )
             }
         }
         guard spawned > 0 else { throw PTYError.spawnFailed(errno: errno) }
-        pid = spawned
-        masterFD = master
+        onQueue {
+            pid = spawned
+            masterFD = master
+            if size.widthPixels > 0 {
+                _ = alethe_pty_resize(master, size.columns, size.rows, size.widthPixels, size.heightPixels)
+            }
+        }
+        // Typed ahead of the spawn.
+        queue.async { [self] in
+            let pending = pendingInput
+            pendingInput = []
+            pending.forEach(writeNow)
+        }
     }
 
     /// Starts reading. Call after `onOutput`/`onExit` are set so no early output is lost.
     public func start() {
+        guard pid > 0 else { return }
         let read = DispatchSource.makeReadSource(fileDescriptor: masterFD, queue: queue)
         read.setEventHandler { [weak self] in self?.drain() }
         read.resume()
@@ -84,10 +129,50 @@ public final class PTYProcess: @unchecked Sendable {
         exit.setEventHandler { [weak self] in self?.reap() }
         exit.resume()
         exitSource = exit
+        // A child that exited before the source was registered never raises its event.
+        queue.async { [weak self] in self?.reapIfExited() }
+    }
+
+    /// Reaps the child if it already exited; `WNOWAIT` leaves it for `reap`'s `waitpid`.
+    private func reapIfExited() {
+        guard pid > 0, !exited else { return }
+        var info = siginfo_t()
+        if waitid(P_PID, id_t(pid), &info, WEXITED | WNOHANG | WNOWAIT) == 0, info.si_pid == pid {
+            reap()
+        }
     }
 
     public func write(_ data: Data) {
-        queue.async { [masterFD] in
+        queue.async { [self] in
+            guard masterFD >= 0 else {
+                if !cancelled { pendingInput.append(data) }
+                return
+            }
+            if !pendingInput.isEmpty {
+                let pending = pendingInput
+                pendingInput = []
+                pending.forEach(writeNow)
+            }
+            // A focus report (`ESC [ I` / `ESC [ O`) reaches a program that asked for them, but one still
+            // in cooked mode with echo — starting up — only echoes it back as `^[[I`.
+            if Self.isFocusReport(data), echoesInput() { return }
+            writeNow(data)
+        }
+    }
+
+    static func isFocusReport(_ data: Data) -> Bool {
+        data == Data([0x1B, 0x5B, 0x49]) || data == Data([0x1B, 0x5B, 0x4F])
+    }
+
+    /// The line discipline is canonical and echoing (a shell reading a line, a program before raw mode).
+    func echoesInput() -> Bool {
+        var attributes = termios()
+        guard masterFD >= 0, tcgetattr(masterFD, &attributes) == 0 else { return false }
+        return attributes.c_lflag & tcflag_t(ICANON) != 0 && attributes.c_lflag & tcflag_t(ECHO) != 0
+    }
+
+    private func writeNow(_ data: Data) {
+        let masterFD = masterFD
             data.withUnsafeBytes { raw in
                 guard var pointer = raw.baseAddress else { return }
                 var remaining = raw.count
@@ -103,11 +188,11 @@ public final class PTYProcess: @unchecked Sendable {
                     }
                 }
             }
-        }
     }
 
     public func resize(_ size: PTYSize) {
-        queue.async { [masterFD] in
+        queue.async { [self] in
+            guard masterFD >= 0 else { return }
             _ = alethe_pty_resize(masterFD, size.columns, size.rows, size.widthPixels, size.heightPixels)
         }
     }
@@ -124,7 +209,7 @@ public final class PTYProcess: @unchecked Sendable {
             pendingResize += 1
             let ticket = pendingResize
             queue.asyncAfter(deadline: .now() + seconds) { [weak self] in
-                guard let self, ticket == pendingResize, !exited else { return }
+                guard let self, ticket == pendingResize, !exited, masterFD >= 0 else { return }
                 _ = alethe_pty_resize(masterFD, size.columns, size.rows, size.widthPixels, size.heightPixels)
             }
         }
@@ -132,6 +217,16 @@ public final class PTYProcess: @unchecked Sendable {
 
     /// Sends a signal to the child's whole process group (the shell and what it runs).
     public func signal(_ signal: Int32 = SIGHUP) {
+        onQueue { signalOnQueue(signal) }
+    }
+
+    /// On `queue` only.
+    private func signalOnQueue(_ signal: Int32) {
+        guard pid > 0 else {
+            cancelled = true
+            pendingInput = []
+            return
+        }
         kill(-pid, signal)
     }
 
@@ -142,7 +237,7 @@ public final class PTYProcess: @unchecked Sendable {
         let seconds = Double(grace.components.seconds) + Double(grace.components.attoseconds) / 1e18
         queue.asyncAfter(deadline: .now() + seconds) { [weak self] in
             guard let self, !self.exited else { return }
-            self.signal(SIGKILL)
+            self.signalOnQueue(SIGKILL)
         }
     }
 
@@ -161,7 +256,8 @@ public final class PTYProcess: @unchecked Sendable {
             } else if count < 0, errno == EINTR {
                 continue
             } else {
-                // EAGAIN: drained for now. 0 / EIO: the slave side closed.
+                // EAGAIN: drained for now. 0 / EIO: the slave side closed, so the child is exiting.
+                if count == 0 || errno == EIO { queue.asyncAfter(deadline: .now() + 0.05) { [weak self] in self?.reapIfExited() } }
                 return
             }
         }
@@ -181,7 +277,7 @@ public final class PTYProcess: @unchecked Sendable {
     }
 
     deinit {
-        if !exited {
+        if !exited, pid > 0 {
             kill(-pid, SIGHUP)
             readSource?.cancel()
             exitSource?.cancel()
