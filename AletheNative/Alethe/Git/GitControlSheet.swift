@@ -12,6 +12,10 @@ struct GitControlSheet: View {
     let projectID: ProjectID?
     @State private var model: GitControlModel?
     @State private var pendingDiscard: GitStatusEntry?
+    @State private var tab = Tab.changes
+    @State private var history: GitHistoryModel?
+
+    private enum Tab: Hashable { case changes, history }
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
@@ -97,11 +101,37 @@ struct GitControlSheet: View {
     private func repositoryView(_ model: GitControlModel) -> some View {
         VStack(spacing: 0) {
             header(model)
+            Picker("git.tab", selection: $tab) {
+                Text("git.tab.changes").tag(Tab.changes)
+                Text("git.tab.history").tag(Tab.history)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, metrics.space(.l))
+            .padding(.bottom, metrics.space(.m))
+            .accessibilityIdentifier("git.tab")
             Divider()
-            changes(model)
-            Divider()
-            commitBox(model)
+            switch tab {
+            case .changes:
+                changes(model)
+                Divider()
+                commitBox(model)
+            case .history:
+                if let history {
+                    GitGraphView(history: history)
+                } else {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .task { history = makeHistory(model) }
+                }
+            }
         }
+    }
+
+    /// The History tab's model, created on first use for the discovered repository.
+    private func makeHistory(_ model: GitControlModel) -> GitHistoryModel? {
+        guard let repository = model.repository else { return nil }
+        return GitHistoryModel(repository: repository) { [weak model] in await model?.refresh() }
     }
 
     private func header(_ model: GitControlModel) -> some View {

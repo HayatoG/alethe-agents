@@ -30,7 +30,7 @@ final class GitControlModel {
     var message = ""
     var amend = false
 
-    private var repository: GitRepository?
+    private(set) var repository: GitRepository?
     /// The repository's top level; status paths are relative to it, not to `folder`.
     private(set) var root: URL?
     private var watcher: GitWatcher?
