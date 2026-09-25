@@ -18,6 +18,8 @@ enum EditorRequest: Identifiable, Hashable {
     case importTauri
     /// Custom grid designer for a project (upstream `LayoutDesignerModal`).
     case layoutDesigner(ProjectID)
+    /// Find/Jump (⌘K; upstream `FindJumpModal`).
+    case findJump
 
     var id: String {
         switch self {
@@ -31,6 +33,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .previewLink(let target): "previewLink:\(target)"
         case .importTauri: "importTauri"
         case .layoutDesigner(let id): "layoutDesigner:\(id)"
+        case .findJump: "findJump"
         }
     }
 }

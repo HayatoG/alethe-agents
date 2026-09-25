@@ -113,4 +113,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   priority. In Settings › Resources you can let Alethe hibernate idle hidden terminals — always
   after an idle limit, or only when memory is critical. A hibernated terminal keeps its output and
   picks up its session again as soon as you show it.
+- Find or Jump (⌘K): type a few letters of a terminal, project or command and press Return — results
+  are ranked by how well they match, so “cli” finds client-site. Commands like New Terminal, Flat
+  Workspace or a project layout run from the same field.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

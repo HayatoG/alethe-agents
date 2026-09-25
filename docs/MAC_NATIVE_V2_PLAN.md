@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-24 (P2-1…P2-5 tested; P2-6…P2-24
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-25 (P2-1…P2-5 tested; P2-6…P2-25
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-25. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-26. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1384,8 +1384,20 @@ they run per the test cadence above.
   *Tests (written, not run — owner decision 2026-09-24):* `ResourcePolicyTests` (9, the upstream cases
   plus idle mode and mounted tabs), P `SystemResourcesTests` (memory sane; a spawned process tree is
   measured and gives everything back once ended). Compiled.
-- [ ] **P2-25 (M) Find/Jump (⌘K).** Fuzzy search over projects, terminals and commands. *Tests:* U
+- [x] **P2-25 (M) Find/Jump (⌘K).** Fuzzy search over projects, terminals and commands. *Tests:* U
   (ranking port), UI, HT. *Parity:* SET-10.
+  *Done:* `AletheModel/FuzzyMatch`: every query character in order (spaces ignored), the match
+  tightened to its shortest window, scored for consecutive runs, word starts (space, `-`, `_`, `/`, `.`,
+  camelCase), the text start and exact case, minus spread, late start and length; `rank` keeps the best
+  field per item and is stable, so an empty query keeps the given order. Upstream filters by substring;
+  ranking is the native improvement the plan asked for. `Editors/FindJumpSheet` (History › Find or
+  Jump… ⌘K, also a launcher row): one field over terminals (title, project, folder), projects and
+  commands (`JumpCommand`: new terminal/project/group, add content, reopen tab, flat workspace, focus
+  pane, layouts and Design Grid for the selected project, Tauri import, Settings — each with its
+  shortcut shown, only when it applies); ↑/↓ move, ↩ or a click jumps (a terminal's project opens in its
+  tab, the terminal is shown and focused), Esc closes, 50 results.
+  *Tests (written, not run — owner decision 2026-09-24):* `FuzzyMatchTests` (5), UI `FindJumpTests` (jump
+  to a project, run a command, nothing found + Esc, HT at three zoom levels). Compiled.
 - [ ] **P2-26 (S) Resume last session and close confirmation.** Reopen the last workspace or start
   clean; confirm quitting with running agents. *Tests:* UI. *Parity:* SE-2, SET-12.
 - [ ] **P2-27 (S) Visual style and motion.** Normal/clean style (sidebar Clean mode included) and the
@@ -1463,7 +1475,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | WS-10 | Focus mode | P2 | Done | P2-21; double-click header, ⇧⌘F, Esc/backdrop to leave |
 | WS-11 | Add content | P2 | Done | Markdown (P2-9), image/video (P2-10), Git changes (P2-11), website (P2-12); orchestration with ORC-1 |
 | WS-12 | Link viewer overlay | P2 | Done | P2-14; sheet + link actions menu (⇧⌘-click) |
-| WS-13 | Empty workspace launcher | P2 | Done | P2-22; Find/Jump row added with P2-25 |
+| WS-13 | Empty workspace launcher | P2 | Done | P2-22; Find/Jump row (P2-25) |
 | WS-14 | Disable terminal/project, suspend group | P2 | Done | P2-23; processes end with output kept (upstream behavior, not SIGSTOP) |
 | TERM-1 | Real PTYs + process tree | P1 | Partial | Spawn/resize/restart/kill done (P1-7); shell integration marks (P2-3); process-tree kill (P2-2); process-tree info later |
 | TERM-2 | Sub-tabs lane | P2 | Done | P2-1; close is undoable instead of confirmed |
@@ -1540,7 +1552,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SET-7 | Onboarding + welcome | P5 | Not started | Tauri import done as File menu item (P1-12); onboarding offers it in P5 |
 | SET-8 | Updater + What's New | P8 | Not started | Sparkle |
 | SET-9 | Notifications | P3 | Not started | |
-| SET-10 | Find/Jump | P2 | Not started | |
+| SET-10 | Find/Jump | P2 | Done | P2-25; ⌘K, fuzzy ranking (upstream substring), terminals + projects + commands |
 | SET-11 | Audit center | P5 | Replaced | OSLog + diagnostic export |
 | SET-12 | Close confirmation | P2 | Not started | |
 | SET-13 | Keyboard shortcuts | P1, ongoing | Partial | ⌘N, ⇧⌘N, ⌘O, ⌘T, ⌘,, zoom, undo (P1-1…P1-9); §6.3 |

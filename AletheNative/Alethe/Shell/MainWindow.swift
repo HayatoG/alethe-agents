@@ -59,6 +59,8 @@ struct MainWindow: View {
             TauriImportSheet(workspace: workspace, undoManager: undoManager)
         case .layoutDesigner(let project):
             LayoutDesignerSheet(workspace: workspace, undoManager: undoManager, projectID: project)
+        case .findJump:
+            FindJumpSheet(workspace: workspace, undoManager: undoManager)
         }
     }
 

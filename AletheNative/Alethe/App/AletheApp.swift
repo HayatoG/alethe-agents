@@ -144,6 +144,10 @@ private struct HistoryCommands: Commands {
 
     var body: some Commands {
         CommandMenu("menu.history") {
+            Button("menu.history.findJump") { environment.editorRequest = .findJump }
+                .keyboardShortcut("k", modifiers: .command)
+                .disabled(environment.workspace == nil)
+            Divider()
             Button("menu.view.back") { environment.workspace?.update { $0.navigateHistory(-1) } }
                 .keyboardShortcut("[", modifiers: .command)
                 .disabled(document?.canGoBack != true)

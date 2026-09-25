@@ -49,6 +49,9 @@ struct WorkspaceLauncher: View {
                     workspace.update { $0.openInTab(project.id) }
                 }
             }
+            row(Text("menu.history.findJump"), keys: ["⌘", "K"], id: "launcher.findJump") {
+                environment.editorRequest = .findJump
+            }
             row(Text("menu.file.newTerminal"), keys: ["⌘", "T"], id: "launcher.newTerminal") {
                 environment.editorRequest = .newTerminal(nil)
             }
