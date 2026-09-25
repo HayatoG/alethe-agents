@@ -27,6 +27,14 @@ final class TerminalRegistry {
     private(set) var generations: [TabID: Int] = [:]
     /// Tabs ended to save memory (P2-24); each starts again, resuming its session, when shown.
     private(set) var hibernated: Set<TabID> = []
+    /// What each running agent is doing (P3-9): from hooks where the agent has them, else inferred
+    /// from its traffic.
+    private(set) var activity: [TabID: AgentActivity] = [:]
+    /// Called on every activity change (notifications, P3-11).
+    @ObservationIgnored var onActivityChange: ((TabID, AgentActivity, AgentHookEvent?) -> Void)?
+    @ObservationIgnored let hooks = AgentHookHub()
+    @ObservationIgnored private var watches: [TabID: ActivityWatch] = [:]
+    @ObservationIgnored private var ticker: Timer?
     @ObservationIgnored private var views: [TabID: TerminalPaneView] = [:]
     @ObservationIgnored private var claims = SessionClaims()
     /// How each live process was started, for the early-exit fallback.
@@ -75,9 +83,51 @@ final class TerminalRegistry {
         generations.removeValue(forKey: tab)
         discoveries.removeValue(forKey: tab)?.cancel()
         preparing.remove(tab)
+        watches.removeValue(forKey: tab)?.stop()
+        activity.removeValue(forKey: tab)
         launches.removeValue(forKey: tab)
         retriedFresh.remove(tab)
         claims.release(owner: tab.rawValue)
+    }
+
+    /// A hook event for a tab: its activity, and the conversation it is on now (Claude moves to a new
+    /// id after `/clear` or an in-CLI `/resume`; upstream `trackClaudeSessionHook`).
+    func apply(_ event: AgentHookEvent, to tab: TabID) {
+        guard states[tab] == .running else { return }
+        if let session = event.sessionID, let environment = hookEnvironment,
+           let (project, pane) = environment.workspace?.document.paneHolding(tab),
+           let item = pane.tabs.first(where: { $0.id == tab }), item.sessionID != session {
+            let cwd = item.workingDirectory ?? project.folder
+            claims.release(owner: tab.rawValue)
+            claims.register(AgentKind(rawValue: item.agent), cwd: cwd, sessionID: session, owner: tab.rawValue)
+            environment.workspace?.update { $0.updateTab(tab) { $0.sessionID = session } }
+        }
+        if let next = event.activity { setActivity(next, for: tab, event: event) }
+    }
+
+    /// Set by the environment so hook events can reach the workspace.
+    @ObservationIgnored weak var hookEnvironment: AppEnvironment?
+
+    private func setActivity(_ next: AgentActivity, for tab: TabID, event: AgentHookEvent? = nil) {
+        guard activity[tab] != next else { return }
+        activity[tab] = next
+        onActivityChange?(tab, next, event)
+    }
+
+    /// Traffic heuristics for a tab: a submitted prompt means working; for agents without turn hooks,
+    /// quiet after a response means done (upstream `AgentCompletionMonitor`).
+    private func watch(_ tab: TabID, view: TerminalPaneView, heuristicTurns: Bool) {
+        watches.removeValue(forKey: tab)?.stop()
+        let watch = ActivityWatch(tap: view.tap, endsTurns: heuristicTurns) { [weak self] next in
+            Task { @MainActor in self?.setActivity(next, for: tab) }
+        }
+        watches[tab] = watch
+        setActivity(.idle, for: tab)
+        if ticker == nil {
+            ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.watches.values.forEach { $0.tick() } }
+            }
+        }
     }
 
     /// Running terminals with their views, for the resource monitor.
@@ -217,7 +267,8 @@ final class TerminalRegistry {
             workingDirectory: cwd,
             extraArguments: tab.extraArguments,
             sessionID: sessionID,
-            unrestricted: tab.unrestricted
+            unrestricted: tab.unrestricted,
+            hooks: hooks.launch(for: tab.id, kind: kind)
         )
         do {
             let command = try environment.agentLauncher.command(for: request)
@@ -262,6 +313,7 @@ final class TerminalRegistry {
             }
             views[tab.id] = view
             states[tab.id] = .running
+            if kind != .shell { watch(tab.id, view: view, heuristicTurns: !hooks.reportsTurns(kind)) }
             launches[tab.id] = (.now, sessionID != nil)
             if let prompt = tab.initialPrompt, kind != .shell {
                 deliver(prompt, to: view, tab: tab.id, style: kind == .opencode ? .typeAndConfirm : .paste,
@@ -284,5 +336,43 @@ final class TerminalRegistry {
             states[tab.id] = .failed(message: String(describing: error))
         }
         generations[tab.id, default: 0] += 1
+    }
+}
+
+/// One tab's traffic heuristics, fed from the terminal tap off the main thread.
+final class ActivityWatch: @unchecked Sendable {
+    private let lock = NSLock()
+    private var monitor = ActivityMonitor()
+    private let tap: TerminalIOTap
+    private var observers: [UUID] = []
+    private let endsTurns: Bool
+    private let report: @Sendable (AgentActivity) -> Void
+
+    init(tap: TerminalIOTap, endsTurns: Bool, report: @escaping @Sendable (AgentActivity) -> Void) {
+        self.tap = tap
+        self.endsTurns = endsTurns
+        self.report = report
+        observers.append(tap.observeInput { [weak self] data in
+            guard let self else { return }
+            let now = Date().timeIntervalSinceReferenceDate
+            if let next = self.lock.withLock({ self.monitor.input(String(decoding: data, as: UTF8.self), at: now) }) {
+                self.report(next)
+            }
+        })
+        observers.append(tap.observeOutput { [weak self] data in
+            guard let self else { return }
+            let now = Date().timeIntervalSinceReferenceDate
+            self.lock.withLock { self.monitor.output(String(decoding: data, as: UTF8.self), at: now) }
+        })
+    }
+
+    func tick() {
+        guard endsTurns else { return }
+        let now = Date().timeIntervalSinceReferenceDate
+        if let next = lock.withLock({ monitor.tick(at: now) }) { report(next) }
+    }
+
+    func stop() {
+        for id in observers { tap.remove(id) }
     }
 }

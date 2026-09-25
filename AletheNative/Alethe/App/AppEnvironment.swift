@@ -89,6 +89,9 @@ final class AppEnvironment {
             editorRequest = .previewLink(.file(locations.root.appending(path: name).path))
         }
         #endif
+        // The hook bridge listens before any terminal starts, so the first launches are wired too.
+        terminals.hookEnvironment = self
+        await terminals.hooks.start(terminals: terminals)
         self.profiles = profiles
         self.workspace = loadedWorkspace
         self.preferences = loadedPreferences
@@ -130,6 +133,7 @@ final class AppEnvironment {
     /// Writes every pending change; called before the app quits.
     func flush() async {
         terminals.terminateAll()
+        terminals.hooks.stop()
         await workspace?.flush()
         await preferences?.flush()
         await promptHistory?.flush()

@@ -9,14 +9,27 @@ public struct AgentLaunchRequest: Sendable {
     /// Session to resume, when the tab already owns one.
     public var sessionID: String?
     public var unrestricted: Bool
+    /// Hook bridge wiring for this launch (P3-9): Claude's `--settings` file, Codex's `notify`.
+    public var hooks: HookLaunch?
+
+    public struct HookLaunch: Sendable {
+        public var claudeSettingsPath: String?
+        public var codexArguments: [String]
+
+        public init(claudeSettingsPath: String? = nil, codexArguments: [String] = []) {
+            self.claudeSettingsPath = claudeSettingsPath
+            self.codexArguments = codexArguments
+        }
+    }
 
     public init(kind: AgentKind, workingDirectory: String? = nil, extraArguments: [String] = [],
-                sessionID: String? = nil, unrestricted: Bool = false) {
+                sessionID: String? = nil, unrestricted: Bool = false, hooks: HookLaunch? = nil) {
         self.kind = kind
         self.workingDirectory = workingDirectory
         self.extraArguments = extraArguments
         self.sessionID = sessionID
         self.unrestricted = unrestricted
+        self.hooks = hooks
     }
 }
 
@@ -89,8 +102,17 @@ public struct AgentLauncher: Sendable {
         if request.unrestricted, let flag = descriptor.unrestrictedFlag, !base.contains(flag) {
             base.append(flag)
         }
-        let session = AgentArguments.build(for: request.kind, base: base, sessionID: request.sessionID,
+        var session = AgentArguments.build(for: request.kind, base: base, sessionID: request.sessionID,
                                            makeSessionID: makeSessionID)
+        if let hooks = request.hooks {
+            if request.kind == .claude, let path = hooks.claudeSettingsPath {
+                // After the session flags, as upstream places it.
+                session.arguments.insert(contentsOf: ["--settings", path], at: min(2, session.arguments.count))
+            } else if request.kind == .codex, !hooks.codexArguments.isEmpty {
+                // Config overrides go before a `resume` subcommand.
+                session.arguments = hooks.codexArguments + session.arguments
+            }
+        }
         if request.kind == .opencode {
             // OpenTUI's explicit-width probe prints stray bytes in terminals that don't answer it.
             environment["OPENTUI_FORCE_EXPLICIT_WIDTH"] = "false"

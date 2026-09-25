@@ -143,4 +143,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Terminal › Session Cost… shows what an agent session used — tokens per model and the cost where it
   is known (Claude Code, and OpenCode's own figure; Codex shows tokens). Conversations shows the same
   for the conversation you select.
+- Alethe now knows what each agent is doing — working, waiting for you, or done — from Claude Code's
+  and Codex's own events (without touching your settings) and, for other agents, from their output.
+  A Claude conversation that you `/clear` or `/resume` stays bound to its terminal.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

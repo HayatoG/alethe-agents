@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-9. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-10. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1600,11 +1600,32 @@ ship; they run per the test cadence above.
   Conversations list. All reading runs off the main thread.
   *Tests (written, not run — owner decision):* `SessionCostTests` (4, including a real SQLite fixture).
   Compiled.
-- [ ] **P3-9 (L) Agent hook bridge.** A local HTTP endpoint on Network.framework (loopback, random port,
+- [x] **P3-9 (L) Agent hook bridge.** A local HTTP endpoint on Network.framework (loopback, random port,
   per-launch token) receiving Claude Code hooks and Codex notifications, wired per launch without
   touching the user's own settings where the CLI allows it (upstream `agent_hooks_*`,
   `codex_hooks_config_write`); events become each tab's state (working, waiting for input, done).
   *Tests:* U (event parsing, config writing), P (endpoint round trip). *Parity:* AG-8.
+  *Done:* `AletheAgents/AgentHookServer`: the bridge endpoint on Network.framework (`NWListener` bound to
+  127.0.0.1, a port the system picks — upstream tries 9123…9143 — and a per-launch token); a minimal
+  HTTP/1.1 reader (`HTTPRequest`: request line, headers, `Content-Length` body up to 1 MB); `POST
+  /hook/<agent>` with `X-Alethe-Token` and `X-Alethe-Tab` reaches the handler, anything else gets 401,
+  404, 413 or 400. `AletheAgents/AgentHooks`: `AgentActivity` (idle, working, needs input, done),
+  `AgentHookEvent` (Claude Code `SessionStart` / `UserPromptSubmit` carry the session — upstream
+  `claudeSessionFromHook` — and mean idle / working; `Stop` is done; `Notification` is needs-input, except
+  Claude's 60 s idle reminder; Codex `agent-turn-complete` is done), `AgentHookWiring` (a Claude settings
+  file layered with `--settings`, which leaves the user's own settings alone — upstream
+  `agent_hooks_settings_path`; Codex `-c notify=[…]` running a forwarder script that curls the event
+  back, instead of upstream's edit of `.codex/config.toml`), `ActivityMonitor` (port of upstream
+  `AgentCompletionMonitor`: a submitted prompt arms it, real output beyond the echo makes it working,
+  4.5 s of quiet ends the turn). `AgentLaunchRequest.hooks` places `--settings` after Claude's session
+  flags and the Codex override before `resume`. App: `Terminals/AgentHookHub` starts the endpoint before
+  any terminal launches, writes the per-tab files in a private (0700) temporary folder and removes it on
+  quit; `TerminalRegistry.activity` per running agent tab, from hooks and from `ActivityWatch` (the
+  monitor fed by the terminal tap, ticking once a second; it does not end Claude's turns, whose `Stop`
+  hook does); hook sessions rebind the tab's conversation after `/clear` or `/resume` (upstream
+  `trackClaudeSessionHook`); `onActivityChange` for notifications (P3-11). Shown in P3-10.
+  *Tests (written, not run — owner decision):* `AgentHooksTests` (7, including a P loopback round trip).
+  Compiled.
 - [ ] **P3-10 (M) Live titles and busy/done glyphs.** Chat titles from the sessions (upstream
   `get_*_session_title`) in the sidebar, lane and tab bar; working / waiting / done glyphs with unread
   completion (upstream `completionUnread`). *Tests:* U, UI. *Parity:* SB-5.
@@ -1724,7 +1745,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | AG-5 | Install/update/uninstall CLIs | P3 | Done | P3-3; macOS commands from each vendor's docs (script, Homebrew, npm) |
 | AG-6 | Enable/disable agents | P3 | Done | P3-2; Settings › Agents |
 | AG-7 | Claude ↔ Codex handoff | P3 | Not started | |
-| AG-8 | Agent hook bridge | P3 | Not started | |
+| AG-8 | Agent hook bridge | P3 | Done | P3-9; loopback endpoint (Network.framework), Claude --settings, Codex notify forwarder, traffic fallback |
 | AG-9 | Model discovery | P3 | Done | P3-5; real listings + Claude aliases, no stale fallback lists; any id can be typed |
 | SE-1 | Session auto-resume (5 providers) | P1 (2), P3 | Done | Claude + Codex (P1-10); OpenCode, Antigravity, Cursor (P3-6) |
 | SE-2 | Resume last session | P2 | Done | P2-26; Terminal › Resume Previous Conversations (Claude Code, Codex) |
