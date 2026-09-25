@@ -25,6 +25,10 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var cliPaths: [String: String]?
     /// When idle terminals may be hibernated (P2-24); nil is the default policy.
     public var resourcePolicy: ResourcePolicy?
+    /// Open with an empty workspace instead of the last one (P2-26; upstream `alwaysStartOnHome`).
+    public var startClean: Bool?
+    /// Ask before quitting while terminals run (P2-26); nil means yes.
+    public var confirmQuit: Bool?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

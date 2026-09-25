@@ -290,6 +290,12 @@ extension WorkspaceDocument {
         }
     }
 
+    /// Launch without the last view: nothing open, no active tab; the tab bar stays to pick from.
+    public mutating func startClean() {
+        workspace.activeTabID = nil
+        apply(WorkspaceSnapshot())
+    }
+
     /// Drops references to deleted projects from tabs, closed tabs and history.
     mutating func repairNavigation() {
         let known = Set(projects.map(\.id))

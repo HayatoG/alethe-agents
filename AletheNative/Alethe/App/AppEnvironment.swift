@@ -60,6 +60,7 @@ final class AppEnvironment {
         async let promptHistory = PromptHistoryModel.load(from: locations.promptHistory(profile))
         let (loadedWorkspace, loadedPreferences, loadedHistory) = await (workspace, preferences, promptHistory)
         loadedWorkspace.update { $0.repair() }
+        if loadedPreferences.document.startClean == true { loadedWorkspace.update { $0.startClean() } }
         let tabs = Set(loadedWorkspace.document.projects.flatMap(\.panes).flatMap(\.tabs).map(\.id))
         if loadedHistory.document.histories.keys.contains(where: { !tabs.contains(TabID(rawValue: $0)) }) {
             loadedHistory.update { $0.prune(keeping: tabs) }
@@ -94,6 +95,16 @@ final class AppEnvironment {
         for file in files where file.pathExtension == "bin" && !names.contains(file.lastPathComponent) {
             try? FileManager.default.removeItem(at: file)
         }
+    }
+
+    /// Running terminals, agents counted apart (the quit confirmation names them).
+    var runningTerminals: (agents: Int, shells: Int) {
+        guard let document = workspace?.document else { return (0, 0) }
+        var agents = 0, shells = 0
+        for (tab, _) in terminals.running {
+            if document.paneHolding(tab)?.pane.tabs.first(where: { $0.id == tab })?.agent == "shell" { shells += 1 } else { agents += 1 }
+        }
+        return (agents, shells)
     }
 
     /// Writes every pending change; called before the app quits.

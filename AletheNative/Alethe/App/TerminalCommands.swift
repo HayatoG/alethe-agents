@@ -1,4 +1,5 @@
 import AletheModel
+import AppKit
 import AletheTerminal
 import SwiftUI
 
@@ -31,6 +32,9 @@ struct TerminalCommands: Commands {
                 .keyboardShortcut(.downArrow, modifiers: [.command, .option])
                 .disabled(focusedTerminal == nil)
             Divider()
+            Button("menu.terminal.resumePrevious") { resumePrevious() }
+                .disabled(environment.terminals.running.isEmpty)
+            Divider()
             Button("menu.terminal.previousPrompt") { focusedTerminal?.jumpToPrompt(-1) }
                 .keyboardShortcut(.upArrow, modifiers: .command)
                 .disabled(focusedTerminal == nil)
@@ -38,6 +42,26 @@ struct TerminalCommands: Commands {
                 .keyboardShortcut(.downArrow, modifiers: .command)
                 .disabled(focusedTerminal == nil)
         }
+    }
+
+    /// Confirms when several agents would restart, then reports the outcome.
+    @MainActor private func resumePrevious() {
+        let agents = environment.runningTerminals.agents
+        if agents > 1 {
+            let confirm = NSAlert()
+            confirm.messageText = String(format: String(localized: "resumePrevious.confirm"), agents)
+            confirm.addButton(withTitle: String(localized: "resumePrevious.action"))
+            confirm.addButton(withTitle: String(localized: "editor.cancel"))
+            guard confirm.runModal() == .alertFirstButtonReturn else { return }
+        }
+        let result = environment.terminals.resumePreviousConversations(environment: environment)
+        let report = NSAlert()
+        if result.total == 0 {
+            report.messageText = String(localized: "resumePrevious.none")
+        } else {
+            report.messageText = String(format: String(localized: "resumePrevious.done"), result.resumed, result.total)
+        }
+        report.runModal()
     }
 
     @MainActor private var focusedTerminal: TerminalPaneView? {

@@ -49,4 +49,22 @@ public enum SessionResume {
         }
         return nil
     }
+
+    /// The conversation before the current one (upstream `resetLastSession` `pickSessionId`): the
+    /// newest session other than `current`, preferring those last written before `before` (when the
+    /// current process started); nil when there is none.
+    public static func previous(in sessions: [SessionSnapshot], excluding current: String?, before: Date?) -> String? {
+        let candidates = sessions.filter { $0.id != current }
+        let older = before.map { date in candidates.filter { $0.modifiedAt < date } } ?? []
+        return (older.isEmpty ? candidates : older).max { $0.modifiedAt < $1.modifiedAt }?.id
+    }
+
+    /// Sessions of an agent for a folder, newest first; empty for agents without readable sessions.
+    public static func sessions(_ kind: AgentKind, cwd: String) -> [SessionSnapshot] {
+        switch kind {
+        case .claude: ClaudeSessions.snapshot(cwd: cwd)
+        case .codex: CodexSessions.snapshot(cwd: cwd)
+        default: []
+        }
+    }
 }

@@ -90,6 +90,28 @@ final class TerminalRegistry {
         hibernated.insert(tab)
     }
 
+    /// Restarts every running agent on the conversation before its current one (upstream
+    /// `resetLastSession`); returns how many were resumed and how many were running.
+    func resumePreviousConversations(environment: AppEnvironment) -> (resumed: Int, total: Int) {
+        guard let document = environment.workspace?.document else { return (0, 0) }
+        var resumed = 0, total = 0
+        for (tab, view) in running {
+            guard let (project, pane) = document.paneHolding(tab), let item = pane.tabs.first(where: { $0.id == tab }) else { continue }
+            let kind = AgentKind(rawValue: item.agent)
+            guard kind != .shell else { continue }
+            total += 1
+            let sessions = SessionResume.sessions(kind, cwd: item.workingDirectory ?? project.folder)
+            guard let previous = SessionResume.previous(in: sessions, excluding: item.sessionID, before: view.startedAt)
+            else { continue }
+            environment.workspace?.update { $0.updateTab(tab) { $0.sessionID = previous } }
+            var next = item
+            next.sessionID = previous
+            restart(next, in: project, environment: environment)
+            resumed += 1
+        }
+        return (resumed, total)
+    }
+
     /// A disabled terminal: its process ends, its saved output stays for when it is enabled again.
     func suspend(_ tab: TabID) {
         guard states[tab] != nil else { return }

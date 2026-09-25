@@ -3129,6 +3129,23 @@
         }
       }
     },
+    "menu.terminal.resumePrevious" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume Previous Conversations"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retomar Conversas Anteriores"
+          }
+        }
+      }
+    },
     "menu.terminal.useSelection" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4081,6 +4098,74 @@
         }
       }
     },
+    "quit.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerrar"
+          }
+        }
+      }
+    },
+    "quit.dontAsk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't ask again"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não perguntar de novo"
+          }
+        }
+      }
+    },
+    "quit.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld agents and %lld shells are running and will stop. Saved conversations resume the next time you open Alethe."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld agentes e %lld shells estão rodando e vão parar. As conversas salvas são retomadas na próxima vez que você abrir o Alethe."
+          }
+        }
+      }
+    },
+    "quit.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit Alethe?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerrar o Alethe?"
+          }
+        }
+      }
+    },
     "resources.agentIdle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4247,6 +4332,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Shells: %lld min"
+          }
+        }
+      }
+    },
+    "resumePrevious.action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retomar"
+          }
+        }
+      }
+    },
+    "resumePrevious.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart %lld running agents on their previous conversations?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar %lld agentes em execução nas conversas anteriores?"
+          }
+        }
+      }
+    },
+    "resumePrevious.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumed %lld of %lld agents on their previous conversation."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld de %lld agentes retomados na conversa anterior."
+          }
+        }
+      }
+    },
+    "resumePrevious.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No running agent to resume."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum agente em execução para retomar."
           }
         }
       }
@@ -4434,6 +4587,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Novas sessões de agentes pulam as confirmações de permissão (por exemplo, o --dangerously-skip-permissions do Claude Code)."
+          }
+        }
+      }
+    },
+    "settings.general.confirmQuit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask before quitting while terminals run"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perguntar antes de encerrar com terminais rodando"
+          }
+        }
+      }
+    },
+    "settings.general.confirmQuit.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitting stops every agent and shell."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerrar para todos os agentes e shells."
+          }
+        }
+      }
+    },
+    "settings.general.startClean" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open with an empty workspace"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir com o workspace vazio"
+          }
+        }
+      }
+    },
+    "settings.general.startClean.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your workspace tabs stay in the tab bar; nothing is open until you pick one."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suas abas de workspace ficam na barra; nada fica aberto até você escolher uma."
           }
         }
       }

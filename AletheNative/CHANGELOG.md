@@ -116,4 +116,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Find or Jump (⌘K): type a few letters of a terminal, project or command and press Return — results
   are ranked by how well they match, so “cli” finds client-site. Commands like New Terminal, Flat
   Workspace or a project layout run from the same field.
+- Alethe asks before quitting while terminals are running (with a “Don't ask again” option, also in
+  Settings › General). Settings › General › Open with an empty workspace starts with nothing open,
+  your workspace tabs ready to pick.
+- Terminal › Resume Previous Conversations restarts your running agents on the conversation they
+  had before the current one.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

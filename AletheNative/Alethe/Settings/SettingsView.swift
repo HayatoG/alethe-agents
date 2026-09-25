@@ -32,8 +32,26 @@ private struct GeneralSettings: View {
             }
             .disabled(environment.preferences == nil)
             .accessibilityIdentifier("settings.alwaysUnrestricted")
+            Toggle(isOn: optional(\.startClean, default: false)) {
+                Text("settings.general.startClean")
+                Text("settings.general.startClean.help")
+            }
+            .accessibilityIdentifier("settings.startClean")
+            Toggle(isOn: optional(\.confirmQuit, default: true)) {
+                Text("settings.general.confirmQuit")
+                Text("settings.general.confirmQuit.help")
+            }
+            .accessibilityIdentifier("settings.confirmQuit")
         }
         .formStyle(.grouped)
+    }
+
+    private func optional(_ keyPath: WritableKeyPath<PreferencesDocument, Bool?>, default value: Bool) -> Binding<Bool> {
+        Binding {
+            environment.preferences?.document[keyPath: keyPath] ?? value
+        } set: { newValue in
+            environment.preferences?.update { $0[keyPath: keyPath] = newValue == value ? nil : newValue }
+        }
     }
 
     private func binding(_ keyPath: WritableKeyPath<PreferencesDocument, Bool>) -> Binding<Bool> {
