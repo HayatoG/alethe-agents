@@ -172,7 +172,7 @@ public enum GitDiff {
             let errorText = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
             process.waitUntilExit()
             guard process.terminationStatus == 0 else {
-                if errorText.contains("not a git repository") { return .failure(.notARepository) }
+                if errorText.localizedCaseInsensitiveContains("not a git repository") { return .failure(.notARepository) }
                 return .failure(.failed(errorText.trimmingCharacters(in: .whitespacesAndNewlines)))
             }
             if data.count > maxBytes { return .failure(.tooLarge) }

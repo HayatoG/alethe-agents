@@ -20,8 +20,11 @@ public enum TerminalLink: Equatable, Sendable {
     ///   - fileKind: whether a path exists and is a directory (nil: missing); injected for tests.
     public static func resolve(_ raw: String, cwd: String?, home: String = NSHomeDirectory(),
                                fileKind: (String) -> Bool? = TerminalLink.fileKind) -> TerminalLink {
-        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: CharacterSet(charactersIn: ".,;:)]}'\"`"))
+        // Sentence punctuation after a link, and quotes or brackets around it; a leading `.` stays
+        // (`./file`, `../dir`, `.env`).
+        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        while let last = text.last, ".,;:)]}'\"`".contains(last) { text.removeLast() }
+        while let first = text.first, "([{'\"`".contains(first) { text.removeFirst() }
         guard !text.isEmpty else { return .none }
 
         // `README.md:12` parses as a URL with scheme "README.md": a scheme has no dots, and a
