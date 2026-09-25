@@ -18,6 +18,7 @@ struct MainWindow: View {
         } detail: {
             WorkspaceView()
                 .toolbar {
+                    ToolbarItem(placement: .primaryAction) { NotificationsButton() }
                     ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
                 }
         }

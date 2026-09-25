@@ -5,7 +5,7 @@
 > tab close button's accessibility frame
 > is off screen (clicks where drawn work; VoiceOver affected). Manual checks owed: prompt redraw after
 > resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: P3-11. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P3-12. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1641,9 +1641,21 @@ ship; they run per the test cadence above.
   sidebar and the pane header, and on the lane item.
   *Deviation:* unread completions are kept for the session, not saved (upstream persists the flag).
   *Tests (written, not run — owner decision):* `ConversationHistoryTests` (+1). Compiled.
-- [ ] **P3-11 (M) Notifications.** UserNotifications when an agent finishes or waits for input while its
+- [x] **P3-11 (M) Notifications.** UserNotifications when an agent finishes or waits for input while its
   pane is not in view, 5 s dedupe, clicking jumps to the tab; an in-app list for Home. *Tests:* U
   (dedupe, routing), UI. *Parity:* SET-9, HOME-5 (data).
+  *Done:* `AletheModel/NotificationLog` (upstream `uiStore.notifications`: 12 newest, the same title
+  and body within 5 s dropped, an unseen count). `Terminals/AgentNotifier` follows
+  `TerminalRegistry.onActivityChange`: when an agent finishes or needs an answer and its tab is not the
+  focused pane's shown tab in the active app, an entry ("Claude Code finished", the hook's message or
+  "<tab> in <project>") joins the list; with Alethe in the background it also goes to macOS through
+  UserNotifications (permission asked on first use, threaded per tab). Clicking the macOS notification
+  or an entry opens the tab's project, shows the tab and reads its completion. Toolbar bell (badged while
+  there are unseen entries) with `NotificationList`, which Home reuses (P3-15). Settings › General › Notify
+  me when agents finish or need an answer (`PreferencesDocument.notifyAgents`, on by default).
+  *Deviation:* no transient in-app toasts (the Mac idiom is the bell and Notification Center); limit-reset
+  and Pomodoro notifications arrive with their features (P3-13, Phase 7).
+  *Tests (written, not run — owner decision):* `NotificationLogTests` (2), UI `NotificationsTests`. Compiled.
 - [ ] **P3-12 (L) Claude Code ↔ Codex handoff.** Prepare a handoff from one agent's conversation,
   materialize it for the other and continue in a new sub-tab (upstream `HandoffModal`,
   `prepare/materialize/complete_agent_handoff`, `handoffs/`). *Tests:* U (handoff documents), UI.
@@ -1805,7 +1817,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SET-6 | Cloud sync | — | Won't port | Upstream server not shipped (localhost default); revisit if it ships |
 | SET-7 | Onboarding + welcome | P5 | Not started | Tauri import done as File menu item (P1-12); onboarding offers it in P5 |
 | SET-8 | Updater + What's New | P8 | Not started | Sparkle |
-| SET-9 | Notifications | P3 | Not started | |
+| SET-9 | Notifications | P3 | Done | P3-11; agent done / needs-input, UserNotifications in the background, toolbar list |
 | SET-10 | Find/Jump | P2 | Done | P2-25; ⌘K, fuzzy ranking (upstream substring), terminals + projects + commands |
 | SET-11 | Audit center | P5 | Replaced | OSLog + diagnostic export |
 | SET-12 | Close confirmation | P2 | Done | P2-26; quit confirmation with Don't ask again; Settings toggle |

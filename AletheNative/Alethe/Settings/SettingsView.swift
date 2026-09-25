@@ -45,6 +45,11 @@ private struct GeneralSettings: View {
                 Text("settings.general.confirmQuit.help")
             }
             .accessibilityIdentifier("settings.confirmQuit")
+            Toggle(isOn: optional(\.notifyAgents, default: true)) {
+                Text("settings.general.notifyAgents")
+                Text("settings.general.notifyAgents.help")
+            }
+            .accessibilityIdentifier("settings.notifyAgents")
         }
         .formStyle(.grouped)
     }

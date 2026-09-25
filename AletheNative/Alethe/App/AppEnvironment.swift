@@ -28,6 +28,8 @@ final class AppEnvironment {
     let resources = ResourceMonitor()
     /// Agent CLI installs, one at a time (P3-3).
     let installer = AgentInstaller()
+    /// Agent notifications and the in-app list (P3-11).
+    let notifier = AgentNotifier()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -91,6 +93,7 @@ final class AppEnvironment {
         #endif
         // The hook bridge listens before any terminal starts, so the first launches are wired too.
         terminals.hookEnvironment = self
+        notifier.start(environment: self)
         await terminals.hooks.start(terminals: terminals)
         self.profiles = profiles
         self.workspace = loadedWorkspace

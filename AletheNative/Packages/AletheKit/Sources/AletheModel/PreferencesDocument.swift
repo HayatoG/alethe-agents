@@ -36,6 +36,8 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     /// The last New Terminal choice, for New Terminal Like Last ⌥⌘T (upstream
     /// `lastTerminalCreation`, P3-4).
     public var lastTerminalCreation: TerminalCreation?
+    /// Notify when an agent finishes or needs an answer out of view (P3-11); nil means yes.
+    public var notifyAgents: Bool?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

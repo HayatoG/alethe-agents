@@ -149,4 +149,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Agent terminals are named after their conversation in the sidebar, the lane and the title bar, and
   show what they are doing: a pulsing dot while working, a question bubble when they wait for you, and
   a dot when they finished while you were looking elsewhere.
+- Notifications: when an agent finishes or needs your answer in a terminal you are not looking at,
+  it shows up under the bell in the toolbar — and as a macOS notification when Alethe is in the
+  background. Click one to jump to that terminal. Turn it off in Settings › General.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
