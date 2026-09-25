@@ -18,6 +18,9 @@ final class FrameAnimator {
     private var items: [ObjectIdentifier: Item] = [:]
     private var link: CADisplayLink?
     private let spring = Motion.standard
+    /// Reduced motion (preference or macOS setting): frames change without animation. Set by the
+    /// pane host from its metrics.
+    static var reducesMotion = false
 
     init(host: NSView) {
         self.host = host
@@ -25,7 +28,7 @@ final class FrameAnimator {
 
     func set(_ view: NSView, frame: CGRect, animated: Bool) {
         let key = ObjectIdentifier(view)
-        if !animated || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || view.frame == .zero {
+        if !animated || Self.reducesMotion || view.frame == .zero {
             items.removeValue(forKey: key)
             if view.frame != frame { view.frame = frame }
             return

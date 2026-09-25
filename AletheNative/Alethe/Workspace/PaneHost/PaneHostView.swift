@@ -48,6 +48,7 @@ final class PaneHostView: NSView {
         openIDs = state.openProjectIDs.filter { document.project($0) != nil }
         if liveSizes == nil { weights = state.containerWeights.count == openIDs.count ? state.containerWeights : [] }
         layer?.backgroundColor = context.theme.nsColor(.bg).cgColor
+        FrameAnimator.reducesMotion = context.metrics.reducesMotion
 
         // Flat (upstream `workspaceFlat`): every open project's shown panes in one Auto area, unless
         // a project is shown alone.
@@ -166,7 +167,7 @@ final class PaneHostView: NSView {
               let (id, container) = containers.first(where: { $0.value.paneViews.contains { $0.paneID == pane } }) else {
             containers.values.forEach { $0.setFocus(nil, frame: .zero) }
             if let backdrop {
-                NSAnimationContext.runAnimationGroup({ $0.duration = 0.15; backdrop.animator().alphaValue = 0 },
+                NSAnimationContext.runAnimationGroup({ $0.duration = context?.metrics.reducesMotion == true ? 0 : 0.15; backdrop.animator().alphaValue = 0 },
                                                      completionHandler: { backdrop.removeFromSuperview() })
                 self.backdrop = nil
             }
@@ -183,7 +184,7 @@ final class PaneHostView: NSView {
         backdrop.frame = bounds
         if backdrop.superview == nil {
             addSubview(backdrop, positioned: .above, relativeTo: nil)
-            NSAnimationContext.runAnimationGroup { $0.duration = 0.22; backdrop.animator().alphaValue = 1 }
+            NSAnimationContext.runAnimationGroup { $0.duration = context?.metrics.reducesMotion == true ? 0 : 0.22; backdrop.animator().alphaValue = 1 }
         }
         addSubview(container, positioned: .above, relativeTo: backdrop)
         let origin = frames[id]?.origin ?? container.frame.origin

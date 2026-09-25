@@ -8,9 +8,14 @@ public struct Metrics: Hashable, Sendable {
     public static let maximumScale: CGFloat = 1.5
 
     public let scale: CGFloat
+    public let style: VisualStyle
+    /// The user chose reduced motion, or macOS Reduce Motion is on.
+    public let reducesMotion: Bool
 
-    public init(scale: CGFloat = 1) {
+    public init(scale: CGFloat = 1, style: VisualStyle = .normal, reducesMotion: Bool = false) {
         self.scale = min(max(scale, Self.minimumScale), Self.maximumScale)
+        self.style = style
+        self.reducesMotion = reducesMotion
     }
 
     public enum Space: CGFloat, CaseIterable, Sendable {
@@ -22,7 +27,16 @@ public struct Metrics: Hashable, Sendable {
     }
 
     public func space(_ space: Space) -> CGFloat { space.rawValue * scale }
-    public func radius(_ radius: Radius) -> CGFloat { radius.rawValue * scale }
+    /// Clean style is denser and flatter (upstream `visual-clean.css`: 3 / 4 / 6).
+    public func radius(_ radius: Radius) -> CGFloat {
+        guard style == .clean else { return radius.rawValue * scale }
+        let clean: CGFloat = switch radius {
+        case .sm: 3
+        case .md: 4
+        case .lg: 6
+        }
+        return clean * scale
+    }
     /// Any fixed size from a design (widths, icon sizes) goes through this.
     public func size(_ points: CGFloat) -> CGFloat { points * scale }
 }

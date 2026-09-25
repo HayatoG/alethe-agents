@@ -121,4 +121,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   your workspace tabs ready to pick.
 - Terminal › Resume Previous Conversations restarts your running agents on the conversation they
   had before the current one.
+- Settings › Appearance › Style and motion: choose the Clean style — flat, compact surfaces with
+  quiet borders and a denser sidebar — or keep Normal; turn on Reduce motion to stop panes and
+  overlays from animating (it also follows the macOS setting).
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.

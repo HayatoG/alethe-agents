@@ -3,6 +3,7 @@ import AletheDesign
 import AletheFoundation
 import AletheModel
 import AletheTerminal
+import AppKit
 import Foundation
 import Observation
 
@@ -34,7 +35,18 @@ final class AppEnvironment {
 
     var theme: Theme {
         ThemeCatalog.builtin.resolved(id: preferences?.document.themeID ?? PreferencesDocument.defaultThemeID)
+            .styled(visualStyle)
     }
+
+    var visualStyle: VisualStyle {
+        preferences?.document.visualStyle.flatMap(VisualStyle.init(rawValue:)) ?? .normal
+    }
+
+    /// macOS Reduce Motion, kept current by `load`.
+    private(set) var systemReducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+
+    /// Reduced motion by preference or by macOS Reduce Motion (upstream `motionPreference`).
+    var reducesMotion: Bool { preferences?.document.reducedMotion == true || systemReducesMotion }
 
     /// Terminal text follows the UI zoom.
     var terminalFontSize: Float {
@@ -42,7 +54,7 @@ final class AppEnvironment {
     }
 
     var metrics: Metrics {
-        Metrics(scale: CGFloat(preferences?.document.uiScale ?? 1))
+        Metrics(scale: CGFloat(preferences?.document.uiScale ?? 1), style: visualStyle, reducesMotion: reducesMotion)
     }
 
     /// Builds agent commands with the user's CLI path overrides.
@@ -80,6 +92,12 @@ final class AppEnvironment {
         self.preferences = loadedPreferences
         self.promptHistory = loadedHistory
         resources.start(environment: self)
+        NotificationCenter.default.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+                                               object: NSWorkspace.shared, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.systemReducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            }
+        }
     }
 
     /// The saved output of a terminal tab (`scrollback/<tab>.bin` in the active profile).

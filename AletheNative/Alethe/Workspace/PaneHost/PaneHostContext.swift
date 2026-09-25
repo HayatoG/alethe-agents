@@ -14,6 +14,10 @@ struct PaneHostContext {
 
     var workspace: WorkspaceModel? { environment.workspace }
 
+    /// Focused pane border: the accent in Normal, a strong neutral border in Clean (upstream
+    /// `--clean-focus-border`).
+    var focusBorder: ThemeToken { metrics.style == .clean ? .borderStrong : .accent }
+
     /// A SwiftUI view with the environment every Alethe view expects.
     func hosted(_ view: some View) -> AnyView {
         AnyView(view

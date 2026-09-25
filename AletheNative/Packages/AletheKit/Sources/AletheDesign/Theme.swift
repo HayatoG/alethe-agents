@@ -48,6 +48,16 @@ public struct Theme: Identifiable, Hashable, Sendable, Codable {
     /// Validation guarantees every token exists; this only keeps a malformed plugin theme from crashing.
     private static let missingTokenColor = ThemeColor(hex: "#00000000")!
 
+    init(id: String, isLight: Bool, swatch: [ThemeColor], colors: [ThemeToken: ThemeColor],
+         shadows: [ShadowLevel: ThemeShadow], terminal: TerminalPalette) {
+        self.id = id
+        self.isLight = isLight
+        self.swatch = swatch
+        self.colors = colors
+        self.shadows = shadows
+        self.terminal = terminal
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, isLight, swatch, colors, shadows, terminal
     }

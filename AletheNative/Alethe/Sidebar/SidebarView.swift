@@ -39,6 +39,8 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        // Clean style: the compact sidebar (upstream `CleanProjectSidebar`).
+        .environment(\.sidebarRowSize, metrics.style == .clean ? .small : .medium)
         .accessibilityIdentifier("sidebar.list")
         .dropDestination(for: URL.self) { urls, _ in
             let added = actions.addProjects(folders: urls)

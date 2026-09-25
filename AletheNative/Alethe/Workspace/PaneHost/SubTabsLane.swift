@@ -14,7 +14,6 @@ struct SubTabsLane: View {
     let onAdd: () -> Void
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: metrics.space(.xs)) {
@@ -29,7 +28,7 @@ struct SubTabsLane: View {
                     }
                 }
                 .padding(.vertical, metrics.space(.s))
-                .animation(Motion.animation(Motion.quick, reduceMotion: reduceMotion), value: pane.tabs.map(\.id))
+                .animation(Motion.animation(Motion.quick, reduceMotion: metrics.reducesMotion), value: pane.tabs.map(\.id))
             }
             .scrollIndicators(.never)
             .frame(maxHeight: .infinity, alignment: .top)

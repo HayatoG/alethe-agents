@@ -20,6 +20,38 @@ struct AppearanceSettings: View {
             }
 
             Section {
+                Picker(selection: Binding {
+                    environment.visualStyle
+                } set: { style in
+                    environment.preferences?.update { $0.visualStyle = style == .normal ? nil : style.rawValue }
+                }) {
+                    ForEach(VisualStyle.allCases, id: \.self) { style in
+                        VStack(alignment: .leading) {
+                            Text(style.title)
+                            Text(style.detail).font(.footnote).foregroundStyle(.secondary)
+                        }
+                        .tag(style)
+                    }
+                } label: {
+                    Text("settings.appearance.style")
+                }
+                .pickerStyle(.radioGroup)
+                .accessibilityIdentifier("settings.style")
+                Toggle(isOn: Binding {
+                    environment.preferences?.document.reducedMotion == true
+                } set: { reduced in
+                    environment.preferences?.update { $0.reducedMotion = reduced ? true : nil }
+                }) {
+                    Text("settings.appearance.reduceMotion")
+                    Text(environment.systemReducesMotion ? "settings.appearance.reduceMotion.system"
+                         : "settings.appearance.reduceMotion.help")
+                }
+                .accessibilityIdentifier("settings.reduceMotion")
+            } header: {
+                Text("settings.appearance.styleAndMotion")
+            }
+
+            Section {
                 LabeledContent {
                     HStack(spacing: metrics.space(.m)) {
                         Text(verbatim: uiScale.formatted(.percent.precision(.fractionLength(0))))
@@ -153,5 +185,21 @@ private struct ThemeGrid: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityValue(Text(verbatim: isSelected ? "1" : "0"))
         .accessibilityIdentifier("settings.theme.\(option.id)")
+    }
+}
+
+extension VisualStyle {
+    var title: LocalizedStringKey {
+        switch self {
+        case .normal: "settings.appearance.style.normal"
+        case .clean: "settings.appearance.style.clean"
+        }
+    }
+
+    var detail: LocalizedStringKey {
+        switch self {
+        case .normal: "settings.appearance.style.normal.detail"
+        case .clean: "settings.appearance.style.clean.detail"
+        }
     }
 }

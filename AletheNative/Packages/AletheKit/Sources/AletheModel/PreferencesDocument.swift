@@ -29,6 +29,10 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var startClean: Bool?
     /// Ask before quitting while terminals run (P2-26); nil means yes.
     public var confirmQuit: Bool?
+    /// `normal` or `clean` (upstream `visualStyle`, P2-27); nil is normal.
+    public var visualStyle: String?
+    /// Reduced motion even when macOS Reduce Motion is off (upstream `motionPreference`, P2-27).
+    public var reducedMotion: Bool?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

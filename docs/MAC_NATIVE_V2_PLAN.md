@@ -1,8 +1,8 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-26 (P2-1…P2-5 tested; P2-6…P2-26
+> Status: **Phase 2 in progress** (Phase 1 complete). Done: P2-1…P2-27 (P2-1…P2-5 tested; P2-6…P2-27
 > compiled, tests not run). Manual checks owed: prompt redraw after resize (P2-3), image paste and
-> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-27. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> drops (P2-5), prompt recall (P2-6), scrollback after relaunch (P2-7), link clicks (P2-13, P2-14), container reorder drag (P2-16). Next: P2-28. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1414,8 +1414,23 @@ they run per the test cadence above.
   them with AppleScript).
   *Tests (written, not run — owner decision 2026-09-24):* `PreviousSessionTests` (3), UI
   `LaunchAndQuitTests` (quit asks and Cancel keeps the app; start clean after relaunch). Compiled.
-- [ ] **P2-27 (S) Visual style and motion.** Normal/clean style (sidebar Clean mode included) and the
+- [x] **P2-27 (S) Visual style and motion.** Normal/clean style (sidebar Clean mode included) and the
   motion preference, which also follows Reduce Motion. *Tests:* UI, HT. *Parity:* UI-2, UI-3, SB-1.
+  *Done:* `AletheDesign/VisualStyle` (normal, clean; upstream `visualStyle`): `Theme.styled(.clean)`
+  neutralizes the accent-colored selection chrome (`accentSoft`/`accentFaint` → `panelHover`,
+  `accentBorder` → `borderStrong`, `accentBorderSoft`/`borderAccent` → `border`, `accentRing` clear) and
+  drops shadows, keeping the accent and status colors (upstream `visual-clean.css`); `Metrics` carries
+  the style (Clean radii 3 / 4 / 6, still scaled) and `reducesMotion`. `PreferencesDocument.visualStyle`
+  and `reducedMotion` (optional). `AppEnvironment` styles the theme and builds metrics from them, and
+  follows macOS Reduce Motion live (`accessibilityDisplayOptionsDidChangeNotification`). Clean focused
+  panes use a strong neutral border (`--clean-focus-border`); the sidebar goes compact
+  (`sidebarRowSize` small; upstream `CleanProjectSidebar`). Reduced motion: `FrameAnimator` jumps,
+  the sub-tabs lane and the focus backdrop stop animating. Settings › Appearance › Style and motion:
+  Normal / Clean and Reduce motion (it says when macOS already reduces it).
+  *Deviation:* upstream's motion preference drives the Home/loading ASCII animation, which the native
+  app does not have yet; here it governs the app's own motion.
+  *Tests (written, not run — owner decision 2026-09-24):* `VisualStyleTests` (4), UI `VisualStyleTests`
+  (Clean compacts the sidebar and persists with reduced motion; HT at three zoom levels). Compiled.
 - [ ] **P2-28 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
 
 **Phase 2 exit criteria:** every terminal and workspace feature of the parity rows above works at
@@ -1502,7 +1517,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | TERM-9 | Double ^C force-kill | P2 | Done | P2-2; kills the whole process tree |
 | TERM-10 | Scrollback persistence + reattach | P2 | Done | P2-7; replay limited to the last 1 MiB by GhosttyKit |
 | TERM-11 | `alethe` CLI shim | P5 | Not started | |
-| SB-1 | Project tree (Normal/Clean) | P1 | Partial | Tree, reorder, drag and drop, context menus (P1-4); Clean mode with UI-2 |
+| SB-1 | Project tree (Normal/Clean) | P1 | Done | Tree, reorder, drag and drop, context menus (P1-4); Clean compact mode (P2-27) |
 | SB-2 | New/edit project (clone, marker, git init, stack) | P1 (basic), P5 | Partial | Name, color, folder, group (P1-5); clone, marker, git init, stack in P5 |
 | SB-3 | Groups (nested, suspend) | P1, P2 | Done | Nested groups (P1-4/P1-5); suspend and resume (P2-23) |
 | SB-4 | Export/import project config | P5 | Not started | |
@@ -1550,8 +1565,8 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | USE-3 | RAM control, hibernation, supervisor | P2 | Done | P2-24; memory indicator + policy; hibernated terminals resume when shown; no history chart |
 | USE-4 | Crash report | P5 | Not started | MetricKit / diagnostic reports |
 | UI-1 | Themes (16 + 4) | P0, P1, P4 | Partial | 16 built-ins + picker (P1-11); theme packs in P4 |
-| UI-2 | Visual style normal/clean | P2 | Not started | Moved from P1 at the Phase 1 review |
-| UI-3 | Motion preference | P2 | Not started | Also follows system Reduce Motion; moved from P1 at the Phase 1 review |
+| UI-2 | Visual style normal/clean | P2 | Done | P2-27; Clean theme transform + compact sidebar |
+| UI-3 | Motion preference | P2 | Done | P2-27; preference or macOS Reduce Motion |
 | UI-4 | App icon themes | P5 | Not started | `NSApp.applicationIconImage` |
 | UI-5 | UI zoom | P1 | Done | Font + metric scale only; View menu + Settings (P1-11) |
 | UI-6 | Window opacity | — | Won't port | Win32-only upstream; Mac uses materials |
