@@ -254,13 +254,40 @@ private struct FileTreeList: View {
             nil
         }
         await refreshBadges(repository)
+        // With the folder below the repository root, `.git` lies outside the tree watcher: watch it
+        // too, so commits, stages and checkouts refresh the badges.
+        let gitWatcher = repository.flatMap { Self.gitDirectoryWatcher(repoRoot: $0.root, tree: tree.root) }
+        gitWatcher?.start()
+        let gitRefresh = gitWatcher.map { watcher in
+            Task { @MainActor in
+                for await _ in watcher.events { await refreshBadges(repository) }
+            }
+        }
         let watcher = FileTreeWatcher(root: tree.root)
         watcher.start()
-        defer { watcher.stop() }
+        defer {
+            watcher.stop()
+            gitWatcher?.stop()
+            gitRefresh?.cancel()
+        }
         for await _ in watcher.events {
             try? tree.reload()
             await refreshBadges(repository)
         }
+    }
+
+    /// A watcher on the repository's `.git` when it is not inside the watched folder.
+    private static func gitDirectoryWatcher(repoRoot: URL, tree: URL) -> GitWatcher? {
+        let root = repoRoot.standardizedFileURL.resolvingSymlinksInPath()
+        let folder = tree.standardizedFileURL.resolvingSymlinksInPath()
+        guard root.path != folder.path else { return nil }
+        var gitDirectory = root.appending(path: ".git", directoryHint: .isDirectory)
+        // A worktree or submodule has a `.git` file pointing at its git directory.
+        if let text = try? String(contentsOf: root.appending(path: ".git"), encoding: .utf8), text.hasPrefix("gitdir:") {
+            let path = text.dropFirst("gitdir:".count).trimmingCharacters(in: .whitespacesAndNewlines)
+            gitDirectory = URL(filePath: path, directoryHint: .isDirectory, relativeTo: root).standardizedFileURL
+        }
+        return GitWatcher(root: gitDirectory)
     }
 
     private func refreshBadges(_ repository: GitRepository?) async {
