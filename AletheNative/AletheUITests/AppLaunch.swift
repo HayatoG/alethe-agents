@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 
 /// Launches the app against a throwaway data folder, in English, so tests never touch real data and
@@ -26,3 +27,13 @@ func eventually(timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
     return condition()
 }
 
+
+/// Enters text through the pasteboard. XCUITest's `typeText` maps characters to keys with the Mac's
+/// current layout, and with some (Brazilian - Pro) it sends "c" as ⌘C, which copies instead of typing.
+@MainActor
+func paste(_ text: String, into app: XCUIApplication) {
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    pasteboard.setString(text, forType: .string)
+    app.typeKey("v", modifierFlags: .command)
+}

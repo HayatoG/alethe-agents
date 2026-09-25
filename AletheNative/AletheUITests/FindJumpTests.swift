@@ -16,7 +16,7 @@ final class FindJumpTests: XCTestCase {
         XCTAssertTrue(element(app, "sidebar.project.alpha").waitForExistence(timeout: 5))
         app.typeKey("k", modifierFlags: .command)
         XCTAssertTrue(element(app, "findJump.field").waitForExistence(timeout: 5))
-        app.typeText("cli")
+        paste("cli", into: app)
         app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(element(app, "container.client-site").waitForExistence(timeout: 5), "the fuzzy match opened client-site")
 

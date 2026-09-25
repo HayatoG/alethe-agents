@@ -23,7 +23,8 @@ final class WebPaneTests: XCTestCase {
             XCTAssertEqual(address.value as? String, "http://127.0.0.1:9/")
             address.click()
             address.typeKey("a", modifierFlags: .command)
-            address.typeText("file:///etc/hosts\n")
+            paste("file:///etc/hosts", into: app)
+            address.typeKey(.return, modifierFlags: [])
             XCTAssertEqual(address.value as? String, "file:///etc/hosts", "a refused address is kept for fixing")
 
             element(app, "web.options").click()
