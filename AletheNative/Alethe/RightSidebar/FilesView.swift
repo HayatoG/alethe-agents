@@ -4,6 +4,7 @@ import AletheGit
 import AletheModel
 import AlethePluginKit
 import AppKit
+import Quartz
 import SwiftUI
 
 /// File explorer for the selected project's folder (P4-8): lazy tree, git badges, live refresh.
@@ -37,6 +38,7 @@ private struct FileTreeList: View {
     @State private var draftName = ""
     @State private var pendingDelete: URL?
     @State private var errorMessage: String?
+    @State private var selection: URL?
     @FocusState private var renameFocused: Bool
 
     init(project: Project) {
@@ -45,14 +47,20 @@ private struct FileTreeList: View {
     }
 
     var body: some View {
-        List {
+        List(selection: $selection) {
             ForEach(tree.visibleRows()) { row in
                 rowView(row)
+                    .tag(row.node.url)
                     .contextMenu { menu(for: row.node) }
             }
         }
         .listStyle(.sidebar)
         .contextMenu { createMenu(in: tree.root) }
+        .onKeyPress(.space) {
+            guard renaming == nil, let selection else { return .ignored }
+            QuickLook.shared.show(selection)
+            return .handled
+        }
         .overlay {
             if tree.rootNodes.isEmpty { ContentUnavailableView("files.empty", systemImage: "folder") }
         }
@@ -105,7 +113,10 @@ private struct FileTreeList: View {
         }
         .padding(.leading, CGFloat(row.depth) * 12)
         .contentShape(Rectangle())
-        .onTapGesture { activate(node) }
+        .onTapGesture {
+            selection = node.url
+            activate(node)
+        }
         .help(node.url.path)
     }
 
@@ -126,6 +137,7 @@ private struct FileTreeList: View {
             Button("files.open") { open(node) }
             Button("files.openWithDefaultApp") { NSWorkspace.shared.open(node.url) }
         }
+        Button("files.quickLook") { QuickLook.shared.show(node.url) }
         Button("files.revealInFinder") { NSWorkspace.shared.activateFileViewerSelecting([node.url]) }
         Divider()
         Button("files.rename") {
@@ -265,5 +277,29 @@ private struct FileTreeList: View {
 
     private var errorBinding: Binding<Bool> {
         Binding { errorMessage != nil } set: { if !$0 { errorMessage = nil } }
+    }
+}
+
+/// Shows one file in the shared Quick Look panel (Space in the explorer).
+@MainActor
+private final class QuickLook: NSObject, QLPreviewPanelDataSource {
+    static let shared = QuickLook()
+    /// Only touched on the main thread (Quick Look queries its data source there).
+    nonisolated(unsafe) private var url: URL?
+
+    func show(_ url: URL) {
+        self.url = url
+        guard let panel = QLPreviewPanel.shared() else { return }
+        panel.dataSource = self
+        panel.reloadData()
+        if panel.isVisible { panel.orderOut(nil) } else { panel.makeKeyAndOrderFront(nil) }
+    }
+
+    nonisolated func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int {
+        url == nil ? 0 : 1
+    }
+
+    nonisolated func previewPanel(_ panel: QLPreviewPanel!, previewItemAt index: Int) -> (any QLPreviewItem)! {
+        url.map { $0 as NSURL }
     }
 }

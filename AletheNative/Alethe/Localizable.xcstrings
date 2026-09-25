@@ -2211,6 +2211,23 @@
         }
       }
     },
+    "files.quickLook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick Look"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualização rápida"
+          }
+        }
+      }
+    },
     "files.rename" : {
       "extractionState" : "manual",
       "localizations" : {
