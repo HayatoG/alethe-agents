@@ -12,6 +12,9 @@ struct PullRequestsView: View {
     @State private var prs: [PullRequestSummary] = []
     @State private var detailed: Set<String> = []
     @State private var reload = 0
+    @State private var reviewing: PullRequestSummary?
+    @State private var merging: PullRequestSummary?
+    private let reviews = PullRequestReviewState.shared
 
     static let tabID = "pullRequests"
     static let tab = SidebarTabContribution(id: tabID, title: "Pull Requests", symbol: "arrow.triangle.pull", side: .right, viewID: tabID)
@@ -38,6 +41,12 @@ struct PullRequestsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .task(id: reload) { await load() }
+        .sheet(item: $reviewing) { PullRequestReviewSheet(pr: $0) }
+        .sheet(item: $merging) { pr in
+            if let sha = reviews.reviewedHead(pr) {
+                PullRequestMergeSheet(pr: pr, headSHA: sha) { reload += 1 }
+            }
+        }
     }
 
     @ViewBuilder
@@ -128,6 +137,10 @@ struct PullRequestsView: View {
                 _ = TodosPlugin.activeStore?.addPullRequest(number: pr.number, title: pr.title, url: url)
             }
             .disabled(TodosPlugin.activeStore == nil || pr.browserURL == nil)
+            Divider()
+            Button("pullRequests.reviewWithAgent") { reviewing = pr }
+            Button("pullRequests.squashMergeMenu") { merging = pr }
+                .disabled(reviews.reviewedHead(pr) == nil)
         }
     }
 

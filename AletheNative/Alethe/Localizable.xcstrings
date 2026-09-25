@@ -8144,6 +8144,23 @@
         }
       }
     },
+    "pullRequests.cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        }
+      }
+    },
     "pullRequests.checks.failure" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8212,6 +8229,23 @@
         }
       }
     },
+    "pullRequests.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concluído"
+          }
+        }
+      }
+    },
     "pullRequests.draft" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8263,6 +8297,74 @@
         }
       }
     },
+    "pullRequests.headSHA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Head SHA"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA do head"
+          }
+        }
+      }
+    },
+    "pullRequests.mergeHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub merges only if the pull request head still matches the reviewed commit."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O GitHub só faz o merge se o head do pull request ainda for o commit revisado."
+          }
+        }
+      }
+    },
+    "pullRequests.mergeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squash Merge Pull Request"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squash merge do pull request"
+          }
+        }
+      }
+    },
+    "pullRequests.merged" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merged."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge concluído."
+          }
+        }
+      }
+    },
     "pullRequests.missing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8293,6 +8395,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Instale para listar seus pull requests:"
+          }
+        }
+      }
+    },
+    "pullRequests.noHead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub did not report a head commit for this pull request."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O GitHub não informou o commit head deste pull request."
           }
         }
       }
@@ -8382,6 +8501,142 @@
         }
       }
     },
+    "pullRequests.reviewAgain" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the branch moved since the review, review it again before merging."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se a branch mudou desde a revisão, revise de novo antes do merge."
+          }
+        }
+      }
+    },
+    "pullRequests.reviewAgent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agente"
+          }
+        }
+      }
+    },
+    "pullRequests.reviewModel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelo"
+          }
+        }
+      }
+    },
+    "pullRequests.reviewModel.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Padrão"
+          }
+        }
+      }
+    },
+    "pullRequests.reviewPaneName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PR #%lld review"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisão do PR #%lld"
+          }
+        }
+      }
+    },
+    "pullRequests.reviewProject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projeto"
+          }
+        }
+      }
+    },
+    "pullRequests.reviewTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review Pull Request"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisar pull request"
+          }
+        }
+      }
+    },
+    "pullRequests.reviewWithAgent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review with Agent…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisar com agente…"
+          }
+        }
+      }
+    },
     "pullRequests.sendToTodo" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8429,6 +8684,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Faça login em um terminal e atualize:"
+          }
+        }
+      }
+    },
+    "pullRequests.squashMerge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squash Merge"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squash merge"
+          }
+        }
+      }
+    },
+    "pullRequests.squashMergeMenu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squash Merge…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squash merge…"
+          }
+        }
+      }
+    },
+    "pullRequests.startReview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Review"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar revisão"
           }
         }
       }
