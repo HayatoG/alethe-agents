@@ -63,7 +63,7 @@ let package = Package(
                 .product(name: "GhosttyTerminal", package: "GhosttyKit"),
             ]
         ),
-        .testTarget(name: "AletheFoundationTests", dependencies: ["AletheFoundation"]),
+        .testTarget(name: "AletheFoundationTests", dependencies: ["AletheFoundation"], resources: [.copy("Fixtures")]),
         .testTarget(name: "AletheDesignTests", dependencies: ["AletheDesign"]),
         .testTarget(name: "AletheTerminalTests", dependencies: ["AletheTerminal"]),
         .testTarget(name: "AletheModelTests", dependencies: ["AletheModel"], resources: [.copy("Fixtures")]),

@@ -1,0 +1,15 @@
+# Codex configuration
+model = "o3" # default model
+
+# Servers managed by hand
+[mcp_servers.alpha]
+command = "alpha"   # keep this spacing
+args = [
+  "--flag", # first
+  "value",
+]
+
+# Beta is disabled
+[mcp_servers.beta]
+url = "https://beta.example"
+enabled = false
