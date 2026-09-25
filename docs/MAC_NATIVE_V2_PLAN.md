@@ -2622,7 +2622,7 @@ above.
   interrupts with `cancel_queued`; diff is `git diff HEAD` via `GitRunner`; `line(_:)` frames stdin.
   Fixtures: 4 upstream transcripts + 1 hand-written. Tests (4 goldens + 13 units) written and compiled,
   NOT run.
-- [ ] **P6-6 (L) Orchestrator core: queue and lifecycle.** `OrchestratorCore` actor (upstream `Core`):
+- [x] **P6-6 (L) Orchestrator core: queue and lifecycle.** `OrchestratorCore` actor (upstream `Core`):
   launchers by kind, concurrency limit (default 4, clamped 1…16), a FIFO queue drained as slots free,
   workers spawned through P6-3 with the P6-4/P6-5 protocol, deliveries with a sequence number,
   `finish`/`finish_turn` (a completed turn keeps the process parked for follow-ups; at most 4 parked,
@@ -2640,6 +2640,16 @@ above.
   `delegating_to_an_unconfigured_agent_fails_cleanly_like_any_other_agent`,
   `a_worker_that_never_finishes_is_stopped_by_its_budget`, with upstream's fake launchers as shell
   scripts), U (parked limit, no process left after `shutdown()`). *Parity:* ORC-2.
+  *Done:* (`ffdbf44`) `OrchestratorCore` actor (`AletheOrchestrator/Core`): launchers by agent, limit 4
+  (1…16), FIFO queue drained as slots free (slots per job, so a cancelled queued or released blocked job
+  frees its slot), workers spawned off the actor through `WorkerProcess` with the Codex session (replies
+  via `WorkerLineWriter`, `nextRequestID` copied back, `requestFailed` ignored) or the Claude protocol,
+  sequenced deliveries, `finishTurn` parks finished workers (≤4, earliest let go), per-job watchdog (900
+  s, 0 = none, outcome `timeout`), `snapshots()` stream, restore/persist/flush via the P6-2 store
+  (release also persists), `shutdown()` interrupts in-flight/queued jobs, reaps every worker and refuses
+  new work. Tools: `alethe_delegate`, `alethe_check`, `alethe_status`, `alethe_cancel` (lists only what
+  it cancelled), `alethe_release`. State is `internal` for the P6-7/P6-8 extensions. Tests (9 upstream
+  goldens with fake shell workers, 2 store goldens, units) written and compiled, NOT run.
 - [ ] **P6-7 (M) Steering, follow-ups, approvals and isolation.** On the P6-6 core, in its own files:
   `alethe_steer` (interrupt the running turn and deliver the correction next, context kept),
   `alethe_send` (an inbox: a busy worker takes it as its next turn, a parked one at once, a released or
