@@ -2540,7 +2540,7 @@ above.
   tools/call with `isError`, ping, -32601, no reply to notifications) with the nine tool schemas
   verbatim as a resource. `OrderedJSON` gained compact rendering, literals and unsigned/double helpers.
   Tests (3 upstream goldens + model units) written and compiled, NOT run.
-- [ ] **P6-2 (S) Job store.** `OrchestratorJobStore` (upstream `set_store`/`restore`/`persist`):
+- [x] **P6-2 (S) Job store.** `OrchestratorJobStore` (upstream `set_store`/`restore`/`persist`):
   `<profile>/orchestrator-jobs.json` in upstream's v2 shape (`version`, job records, planners), so a
   file from the Tauri app loads; restore turns `running`/`queued` into `interrupted`, moves the job and
   run counters past every restored id and keeps the planners; writes are atomic, serialized and
@@ -2548,6 +2548,15 @@ above.
   starts empty instead of failing. Needs P6-1. *Tests:* G (upstream
   `history_outlives_the_process_and_in_flight_work_is_not_reported_as_running`,
   `a_new_id_never_collides_with_a_restored_one`), U (corrupt file, coalesced writes). *Parity:* ORC-2.
+  *Done:* (`2c1f443`) `OrchestratorJobStore` (`<profile>/orchestrator-jobs.json`) and
+  `OrchestratorJobsFile` in upstream's v2 shape (Tauri files load; records without an id skipped; a
+  repeated job id skipped; a repeated planner id replaces the earlier). `restore()` never fails:
+  running/queued jobs come back interrupted and `nextJobID`/`nextRunID` move past every restored id; an
+  unreadable file or non-object root moves to `.bak`. `persist` returns at once, coalesces pending
+  writes into one atomic write of the latest state on a serial queue; `flush()` waits for disk; a failed
+  write is dropped (the next transition rewrites everything), as upstream. P6-6 wires
+  restore/persist/flush. Tests (upstream goldens ported at store level + file shape, corrupt file,
+  coalescing) written and compiled, NOT run.
 - [ ] **P6-3 (M) Worker process host.** `WorkerProcess` actor: spawns a `Launcher` in the job's folder
   with a clean environment (the login-shell PATH the P3 launcher resolver builds) in its own process
   group; stdin/stdout pipes (`O_CLOEXEC`), stderr discarded like upstream; an ordered line writer that
