@@ -197,6 +197,8 @@ private struct HistoryCommands: Commands {
             Button("menu.history.conversations") { environment.editorRequest = .conversations(nil) }
                 .keyboardShortcut("y", modifiers: .command)
                 .disabled(environment.workspace?.document.projects.isEmpty ?? true)
+            Button("menu.git.control") { environment.editorRequest = .gitControl(nil) }
+                .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
             Divider()
             Button("menu.history.nextTab") { showTab(1) }
                 .keyboardShortcut(.tab, modifiers: .control)

@@ -28,6 +28,8 @@ enum EditorRequest: Identifiable, Hashable {
     case handoff(TabID)
     /// AI usage of the providers (P3-13).
     case aiUsage
+    /// Git Control of a project (nil: the selected one; P4-5).
+    case gitControl(ProjectID?)
 
     var id: String {
         switch self {
@@ -46,6 +48,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .sessionCost(let tab): "sessionCost:\(tab)"
         case .handoff(let tab): "handoff:\(tab)"
         case .aiUsage: "aiUsage"
+        case .gitControl: "gitControl"
         }
     }
 }

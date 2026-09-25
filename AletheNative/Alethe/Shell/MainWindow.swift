@@ -75,6 +75,9 @@ struct MainWindow: View {
             HandoffSheet(workspace: workspace, undoManager: undoManager, tabID: tab)
         case .aiUsage:
             AIUsageSheet()
+        case .gitControl(let project):
+            GitControlSheet(workspace: workspace, undoManager: undoManager,
+                            projectID: project ?? workspace.document.workspace.selectedProjectID)
         }
     }
 

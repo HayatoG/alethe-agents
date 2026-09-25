@@ -15,6 +15,7 @@
 		A1E7000000000000000000B6 /* AletheDocuments in Frameworks */ = {isa = PBXBuildFile; productRef = A1E7000000000000000000C6 /* AletheDocuments */; };
 		A1E70000000000000000000B7 /* AlethePluginKit in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000C7 /* AlethePluginKit */; };
 		A1E70000000000000000000B8 /* AletheThemePack in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000C8 /* AletheThemePack */; };
+		A1E70000000000000000000BA /* AletheGit in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CA /* AletheGit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,6 +59,7 @@
 				A1E7000000000000000000B6 /* AletheDocuments in Frameworks */,
 				A1E70000000000000000000B7 /* AlethePluginKit in Frameworks */,
 				A1E70000000000000000000B8 /* AletheThemePack in Frameworks */,
+				A1E70000000000000000000BA /* AletheGit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +120,7 @@
 				A1E7000000000000000000C6 /* AletheDocuments */,
 				A1E70000000000000000000C7 /* AlethePluginKit */,
 				A1E70000000000000000000C8 /* AletheThemePack */,
+				A1E70000000000000000000CA /* AletheGit */,
 			);
 			productName = Alethe;
 			productReference = A1E7000000000000000000D1 /* Alethe.app */;
@@ -469,6 +472,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
 			productName = AletheThemePack;
+		};
+		A1E70000000000000000000CA /* AletheGit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
+			productName = AletheGit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
