@@ -3,7 +3,8 @@ import Foundation
 import Testing
 @testable import AletheTerminal
 
-@Suite struct PTYProcessTests {
+// Spawns real processes: a rare intermittent hang must fail the test, not stall the run.
+@Suite(.timeLimit(.minutes(1))) struct PTYProcessTests {
     private func run(_ launch: PTYLaunch, input: Data? = nil) async throws -> (output: String, code: Int32) {
         let process = try PTYProcess(launch)
         let collected = Collected()

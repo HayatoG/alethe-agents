@@ -3,7 +3,8 @@ import Foundation
 import Testing
 @testable import AletheTerminal
 
-@Suite struct ForceKillTests {
+// Spawns real processes: a rare intermittent hang must fail the test, not stall the run.
+@Suite(.timeLimit(.minutes(1))) struct ForceKillTests {
     private let ctrlC = Data([0x03])
     private let start = ContinuousClock.now
 

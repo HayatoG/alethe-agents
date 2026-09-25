@@ -3,7 +3,8 @@ import Foundation
 import Testing
 @testable import AletheTerminal
 
-@Suite struct ShellIntegrationTests {
+// Spawns real processes: a rare intermittent hang must fail the test, not stall the run.
+@Suite(.timeLimit(.minutes(1))) struct ShellIntegrationTests {
     private let resources = URL(filePath: "/res")
     private func launch(_ executable: String, _ arguments: [String], env: [String: String] = [:]) -> PTYLaunch {
         PTYLaunch(executable: executable, arguments: arguments, environment: env, workingDirectory: nil,
