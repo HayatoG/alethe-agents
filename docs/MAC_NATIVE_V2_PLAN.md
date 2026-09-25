@@ -2768,7 +2768,7 @@ above.
   upstream; subscribes to the bus itself, and the app's instance lives in `MultiagentController` from
   P6-22. Needs P6-1, P6-18. *Tests:* G (upstream's four scheduler tests on temporary repositories).
   *Parity:* ORC-3.
-- [ ] **P6-21 (M) Planning audit and autocommit.** `AletheIntegrations/GSDSync/PlanningAudit` (upstream
+- [x] **P6-21 (M) Planning audit and autocommit.** `AletheIntegrations/GSDSync/PlanningAudit` (upstream
   `planning.rs`): a record commits only `.planning/` (`git commit -- .planning`, so other staged work
   never joins it) as `gsd(alethe): <reason>` with an `Alethe-Agent:` trailer, does nothing when
   unchanged and publishes `PlanningCommitted`; history from `git log -- .planning` with unit/record
@@ -2777,6 +2777,15 @@ above.
   upstream: on `PlanningUpdated`, 2 s after the last change per planning folder. Needs P6-18. *Tests:* G
   (upstream `records_scoped_audit_commit_with_agent_trailer`), U (debounce generations, history parsing,
   unrelated staged files untouched). *Parity:* ORC-3.
+  *Done:* (`ef8ad4f`) `AletheIntegrations/GSDSync/PlanningAudit`: `git commit -- .planning` as
+  `gsd(alethe): <reason>` with an `Alethe-Agent:` trailer (`unknown` default); nothing when `.planning/`
+  is unchanged; other staged files stay staged; publishes `PlanningCommitted` {hash, subject}; history
+  from `git log -- .planning` (50 default, 500 max, empty on a new repository). `PlanningAutocommit`
+  subscribes to the bus and commits 2 s after the last `PlanningUpdated` per planning folder (per-folder
+  generations); `MultiagentController` starts it, off at every launch, no preference key
+  (`setAutocommit`, `isAutocommitEnabled`); P6-22 must `follow(… by: .autocommit)` the chosen project.
+  Tests (upstream `records_scoped_audit_commit_with_agent_trailer` on temp repos + U) written and
+  compiled, NOT run.
 - [ ] **P6-22 (M) Settings › Multiagent.** A Settings tab (upstream `MultiagentPage`, `schedulerStore`):
   scheduler — project picker, Run Tick, the task queue with status, dependencies, assigned worker and
   Cancel (asks once); execution metrics; recent events filterable by correlation id; planning audit —
