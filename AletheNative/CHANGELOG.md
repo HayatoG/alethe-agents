@@ -181,6 +181,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Plugin foundation: built-in plugins can add sidebar tabs, commands, themes, pane kinds, sheets,
   settings pages and agent providers, use only the host features they declare, and are turned on or off
   with the choice kept after relaunch; a plugin that fails to start does not affect the others.
+- Git layer: runs your own `git` for status, diffs, branches, commits, history and sync (pull, push and
+  fetch with progress), and refreshes when the repository changes.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

@@ -1828,12 +1828,20 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
 - [ ] **P4-3 (M) Right sidebar.** An inspector column (⌥⌘0, width persisted; upstream `RightSidebar`)
   showing contributed tabs plus the project's Markdown docs and plans (list, open in a pane, recent
   history). GSD and MCP tabs arrive with Phase 5. *Tests:* UI, HT. *Parity:* SB-7.
-- [ ] **P4-4 (L) Git layer.** `AletheGit` over the `git` CLI (upstream `git_control.rs`): repository
+- [x] **P4-4 (L) Git layer.** `AletheGit` over the `git` CLI (upstream `git_control.rs`): repository
   discovery, status (porcelain v2 incl. renames, conflicts, submodules), diff and diff summary,
   branches, stage/unstage/discard, commit, pull/push/fetch with progress and credentials left to git,
   init, log graph, show commit files/message, cherry-pick, revert, reset, branch from commit,
   incoming/outgoing; typed errors, cancellation, one queue per repository, a file watcher to refresh.
   *Tests:* G (temporary repositories, upstream's cases). *Parity:* groundwork for GIT-1…5.
+  *Done:* target `AletheGit` runs the user's `git` (PATH, `/opt/homebrew/bin`, `/usr/local/bin`,
+  `/usr/bin`) off the main thread; task cancellation terminates it; `GIT_TERMINAL_PROMPT=0`, no stdin.
+  One `GitRepository` actor per root (shared via `GitRepositories`) chains calls in order. Discovery,
+  init (upstream seeding), porcelain-v2 status (renames, conflicts, submodules, ahead/behind), diff +
+  numstat, branches, stage/unstage/discard, commit/amend, fetch/pull/push with streamed progress,
+  paginated decorated log, commit files/message, cherry-pick, revert, reset, branch from commit,
+  incoming/outgoing; typed `GitError` (+ `invalidArgument` for unsafe paths/hashes/branches);
+  `GitWatcher` (FSEvents, debounced, ignores objects/locks). Pure parsers. G+U 26/26.
 - [ ] **P4-5 (L) Git Control.** Built-in plugin (upstream `plugins/git-control`): changes grouped
   staged/unstaged/conflicts, stage or discard per file or all (discard asks), commit message with ⌘↩,
   amend, branch switcher, pull/push/fetch with status, diff of a file in the diff pane (P2), init for a
