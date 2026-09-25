@@ -56,6 +56,8 @@ import Testing
         #expect(api.panes[2].tabs.map(\.agent) == ["opencode"])
         #expect(site.panes.first?.tabs.first?.agent == "cursor")
 
+        #expect(api.usesGraphify && !site.usesGraphify && notes.graphifyEnabled == nil)
+
         #expect(report.groups == 2 && report.projects == 3 && report.panes == 5 && report.tabs == 6)
         #expect(report.skipped == [
             .paneKind(project: "api", kind: "markdown"),

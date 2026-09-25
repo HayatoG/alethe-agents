@@ -17,6 +17,7 @@ struct ProjectEditor: View {
     @FocusState private var focused: Bool
     @Environment(\.metrics) private var metrics
     @Environment(\.theme) private var theme
+    @Environment(AppEnvironment.self) private var environment
 
     /// Where a new project's folder comes from (P5-5).
     enum Source: Hashable { case folder, clone }
@@ -36,6 +37,8 @@ struct ProjectEditor: View {
     @State private var model = ProjectEditorModel()
 
     private var isCloning: Bool { editing == nil && source == .clone }
+    /// Graphify MCP server for the project's agents (P5-17).
+    @State private var graphifyEnabled = false
 
     var body: some View {
         Form {
@@ -95,6 +98,13 @@ struct ProjectEditor: View {
                     .accessibilityIdentifier("editor.project.worktreeMode")
             } header: { Text("editor.project.worktrees") }
             if isCloning { cloneStatus }
+            if environment.features.isOn(.graphify) {
+                Toggle(isOn: $graphifyEnabled) {
+                    Text("editor.project.graphify")
+                    Text("editor.project.graphify.detail").font(metrics.font(.footnote))
+                }
+                .accessibilityIdentifier("editor.project.graphify")
+            }
             if let problem, !model.cloning {
                 Text(problem)
                     .foregroundStyle(theme[.textSecondary])
@@ -251,6 +261,7 @@ struct ProjectEditor: View {
         color = project.color
         autoWorktree = project.usesAutoWorktree
         worktreeMode = project.effectiveWorktreeMode
+        graphifyEnabled = project.usesGraphify
         location = workspace.document.location(of: editing) ?? .ungrouped
         nameEdited = true
     }
@@ -284,6 +295,7 @@ struct ProjectEditor: View {
             return
         }
         let path = URL(filePath: expanded(folder)).standardizedFileURL.path
+        let graphify: Bool? = graphifyEnabled ? true : nil
         if let editing {
             let trimmed = name.trimmingCharacters(in: .whitespaces)
             let color = color ?? .blue
@@ -295,6 +307,7 @@ struct ProjectEditor: View {
                     $0.color = color
                     $0.autoWorktree = auto
                     $0.worktreeMode = mode
+                    $0.graphifyEnabled = graphify
                 }
                 if doc.location(of: editing) != location { doc.moveProject(editing, to: location, at: Int.max) }
             }
@@ -325,6 +338,7 @@ struct ProjectEditor: View {
                 $0.color = color
                 $0.autoWorktree = auto
                 $0.worktreeMode = mode
+                $0.graphifyEnabled = graphifyEnabled ? true : nil
                 if let githubURL { $0.githubURL = githubURL }
             }
             doc.open(id)

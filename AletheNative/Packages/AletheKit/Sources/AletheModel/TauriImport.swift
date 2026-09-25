@@ -203,6 +203,7 @@ public enum TauriImport {
             }
             workspace.updateProject(created) { $0.panes = panes }
             if project["autoWorktree"] as? Bool == true { workspace.updateProject(created) { $0.autoWorktree = true } }
+            if project["graphifyEnabled"] as? Bool == true { workspace.updateProject(created) { $0.graphifyEnabled = true } }
             if let mode = (project["worktreeMode"] as? String).flatMap(ProjectWorktreeMode.init(rawValue:)) {
                 workspace.updateProject(created) { $0.worktreeMode = mode }
             }

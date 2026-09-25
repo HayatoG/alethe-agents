@@ -130,6 +130,9 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
     public var worktreeMode: ProjectWorktreeMode?
     /// The repository the project was cloned from (upstream `githubUrl`, P5-5).
     public var githubURL: String?
+    /// Agents get the Graphify MCP server and the graph is generated on their first launch (upstream
+    /// `graphifyEnabled`, P5-17); nil is off. Takes effect only while the graphify feature is on.
+    public var graphifyEnabled: Bool?
 
     public init(id: ProjectID = .make(), name: String, color: ProjectColor = .blue, folder: String,
                 panes: [Pane] = [], createdAt: Date = Date(), layoutMode: PaneLayoutMode? = nil) {
@@ -147,6 +150,7 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
 
     public var usesAutoWorktree: Bool { autoWorktree ?? false }
     public var effectiveWorktreeMode: ProjectWorktreeMode { worktreeMode ?? .gitWorktree }
+    public var usesGraphify: Bool { graphifyEnabled ?? false }
 }
 
 /// Relative track sizes of a pane grid; empty means equal sizes.

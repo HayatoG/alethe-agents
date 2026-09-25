@@ -1,4 +1,5 @@
 import AletheDesign
+import AletheIntegrations
 import AletheModel
 import SwiftUI
 
@@ -73,9 +74,69 @@ private struct FeatureOptions: View {
         switch feature {
         case .aiMemory:
             AiMemoryOptions()
-        case .browser, .graphify, .mcp, .playwright, .orchestrator, .gsdSync, .prs:
+        case .graphify:
+            GraphifyOptions()
+        case .browser, .mcp, .playwright, .orchestrator, .gsdSync, .prs:
             EmptyView()
         }
+    }
+}
+
+/// Settings › Features › Graphify: the CLI command and whether it answers.
+private struct GraphifyOptions: View {
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.metrics) private var metrics
+    @Environment(\.theme) private var theme
+    @State private var command = ""
+
+    private var graphify: GraphifyController { environment.graphify }
+
+    var body: some View {
+        TextField(text: $command, prompt: Text(verbatim: GraphifyService.defaultCommand)) {
+            Text("features.graphify.command")
+            Text("features.graphify.command.detail")
+        }
+        .onSubmit(save)
+        .accessibilityIdentifier("settings.graphify.command")
+        LabeledContent {
+            HStack {
+                if graphify.isDetecting { ProgressView().controlSize(.small) }
+                Button("features.graphify.checkAgain") { save() }
+                    .disabled(graphify.isDetecting)
+                    .accessibilityIdentifier("settings.graphify.check")
+            }
+        } label: {
+            Text("features.graphify.status")
+            statusText
+                .font(metrics.font(.footnote))
+                .foregroundStyle(theme[.textSecondary])
+                .textSelection(.enabled)
+                .accessibilityIdentifier("settings.graphify.status")
+        }
+        .task {
+            command = environment.preferences?.document.graphifyCommand ?? ""
+            await graphify.detect()
+        }
+        .onDisappear(perform: store)
+    }
+
+    private var statusText: Text {
+        guard let status = graphify.status else { return Text("features.graphify.checking") }
+        guard status.available, let executable = status.executable else { return Text("features.graphify.notFound") }
+        return Text(verbatim: format("features.graphify.found", status.version ?? executable, executable))
+    }
+
+    /// Saves the command (empty is the default) and checks it.
+    private func save() {
+        store()
+        Task { await graphify.detect() }
+    }
+
+    private func store() {
+        let trimmed = command.trimmingCharacters(in: .whitespaces)
+        let value = trimmed.isEmpty ? nil : trimmed
+        guard environment.preferences?.document.graphifyCommand != value else { return }
+        environment.preferences?.update { $0.graphifyCommand = value }
     }
 }
 

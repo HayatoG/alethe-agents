@@ -36,6 +36,7 @@
       "id": "p-api",
       "name": "api",
       "color": "#6ea8ff",
+      "graphifyEnabled": true,
       "groupId": "g-work",
       "layoutMode": "auto",
       "collapsed": false,

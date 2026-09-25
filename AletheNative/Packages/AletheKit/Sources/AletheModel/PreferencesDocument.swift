@@ -59,6 +59,9 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     /// Toolbar items shown or hidden against their default, keyed by `ToolbarItemKind` raw value
     /// (upstream `topbarShow*`; P5-13 replaced P3-13's `usagePills`); read through `showsToolbarItem`.
     public var toolbarItems: [String: Bool]?
+    /// The Graphify CLI (Settings › Features › Graphify, P5-17): a command name looked up like the
+    /// agents' CLIs, or a path; nil is `graphify`.
+    public var graphifyCommand: String?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,

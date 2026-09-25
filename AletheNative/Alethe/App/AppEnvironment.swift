@@ -73,6 +73,8 @@ final class AppEnvironment {
     let diagnostics = DiagnosticsController()
     /// ai-memory detection and its MCP server on agent launches (P5-18).
     let aiMemory = AiMemoryController()
+    /// Graphify CLI, graphs and the MCP server added to agent launches (P5-17).
+    let graphify = GraphifyController()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -192,6 +194,7 @@ final class AppEnvironment {
         #endif
         // The hook bridge listens before any terminal starts, so the first launches are wired too.
         terminals.hookEnvironment = self
+        graphify.start(environment: self)
         notifier.start(environment: self)
         pomodoro.start(environment: self)
         await terminals.hooks.start(terminals: terminals)
