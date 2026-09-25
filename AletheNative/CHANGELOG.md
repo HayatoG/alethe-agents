@@ -248,6 +248,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Settings › General › Data: export the profile as a `.zip` and import it back (contents shown first),
   reset the profile or erase all data; a safety backup is saved first and the app relaunches to apply
   it.
+- New Project can clone a repository (owner/name, a GitHub or git URL, or a local path) with progress; a
+  folder's saved Alethe settings (`.alethe/project.json`) are offered back, Initialize Git is offered
+  for non-repositories, and the detected stack is shown.
+- Project menu › Export Settings… / Import Settings…: move a project's settings as JSON; import lists
+  the changes and can be undone.
+- Open in VS Code in the project and terminal menus, Show in Finder for a terminal's folder, and Open in
+  Browser for the project's repository page.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

@@ -2140,7 +2140,7 @@ cadence above.
   `opencode.json` fallback; a user-set OPENCODE_CONFIG is replaced for that launch). App
   `McpLaunchWiring` registry (providers from P5-17/18/19) writes per-launch files 0600 in the P3-9
   private folder. Tests written and compiled, NOT run.
-- [ ] **P5-5 (M) New project: clone, marker, git init, stack.** Project editor (upstream
+- [x] **P5-5 (M) New project: clone, marker, git init, stack.** Project editor (upstream
   `NewProjectModal`, `EditProjectModal`): Clone from GitHub (`normalize_github_url`, `git clone` with
   progress through `AletheGit`, cancel removes the partial folder); `.alethe/project.json` read when a
   folder is picked (offers to restore the saved name, color, agents and worktree settings) and written on
@@ -2149,15 +2149,31 @@ cadence above.
   shown in the editor and feeding the Merge Center's suggested validation. *Tests:* U (URL
   normalization, marker round-trip against an upstream file), G (stack fixtures from upstream's tests),
   UI (clone of a local bare repository). *Parity:* SB-2.
-- [ ] **P5-6 (S) Export/import project config.** Project menu › Export Settings… / Import Settings…
+  *Done:* (`2986e4c`) project editor Local Folder / Clone from GitHub (`owner/name`, GitHub or git URLs,
+  local paths; into `~/Alethe` or a chosen folder; progress; Cancel removes the partial folder). Picking
+  a folder reads `.alethe/project.json` (upstream shape) and offers to restore it; saving writes it back
+  keeping unknown keys and leaving out machine-local ids. Initialize Git for non-repositories; stack
+  detection keeps upstream's five kinds (web, cli, desktop, fullstack, unknown — a backend-only project
+  is `cli` like upstream) and feeds the Merge Center's suggested validation. Optional
+  `Project.githubURL` (old workspace.json loads). Tests (U + UI `ProjectCloneTests`, seed `clone`)
+  written and compiled, NOT run.
+- [x] **P5-6 (S) Export/import project config.** Project menu › Export Settings… / Import Settings…
   (upstream `sidebarMenus.tsx`): the project's settings (not terminals or scrollback) as JSON through the
   save/open panels; import shows what changes and applies with undo. *Tests:* U (round-trip, unknown
   keys ignored), UI. *Parity:* SB-4.
-- [ ] **P5-7 (S) Open in VS Code, Finder, browser.** Project and terminal menus: Open in VS Code (the
+  *Done:* (`a81f089`) project menu › Export Settings… / Import Settings…: name, color, worktree
+  settings, layout and repository URL (no terminals or scrollback) with upstream's key names, so files
+  move both ways with the Tauri app; import ignores unknown keys, lists the changes, asks once and is
+  undoable. Tests (U + UI `ProjectSettingsTests`) written and compiled, NOT run.
+- [x] **P5-7 (S) Open in VS Code, Finder, browser.** Project and terminal menus: Open in VS Code (the
   `code` CLI through the launcher resolver, else `NSWorkspace` by bundle id; upstream `open_in_vscode`),
   Reveal in Finder (exists for projects; add terminals' folders), Open in Browser for the project's web
   URL (upstream `open_in_browser`); a clear message when VS Code is missing. *Tests:* U (resolution),
   UI (menu items). *Parity:* SB-6.
+  *Done:* (`4ff98d8`) Open in VS Code (`code`, else VS Code / Insiders / VSCodium app, else a message)
+  in the project and sidebar terminal menus (not the sub-tab lane menu); Show in Finder for a terminal's
+  folder; Open in Browser uses the cloned URL, else the `origin` remote, else a message. Tests (U + UI
+  `OpenInTests`) written and compiled, NOT run.
 - [x] **P5-8 (M) `alethe` CLI shim.** Settings › General › Command Line Tool: install, reinstall when
   stale, uninstall, status (path, on PATH or not) — upstream `cli_shim.rs`: a POSIX script in
   `~/.local/bin` that opens the app with the folder, marked so a
