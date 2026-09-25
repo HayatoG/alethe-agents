@@ -9,7 +9,9 @@ import Foundation
 final class AgentHookHub {
     private var server: AgentHookServer?
     private var endpoint: String?
-    private let folder = FileManager.default.temporaryDirectory.appending(path: "alethe-hooks-\(getpid())", directoryHint: .isDirectory)
+    /// Private (0700) per-run folder for launch files; MCP wiring (P5-4) writes here too.
+    static let folder = FileManager.default.temporaryDirectory.appending(path: "alethe-hooks-\(getpid())", directoryHint: .isDirectory)
+    private var folder: URL { Self.folder }
     private var codexScript: URL?
 
     func start(terminals: TerminalRegistry) async {

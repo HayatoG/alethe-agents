@@ -34,6 +34,8 @@ final class TerminalRegistry {
     /// Called on every activity change (notifications, P3-11).
     @ObservationIgnored var onActivityChange: ((TabID, AgentActivity, AgentHookEvent?) -> Void)?
     @ObservationIgnored let hooks = AgentHookHub()
+    /// MCP servers integrations add to each agent launch (P5-4).
+    @ObservationIgnored let mcp = McpLaunchWiring()
     /// Conversation titles of agent tabs (P3-10), read from their transcripts.
     private(set) var titles: [TabID: String] = [:]
     /// Tabs whose agent finished while the user was elsewhere (upstream `completionUnread`).
@@ -300,13 +302,16 @@ final class TerminalRegistry {
         discoveries.removeValue(forKey: tab.id)?.cancel()
         claims.release(owner: tab.id.rawValue)
         let sessionID = resumableSession(of: tab, kind: kind, cwd: cwd, fresh: fresh)
+        let servers = mcp.launch(for: McpLaunchContext(tab: tab.id, kind: kind, project: project, workingDirectory: cwd))
         let request = AgentLaunchRequest(
             kind: kind,
             workingDirectory: cwd,
             extraArguments: tab.extraArguments,
             sessionID: sessionID,
             unrestricted: tab.unrestricted,
-            hooks: hooks.launch(for: tab.id, kind: kind)
+            hooks: hooks.launch(for: tab.id, kind: kind),
+            mcpServers: servers.servers,
+            mcpConfigPath: servers.configPath
         )
         do {
             let command = try environment.agentLauncher.command(for: request)

@@ -11,6 +11,11 @@ public struct AgentLaunchRequest: Sendable {
     public var unrestricted: Bool
     /// Hook bridge wiring for this launch (P3-9): Claude's `--settings` file, Codex's `notify`.
     public var hooks: HookLaunch?
+    /// MCP servers added to this launch only (P5-4); agents without wiring ignore them.
+    public var mcpServers: [McpLaunchServer]
+    /// The per-launch file written from `mcpServers` for agents that read one (`McpLaunchConfig.needsFile`):
+    /// Claude's `--mcp-config`, OpenCode's `OPENCODE_CONFIG`. Without it those agents get no servers.
+    public var mcpConfigPath: String?
 
     public struct HookLaunch: Sendable {
         public var claudeSettingsPath: String?
@@ -23,13 +28,16 @@ public struct AgentLaunchRequest: Sendable {
     }
 
     public init(kind: AgentKind, workingDirectory: String? = nil, extraArguments: [String] = [],
-                sessionID: String? = nil, unrestricted: Bool = false, hooks: HookLaunch? = nil) {
+                sessionID: String? = nil, unrestricted: Bool = false, hooks: HookLaunch? = nil,
+                mcpServers: [McpLaunchServer] = [], mcpConfigPath: String? = nil) {
         self.kind = kind
         self.workingDirectory = workingDirectory
         self.extraArguments = extraArguments
         self.sessionID = sessionID
         self.unrestricted = unrestricted
         self.hooks = hooks
+        self.mcpServers = mcpServers
+        self.mcpConfigPath = mcpConfigPath
     }
 }
 
@@ -104,14 +112,24 @@ public struct AgentLauncher: Sendable {
         }
         var session = AgentArguments.build(for: request.kind, base: base, sessionID: request.sessionID,
                                            makeSessionID: makeSessionID)
-        if let hooks = request.hooks {
-            if request.kind == .claude, let path = hooks.claudeSettingsPath {
-                // After the session flags, as upstream places it.
-                session.arguments.insert(contentsOf: ["--settings", path], at: min(2, session.arguments.count))
-            } else if request.kind == .codex, !hooks.codexArguments.isEmpty {
-                // Config overrides go before a `resume` subcommand.
-                session.arguments = hooks.codexArguments + session.arguments
-            }
+        let mcpFile = request.mcpServers.isEmpty ? nil : request.mcpConfigPath
+        switch request.kind {
+        case .claude:
+            // After the session flags, MCP then settings, as upstream places them. `--mcp-config` is
+            // variadic, so the `=` form keeps it from swallowing a positional argument after it.
+            var flags = mcpFile.map { ["--mcp-config=\($0)"] } ?? []
+            if let path = request.hooks?.claudeSettingsPath { flags += ["--settings", path] }
+            session.arguments.insert(contentsOf: flags, at: min(2, session.arguments.count))
+        case .codex:
+            // Config overrides go before a `resume` subcommand.
+            let mcp = McpLaunchConfig.codexArguments(request.mcpServers)
+            session.arguments = (request.hooks?.codexArguments ?? []) + mcp + session.arguments
+        case .opencode:
+            // Merged over the global config, under the project's own `opencode.json`. A user's own
+            // OPENCODE_CONFIG is replaced for this launch.
+            if let mcpFile { environment["OPENCODE_CONFIG"] = mcpFile }
+        default:
+            break
         }
         if request.kind == .opencode {
             // OpenTUI's explicit-width probe prints stray bytes in terminals that don't answer it.
