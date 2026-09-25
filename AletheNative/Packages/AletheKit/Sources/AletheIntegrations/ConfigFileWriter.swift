@@ -125,6 +125,25 @@ public struct ConfigFileWriter: Sendable {
         try write(Data(text.utf8), over: snapshot, backupSlot: slot)
     }
 
+    /// Deletes the file `snapshot` was read from, with the same guard and backup as a write. A
+    /// missing file is a no-op; a symlink is removed, not its target.
+    @discardableResult
+    public func remove(over snapshot: ConfigFileSnapshot, backupSlot slot: ConfigBackupSlot?) throws(ConfigFileError) -> ConfigWriteReport {
+        let current = try read(snapshot.url)
+        guard current == snapshot else { throw .changedSinceRead(snapshot.url) }
+        guard let contents = current.contents else { return ConfigWriteReport(url: snapshot.url, backup: nil) }
+        var backup: ConfigBackup?
+        if let slot {
+            backup = try store(contents, of: snapshot.url, in: slot)
+        }
+        do {
+            try FileManager.default.removeItem(at: snapshot.url)
+        } catch {
+            throw .writeFailed(snapshot.url, error.localizedDescription)
+        }
+        return ConfigWriteReport(url: snapshot.url, backup: backup)
+    }
+
     // MARK: Backups
 
     /// A slot's backups, newest first.

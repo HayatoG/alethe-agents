@@ -38,6 +38,8 @@ enum EditorRequest: Identifiable, Hashable {
     case worktrees(ProjectID?)
     /// Branch testing of a project (nil: the selected one; P4-12).
     case branchTesting(ProjectID?)
+    /// Agent Library of a project (nil: the selected one; P5-16).
+    case agentLibrary(ProjectID?)
     /// Help › Diagnostics…: recent errors and log export (P5-11).
     case diagnostics
     /// The previous run did not exit cleanly: its crash records (P5-11).
@@ -66,6 +68,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .mergeCenter: "mergeCenter"
         case .worktrees: "worktrees"
         case .branchTesting: "branchTesting"
+        case .agentLibrary: "agentLibrary"
         case .diagnostics: "diagnostics"
         case .crashNotice: "crashNotice"
         case .skills: "skills"

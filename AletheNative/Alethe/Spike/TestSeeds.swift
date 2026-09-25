@@ -97,6 +97,14 @@ enum TestSeeds {
             try? git.run()
             git.waitUntilExit()
             _ = doc.addProject(name: "repo", folder: repo.path, color: .green)
+        case "agentLibrary":
+            // A project in the data root whose `.claude/agents` holds one agent Alethe did not write (P5-16).
+            let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+            let folder = URL(filePath: root).appending(path: "agentsproj")
+            let agents = folder.appending(path: ".claude/agents")
+            try? FileManager.default.createDirectory(at: agents, withIntermediateDirectories: true)
+            try? Data("---\nname: mine\ndescription: My own agent.\n---\n".utf8).write(to: agents.appending(path: "mine.md"))
+            _ = doc.addProject(name: "agentsproj", folder: folder.path, color: .purple)
         case "web":
             // Port 9 (discard) is closed on a Mac: the page fails fast without touching the network.
             let project = doc.addProject(name: "site", folder: "/private/tmp", color: .blue)
