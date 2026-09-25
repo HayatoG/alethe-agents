@@ -380,8 +380,10 @@ private let writesGraph = #"mkdir -p "$1/graphify-out" && echo '{"nodes":[{"id":
     }
 
     @Test func timesOut() async {
-        await #expect(throws: ExternalCommandError.timedOut) {
+        await #expect {
             try await ExternalCommand.run("/bin/sleep", ["30"], timeout: .milliseconds(200))
+        } throws: { error in
+            if case ExternalCommandError.timedOut = error { true } else { false }
         }
     }
 

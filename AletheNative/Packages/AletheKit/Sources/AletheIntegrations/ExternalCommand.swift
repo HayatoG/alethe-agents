@@ -80,3 +80,19 @@ public enum ExternalCommand {
         var isSet: Bool { lock.withLock { value } }
     }
 }
+
+public extension ExternalCommandResult {
+    init(exitCode: Int32, stdout: String, stderr: String) {
+        self.init(status: exitCode, stdout: stdout, stderr: stderr)
+    }
+
+    var exitCode: Int32 { status }
+}
+
+public extension ExternalCommand {
+    /// Path form, for callers that resolved the CLI to a path string.
+    static func run(_ executable: String, _ arguments: [String], directory: URL? = nil,
+                    timeout: Duration) async throws(ExternalCommandError) -> ExternalCommandResult {
+        try await run(URL(filePath: executable), arguments, directory: directory, timeout: timeout)
+    }
+}

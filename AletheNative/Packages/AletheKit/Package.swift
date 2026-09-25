@@ -55,10 +55,9 @@ let package = Package(
         .target(name: "AletheExtensionHost", dependencies: ["AlethePluginKit", "AletheFoundation", "AletheExtensionSDK"]),
         .target(
             name: "AletheIntegrations",
-            dependencies: ["AletheFoundation", "AletheGit"],
+            dependencies: ["AletheFoundation", "AletheGit", "AletheAgents"],
             resources: [.copy("Resources/OpenCodePlugins")]
         ),
-        .target(name: "AletheIntegrations", dependencies: ["AletheFoundation", "AletheAgents"]),
         .target(name: "CAlethePTY"),
         .target(
             name: "AletheTerminal",
@@ -81,10 +80,9 @@ let package = Package(
         .testTarget(name: "AletheTodosTests", dependencies: ["AletheTodos", "AlethePluginKit"]),
         .testTarget(name: "AletheGitControlTests", dependencies: ["AletheGitControl", "AletheGit", "AlethePluginKit"]),
         .testTarget(name: "AletheFilesTests", dependencies: ["AletheFiles", "AletheGit"]),
-        .testTarget(name: "AletheIntegrationsTests", dependencies: ["AletheIntegrations", "AletheFoundation", "AletheGit"]),
         .testTarget(
             name: "AletheIntegrationsTests",
-            dependencies: ["AletheIntegrations", "AletheFoundation", "AletheAgents"],
+            dependencies: ["AletheIntegrations", "AletheFoundation", "AletheGit", "AletheAgents"],
             resources: [.copy("Fixtures")]
         ),
         .testTarget(name: "AletheExtensionHostTests", dependencies: ["AletheExtensionHost", "AlethePluginKit", "AletheExtensionSDK"]),
