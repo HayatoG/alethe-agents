@@ -238,7 +238,7 @@ public enum TauriImport {
     }
 
     /// A terminal's tabs the native app can run; nil when none is left.
-    private static func pane(from terminal: [String: Any], folder: String, project: String, context: Context,
+    static func pane(from terminal: [String: Any], folder: String, project: String, context: Context,
                              report: inout Report) -> Pane? {
         var tabs: [PaneTab] = []
         var activeTab: TabID?

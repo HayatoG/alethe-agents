@@ -100,6 +100,14 @@ struct MergeValidateFinishTests {
         #expect(ValidationSettings.suggested(for: dir).commands == ["npm run build", "npm test", "cargo build", "cargo test"])
     }
 
+    @Test func suggestedCommandsAddTheDetectedStacksChecks() throws {
+        let dir = try Self.tempDir("alethe-suggest-stack")
+        try #"{"scripts":{"build":"vite build"}}"#.write(to: dir.appendingPathComponent("package.json"), atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent("src-tauri"), withIntermediateDirectories: true)
+        try "{}".write(to: dir.appendingPathComponent("src-tauri/tauri.conf.json"), atomically: true, encoding: .utf8)
+        #expect(ValidationSettings.suggested(for: dir).commands == ["npm run build", "cargo check --manifest-path src-tauri/Cargo.toml"])
+    }
+
     // MARK: G — finish
 
     @Test func finalizeCleanBranchFastForwardsAndTearsDown() async throws {

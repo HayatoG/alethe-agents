@@ -87,6 +87,16 @@ enum TestSeeds {
                 git.waitUntilExit()
             }
             _ = doc.addProject(name: "wtrepo", folder: repo.path, color: .green)
+        case "clone":
+            // A local bare repository (`origin.git` in the data root) to clone from (P5-5).
+            let repo = seedRepository()
+            let bare = repo.deletingLastPathComponent().appending(path: "origin.git")
+            let git = Process()
+            git.executableURL = URL(filePath: "/usr/bin/git")
+            git.arguments = ["clone", "-q", "--bare", "--", repo.path, bare.path]
+            try? git.run()
+            git.waitUntilExit()
+            _ = doc.addProject(name: "repo", folder: repo.path, color: .green)
         case "web":
             // Port 9 (discard) is closed on a Mac: the page fails fast without touching the network.
             let project = doc.addProject(name: "site", folder: "/private/tmp", color: .blue)

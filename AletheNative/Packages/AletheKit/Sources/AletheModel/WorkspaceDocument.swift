@@ -128,6 +128,8 @@ public struct Project: Codable, Hashable, Sendable, Identifiable {
     public var autoWorktree: Bool?
     /// How those worktrees are created; nil is a linked git worktree (upstream leaves it undefined).
     public var worktreeMode: ProjectWorktreeMode?
+    /// The repository the project was cloned from (upstream `githubUrl`, P5-5).
+    public var githubURL: String?
 
     public init(id: ProjectID = .make(), name: String, color: ProjectColor = .blue, folder: String,
                 panes: [Pane] = [], createdAt: Date = Date(), layoutMode: PaneLayoutMode? = nil) {

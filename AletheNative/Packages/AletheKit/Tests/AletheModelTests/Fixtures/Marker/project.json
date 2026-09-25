@@ -1,0 +1,53 @@
+{
+  "id": "p_upstream1",
+  "name": "Storefront",
+  "mode": "standard",
+  "color": "#22c55e",
+  "iconUrl": "https://example.com/icon.png",
+  "groupId": null,
+  "defaultCwd": "/Users/someone/code/storefront",
+  "terminals": [
+    {
+      "id": "t_one",
+      "name": "Claude",
+      "cwd": "/Users/someone/code/storefront",
+      "tabs": [
+        { "id": "s_1", "type": "claude", "name": "Claude", "cwd": "/Users/someone/code/storefront", "ptyId": "pty-9", "sessionId": "abc-123", "extraArgs": ["--verbose"] },
+        { "id": "s_2", "type": "shell", "name": "Shell", "cwd": "/Users/someone/code/storefront", "ptyId": null }
+      ],
+      "activeTabId": "s_2",
+      "disabled": false,
+      "laneVisible": null
+    },
+    {
+      "id": "t_two",
+      "name": "Codex",
+      "cwd": "/Users/someone/code/storefront",
+      "tabs": [
+        { "id": "s_3", "type": "codex", "name": "Codex", "cwd": "/Users/someone/code/storefront", "ptyId": null }
+      ],
+      "activeTabId": "s_3",
+      "disabled": false,
+      "laneVisible": null,
+      "gridId": "g_side"
+    },
+    {
+      "id": "t_md",
+      "name": "README",
+      "cwd": "/Users/someone/code/storefront",
+      "tabs": [],
+      "activeTabId": "",
+      "disabled": false,
+      "laneVisible": null,
+      "kind": "markdown",
+      "filePath": "README.md"
+    }
+  ],
+  "layoutMode": "grid",
+  "collapsed": false,
+  "createdAt": 1735000000000,
+  "worktreeMode": "localCopy",
+  "autoWorktree": true,
+  "validationCommands": ["npm run build"],
+  "githubUrl": "https://github.com/someone/storefront"
+}

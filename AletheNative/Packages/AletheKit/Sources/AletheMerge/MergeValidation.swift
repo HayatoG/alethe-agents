@@ -19,7 +19,7 @@ public struct ValidationSettings: Codable, Equatable, Sendable {
         commands.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
     }
 
-    /// Build/test commands inferred from well-known manifests at `root` (native-only convenience).
+    /// Build/test commands inferred from well-known manifests at `root`, then the stack's checks.
     public static func suggested(for root: URL) -> ValidationSettings {
         let fm = FileManager.default
         func exists(_ name: String) -> Bool { fm.fileExists(atPath: root.appendingPathComponent(name).path) }
@@ -35,7 +35,19 @@ public struct ValidationSettings: Codable, Equatable, Sendable {
         if exists("Cargo.toml") { commands += ["cargo build", "cargo test"] }
         if exists("Package.swift") { commands += ["swift build", "swift test"] }
         if exists("go.mod") { commands += ["go build ./...", "go test ./..."] }
+        // The detected stack (P5-5) adds its checks for toolchains the manifests above did not cover:
+        // a Tauri app's `src-tauri` crate, a Python backend.
+        if let detection = try? ProjectStackDetector.detect(root) {
+            let covered = Set(commands.map(toolchain))
+            commands += detection.suggestedCommands.filter { !covered.contains(toolchain($0)) }
+        }
         return ValidationSettings(commands: commands)
+    }
+
+    /// The toolchain a command runs (`npm`, `pnpm` and `yarn` count as one).
+    static func toolchain(_ command: String) -> String {
+        let tool = command.split(separator: " ").first.map(String.init) ?? command
+        return ["npm", "pnpm", "yarn"].contains(tool) ? "node" : tool
     }
 }
 
