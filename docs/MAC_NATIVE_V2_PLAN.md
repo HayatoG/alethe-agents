@@ -2103,13 +2103,19 @@ cadence above.
   `graphify_codex_config_write`). *Tests:* G (upstream's Codex cases plus `toml_edit` round-trip cases:
   a file edited and edited back is unchanged; untouched tables byte-identical), U (malformed input is an
   error with a line, never a partial write). *Parity:* groundwork for EXT-1.
-- [ ] **P5-3 (S) Feature toggles.** `PreferencesDocument.enabledFeatures` (browser, graphify, mcp,
+- [x] **P5-3 (S) Feature toggles.** `PreferencesDocument.enabledFeatures` (browser, graphify, mcp,
   playwright, orchestrator, gsdSync, aiMemory, prs; upstream `lib/features.ts` defaults: browser,
   graphify, mcp and prs on), `Features.isOn(_:)`, Settings › Features (upstream `FeaturesPage`: title,
   description, secondary ones under “Show more”, a slot under each feature for its options, used by
   P5-17…P5-19). The web pane entry points and the Pull Requests tab are gated now; later tasks gate their
   own surfaces. Imported from Tauri. *Tests:* U (defaults, decoding without the key), UI (turning PRs
   off hides the tab). *Parity:* SET-2.
+  *Done:* (`13f81a7`) `PreferencesDocument.enabledFeatures` with upstream defaults (browser, graphify,
+  mcp, prs on); `Features.isOn(_:)`; unknown upstream keys kept on save; imported from Tauri. Settings ›
+  Features: one toggle each, Graphify / GSD Sync / AI Memory under Show 3 More, `FeatureOptions` slots
+  for P5-17/18/19/24. Browser off hides web-pane entry points (Add Content › Web, ⌥-click, link menu and
+  page bar Open in Pane, HTML in Files); PRs off hides the Pull Requests tab. Open web panes are not
+  closed. Tests (U + UI `FeatureTogglesTests`) written and compiled, NOT run.
 - [x] **P5-4 (M) Per-launch MCP wiring.** `AgentLaunchRequest.mcpServers` (name, command, arguments,
   environment): Claude Code gets one `--mcp-config` file per launch in the P3-9 private folder (upstream
   `graphify_mcp_config_path`, `ai_memory_mcp_config_path`, `playwright_mcp_config_path`); Codex gets
@@ -2182,11 +2188,16 @@ cadence above.
   launch offers the newest `DiagnosticReports/Alethe-*.ips` and MetricKit crash diagnostics to view or
   export. *Tests:* U (marker states, export assembly, secrets absent), UI (the after-crash notice with a
   seeded marker). *Parity:* SET-4, SET-11, USE-4.
-- [ ] **P5-12 (S) App icon themes.** Upstream's four (`elite-original`, `elite-pure-black`,
+- [x] **P5-12 (S) App icon themes.** Upstream's four (`elite-original`, `elite-pure-black`,
   `elite-indigo`, `elite-blush`; `src/assets/theme-icons/`) as app resources, picked in Settings ›
   Appearance and applied with `NSApp.applicationIconImage` (the bundle is never modified: it would break
   the signature); `appIconTheme` imported from Tauri. *Tests:* U (preference), HT (picker at three zoom
   levels). *Parity:* UI-4.
+  *Done:* (`ebe8cfe`) new `Alethe/Assets.xcassets` with upstream's four icons copied unchanged from
+  `src/assets/theme-icons/`; the Dock icon is set at runtime (`NSApp.applicationIconImage`), the bundle
+  is never modified (so the icon shows only while running); Settings › Appearance › App Icon, default
+  elite-indigo with upstream fallback; imported from Tauri. Tests (U + UI in `AppearanceTests`) written
+  and compiled, NOT run.
 - [ ] **P5-13 (M) Toolbar configuration.** The window toolbar becomes customizable (SwiftUI
   `.toolbar(id:)`, View › Customize Toolbar…; upstream `TopbarSettingsModal`): usage pills per provider,
   memory, Pomodoro, notifications, profile, Home; visibility priorities on macOS 27 (ADR-7a).

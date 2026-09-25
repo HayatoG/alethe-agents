@@ -235,6 +235,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   add their own right-sidebar tab, and are isolated if they crash (a sample extension is included).
 - `alethe` command line tool (Settings › General › Command Line Tool): `alethe .` opens that folder in
   Alethe, showing its project or offering to add it.
+- Settings › Features: turn optional modules on or off (Browser, MCP & Skills, Playwright Browser, Agent
+  Orchestration, Open Pull Requests; Graphify, GSD Sync and AI Memory under Show More), imported from
+  the previous Alethe.
+- Settings › Appearance › App Icon: four Dock icons (Elite Original, Pure Black, Indigo, Blush),
+  imported from the previous Alethe.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
