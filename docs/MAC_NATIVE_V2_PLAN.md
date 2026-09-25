@@ -5,7 +5,7 @@
 > right after pane-drag). Open: the workspace tab close button's accessibility frame is off screen (clicks
 > where drawn work; VoiceOver affected). Manual checks owed: dictation with a real microphone (P3-17),
 > prompt redraw after resize (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24).
-> Next: break Phase 4 into tasks. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P4-1. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
 > will later move to its own repository (see §9.4).
 
@@ -1790,12 +1790,92 @@ ship; they run per the test cadence above.
 state (working, waiting, done, cost, usage) shows live with notifications; Home shows real data.
 
 ### Phase 4 — Plugins, Git and review
-EXT-3 `AlethePluginKit` v1 (L) + plugin settings page; GIT-1 Git Control as a built-in plugin (L);
-GIT-2 commit graph (L); GIT-3 incoming/outgoing; FS-1 file explorer with git badges, Quick Look, drag to
-pane (L); FS-2 → `NSOpenPanel`; GIT-4 worktrees (L); GIT-5 Merge Center (split into analyze, prepare,
-validate/health/contract, finalize/abort/cleanup: 4 × L); PR-1 Open PRs; PR-2 PR review + squash merge
-(L); PER-1 Todos plugin; PER-2 Pomodoro (upstream shape incl. `focusTodoId`); UI-1 theme-pack data
-plugin; SB-7 right sidebar; SB-8 view placement; ExtensionKit host + sample third-party extension (M).
+Order: the plugin API and its host surfaces first (Git, Todos and the theme pack are built-in plugins on
+the public API, ADR-9), then Git — a `git` CLI layer, Git Control, the graph, incoming/outgoing — then
+the file explorer, then worktrees and the Merge Center that builds on them, then pull requests, then
+Todos + Pomodoro and the theme pack, then the ExtensionKit spike for third-party plugins. Git runs the
+user's `git` and `gh` (no libgit2), off the main thread, cancelable. Destructive steps (discard, reset
+--hard, force cleanup, delete) ask once; the rest is undoable or reversible. Upstream's JavaScript
+plugins (catalog, local install, `plugin_*` storage for JS) stay Won't port; third parties go through
+ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the test cadence above.
+
+- [ ] **P4-1 (L) `AlethePluginKit` v1.** Versioned Swift API (ADR-9): `AlethePlugin` with a manifest (id,
+  version, name, capabilities) and `activate(context:)`; contribution points — sidebar tab (left or
+  right), command (menu and Find/Jump), theme, pane kind, sheet, settings page, agent provider; declared
+  capabilities enforced by the context (git, filesystem read/write, terminal input, network, storage);
+  per-plugin storage (`plugin-data/<id>.json`, atomic, debounced); a host registry with enable/disable
+  that survives relaunch and isolates a failing plugin. Built-ins register statically.
+  *Tests:* U (registry, capabilities, storage). *Parity:* EXT-3 (partial).
+- [ ] **P4-2 (M) Plugins settings and view placement.** Settings › Plugins (upstream `PluginsPage`):
+  each plugin with version, capabilities, enabled toggle and its error; plugin settings pages. View
+  placement (upstream `viewPlacement.ts`): move a contributed tab between the left sidebar and the
+  right one and reorder it, persisted (`viewPlacements`). *Tests:* U (placement), UI. *Parity:* SB-8,
+  EXT-3.
+- [ ] **P4-3 (M) Right sidebar.** An inspector column (⌥⌘0, width persisted; upstream `RightSidebar`)
+  showing contributed tabs plus the project's Markdown docs and plans (list, open in a pane, recent
+  history). GSD and MCP tabs arrive with Phase 5. *Tests:* UI, HT. *Parity:* SB-7.
+- [ ] **P4-4 (L) Git layer.** `AletheGit` over the `git` CLI (upstream `git_control.rs`): repository
+  discovery, status (porcelain v2 incl. renames, conflicts, submodules), diff and diff summary,
+  branches, stage/unstage/discard, commit, pull/push/fetch with progress and credentials left to git,
+  init, log graph, show commit files/message, cherry-pick, revert, reset, branch from commit,
+  incoming/outgoing; typed errors, cancellation, one queue per repository, a file watcher to refresh.
+  *Tests:* G (temporary repositories, upstream's cases). *Parity:* groundwork for GIT-1…5.
+- [ ] **P4-5 (L) Git Control.** Built-in plugin (upstream `plugins/git-control`): changes grouped
+  staged/unstaged/conflicts, stage or discard per file or all (discard asks), commit message with ⌘↩,
+  amend, branch switcher, pull/push/fetch with status, diff of a file in the diff pane (P2), init for a
+  folder without a repository. *Tests:* U, UI. *Parity:* GIT-1.
+- [ ] **P4-6 (L) Commit graph.** Lanes laid out like upstream `GitGraph` (merges, branch and tag
+  labels, HEAD), a lazy list for long histories, commit detail (message, files, diff), actions:
+  cherry-pick, revert, reset soft/mixed/hard (hard asks), branch from commit, copy SHA.
+  *Tests:* U (lane layout, golden against upstream fixtures), UI. *Parity:* GIT-2.
+- [ ] **P4-7 (S) Incoming/outgoing.** Commits ahead of and behind the upstream branch with fetch, as a
+  Git Control section (upstream `IncomingOutgoing`). *Tests:* G, UI. *Parity:* GIT-3.
+- [ ] **P4-8 (L) File explorer.** A sidebar tab (upstream `FileExplorer`): lazy tree with file-type
+  icons, git badges (P4-4), rename, move to Trash (confirmation only when the Trash is unavailable),
+  new file/folder, Quick Look on Space, open in a pane (Markdown, media, text, web), drag to a pane or
+  grid slot, reveal in Finder, live refresh (FSEvents). *Tests:* U (tree model, badges), UI.
+  *Parity:* FS-1.
+- [ ] **P4-9 (L) Worktrees.** Worktree isolation per agent (upstream `worktrees.rs`): provision, list,
+  remove, lock/unlock, fetch branch, commit pending changes, cleanup; `autoWorktree` / `worktreeMode` /
+  `worktreeAgentId` on new terminals and the New Terminal sheet; the sidebar marks worktree terminals.
+  *Tests:* G, UI. *Parity:* GIT-4.
+- [ ] **P4-10 (L) Merge Center — analyze.** `merge_analyzer` port (path classes, strategies), the
+  sidebar merge panel and merge tree (upstream `SidebarMergePanel`, `MergeTree`), the Merge Center
+  sheet shell with its stages. *Tests:* U (golden against upstream fixtures), UI. *Parity:* GIT-5.
+- [ ] **P4-11 (L) Merge Center — prepare.** Prepare and rebase onto the target (upstream
+  `conflict_resolution.rs`), conflicts listed with open-in-diff and agent-assisted resolution in a
+  terminal, cancelable long steps. *Tests:* G (conflict scenarios), UI. *Parity:* GIT-5.
+- [ ] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
+  probe, contract check, branch testing (upstream `BranchTestingModal`), results kept per merge.
+  *Tests:* G, UI. *Parity:* GIT-5.
+- [ ] **P4-13 (L) Merge Center — finish.** Finalize, abort, preflight abort, force cleanup (asks once),
+  confirm worktree commit (upstream `ConfirmWorktreeCommitModal`), worktree removal after merging.
+  *Tests:* G, UI. *Parity:* GIT-5.
+- [ ] **P4-14 (M) Open pull requests.** A sidebar tab with the user's PRs (`gh search prs
+  --involves=@me`; upstream `PullRequestsSidebar`): status and checks, open in the browser, send to a
+  Todo (P4-16); a clear state when `gh` is missing or signed out. *Tests:* U (parsing), UI. *Parity:*
+  PR-1.
+- [ ] **P4-15 (L) PR review and squash merge.** Review a PR with an agent in a terminal (upstream
+  `PullRequestReviewModal`; review agent and model preferences), squash merge guarded by the reviewed
+  head SHA (`gh pr merge --squash --match-head-commit`). *Tests:* U, UI. *Parity:* PR-2.
+- [ ] **P4-16 (L) Todos.** Built-in plugin (upstream `plugins/todos`): global and per-project lists,
+  tags, PR links, reorder, the external `todos.jsonc` template (`ensure_todo_template`) and settings.
+  *Tests:* U (store, file round-trip), UI. *Parity:* PER-1.
+- [ ] **P4-17 (M) Pomodoro.** Timer in the Todos panel and a toolbar pill (upstream `PomodoroWidget`),
+  focus todo (`focusTodoId`), work/break lengths, the session surviving relaunch, a notification at the
+  end (P3-11). *Tests:* U (timer state), UI. *Parity:* PER-2.
+- [ ] **P4-18 (S) Theme pack.** Upstream's four theme-pack themes as a data plugin on the theme
+  contribution point, in the picker with the built-ins. *Tests:* U (tokens complete), HT. *Parity:* UI-1.
+- [ ] **P4-19 (M) ExtensionKit spike.** The app's extension point, a sample third-party extension in
+  its own signed app (a sidebar tab rendered remotely with `EXHostViewController`, a command, storage
+  through the host), capability prompts on first enable, crash isolation. Outcome recorded in ADR-9;
+  in-process bundles stay rejected unless the spike fails. *Tests:* UI (sample loads, a crash is
+  contained). *Parity:* EXT-3.
+- [ ] **P4-20 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+
+**Phase 4 exit criteria:** Git Control, the graph and the Merge Center cover upstream's flows on real
+repositories; the file explorer, worktrees and PRs work from the sidebar; Todos, Pomodoro and the theme
+pack run as built-in plugins on the public API; a sample ExtensionKit plugin loads and is isolated.
 
 ### Phase 5 — Integrations
 EXT-1 MCP manager (config editors for Claude/Codex (TOML)/OpenCode/Cursor/Gemini, registry search,
