@@ -1,4 +1,5 @@
 import AletheDesign
+import AletheIntegrations
 import AletheModel
 import SwiftUI
 
@@ -96,6 +97,8 @@ struct MainWindow: View {
             DiagnosticsSheet()
         case .crashNotice:
             CrashNoticeSheet()
+        case .skills:
+            SkillsSheet(store: environment.skillStore)
         }
     }
 

@@ -42,6 +42,8 @@ enum EditorRequest: Identifiable, Hashable {
     case diagnostics
     /// The previous run did not exit cleanly: its crash records (P5-11).
     case crashNotice
+    /// History › Skills…: the skills of every agent (P5-15).
+    case skills
 
     var id: String {
         switch self {
@@ -66,6 +68,7 @@ enum EditorRequest: Identifiable, Hashable {
         case .branchTesting: "branchTesting"
         case .diagnostics: "diagnostics"
         case .crashNotice: "crashNotice"
+        case .skills: "skills"
         }
     }
 }

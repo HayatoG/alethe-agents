@@ -2,6 +2,7 @@ import AletheAgents
 import AletheDesign
 import AletheFoundation
 import AletheGitControl
+import AletheIntegrations
 import AletheModel
 import AlethePluginKit
 import AletheTodos
@@ -128,6 +129,21 @@ final class AppEnvironment {
 
     /// Optional modules (P5-3); every gated surface reads this.
     var features: Features { preferences?.document.features ?? .defaults }
+
+    /// The skills of every agent under the integrations home (P5-15).
+    var skillStore: SkillStore { SkillStore(home: Self.integrationsHome) }
+
+    /// The home folder whose agent configs and skills the integrations read and write.
+    /// `-AletheIntegrationsHome <path>` (debug builds) points it elsewhere, like upstream's
+    /// `ALETHE_MCP_HOME`, so UI tests work on a seeded throwaway home.
+    static var integrationsHome: URL {
+        #if DEBUG
+        if let home = UserDefaults.standard.string(forKey: "AletheIntegrationsHome") {
+            return URL(filePath: home, directoryHint: .isDirectory)
+        }
+        #endif
+        return FileManager.default.homeDirectoryForCurrentUser
+    }
 
     /// Builds agent commands with the user's CLI path overrides.
     var agentLauncher: AgentLauncher {

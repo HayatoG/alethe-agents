@@ -101,6 +101,8 @@ enum TestSeeds {
             // Port 9 (discard) is closed on a Mac: the page fails fast without touching the network.
             let project = doc.addProject(name: "site", folder: "/private/tmp", color: .blue)
             doc.addPane(to: project, content: .web(url: "http://127.0.0.1:9/", options: WebPaneOptions()))
+        case "skills":
+            seedSkills()
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"
@@ -109,6 +111,26 @@ enum TestSeeds {
         default:
             break
         }
+    }
+
+    /// Skills in the `-AletheIntegrationsHome` folder (P5-15): `brand` in the shared store linked
+    /// from Claude Code, `motion` only in Claude Code, and Codex's bundled `imagegen`.
+    private static func seedSkills() {
+        guard let home = UserDefaults.standard.string(forKey: "AletheIntegrationsHome") else { return }
+        let root = URL(filePath: home, directoryHint: .isDirectory)
+        func skill(_ path: String, _ text: String) -> URL {
+            let dir = root.appending(path: path, directoryHint: .isDirectory)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try? Data(text.utf8).write(to: dir.appending(path: "SKILL.md"))
+            return dir
+        }
+        let brand = skill(".agents/skills/brand", "---\nname: brand\ndescription: Brand system\n---\n\n# Brand\n\nUse the palette.\n")
+        try? FileManager.default.createDirectory(at: root.appending(path: ".claude/skills"), withIntermediateDirectories: true)
+        try? FileManager.default.createSymbolicLink(at: root.appending(path: ".claude/skills/brand"), withDestinationURL: brand)
+        let motion = skill(".claude/skills/motion", "---\nname: motion\ndescription: >\n  Creates motion\n  graphics\n---\n\n# Motion guide\n")
+        try? FileManager.default.createDirectory(at: motion.appending(path: "references"), withIntermediateDirectories: true)
+        try? Data("notes".utf8).write(to: motion.appending(path: "references/timing.md"))
+        _ = skill(".codex/skills/.system/imagegen", "---\ndescription: Generates images\n---\n\n# Images\n")
     }
 
     /// `repo` in the data root: `notes.txt` committed on `main`, then modified in the worktree.

@@ -214,6 +214,10 @@ private struct HistoryCommands: Commands {
             Button("menu.history.conversations") { environment.editorRequest = .conversations(nil) }
                 .keyboardShortcut("y", modifiers: .command)
                 .disabled(environment.workspace?.document.projects.isEmpty ?? true)
+            if environment.features.isOn(.mcp) {
+                Button("menu.history.skills") { environment.editorRequest = .skills }
+                    .disabled(environment.workspace == nil)
+            }
             if environment.hasPluginCommand(GitControlPlugin.openCommandID) {
                 Button("menu.git.control") { environment.performPluginCommand(GitControlPlugin.openCommandID) }
                     .disabled(environment.workspace?.document.workspace.selectedProjectID == nil)
