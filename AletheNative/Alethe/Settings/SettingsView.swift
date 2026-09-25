@@ -15,6 +15,9 @@ struct SettingsView: View {
             Tab("settings.appearance.tab", systemImage: "paintpalette", value: SettingsTab.appearance) {
                 AppearanceSettings()
             }
+            Tab("settings.toolbar", systemImage: "menubar.rectangle", value: SettingsTab.toolbar) {
+                ToolbarSettings()
+            }
             Tab("settings.agents.tab", systemImage: "sparkles", value: SettingsTab.agents) {
                 AgentSettings()
             }
@@ -38,7 +41,7 @@ struct SettingsView: View {
 
 /// The Settings pane shown; Home's setup steps open a given one.
 enum SettingsTab: Hashable {
-    case general, appearance, agents, resources, features, plugins, profiles
+    case general, appearance, toolbar, agents, resources, features, plugins, profiles
 }
 
 private struct GeneralSettings: View {

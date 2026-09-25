@@ -305,6 +305,13 @@
     },
     "visualStyle": "normal",
     "appIconTheme": "elite-blush",
+    "topbarShowClaudeUsage": false,
+    "topbarShowCodexUsage": true,
+    "topbarShowAntigravityUsage": false,
+    "topbarShowSync": true,
+    "topbarShowProfile": true,
+    "topbarShowMemory": false,
+    "topbarShowRouter9": false,
     "enabledFeatures": {
       "browser": true,
       "graphify": true,

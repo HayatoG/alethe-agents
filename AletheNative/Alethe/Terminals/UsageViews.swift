@@ -3,35 +3,41 @@ import AletheDesign
 import AletheModel
 import SwiftUI
 
-/// Toolbar usage pills (upstream `UsageStrip` / topbar pills): each shown provider's busiest window,
-/// tinted as it fills; clicking opens AI Usage.
-struct UsagePills: View {
+/// A toolbar usage pill (upstream topbar pills): the provider's busiest window, tinted as it fills;
+/// clicking opens AI Usage. Empty until the provider's usage is known.
+struct UsagePill: View {
+    let provider: AgentKind
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
     @Environment(\.metrics) private var metrics
 
     var body: some View {
-        HStack(spacing: metrics.space(.xs)) {
-            ForEach(environment.usage.shownProviders, id: \.self) { provider in
-                if let peak = environment.usage.usage[provider]?.peak {
-                    Button { environment.editorRequest = .aiUsage } label: {
-                        Text(verbatim: "\(AgentLabels.name(for: provider.rawValue).split(separator: " ").first ?? "") \(Int(peak.usedPercent.rounded()))%")
-                            .font(metrics.font(.caption).monospacedDigit())
-                            .padding(.horizontal, metrics.space(.s))
-                            .padding(.vertical, metrics.space(.xxs))
-                            .background(theme[UsageLevel.token(peak.usedPercent)].opacity(0.18), in: Capsule())
-                            .foregroundStyle(theme[UsageLevel.token(peak.usedPercent)])
-                    }
-                    .buttonStyle(.plain)
-                    .help(Text(String(format: String(localized: "usage.pill.help"), AgentLabels.name(for: provider.rawValue), peak.label)))
-                    .accessibilityIdentifier("usage.pill.\(provider.rawValue)")
-                }
+        if let peak = environment.usage.usage[provider]?.peak {
+            Button { environment.editorRequest = .aiUsage } label: {
+                Text(verbatim: "\(AgentLabels.name(for: provider.rawValue).split(separator: " ").first ?? "") \(Int(peak.usedPercent.rounded()))%")
+                    .font(metrics.font(.caption).monospacedDigit())
+                    .padding(.horizontal, metrics.space(.s))
+                    .padding(.vertical, metrics.space(.xxs))
+                    .background(theme[UsageLevel.token(peak.usedPercent)].opacity(0.18), in: Capsule())
+                    .foregroundStyle(theme[UsageLevel.token(peak.usedPercent)])
             }
-            Button { environment.editorRequest = .aiUsage } label: { Image(systemName: "gauge.with.dots.needle.33percent") }
-                .help(Text("usage.title"))
-                .accessibilityLabel(Text("usage.title"))
-                .accessibilityIdentifier("usage.button")
+            .buttonStyle(.plain)
+            .help(Text(String(format: String(localized: "usage.pill.help"), AgentLabels.name(for: provider.rawValue), peak.label)))
+            .accessibilityIdentifier("usage.pill.\(provider.rawValue)")
         }
+    }
+}
+
+/// Toolbar: opens AI Usage.
+struct AIUsageButton: View {
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        Button { environment.editorRequest = .aiUsage } label: {
+            Label { Text("usage.title") } icon: { Image(systemName: "gauge.with.dots.needle.33percent") }
+        }
+        .help(Text("usage.title"))
+        .accessibilityIdentifier("usage.button")
     }
 }
 
@@ -133,15 +139,14 @@ struct AIUsageSheet: View {
         }
     }
 
+    /// The same choice as Settings › Toolbar.
     private func pill(_ provider: AgentKind) -> Binding<Bool> {
-        Binding {
-            environment.preferences?.document.usagePills?.contains(provider.rawValue) == true
+        let item = ToolbarItemKind.usagePill(for: provider.rawValue)
+        return Binding {
+            item.map { environment.preferences?.document.showsToolbarItem($0) == true } ?? false
         } set: { on in
-            environment.preferences?.update { preferences in
-                var pills = Set(preferences.usagePills ?? [])
-                if on { pills.insert(provider.rawValue) } else { pills.remove(provider.rawValue) }
-                preferences.usagePills = UsageMonitor.providers.map(\.rawValue).filter(pills.contains)
-            }
+            guard let item else { return }
+            environment.preferences?.update { $0.setToolbarItem(item, shown: on) }
         }
     }
 }

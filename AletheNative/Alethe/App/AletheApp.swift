@@ -33,6 +33,7 @@ struct AletheApp: App {
         .windowToolbarStyle(.unified)
         .commands {
             SidebarCommands()
+            ToolbarCommands()
             FileCommands(environment: environment)
             ViewCommands(environment: environment)
             TerminalCommands(environment: environment)

@@ -21,14 +21,7 @@ struct MainWindow: View {
                 // Inside the detail column: over the whole split view, AppKit's split views take the clicks.
                 .overlay(alignment: .bottom) { DictationHUD() }
                 .animation(environment.reducesMotion ? nil : .easeOut(duration: 0.2), value: environment.dictation.machine.phase)
-                .toolbar {
-                    ToolbarItem(placement: .navigation) { HomeButton() }
-                    ToolbarItem(placement: .primaryAction) { PomodoroToolbarPill() }
-                    ToolbarItem(placement: .primaryAction) { UsagePills() }
-                    ToolbarItem(placement: .primaryAction) { NotificationsButton() }
-                    ToolbarItem(placement: .primaryAction) { MemoryIndicator() }
-                    ToolbarItem(placement: .primaryAction) { ProfileToolbarMenu() }
-                }
+                .modifier(MainToolbar())
                 .inspector(isPresented: rightSidebarVisible) {
                     RightSidebar()
                         .inspectorColumnWidth(min: metrics.size(220), ideal: rightSidebarWidth, max: metrics.size(480))

@@ -28,11 +28,11 @@ final class UsageMonitor {
         }
     }
 
-    /// Providers with a toolbar pill (Settings › Agents › Usage). Reading Claude's and Antigravity's
+    /// Providers with a toolbar pill (AI Usage, Settings › Toolbar). Reading Claude's and Antigravity's
     /// tokens can make macOS ask for Keychain access, so nothing is fetched in the background until the
     /// user turns a pill on.
     var shownProviders: [AgentKind] {
-        let shown = Set(environment?.preferences?.document.usagePills ?? [])
+        let shown = Set(environment?.preferences?.document.usagePillProviders ?? [])
         return Self.providers.filter { shown.contains($0.rawValue) }
     }
 

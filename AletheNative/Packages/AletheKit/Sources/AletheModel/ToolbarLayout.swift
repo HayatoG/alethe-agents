@@ -1,0 +1,83 @@
+import AletheFoundation
+import Foundation
+
+/// An item of the main window's toolbar (UI-7, upstream `TopbarSettingsModal`). Shown or hidden in
+/// Settings › Toolbar (stored in `PreferencesDocument.toolbarItems`); arranged through
+/// View › Customize Toolbar…, which AppKit stores itself.
+public enum ToolbarItemKind: String, CaseIterable, Codable, Hashable, Sendable {
+    case home
+    case pomodoro
+    case usageClaude = "usage.claude"
+    case usageCodex = "usage.codex"
+    case usageAntigravity = "usage.antigravity"
+    /// The AI Usage button.
+    case aiUsage = "usage"
+    case notifications
+    case memory
+    case profile
+
+    /// Providers with a usage pill, in toolbar order.
+    public static let usageProviders = ["claude", "codex", "antigravity"]
+
+    public static func usagePill(for provider: String) -> ToolbarItemKind? {
+        ToolbarItemKind(rawValue: "usage.\(provider)")
+    }
+
+    /// The provider of a usage pill; nil for every other item.
+    public var usageProvider: String? {
+        guard rawValue.hasPrefix("usage.") else { return nil }
+        return String(rawValue.dropFirst("usage.".count))
+    }
+
+    /// Usage pills start hidden: reading Claude's and Antigravity's tokens can make macOS ask for
+    /// Keychain access, so nothing is fetched until the user shows one (P3-13).
+    public var shownByDefault: Bool { usageProvider == nil }
+
+    /// When the window is too narrow, lower ranks go to the overflow menu first (ADR-7a
+    /// `ToolbarItemVisibilityPriority`, macOS 26.1 and later).
+    public var overflowRank: ToolbarOverflowRank {
+        switch self {
+        case .usageClaude, .usageCodex, .usageAntigravity: .first
+        case .memory, .aiUsage: .early
+        case .pomodoro, .notifications: .standard
+        case .home, .profile: .last
+        }
+    }
+}
+
+public enum ToolbarOverflowRank: Int, Comparable, Sendable {
+    case first, early, standard, last
+
+    public static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
+}
+
+extension PreferencesDocument {
+    public func showsToolbarItem(_ item: ToolbarItemKind) -> Bool {
+        toolbarItems?[item.rawValue] ?? item.shownByDefault
+    }
+
+    /// Only choices that differ from the default are stored.
+    public mutating func setToolbarItem(_ item: ToolbarItemKind, shown: Bool) {
+        var items = toolbarItems ?? [:]
+        items[item.rawValue] = shown == item.shownByDefault ? nil : shown
+        toolbarItems = items.isEmpty ? nil : items
+    }
+
+    /// Providers whose usage pill is shown, in toolbar order.
+    public var usagePillProviders: [String] {
+        ToolbarItemKind.usageProviders.filter { provider in
+            ToolbarItemKind.usagePill(for: provider).map(showsToolbarItem) ?? false
+        }
+    }
+
+    /// v1 → v2 (P5-13): P3-13's `usagePills` list becomes the usage pill toolbar items.
+    static func migrateUsagePills(_ object: inout JSONObject) {
+        guard let pills = object.removeValue(forKey: "usagePills") else { return }
+        let shown = Set(pills.arrayValue?.compactMap(\.stringValue) ?? [])
+        var items = object["toolbarItems"]?.objectValue ?? [:]
+        for provider in ToolbarItemKind.usageProviders where shown.contains(provider) {
+            if let item = ToolbarItemKind.usagePill(for: provider) { items[item.rawValue] = .bool(true) }
+        }
+        if !items.isEmpty { object["toolbarItems"] = .object(items) }
+    }
+}

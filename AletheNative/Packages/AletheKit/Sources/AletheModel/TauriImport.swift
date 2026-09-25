@@ -47,7 +47,7 @@ public enum TauriImport {
     }
 
     public enum Preference: String, Hashable, Sendable, CaseIterable {
-        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features, appIcon
+        case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features, appIcon, toolbar
     }
 
     /// What the importer needs to know about the native app, injected to keep this module free of
@@ -320,6 +320,18 @@ public enum TauriImport {
         if let icon = (raw["appIconTheme"] as? String).flatMap(AppIconTheme.init(rawValue:)), icon != preferences.iconTheme {
             preferences.iconTheme = icon
             report.preferences.insert(.appIcon)
+        }
+        // Upstream's sync and 9router items arrive with Phase 7.
+        let toolbar: [(String, ToolbarItemKind)] = [
+            ("topbarShowClaudeUsage", .usageClaude), ("topbarShowCodexUsage", .usageCodex),
+            ("topbarShowAntigravityUsage", .usageAntigravity), ("topbarShowProfile", .profile),
+            ("topbarShowMemory", .memory),
+        ]
+        for (key, item) in toolbar {
+            if let shown = raw[key] as? Bool, shown != preferences.showsToolbarItem(item) {
+                preferences.setToolbarItem(item, shown: shown)
+                report.preferences.insert(.toolbar)
+            }
         }
         if let language = raw["language"] as? String, !language.isEmpty { report.language = language }
     }

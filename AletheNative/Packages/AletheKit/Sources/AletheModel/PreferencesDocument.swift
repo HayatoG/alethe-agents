@@ -3,8 +3,10 @@ import Foundation
 
 /// User preferences, persisted as `preferences.json` in the profile folder.
 public struct PreferencesDocument: VersionedDocument, Hashable {
-    public static let currentVersion = 1
-    public static let migrations: [Int: @Sendable (inout JSONObject) throws -> Void] = [:]
+    public static let currentVersion = 2
+    public static let migrations: [Int: @Sendable (inout JSONObject) throws -> Void] = [
+        1: { migrateUsagePills(&$0) },
+    ]
     public static let initial = PreferencesDocument()
 
     public static let defaultThemeID = "elite-indigo"
@@ -38,8 +40,6 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var lastTerminalCreation: TerminalCreation?
     /// Notify when an agent finishes or needs an answer out of view (P3-11); nil means yes.
     public var notifyAgents: Bool?
-    /// Providers with a usage pill in the toolbar (`claude`, `codex`, `antigravity`; P3-13).
-    public var usagePills: [String]?
     /// Notify when a usage limit resets (upstream `notifyOnLimitReset`); nil means yes.
     public var notifyLimitReset: Bool?
     /// Open on Home instead of the workspace (upstream `alwaysStartOnHome`; P3-15).
@@ -56,6 +56,9 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     /// Models the GSD Sync child session tries in order (upstream `gsdSyncModelChain`), written to
     /// `.opencode/alethe-gsd-config.json`; nil or empty lets OpenCode pick.
     public var gsdSyncModelChain: [String]?
+    /// Toolbar items shown or hidden against their default, keyed by `ToolbarItemKind` raw value
+    /// (upstream `topbarShow*`; P5-13 replaced P3-13's `usagePills`); read through `showsToolbarItem`.
+    public var toolbarItems: [String: Bool]?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,
