@@ -22,6 +22,7 @@
 		A1E70000000000000000000BD /* AletheGitControl in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CD /* AletheGitControl */; };
 		A1E70000000000000000000BE /* AletheExtensionHost in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CE /* AletheExtensionHost */; };
 		A1E70000000000000000000BF /* AletheIntegrations in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000CF /* AletheIntegrations */; };
+		A1E70000000000000000000B0 /* AletheOrchestrator in Frameworks */ = {isa = PBXBuildFile; productRef = A1E70000000000000000000C0 /* AletheOrchestrator */; };
 		A1E7000000000000000E0041 /* AletheSampleSidebar.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = A1E7000000000000000E0002 /* AletheSampleSidebar.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1E7000000000000000E0042 /* AletheExtensionSDK in Frameworks */ = {isa = PBXBuildFile; productRef = A1E7000000000000000E0043 /* AletheExtensionSDK */; };
 /* End PBXBuildFile section */
@@ -114,6 +115,7 @@
 				A1E70000000000000000000BD /* AletheGitControl in Frameworks */,
 				A1E70000000000000000000BE /* AletheExtensionHost in Frameworks */,
 				A1E70000000000000000000BF /* AletheIntegrations in Frameworks */,
+				A1E70000000000000000000B0 /* AletheOrchestrator in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +211,7 @@
 				A1E70000000000000000000CD /* AletheGitControl */,
 				A1E70000000000000000000CE /* AletheExtensionHost */,
 				A1E70000000000000000000CF /* AletheIntegrations */,
+				A1E70000000000000000000C0 /* AletheOrchestrator */,
 			);
 			productName = Alethe;
 			productReference = A1E7000000000000000000D1 /* Alethe.app */;
@@ -813,6 +816,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
 			productName = AletheIntegrations;
+		};
+		A1E70000000000000000000C0 /* AletheOrchestrator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1E700000000000000000601 /* XCLocalSwiftPackageReference "Packages/AletheKit" */;
+			productName = AletheOrchestrator;
 		};
 		A1E7000000000000000E0043 /* AletheExtensionSDK */ = {
 			isa = XCSwiftPackageProductDependency;

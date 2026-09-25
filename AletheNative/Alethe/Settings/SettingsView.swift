@@ -30,18 +30,26 @@ struct SettingsView: View {
             Tab("settings.plugins.tab", systemImage: "puzzlepiece.extension", value: SettingsTab.plugins) {
                 PluginSettings()
             }
+            if environment.features.isOn(.orchestrator) {
+                Tab("settings.multiagent.tab", systemImage: "point.3.connected.trianglepath.dotted", value: SettingsTab.multiagent) {
+                    MultiagentSettings()
+                }
+            }
             Tab("settings.profiles.tab", systemImage: "person.2", value: SettingsTab.profiles) {
                 ProfileSettings()
             }
         }
         .frame(width: 560)
         .scenePadding()
+        .onChange(of: environment.features.isOn(.orchestrator)) { _, isOn in
+            if !isOn, environment.settingsTab == .multiagent { environment.settingsTab = .general }
+        }
     }
 }
 
 /// The Settings pane shown; Home's setup steps open a given one.
 enum SettingsTab: Hashable {
-    case general, appearance, toolbar, agents, resources, features, plugins, profiles
+    case general, appearance, toolbar, agents, resources, features, plugins, multiagent, profiles
 }
 
 private struct GeneralSettings: View {

@@ -1,6 +1,7 @@
 import AletheFoundation
 import AletheGit
 import AletheIntegrations
+import AletheOrchestrator
 import Foundation
 import Observation
 
@@ -8,6 +9,7 @@ import Observation
 /// `.planning/` watchers and audit of `planning.rs`): owns the event bus and its telemetry, publishes
 /// `PlanningUpdated` for the projects the scheduler or autocommit follow, and runs the planning audit
 /// and its opt-in autocommit. The scheduler (P6-20, P6-22) and autocommit subscribe to `bus` themselves.
+/// Settings › Multiagent picks the project both work on (`focus`).
 @Observable
 @MainActor
 final class MultiagentController {
@@ -33,9 +35,21 @@ final class MultiagentController {
     @ObservationIgnored private var autocommit: PlanningAutocommit?
     /// Off at every launch, like upstream; not a preference.
     private(set) var isAutocommitEnabled = false
+    /// `.planning/task.md` chains per project, in memory like upstream; ticks on request and, once
+    /// started, on `PlanningUpdated`.
+    @ObservationIgnored let scheduler: Scheduler
+    /// The project Settings › Multiagent works on: the scheduler follows its `.planning/`, and
+    /// autocommit does too while on. Kept when the Settings window closes, like upstream's watchers.
+    private(set) var focusedProject: FocusedProject?
+
+    struct FocusedProject: Equatable, Sendable {
+        var id: String
+        var folder: URL
+    }
 
     init() {
         planningAudit = PlanningAudit(bus: bus)
+        scheduler = Scheduler(bus: bus)
     }
 
     private struct WatchKey: Hashable {
@@ -52,15 +66,42 @@ final class MultiagentController {
         let autocommit = PlanningAutocommit(bus: bus, audit: planningAudit)
         self.autocommit = autocommit
         await autocommit.start()
+        await scheduler.startAutoTick(on: bus)
     }
 
     /// Turns planning autocommit on or off for this launch (upstream `set_planning_autocommit`).
+    /// The focused project's `.planning/` is followed for autocommit while it is on.
     func setAutocommit(_ enabled: Bool) async {
         isAutocommitEnabled = enabled
         await autocommit?.setEnabled(enabled)
+        guard let project = focusedProject else { return }
+        if enabled {
+            try? await follow(projectID: project.id, folder: project.folder, by: .autocommit)
+        } else {
+            await unfollow(projectID: project.id, folder: project.folder, by: .autocommit)
+        }
+    }
+
+    /// Makes `project` the one the scheduler (and autocommit, while on) follows, dropping the
+    /// previous one; nil drops both. Throws `FollowError.notARepository` outside a git checkout,
+    /// with the project still focused so its (empty) queue and history show.
+    func focus(_ project: FocusedProject?) async throws {
+        guard project != focusedProject else { return }
+        if let previous = focusedProject {
+            await unfollow(projectID: previous.id, folder: previous.folder, by: .scheduler)
+            await unfollow(projectID: previous.id, folder: previous.folder, by: .autocommit)
+        }
+        focusedProject = project
+        guard let project else { return }
+        try await follow(projectID: project.id, folder: project.folder, by: .scheduler)
+        if isAutocommitEnabled {
+            try await follow(projectID: project.id, folder: project.folder, by: .autocommit)
+        }
     }
 
     func stop() async {
+        await scheduler.stopAutoTick()
+        focusedProject = nil
         await autocommit?.stop()
         autocommit = nil
         isAutocommitEnabled = false

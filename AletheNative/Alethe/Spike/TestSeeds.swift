@@ -136,6 +136,12 @@ enum TestSeeds {
             doc.workspace.selectedProjectID = project
         case "mcp":
             seedMcp()
+        case "multiagent", "multiagentLive":
+            // A committed `.planning/` roadmap with one of three items done (P6-22); the live variant
+            // keeps changing `.planning/notes.md`, as an agent would, so autocommit has work.
+            let repo = seedSchedulerRepository()
+            doc.addProject(name: "agentrepo", folder: repo.path, color: .purple)
+            if name == "multiagentLive" { touchPlanningPeriodically(in: repo) }
         case "prompt":
             // Folder from -AletheUITestFolder (a folder the agent already trusts).
             let folder = UserDefaults.standard.string(forKey: "AletheUITestFolder") ?? "/private/tmp"
@@ -151,7 +157,7 @@ enum TestSeeds {
         switch name {
         case "gsdSync":
             preferences.features.set(.gsdSync, on: true)
-        case "orchestrator":
+        case "orchestrator", "multiagent", "multiagentLive":
             preferences.features.set(.orchestrator, on: true)
         default:
             break
@@ -179,6 +185,46 @@ enum TestSeeds {
         ]
         for (name, text) in files { try? Data(text.utf8).write(to: planning.appending(path: name)) }
         return repo
+    }
+
+    /// `agentrepo` in the data root: `.planning/task.md` (1 of 3 checked) committed as an audit commit,
+    /// with a local identity so later audit commits need no global git config.
+    private static func seedSchedulerRepository() -> URL {
+        let root = UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp"
+        let repo = URL(filePath: root).appending(path: "agentrepo")
+        let planning = repo.appending(path: ".planning")
+        try? FileManager.default.createDirectory(at: planning, withIntermediateDirectories: true)
+        try? Data("- [x] Map the API\n- [ ] Write the client\n- [ ] Ship it\n".utf8)
+            .write(to: planning.appending(path: "task.md"))
+        try? Data("# Plan\n".utf8).write(to: planning.appending(path: "plan.md"))
+        for arguments in [["init", "-q", "-b", "main"], ["config", "user.name", "seed"], ["config", "user.email", "seed@local"],
+                          ["config", "commit.gpgsign", "false"], ["add", "."],
+                          ["commit", "-q", "-m", "gsd(alethe): seed", "-m", "Alethe-Agent: seed"]] {
+            let git = Process()
+            git.executableURL = URL(filePath: "/usr/bin/git")
+            git.arguments = ["-C", repo.path] + arguments
+            try? git.run()
+            git.waitUntilExit()
+        }
+        return repo
+    }
+
+    /// Appends to `.planning/notes.md` every 3 s for five minutes.
+    private static func touchPlanningPeriodically(in repo: URL) {
+        let notes = repo.appending(path: ".planning/notes.md")
+        Task.detached(priority: .utility) {
+            for tick in 0..<100 {
+                try? await Task.sleep(for: .seconds(3))
+                let line = "tick \(tick)\n"
+                if let handle = try? FileHandle(forWritingTo: notes) {
+                    handle.seekToEndOfFile()
+                    handle.write(Data(line.utf8))
+                    try? handle.close()
+                } else {
+                    try? Data(line.utf8).write(to: notes)
+                }
+            }
+        }
     }
 
     /// Skills in the `-AletheIntegrationsHome` folder (P5-15): `brand` in the shared store linked
