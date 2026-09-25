@@ -2688,7 +2688,7 @@ above.
   app target's copy phase, `OrchestratorWiring`. Needs P6-7, P6-8, P6-9. *Tests:* U (bridge framing, no
   line for a notification, the standalone handshake, the built helper against a stub endpoint).
   *Parity:* ORC-2.
-- [ ] **P6-11 (M) Planner subagents.** Claude Code's own subagents and teammates reach the board
+- [x] **P6-11 (M) Planner subagents.** Claude Code's own subagents and teammates reach the board
   (upstream `agent_hooks_settings_path(orchestrator: true)`, `agent_events.rs`, `agentCanvasStore`,
   `lib/orchestratorSubagents.ts`): with the feature on, P3-9's per-launch Claude settings add
   `SubagentStart`, `SubagentStop`, `PreToolUse`, `PostToolUse`, `TeammateIdle`, `TaskCreated`,
@@ -2700,6 +2700,16 @@ above.
   `Alethe/Orchestrator/SubagentTracker.swift`. Needs P6-12. *Tests:* G
   (`orchestratorSubagents.test.ts`), U (hook parsing, settings with and without the feature). *Parity:*
   ORC-1 (subagents).
+  *Done:* (`ec079a4`) with the orchestrator feature on, P3-9's per-launch Claude settings add
+  SubagentStart/Stop, Pre/PostToolUse, TeammateIdle, TaskCreated/Completed (task events ignored) and
+  `teammateMode: in-process`; Codex planners get per-launch `-c hooks.SubagentStart/Stop` through a
+  stdin forwarder (not `.codex/config.toml`; replaces the user's own Subagent hooks for that launch
+  only; unverified without Codex installed). `SubagentLedger` (package) builds subagent, teammate
+  (`teammate:<planner>/<name>`) and background-shell nodes per planner tab; the app's `SubagentTracker`
+  feeds it from the bridge and reads a finished node's cost from its absolute `.jsonl` transcript off
+  main; the board gets them via `NativeSubagents.jobs` as one "Subagents" run per planner. Nodes are
+  never pruned (as upstream). Tests (U `SubagentLedgerTests` 5, `AgentHooksTests` +3) written and
+  compiled, NOT run.
 - [x] **P6-12 (M) Board model.** Pure ports in `AletheOrchestrator/Board`: runs and planners
   (`lib/orchestratorRuns.ts`: lanes and their order, counts, worst state, attention, `groupRuns`,
   `groupPlanners` with declared, orphaned and planner-less groups in a stable order,
