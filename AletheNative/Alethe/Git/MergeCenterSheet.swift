@@ -48,7 +48,7 @@ struct MergeCenterSheet: View {
         .task {
             guard let project else { return }
             let model = MergeCenterModel(folder: URL(filePath: project.folder, directoryHint: .isDirectory),
-                                         projectID: project.id)
+                                         projectID: project.id, bus: environment.multiagent.bus)
             self.model = model
             let last = AgentRegistry.builtin.parse(environment.preferences?.document.lastAgent)
             agent = last.flatMap { agents.contains($0) ? $0 : nil } ?? (agents.contains(.claude) ? .claude : agents.first ?? .claude)
@@ -404,10 +404,14 @@ final class MergeCenterModel {
     private(set) var running = false
     private(set) var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
     private var task: Task<Void, Never>?
+    /// Analysis and conflict-resolution events (P6-19; upstream `merge_analyzer.rs`,
+    /// `conflict_resolution.rs`).
+    @ObservationIgnored let events: EventOutbox
 
-    init(folder: URL, projectID: ProjectID? = nil) {
+    init(folder: URL, projectID: ProjectID? = nil, bus: EventBus? = nil) {
         self.folder = folder
         self.projectID = projectID
+        events = EventOutbox(bus: bus)
     }
 
     var canAnalyze: Bool { root != nil && !source.isEmpty && !target.isEmpty && source != target }
@@ -478,7 +482,11 @@ final class MergeCenterModel {
             let outcome = await withTaskCancellationHandler { await work.value } onCancel: { work.cancel() }
             guard !Task.isCancelled else { return }
             switch outcome {
-            case .success(let result): analysis = result
+            case .success(let result):
+                analysis = result
+                events.publish(.mergeAnalyzed(projectID: projectID?.rawValue, source: result.source, target: result.target,
+                                              clean: result.clean, conflictCount: result.conflicts.count,
+                                              classes: result.classes.map(\.variantName)))
             case .failure(let failure): error = String(describing: failure)
             }
             running = false
@@ -521,6 +529,9 @@ final class MergeCenterModel {
         let (source, target) = (source, target)
         let projectID = projectID?.rawValue
         perform({ try await ConflictResolution(root: root).prepare(source: source, target: target, projectId: projectID) }) { env in
+            self.events.publish(BusEvent.mergePrepared(
+                environmentID: env.id, projectID: projectID, source: source, target: target, clean: env.clean,
+                conflictCount: env.conflicts.count, environmentPath: env.path.path))
             self.environment = env
             self.conflicts = env.conflicts
             self.note = nil
@@ -543,13 +554,17 @@ final class MergeCenterModel {
 
     func abort() {
         guard let root, let id = environment?.id else { return }
-        perform({ try await ConflictResolution(root: root).abort(id: id) }) { _ in self.reset() }
+        perform({ try await ConflictResolution(root: root).abort(id: id) }) { _ in
+            self.events.publish(.mergeAborted(environmentID: id, projectID: self.projectID?.rawValue))
+            self.reset()
+        }
     }
 
     func validate() {
         guard let root, let handle else { return }
         let settings = settings
         perform({ try await MergeFinisher(root: root).validate(handle, settings: settings) }) { outcome in
+            self.publishEvents(of: outcome, handle: handle)
             self.note = Self.describe(outcome)
             self.outcome = outcome
             self.recordStage()
@@ -560,10 +575,25 @@ final class MergeCenterModel {
         guard let root, let handle else { return }
         let settings = settings
         perform({ try await MergeFinisher(root: root).finalize(handle, settings: settings) }) { outcome in
+            self.publishEvents(of: outcome, handle: handle)
             self.note = Self.describe(outcome)
             self.outcome = outcome
             self.merged = outcome.merged
             if outcome.merged { self.environment = nil }
+        }
+    }
+
+    /// `MergeValidated`/`MergeValidationFailed` when the pipeline ran, then `MergeMerged`, like
+    /// upstream's validate and finalize.
+    private func publishEvents(of outcome: MergeFinishOutcome, handle: MergeEnvHandle) {
+        let projectID = projectID?.rawValue
+        if let report = outcome.validation {
+            let failed = outcome.stage == .validation ? (report.failedCommand ?? report.status.rawValue) : nil
+            events.publish(.mergeValidation(environmentID: handle.id, projectID: projectID, failedStage: failed))
+        }
+        if outcome.merged {
+            events.publish(.mergeMerged(environmentID: handle.id, projectID: projectID,
+                                        source: handle.source, target: handle.target))
         }
     }
 

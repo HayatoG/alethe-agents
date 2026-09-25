@@ -1,4 +1,5 @@
 import AletheExtensionHost
+import AletheFoundation
 import AlethePluginKit
 import CoreServices
 import ExtensionFoundation
@@ -46,6 +47,8 @@ final class ExtensionManager {
     /// Set when discovery could not start (for example, the point is not declared in this build).
     private(set) var discoveryError: String?
     var pendingConsent: ConsentRequest?
+    /// Load failures (`PluginFailed`) for the app's event bus (P6-19); held until a bus is attached.
+    @ObservationIgnored let events = EventOutbox()
 
     private let stateURL: URL
     private let dataRoot: URL
@@ -181,7 +184,11 @@ final class ExtensionManager {
 
     private func update(_ id: String, _ change: (inout Entry) -> Void) {
         guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        let before = entries[index].status
         change(&entries[index])
+        if case .failed(let error) = entries[index].status, entries[index].status != before {
+            events.publish(.pluginFailed(id: id, error: error))
+        }
     }
 
     // MARK: - Enablement

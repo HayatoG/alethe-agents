@@ -1,4 +1,5 @@
 import AletheDesign
+import AletheFoundation
 import AlethePluginKit
 import SwiftUI
 
@@ -31,6 +32,11 @@ struct PluginSettings: View {
         .scrollDisabled(true)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityIdentifier("settings.plugins")
+        .task {
+            // Plugin events reach the bus from here on; failures from launch are delivered now.
+            environment.plugins?.events.attach(environment.multiagent.bus)
+            environment.extensions?.events.attach(environment.multiagent.bus)
+        }
     }
 }
 

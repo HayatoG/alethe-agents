@@ -1,3 +1,4 @@
+import AletheFoundation
 import AletheModel
 import AletheTerminal
 import Dispatch
@@ -34,10 +35,15 @@ final class ResourceMonitor {
     @ObservationIgnored private var pressureSource: DispatchSourceMemoryPressure?
     @ObservationIgnored private var background: Set<TabID> = []
     @ObservationIgnored private var lastUsed: [TabID: Date] = [:]
+    /// Pressure level changes so far (upstream `policy_trigger_count`).
+    @ObservationIgnored private var pressureChanges = 0
+    /// `ResourceMetricsUpdated` after every pass (P6-19).
+    @ObservationIgnored private let events = EventOutbox()
 
     func start(environment: AppEnvironment) {
         guard loop == nil else { return }
         self.environment = environment
+        events.attach(environment.multiagent.bus)
         loop = Task { [weak self] in
             while !Task.isCancelled {
                 self?.check()
@@ -65,8 +71,10 @@ final class ResourceMonitor {
 
         var runtimes: [TerminalRuntime] = []
         var usage: [TerminalUsage] = []
+        var processCount = 1  // the app, like upstream's walk
         for (tab, view) in running {
             let memory = SystemResources.treeFootprintMB(of: view.processID, parents: parents)
+            if view.processID > 0 { processCount += ProcessTree.descendants(of: view.processID, parents: parents).count }
             usage.append(TerminalUsage(tab: tab, memoryMB: memory))
             let quiet = Double(view.quietFor.components.seconds)
             runtimes.append(TerminalRuntime(
@@ -86,15 +94,30 @@ final class ResourceMonitor {
 
         system = SystemResources.memory()
         appMB = SystemResources.footprintMB(of: getpid())
+        let previous = pressure
         pressure = MemoryPressure.level(availableMB: system.availableMB, totalMB: system.totalMB, previous: pressure)
+        if pressure != previous { pressureChanges += 1 }
         terminals = usage.sorted { $0.memoryMB > $1.memoryMB }
         let candidates = ResourceSupervision.candidates(runtimes, policy: policy, now: now.timeIntervalSince1970)
         candidateCount = candidates.count
+        events.publish(.resourceMetrics(
+            memoryPressure: Self.upstreamLevel(pressure), systemAvailableMB: system.availableMB,
+            systemTotalMB: system.totalMB, appMB: appMB, ptysMB: terminalsMB, processCount: processCount,
+            policyTriggerCount: pressureChanges))
 
         guard ResourceSupervision.mayHibernate(pressure, policy: policy) else { return }
         // Under pressure one per pass, like upstream; in idle mode every candidate.
         for tab in policy.mode == .idle ? candidates : Array(candidates.prefix(1)) {
             environment.terminals.hibernate(tab)
+        }
+    }
+
+    /// Upstream's level name for each of the three native levels.
+    static func upstreamLevel(_ pressure: MemoryPressure) -> String {
+        switch pressure {
+        case .normal: "Ok"
+        case .warning: "Medium"
+        case .critical: "Critical"
         }
     }
 }

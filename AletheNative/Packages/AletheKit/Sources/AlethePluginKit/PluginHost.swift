@@ -37,6 +37,9 @@ public final class PluginHost {
     /// Contributions of every active plugin, in registration order.
     public private(set) var contributions = PluginContributions()
     private var placements = ViewPlacements.empty
+    /// `PluginEnabled`/`PluginDisabled` and load failures for the app's event bus (P6-19); held
+    /// until the app attaches its bus.
+    @ObservationIgnored public let events = EventOutbox()
 
     @ObservationIgnored private let pluginTypes: [any AlethePlugin.Type]
     @ObservationIgnored private let dataRoot: URL
@@ -84,6 +87,9 @@ public final class PluginHost {
         for index in records.indices where records[index].isEnabled && records[index].state == .disabled {
             activate(at: index)
         }
+        for record in records {
+            if case .failed(let error) = record.state { events.publish(.pluginFailed(id: record.id, error: error)) }
+        }
         rebuildContributions()
     }
 
@@ -116,6 +122,10 @@ public final class PluginHost {
         } else {
             await deactivate(at: index)
             records[index].state = .disabled
+        }
+        events.publish(.pluginEnabledChanged(id: id, enabled: enabled))
+        if enabled, case .failed(let error) = records[index].state {
+            events.publish(.pluginFailed(id: id, error: error))
         }
         rebuildContributions()
     }

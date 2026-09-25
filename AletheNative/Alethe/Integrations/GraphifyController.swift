@@ -27,9 +27,12 @@ final class GraphifyController {
     private(set) var failures: [URL: String] = [:]
     @ObservationIgnored private weak var environment: AppEnvironment?
     @ObservationIgnored private var roots: [String: URL] = [:]
+    /// `GraphUpdated` on generation and rollback (P6-19).
+    @ObservationIgnored private let events = EventOutbox()
 
     func start(environment: AppEnvironment) {
         self.environment = environment
+        events.attach(environment.multiagent.bus)
         environment.terminals.mcp.register(Self.mcpServerName) { [weak self] context in
             self?.servers(for: context) ?? []
         }
@@ -73,7 +76,7 @@ final class GraphifyController {
         generating.insert(root)
         Task {
             let result = await service.ensureGraph(root: root, executable: executable) { outcome in
-                Task { @MainActor [weak self] in self?.finished(root, outcome) }
+                Task { @MainActor [weak self] in self?.finished(root, outcome, action: "bootstrap") }
             }
             if result == .exists || result == .unavailable, !wasGenerating { generating.remove(root) }
         }
@@ -90,7 +93,7 @@ final class GraphifyController {
         }
         generating.insert(root)
         let outcome = await service.generate(root: root, executable: executable)
-        finished(root, outcome)
+        finished(root, outcome, action: "generate")
         return outcome
     }
 
@@ -102,14 +105,17 @@ final class GraphifyController {
     func rollback(root: URL, to snapshot: String) async throws {
         try await service.rollback(root: root, to: snapshot)
         revisions[root.standardizedFileURL, default: 0] += 1
+        events.publish(.graphRolledBack(snapshotID: snapshot))
     }
 
-    private func finished(_ root: URL, _ outcome: GraphifyGenerationOutcome) {
+    /// `action` is the `GraphUpdated` action published on success.
+    private func finished(_ root: URL, _ outcome: GraphifyGenerationOutcome, action: String) {
         generating.remove(root)
         switch outcome {
         case .generated:
             failures[root] = nil
             revisions[root, default: 0] += 1
+            events.publish(.graphGenerated(repository: root.path, action: action))
         case .failed(let message):
             failures[root] = message.isEmpty ? String(localized: "graphify.generationFailed") : message
             AppLog.record(.warning, .integrations, "Graphify generation failed: \(message)")
