@@ -1820,11 +1820,16 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   `plugin-data/<id>.json` debounced via tmp + rename; `PluginHost` persists enable/disable in
   `plugins.json` and marks a plugin failed (invalid/duplicate id, incompatible API, `activate` throws)
   without affecting others. U 16/16. App wiring comes with P4-2.
-- [ ] **P4-2 (M) Plugins settings and view placement.** Settings › Plugins (upstream `PluginsPage`):
+- [x] **P4-2 (M) Plugins settings and view placement.** Settings › Plugins (upstream `PluginsPage`):
   each plugin with version, capabilities, enabled toggle and its error; plugin settings pages. View
   placement (upstream `viewPlacement.ts`): move a contributed tab between the left sidebar and the
   right one and reorder it, persisted (`viewPlacements`). *Tests:* U (placement), UI. *Parity:* SB-8,
   EXT-3.
+  *Done:* the app owns a `PluginHost` of built-ins (Theme Pack), state in the profile's `plugins.json`,
+  loaded before preferences publish so a saved pack theme shows on the first frame; the theme picker lists
+  built-ins then plugin themes. Settings › Plugins: name, version, capabilities, enable toggle, load error.
+  `ViewPlacements` (side + order of contributed tabs) persisted in `plugins.json`, U 7; the drag UI comes
+  with P4-3. Open: plugin settings pages, Tauri import still validates built-in theme ids only.
 - [ ] **P4-3 (M) Right sidebar.** An inspector column (⌥⌘0, width persisted; upstream `RightSidebar`)
   showing contributed tabs plus the project's Markdown docs and plans (list, open in a pane, recent
   history). GSD and MCP tabs arrive with Phase 5. *Tests:* UI, HT. *Parity:* SB-7.
@@ -1875,6 +1880,11 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
 - [ ] **P4-11 (L) Merge Center — prepare.** Prepare and rebase onto the target (upstream
   `conflict_resolution.rs`), conflicts listed with open-in-diff and agent-assisted resolution in a
   terminal, cancelable long steps. *Tests:* G (conflict scenarios), UI. *Parity:* GIT-5.
+  *Done (model):* `ConflictResolution` in `AletheMerge` ports `conflict_resolution.rs`: `prepare` builds
+  worktree `alethe/merge-<id>` under `.alethe/merge-envs/`, `merge --no-commit --no-ff`, lists conflicts,
+  writes `<id>.json` + `ALETHE_CONFLICT.md` (upstream prompt verbatim); `rebaseOntoTarget`, `preflightAbort`,
+  `abort`; progress via `MergePrepareStep`; cancellation stops git and tears down (force-remove + prune).
+  G+U 6. Sheet stage UI, agent terminal launch, Event Bus events owed.
 - [ ] **P4-12 (L) Merge Center — validate.** Validation (build/test commands per project), health
   probe, contract check, branch testing (upstream `BranchTestingModal`), results kept per merge.
   *Tests:* G, UI. *Parity:* GIT-5.

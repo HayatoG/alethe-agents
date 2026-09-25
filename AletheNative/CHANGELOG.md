@@ -189,6 +189,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   through `gh`, and a squash merge guarded by the reviewed head commit.
 - Groundwork for the Todos plugin (not in the interface yet): global and per-project lists with tags, PR
   links, reordering, the editable JSONC template file, and a Pomodoro session that survives relaunch.
+- Settings › Plugins lists the built-in plugins with version and capabilities, turns each on or off and
+  shows a load error; the Theme Pack themes appear in the theme picker.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
