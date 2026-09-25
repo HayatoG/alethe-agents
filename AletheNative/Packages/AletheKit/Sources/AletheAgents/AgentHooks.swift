@@ -59,14 +59,22 @@ public struct AgentHookEvent: Equatable, Sendable {
 public enum AgentHookWiring {
     public static let events = ["SessionStart", "UserPromptSubmit", "Stop", "Notification"]
 
+    /// What a planner adds with the orchestrator feature on (upstream `agent_hooks_settings_path`
+    /// with `orchestrator: true`): its own subagents, teammates and tool calls reach the board.
+    public static let orchestratorEvents = ["SubagentStart", "SubagentStop", "PreToolUse", "PostToolUse",
+                                            "TeammateIdle", "TaskCreated", "TaskCompleted"]
+
     /// Claude Code settings layered on top of the user's with `--settings` (upstream
     /// `agent_hooks_settings_path`): each event posts to the bridge with the tab id and the token.
-    public static func claudeSettings(endpoint: String, token: String, tab: String) -> Data {
+    public static func claudeSettings(endpoint: String, token: String, tab: String, orchestrator: Bool = false) -> Data {
         let hook: [[String: Any]] = [["hooks": [[
             "type": "http", "url": "\(endpoint)/hook/claude", "timeout": 5,
             "headers": ["X-Alethe-Token": token, "X-Alethe-Tab": tab],
         ]]]]
-        let settings: [String: Any] = ["hooks": Dictionary(uniqueKeysWithValues: events.map { ($0, hook) })]
+        let names = orchestrator ? events + orchestratorEvents : events
+        var settings: [String: Any] = ["hooks": Dictionary(uniqueKeysWithValues: names.map { ($0, hook) })]
+        // Teammates run inside the planner's process, so their hooks reach this same file.
+        if orchestrator { settings["teammateMode"] = "in-process" }
         return (try? JSONSerialization.data(withJSONObject: settings, options: [.prettyPrinted, .sortedKeys])) ?? Data()
     }
 
@@ -83,10 +91,37 @@ public enum AgentHookWiring {
 
     /// `-c notify=[…]` for one launch: Codex appends the JSON to these arguments.
     public static func codexArguments(script: String, tab: String) -> [String] {
-        func toml(_ value: String) -> String {
-            "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
+        ["-c", "notify=[\(["/bin/sh", script, tab].map(toml).joined(separator: ","))]"]
+    }
+
+    /// Codex hooks get the event JSON on stdin (upstream `write_codex_hook_forwarder`); this script
+    /// posts it to the bridge as a subagent event.
+    public static func codexHookForwarder(endpoint: String, token: String) -> String {
+        """
+        #!/bin/sh
+        # Alethe: forwards a Codex hook event (JSON on stdin) to the app; the tab id is the argument.
+        exec /usr/bin/curl -s -m 5 -o /dev/null -X POST \\
+          -H "X-Alethe-Token: \(token)" -H "X-Alethe-Tab: $1" -H "Content-Type: application/json" \\
+          --data-binary @- "\(endpoint)/hook/\(codexSubagentRoute)"
+        """
+    }
+
+    /// The bridge route Codex's subagent hooks post to (Claude's arrive on `claude`).
+    public static let codexSubagentRoute = "codex-subagents"
+
+    /// Codex's own subagents for one launch (upstream `codex_hooks_config_write`, whose command is a
+    /// no-op outside Windows): `-c hooks.<event>=[…]` overrides instead of editing `.codex/config.toml`.
+    public static func codexSubagentArguments(script: String, tab: String) -> [String] {
+        func quoted(_ value: String) -> String { "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'" }
+        let command = toml("/bin/sh \(quoted(script)) \(quoted(tab))")
+        return ["SubagentStart", "SubagentStop"].flatMap { event in
+            ["-c", "hooks.\(event)=[{matcher=\".*\",hooks=[{type=\"command\",command=\(command),timeout=5}]}]"]
         }
-        return ["-c", "notify=[\(["/bin/sh", script, tab].map(toml).joined(separator: ","))]"]
+    }
+
+    /// A TOML basic string.
+    static func toml(_ value: String) -> String {
+        "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
     }
 }
 
@@ -157,5 +192,64 @@ public struct ActivityMonitor: Sendable {
     static func stripControls(_ text: String) -> String {
         text.replacingOccurrences(of: #"\x{1B}\[[0-?]*[ -/]*[@-~]|\x{1B}\][^\x{07}]*(?:\x{07}|\x{1B}\\)|\x{1B}[PX^_].*?\x{1B}\\|\x{1B}[@-_]"#,
                                   with: "", options: .regularExpression)
+    }
+}
+
+/// A planner's subagent, teammate or tool-call hook (upstream `AgentHookPayload`), reduced to the
+/// fields the board tracks. Prompts, commands and replies are user data.
+public struct SubagentHook: Equatable, Sendable {
+    public var event: String
+    /// Set when a subagent (not the planner itself) fired it.
+    public var agentID: String?
+    public var agentType: String?
+    public var toolName: String?
+    /// The string values of `tool_input`; empty strings are dropped, as upstream's `str()`.
+    public var input: [String: String]
+    /// `tool_input.run_in_background`.
+    public var runInBackground: Bool
+    /// The string values of `tool_response`.
+    public var response: [String: String]
+    public var lastAssistantMessage: String?
+    public var transcriptPath: String?
+    public var teammateName: String?
+
+    public init(event: String, agentID: String? = nil, agentType: String? = nil, toolName: String? = nil,
+                input: [String: String] = [:], runInBackground: Bool = false, response: [String: String] = [:],
+                lastAssistantMessage: String? = nil, transcriptPath: String? = nil, teammateName: String? = nil) {
+        self.event = event
+        self.agentID = agentID
+        self.agentType = agentType
+        self.toolName = toolName
+        self.input = input
+        self.runInBackground = runInBackground
+        self.response = response
+        self.lastAssistantMessage = lastAssistantMessage
+        self.transcriptPath = transcriptPath
+        self.teammateName = teammateName
+    }
+
+    /// The events the board reads; anything else (the lifecycle events of P3-9, task events) is nil.
+    public static let events: Set<String> = ["SubagentStart", "SubagentStop", "PreToolUse", "PostToolUse", "TeammateIdle"]
+
+    public static func parse(_ body: Data) -> SubagentHook? {
+        guard let object = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let event = object["hook_event_name"] as? String, events.contains(event) else { return nil }
+        func text(_ value: Any?) -> String? { (value as? String).flatMap { $0.isEmpty ? nil : $0 } }
+        func strings(_ value: Any?) -> [String: String] {
+            (value as? [String: Any] ?? [:]).compactMapValues { text($0) }
+        }
+        let input = object["tool_input"] as? [String: Any]
+        return SubagentHook(
+            event: event,
+            agentID: text(object["agent_id"]),
+            agentType: text(object["agent_type"]),
+            toolName: text(object["tool_name"]),
+            input: strings(input),
+            runInBackground: input?["run_in_background"] as? Bool == true,
+            response: strings(object["tool_response"]),
+            lastAssistantMessage: text(object["last_assistant_message"]),
+            transcriptPath: text(object["agent_transcript_path"]),
+            teammateName: text(object["teammate_name"])
+        )
     }
 }

@@ -27,6 +27,47 @@ import Testing
         #expect((stop.first?["headers"] as? [String: String]) == ["X-Alethe-Token": "tok", "X-Alethe-Tab": "t1"])
     }
 
+    /// P6-11: a planner's settings add the subagent events and in-process teammates; without the
+    /// orchestrator feature they stay as P3-9 wrote them.
+    @Test func plannerSettingsAddTheSubagentEvents() throws {
+        func settings(_ orchestrator: Bool) throws -> [String: Any] {
+            let data = AgentHookWiring.claudeSettings(endpoint: "http://127.0.0.1:5000", token: "tok", tab: "t1", orchestrator: orchestrator)
+            return try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        }
+        let plain = try settings(false)
+        #expect(Set(try #require(plain["hooks"] as? [String: Any]).keys) == Set(AgentHookWiring.events))
+        #expect(plain["teammateMode"] == nil)
+        let planner = try settings(true)
+        let hooks = try #require(planner["hooks"] as? [String: Any])
+        #expect(Set(hooks.keys) == Set(AgentHookWiring.events + ["SubagentStart", "SubagentStop", "PreToolUse", "PostToolUse",
+                                                                 "TeammateIdle", "TaskCreated", "TaskCompleted"]))
+        #expect(planner["teammateMode"] as? String == "in-process")
+        let start = try #require((hooks["SubagentStart"] as? [[String: Any]])?.first?["hooks"] as? [[String: Any]])
+        #expect((start.first?["headers"] as? [String: String]) == ["X-Alethe-Token": "tok", "X-Alethe-Tab": "t1"])
+    }
+
+    @Test func subagentHooksParseTheirFields() throws {
+        let body = #"{"hook_event_name":"PostToolUse","session_id":"s","tool_name":"Bash","tool_input":{"command":"npm run dev","description":"","run_in_background":true,"timeout":5},"tool_response":{"backgroundTaskId":"sh1"},"agent_transcript_path":"/t/a.jsonl"}"#
+        let hook = try #require(SubagentHook.parse(Data(body.utf8)))
+        #expect(hook == SubagentHook(event: "PostToolUse", toolName: "Bash", input: ["command": "npm run dev"],
+                                     runInBackground: true, response: ["backgroundTaskId": "sh1"], transcriptPath: "/t/a.jsonl"))
+        #expect(SubagentHook.parse(Data(#"{"hook_event_name":"SubagentStart","agent_id":"","agent_type":"Explore"}"#.utf8))
+                == SubagentHook(event: "SubagentStart", agentType: "Explore"))
+        #expect(SubagentHook.parse(Data(#"{"hook_event_name":"Stop"}"#.utf8)) == nil, "lifecycle events stay P3-9's")
+        #expect(SubagentHook.parse(Data(#"{"hook_event_name":"TaskCreated","task_id":"1"}"#.utf8)) == nil)
+        #expect(SubagentHook.parse(Data("not json".utf8)) == nil)
+    }
+
+    @Test func codexSubagentHooksAreOneLaunchOverride() {
+        let arguments = AgentHookWiring.codexSubagentArguments(script: "/tmp/it's.sh", tab: "t1")
+        #expect(arguments == [
+            "-c", #"hooks.SubagentStart=[{matcher=".*",hooks=[{type="command",command="/bin/sh '/tmp/it'\''s.sh' 't1'",timeout=5}]}]"#,
+            "-c", #"hooks.SubagentStop=[{matcher=".*",hooks=[{type="command",command="/bin/sh '/tmp/it'\''s.sh' 't1'",timeout=5}]}]"#,
+        ])
+        let script = AgentHookWiring.codexHookForwarder(endpoint: "http://127.0.0.1:5000", token: "tok")
+        #expect(script.contains("--data-binary @- \"http://127.0.0.1:5000/hook/codex-subagents\""))
+    }
+
     @Test func codexNotifyIsATomlArray() {
         #expect(AgentHookWiring.codexArguments(script: "/tmp/a b.sh", tab: "t\"1")
                 == ["-c", #"notify=["/bin/sh","/tmp/a b.sh","t\"1"]"#])

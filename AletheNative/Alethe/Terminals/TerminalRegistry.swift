@@ -322,7 +322,7 @@ final class TerminalRegistry {
             extraArguments: tab.extraArguments,
             sessionID: sessionID,
             unrestricted: tab.unrestricted,
-            hooks: hooks.launch(for: tab.id, kind: kind),
+            hooks: hooks.launch(for: tab.id, kind: kind, orchestrator: environment.features.isOn(.orchestrator)),
             mcpServers: servers.servers,
             mcpConfigPath: servers.configPath
         )
