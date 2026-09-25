@@ -1,4 +1,5 @@
 import AletheDesign
+import AletheFoundation
 import AletheTodos
 import AppKit
 import SwiftUI
@@ -18,7 +19,7 @@ struct TodosSettingsSheet: View {
     @State private var confirming: Confirmation?
     @State private var busy = false
     @State private var message: String?
-    @State private var error: String?
+    @State private var error: String? { didSet { if error != oldValue { AppLog.shown(error, .integrations) } } }
 
     private enum Confirmation: Identifiable {
         case importTemplate, exportTemplate, reset

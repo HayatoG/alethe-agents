@@ -1,4 +1,5 @@
 import AletheDesign
+import AletheFoundation
 import AletheGit
 import AletheMerge
 import AletheModel
@@ -171,7 +172,7 @@ final class BranchTestingModel {
     private(set) var log = BranchTestLog()
     private(set) var running = false
     private(set) var step: BranchTestStep?
-    private(set) var error: String?
+    private(set) var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
     private var task: Task<Void, Never>?
 
     init(folder: URL, initialBranch: String?) {

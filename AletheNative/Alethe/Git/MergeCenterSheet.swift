@@ -1,5 +1,6 @@
 import AletheAgents
 import AletheDesign
+import AletheFoundation
 import AletheGit
 import AletheMerge
 import AletheModel
@@ -401,7 +402,7 @@ final class MergeCenterModel {
     private(set) var analysis: MergeAnalysis?
     private(set) var loading = true
     private(set) var running = false
-    private(set) var error: String?
+    private(set) var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
     private var task: Task<Void, Never>?
 
     init(folder: URL, projectID: ProjectID? = nil) {

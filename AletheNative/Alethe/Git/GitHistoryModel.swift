@@ -1,3 +1,4 @@
+import AletheFoundation
 import AletheGit
 import Foundation
 import Observation
@@ -12,7 +13,7 @@ final class GitHistoryModel {
     private(set) var hasMore = true
     private(set) var loading = false
     private(set) var busy = false
-    private(set) var error: String?
+    private(set) var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
     var selection: String?
     private(set) var detailMessage: String?
     private(set) var detailFiles: [GitFileChange] = []

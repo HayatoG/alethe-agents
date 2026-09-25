@@ -1,3 +1,4 @@
+import AletheFoundation
 import AletheGit
 import AletheGitControl
 import Foundation
@@ -23,7 +24,7 @@ final class GitControlModel {
     private(set) var branches: [GitBranch] = []
     /// Commits ahead of and behind the upstream (P4-7); nil without an upstream.
     private(set) var incomingOutgoing: GitIncomingOutgoing?
-    private(set) var error: String?
+    private(set) var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
     /// The remote operation in flight and its last progress line.
     private(set) var remoteAction: RemoteAction?
     private(set) var progress: String?

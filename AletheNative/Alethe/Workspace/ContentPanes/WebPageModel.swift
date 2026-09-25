@@ -1,3 +1,4 @@
+import AletheFoundation
 import AletheModel
 import AppKit
 import Observation
@@ -17,7 +18,7 @@ final class WebPageModel: NSObject {
     private(set) var canGoBack = false
     private(set) var canGoForward = false
     /// Why the last navigation failed; nil while it works.
-    private(set) var failure: String?
+    private(set) var failure: String? { didSet { if failure != oldValue { AppLog.shown(failure, .app, level: .warning) } } }
     private(set) var options: WebPaneOptions
 
     /// Called when the page settles on another address, so the pane can persist it.

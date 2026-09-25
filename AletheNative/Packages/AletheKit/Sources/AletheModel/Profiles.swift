@@ -69,6 +69,8 @@ public struct DataLocations: Sendable, Hashable {
     }
 
     public var profileIndex: URL { root.appending(path: "profiles.json") }
+    /// Log files, the spawn log and the session marker (P5-11); shared by every profile.
+    public var logs: URL { root.appending(path: "logs", directoryHint: .isDirectory) }
 
     public func profileDirectory(_ id: ProfileID) -> URL {
         root.appending(path: "profiles", directoryHint: .isDirectory)

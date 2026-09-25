@@ -62,6 +62,8 @@ final class AppEnvironment {
     let activity = ActivityTracker()
     /// Dictation (P3-17).
     let dictation = DictationController()
+    /// Logs, recent errors and the after-crash notice (P5-11).
+    let diagnostics = DiagnosticsController()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -124,6 +126,14 @@ final class AppEnvironment {
     func load() async {
         guard !isLoaded, let locations = try? Self.dataLocations() else { return }
         self.locations = locations
+        #if DEBUG
+        // `-AletheUITestCrashMarker YES`: the previous run "crashed" (an unclean marker is seeded).
+        if UserDefaults.standard.bool(forKey: "AletheUITestCrashMarker") {
+            SessionMarkerStore(logsDirectory: locations.logs).begin(
+                SessionMarker(startedAt: .now.addingTimeInterval(-60), appVersion: "0.0-test", build: "0", processID: 1))
+        }
+        #endif
+        await diagnostics.start(logs: locations.logs)
         let profiles = await DocumentModel<ProfileIndexDocument>.load(from: locations.profileIndex)
         let profile = profiles.document.activeProfile.id
         async let workspace = WorkspaceModel.load(from: locations.workspace(profile))
@@ -183,6 +193,7 @@ final class AppEnvironment {
         let requested = pendingFolders
         pendingFolders = []
         requested.forEach(openFolder)
+        if diagnostics.crashNotice != nil, editorRequest == nil, Self.showsCrashNotice { editorRequest = .crashNotice }
         NotificationCenter.default.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
                                                object: NSWorkspace.shared, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -308,6 +319,17 @@ final class AppEnvironment {
     func openPluginSheet(_ id: String, project: ProjectID?) {
         guard let sheet = plugins?.contributions.sheets.first(where: { $0.id == id }) else { return }
         editorRequest = .pluginSheet(viewID: sheet.viewID, project: project)
+    }
+
+    /// UI tests end the app without quitting it, so every relaunch would look like a crash: with a
+    /// test data root the notice appears only for the seeded marker.
+    private static var showsCrashNotice: Bool {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "AletheDataRoot") != nil {
+            return UserDefaults.standard.bool(forKey: "AletheUITestCrashMarker")
+        }
+        #endif
+        return true
     }
 
     /// `-AletheDataRoot <path>` (debug builds) points the app at another data folder: UI tests and

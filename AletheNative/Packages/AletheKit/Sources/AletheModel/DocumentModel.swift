@@ -26,12 +26,22 @@ public final class DocumentModel<Document: VersionedDocument> {
     /// `loadOutcome`/`loadError` and the model starts from the initial document.
     public static func load(from url: URL) async -> DocumentModel {
         let store = DocumentStore<Document>(url: url)
+        let name = url.lastPathComponent
         do {
             let (document, outcome) = try await store.load()
+            switch outcome {
+            case .migrated(let version, _):
+                AppLog.info(.persistence, "\(name) migrated from version \(version)")
+            case .recoveredFromCorruption(let movedTo):
+                AppLog.record(.warning, .persistence, "\(name) was unreadable; moved to \(movedTo.lastPathComponent)")
+            case .fresh, .loaded: break
+            }
             return DocumentModel(store: store, document: document, outcome: outcome, error: nil)
         } catch let error as DocumentStoreError {
+            AppLog.record(.error, .persistence, "\(name) not loaded: \(error)")
             return DocumentModel(store: store, document: Document.initial, outcome: nil, error: error)
         } catch {
+            AppLog.record(.error, .persistence, "\(name) not loaded: \(error.localizedDescription)")
             return DocumentModel(store: store, document: Document.initial, outcome: nil, error: nil)
         }
     }

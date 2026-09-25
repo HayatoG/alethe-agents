@@ -182,6 +182,11 @@ private struct ViewCommands: Commands {
                 environment.showingHome = true
             }
             .disabled(environment.workspace == nil)
+            Divider()
+            Button("menu.help.diagnostics") { environment.editorRequest = .diagnostics }
+                .disabled(environment.workspace == nil)
+            Button("menu.help.exportLogs") { environment.diagnostics.exportLogs() }
+            Button("menu.help.openLogsFolder") { environment.diagnostics.openLogsFolder() }
         }
     }
 }

@@ -1,5 +1,6 @@
 import AletheDesign
 import AletheFiles
+import AletheFoundation
 import AletheGit
 import AletheModel
 import AlethePluginKit
@@ -37,7 +38,7 @@ private struct FileTreeList: View {
     @State private var renaming: URL?
     @State private var draftName = ""
     @State private var pendingDelete: URL?
-    @State private var errorMessage: String?
+    @State private var errorMessage: String? { didSet { if errorMessage != oldValue { AppLog.shown(errorMessage, .app) } } }
     @State private var selection: URL?
     @FocusState private var renameFocused: Bool
 

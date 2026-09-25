@@ -56,6 +56,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return .terminateLater
     }
 
+    /// Reached only on a normal quit: the session marker records it (P5-11).
+    func applicationWillTerminate(_ notification: Notification) {
+        MainActor.assumeIsolated { environment?.diagnostics.markCleanExit() }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
     }

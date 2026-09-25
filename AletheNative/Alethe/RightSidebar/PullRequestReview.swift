@@ -1,5 +1,6 @@
 import AletheAgents
 import AletheDesign
+import AletheFoundation
 import AletheGit
 import AletheModel
 import SwiftUI
@@ -46,7 +47,7 @@ struct PullRequestReviewSheet: View {
     @State private var agent: AgentKind = .claude
     @State private var model = ""
     @State private var headSHA: String?
-    @State private var error: String?
+    @State private var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
 
     private var agents: [AgentKind] {
         AgentRegistry.builtin.enabledKinds(environment.preferences?.document.enabledAgents).filter { $0 != .shell }
@@ -145,7 +146,7 @@ struct PullRequestMergeSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var running = false
     @State private var merged = false
-    @State private var error: String?
+    @State private var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: metrics.space(.l)) {

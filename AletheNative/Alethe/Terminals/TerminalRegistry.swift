@@ -1,5 +1,6 @@
 import AletheAgents
 import AletheDesign
+import AletheFoundation
 import AletheModel
 import AletheTerminal
 import AppKit
@@ -360,6 +361,11 @@ final class TerminalRegistry {
             }
             views[tab.id] = view
             states[tab.id] = .running
+            // Variable names only: their values may be tokens.
+            let variables = command.environment.keys.sorted().joined(separator: ",")
+            Diagnostics.shared.recordSpawn("started agent=\(kind.rawValue) pid=\(view.processID) cwd=\(cwd) "
+                + "executable=\(command.executable ?? "-") resumed=\(sessionID != nil) env=[\(variables)] "
+                + "command=\(command.shellCommand ?? "login shell")")
             if kind != .shell {
                 watch(tab.id, view: view, heuristicTurns: !hooks.reportsTurns(kind))
                 if tab.sessionID != nil { refreshTitle(tab.id) }
@@ -382,8 +388,12 @@ final class TerminalRegistry {
             }
         } catch AgentLaunchError.launcherNotFound(let command) {
             states[tab.id] = .notFound(command: command)
+            Diagnostics.shared.recordSpawn("not found agent=\(kind.rawValue) command=\(command) cwd=\(cwd)")
+            AppLog.record(.warning, .agents, "\(kind.rawValue): \(command) not found")
         } catch {
             states[tab.id] = .failed(message: String(describing: error))
+            Diagnostics.shared.recordSpawn("failed agent=\(kind.rawValue) cwd=\(cwd) error=\(error)")
+            AppLog.record(.error, .terminal, "\(kind.rawValue) did not start: \(error)")
         }
         generations[tab.id, default: 0] += 1
     }

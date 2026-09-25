@@ -1,5 +1,6 @@
 import AletheAgents
 import AletheDesign
+import AletheFoundation
 import AletheModel
 import SwiftUI
 
@@ -18,7 +19,7 @@ struct HandoffSheet: View {
     @State private var failure: Handoff.Failure?
     @State private var content = ""
     @State private var unrestricted = false
-    @State private var error: String?
+    @State private var error: String? { didSet { if error != oldValue { AppLog.shown(error, .agents) } } }
 
     private var source: (project: Project, tab: PaneTab)? {
         guard let (project, pane) = workspace.document.paneHolding(tabID),

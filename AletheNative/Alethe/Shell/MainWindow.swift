@@ -98,6 +98,10 @@ struct MainWindow: View {
             BranchTestingSheet(folder: (project ?? workspace.document.workspace.selectedProjectID)
                 .flatMap { workspace.document.project($0) }
                 .map { URL(filePath: $0.folder, directoryHint: .isDirectory) })
+        case .diagnostics:
+            DiagnosticsSheet()
+        case .crashNotice:
+            CrashNoticeSheet()
         }
     }
 

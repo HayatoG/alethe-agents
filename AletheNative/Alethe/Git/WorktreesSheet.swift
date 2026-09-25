@@ -1,4 +1,5 @@
 import AletheDesign
+import AletheFoundation
 import AletheGit
 import AletheModel
 import SwiftUI
@@ -236,7 +237,7 @@ final class WorktreesModel {
     private(set) var rows: [Row] = []
     private(set) var loading = true
     private(set) var running = false
-    private(set) var error: String?
+    private(set) var error: String? { didSet { if error != oldValue { AppLog.shown(error, .git) } } }
     /// Outcome of the last action.
     private(set) var note: String?
 
