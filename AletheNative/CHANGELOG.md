@@ -218,6 +218,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   branch from the current commit.
 - Projects can start new agents in their own worktree by default (git worktree or local copy); the
   Worktrees… sheet lists them with lock/unlock, fetch branch, commit, remove and stale cleanup.
+- Todos: edit tags, move a todo between the global and project lists, and Todo Settings (template file
+  open/import/export, Pomodoro lengths, reset to the default list).
+- Pomodoro: pick a focus todo, get a notification when each phase ends, and follow the running phase in a
+  toolbar pill; the session carries on after relaunch.
+- Fixed: Files badges refresh on commits and stages when the project folder is inside a larger repository.
+- Pull requests: reviewed commits and the review agent/model are remembered across relaunches.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

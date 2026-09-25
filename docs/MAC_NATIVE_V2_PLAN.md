@@ -1988,7 +1988,7 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   records the reviewed SHA. Squash Merge… is enabled only after a review, confirms PR + SHA, runs
   `gh pr merge --squash --match-head-commit`; a moved head shows gh's error and asks to review again.
   Open: reviewed SHAs and agent/model choice are in memory only; U tests for the prompt.
-- [ ] **P4-16 (L) Todos.** Built-in plugin (upstream `plugins/todos`): global and per-project lists,
+- [x] **P4-16 (L) Todos.** Built-in plugin (upstream `plugins/todos`): global and per-project lists,
   tags, PR links, reorder, the external `todos.jsonc` template (`ensure_todo_template`) and settings.
   *Tests:* U (store, file round-trip), UI. *Parity:* PER-1.
   *Done (model):* target `AletheTodos`: `Todo`, `TodoScope`, `TodoRules`, `TodoSettings`; `@Observable`
@@ -1996,9 +1996,19 @@ ExtensionKit (§11.4). *Tests* list what each task must ship; they run per the t
   `ensure_todo_template` port (`alethe-todo.template.jsonc`) with a JSONC reader/writer; `TodosPlugin`
   (`com.alethe.todos`, right tab `todos`, `todos.new`). Also P4-17's `PomodoroTimer` (Codable, injected
   dates, `focusTodoId`). U 16. Views, app registration and string localization owed.
-- [ ] **P4-17 (M) Pomodoro.** Timer in the Todos panel and a toolbar pill (upstream `PomodoroWidget`),
+  *Done (UI, `ce1a0ff`):* todo menu › Edit Tags, Move to Global / <project>, Open Pull Request; Todo
+  Settings (template folder Choose/Clear creates `alethe-todo.template.jsonc`, Open/Import/Export, Pomodoro
+  lengths 1–120 min, Reset to Default List; destructive steps ask once). Template I/O now goes through the
+  plugin's declared `filesystemRead`/`filesystemWrite` services. Tests written and compiled, NOT run.
+- [x] **P4-17 (M) Pomodoro.** Timer in the Todos panel and a toolbar pill (upstream `PomodoroWidget`),
   focus todo (`focusTodoId`), work/break lengths, the session surviving relaunch, a notification at the
   end (P3-11). *Tests:* U (timer state), UI. *Parity:* PER-2.
+  *Done (UI, `5b5c514`):* focus todo from the todo menu (cleared when done/deleted); app-wide
+  `PomodoroController` ticks every second; phase-end notification through the P3-11 notifier (a phase that
+  ended while closed is reported once after relaunch); toolbar pill while running/paused opens Todos. Also
+  `84c4dbe` (Files badges watch the repository `.git` above the project folder) and `3bf13d2` (reviewed PR
+  SHAs + review agent/model in `pull-request-reviews.json`). Tests written and compiled, NOT run
+  (U + UI `TodosTests`).
 - [x] **P4-18 (S) Theme pack.** Upstream's four theme-pack themes as a data plugin on the theme
   contribution point, in the picker with the built-ins. *Tests:* U (tokens complete), HT. *Parity:* UI-1.
   *Done (package):* target `AletheThemePack`: `ThemePackPlugin` (`alethe.theme-pack`) contributes Dark
