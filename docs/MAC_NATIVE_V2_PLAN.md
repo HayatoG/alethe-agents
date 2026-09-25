@@ -2081,7 +2081,7 @@ Out of Phase 5: 9router (PER-5, Phase 7), planning audit and autocommit (ORC-3, 
 Canvas palette (EXP-1, Won't port). *Tests* list what each task must ship; they run per the test
 cadence above.
 
-- [ ] **P5-1 (M) `AletheIntegrations` target and config-file primitives.** New package target (ADR-7)
+- [x] **P5-1 (M) `AletheIntegrations` target and config-file primitives.** New package target (ADR-7)
   with `ConfigFileWriter`: read with modification date, atomic write that refuses when the file changed
   since it was read, backup first into `<profile>/config-backups/<agent>-<kind>/` pruned to 10 (upstream
   `mcp_store.rs` `backup`/`prune_backups`/`atomic_write`), list and restore a backup; a JSON editor that
@@ -2089,6 +2089,12 @@ cadence above.
   key order kept); the JSONC reader moved from `AletheTodos` (`TodoTemplate`) to `AletheFoundation` and
   shared; `Secret.mask` (upstream `mask_secret`). No UI. *Tests:* U (write conflicts, backup rotation,
   JSON edits keep unknown keys, JSONC). *Parity:* groundwork for EXT-1, EXT-4, EXT-5, EXT-6, EXT-7.
+  *Done:* (`e9008db`) target `AletheIntegrations`: `ConfigFileWriter` (refuses if contents or mtime
+  changed since read, atomic write keeping permissions and symlink targets, owner-only backups in
+  `<profile>/config-backups/<agent>-<kind>/` pruned to 10, list/restore that backs up first),
+  `OrderedJSON` + `JSONConfigEditor` (key order and number spelling kept, managed-key upsert, throws
+  `notAnObject` instead of replacing), `Secret.mask`; the JSONC reader moved to `AletheFoundation`
+  (`TodoTemplate` uses it). Tests written and compiled, NOT run.
 - [ ] **P5-2 (L) Comment-preserving TOML editor.** In `AletheFoundation` (§10 risk): a table-level
   document model that keeps comments, blank lines, key order and formatting byte for byte outside the
   edited table; read tables, arrays, inline tables and strings; upsert and remove a table
@@ -2104,7 +2110,7 @@ cadence above.
   P5-17…P5-19). The web pane entry points and the Pull Requests tab are gated now; later tasks gate their
   own surfaces. Imported from Tauri. *Tests:* U (defaults, decoding without the key), UI (turning PRs
   off hides the tab). *Parity:* SET-2.
-- [ ] **P5-4 (M) Per-launch MCP wiring.** `AgentLaunchRequest.mcpServers` (name, command, arguments,
+- [x] **P5-4 (M) Per-launch MCP wiring.** `AgentLaunchRequest.mcpServers` (name, command, arguments,
   environment): Claude Code gets one `--mcp-config` file per launch in the P3-9 private folder (upstream
   `graphify_mcp_config_path`, `ai_memory_mcp_config_path`, `playwright_mcp_config_path`); Codex gets
   `-c mcp_servers.<name>.command=…`/`args=[…]` overrides instead of upstream's `.codex/config.toml`
@@ -2113,6 +2119,13 @@ cadence above.
   app-side `McpLaunchWiring` (Graphify, ai-memory, Playwright plug in later). *Tests:* U (arguments per
   agent, ordering next to `--settings` and `resume`, quoting). *Parity:* groundwork for EXT-5, EXT-6,
   BR-3.
+  *Done:* (`f3d67d9`) `AletheAgents/McpLaunch.swift`: server model, Claude/OpenCode config formats,
+  Codex `-c mcp_servers.<name>.*` args (names sanitized to letters/digits/_/-). Claude gets `--mcp-
+  config=<file>` before `--settings`; Codex args before `resume`; OpenCode `OPENCODE_CONFIG` (verified
+  in the installed 1.18.26 bundle: global → OPENCODE_CONFIG → project, deep-merged, so no
+  `opencode.json` fallback; a user-set OPENCODE_CONFIG is replaced for that launch). App
+  `McpLaunchWiring` registry (providers from P5-17/18/19) writes per-launch files 0600 in the P3-9
+  private folder. Tests written and compiled, NOT run.
 - [ ] **P5-5 (M) New project: clone, marker, git init, stack.** Project editor (upstream
   `NewProjectModal`, `EditProjectModal`): Clone from GitHub (`normalize_github_url`, `git clone` with
   progress through `AletheGit`, cancel removes the partial folder); `.alethe/project.json` read when a
