@@ -81,6 +81,7 @@ struct RightSidebar: View {
                 .pickerStyle(.segmented)
                 .labelStyle(.iconOnly)
                 .labelsHidden()
+                .accessibilityIdentifier("rightSidebar.tabs")
                 .padding(8)
             }
             if let selected {

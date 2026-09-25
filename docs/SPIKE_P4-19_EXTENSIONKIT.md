@@ -98,3 +98,72 @@ New package target `AletheExtensionHost` (depends only on `AlethePluginKit`; no 
 4. UI tests: sample loads and renders; `kill -9` of the extension process shows the placeholder and
    the app keeps running.
 5. Verify the signing risk above, then record the outcome in ADR-9.
+
+## Follow-up: host + sample landed (2026-09-25, round 19)
+
+Owner rule for this round: **no tests were run** and the app was not launched; everything below is
+verified by compiling and by inspecting the built bundles.
+
+### What landed
+
+- **App (host)** — `Alethe/Extensions/`:
+  - `ExtensionPoint.swift`: `@AppExtensionPoint.Definition static var aletheSidebarTab` —
+    `Name("sidebar-tab")`, `Scope(restriction: .none)`, `UserInterface(true)` (no
+    `EnhancedSecurity`: it would require the hardened-process entitlements from every third party).
+  - `ExtensionManager` (`@Observable`, owned by `AppEnvironment`): `AppExtensionPoint.Monitor`
+    discovery (re-synced with `withObservationTracking`), one `AppExtensionProcess` +
+    `makeXPCConnection()` per extension (manifest, commands, `onInterruption` → stopped), host
+    storage served through `ExtensionRequestRouter` with `ExtensionHostState.isAllowed`, state in the
+    profile's `extensions.json`.
+  - Settings › Plugins › **Third-party extensions**: toggle per extension (disabled until the
+    manifest arrives), consent sheet (first enable; re-prompt only for new capabilities; decline
+    keeps it off), the extension's commands with their reply, "Manage Extensions…" presenting
+    `EXAppExtensionBrowserViewController`, and a footer counting extensions awaiting system approval.
+  - Right sidebar: active extensions with a `sidebarTab` add a tab rendered by `EXHostViewController`
+    (scene `sidebar`); the scene's own connection (`makeXPCConnection()` in
+    `hostViewControllerDidActivate`) also gets the host service. `hostViewControllerWillDeactivate`
+    with an error, or the process's interruption, swaps in "The extension stopped" + Reload.
+- **Packages**: new `AletheExtensionSDK` (Foundation only): point constants, `ExtensionManifestPayload`,
+  `HostRequest`/`HostResponse`, JSON framing, `@objc` `AletheHostXPC` / `AletheExtensionXPC`.
+  `AletheExtensionHost` adds `ExtensionHostState` (enable + ledger, persistence) and
+  `ExtensionRequestRouter`; 10 more unit tests (compiled, not run).
+- **Sample** — `AletheNative/Samples/AletheSampleExtension`: `AletheSample.app` (minimal sandboxed
+  containing app, `com.kc1t.alethe.sample`) embedding `AletheSampleSidebar.appex`
+  (`com.apple.product-type.extensionkit-extension`, sandboxed, macOS 26.2,
+  `com.kc1t.alethe.sample.sidebar`) with `@AppExtensionPoint.Bind` →
+  `Identifier(host: "com.kc1t.alethe.mac", name: "sidebar-tab")`, a SwiftUI tab, an
+  "Increment Counter" command, a counter in host storage, and a DEBUG-only Crash button
+  (`fatalError`). Shared scheme `AletheSample`; `AletheUITests` depends on it.
+- **UI tests** (`AletheUITests/ExtensionKitTests.swift`, compiled with `build-for-testing`, not
+  run): discovery in Settings, consent on first enable / after decline / not after a grant; tab
+  renders, storage round trip, Crash → stopped state with Alethe still running, Reload.
+
+### Findings while building
+
+- **Host bundle id is `com.kc1t.alethe.mac`** (the spike text said `com.kc1t.alethe`, which is the
+  Tauri app). The point's full id is `com.kc1t.alethe.mac.sidebar-tab`.
+- **The host's point is only extracted with `EX_ENABLE_EXTENSION_POINT_GENERATION = YES`.** Without
+  it, `@Definition` compiles (const values are emitted) but no `Contents/Extensions/Alethe.appexpt` is
+  produced. With it the bundle carries `{com.kc1t.alethe.mac.sidebar-tab: {EXExtensionPointName,
+  EXPresentsUserInterface: true, _EXScopeRestriction: none}}`.
+- **`exutil generate-appextension-plist` is nondeterministic** (Xcode 27A266a): given several
+  `.swiftconstvalues` inputs (one per Swift file, plus the string-catalog symbols) it drops the
+  `@Bind` result in most runs and writes an empty dict; with the single file that holds the
+  extension type it is stable. The sample therefore sets
+  `EX_DISABLE_APPEXTENSION_ATTRIBUTES_GENERATION = YES` and states `EXAppExtensionAttributes /
+  EXExtensionPointIdentifier` in `SidebarExtension-Info.plist` (the `@Bind` stays in code).
+- **Manifest over XPC, not Info.plist.** `AppExtensionIdentity` exposes no bundle URL, so the host
+  cannot read an `AletheExtension` Info.plist dictionary; the manifest (capabilities, commands, tab)
+  comes from the extension's `manifest(reply:)` on its process connection. The process is sandboxed
+  and gets no host service before consent (`isAllowed` requires enabled + granted).
+- **Registration.** Debug builds accept `-AletheRegisterExtensionApp <path>` and call
+  `LSRegisterURL` so UI tests find the sample without launching it.
+
+### Still unverified (needs a run)
+
+- That the self-signed "Alethe Dev Signing" extension is accepted by the extension policy and
+  shows up in `Monitor.identities` (or only after approval in Manage Extensions — the UI tests
+  assume no approval step; if one is needed they will fail at discovery).
+- The remote scene's accessibility tree being visible to XCUITest (`sample.counter`,
+  `sample.crash`), and `hostViewControllerWillDeactivate` reporting a non-nil error on a crash.
+- Auto-disable after N crashes in a window (not implemented; Reload is manual).
