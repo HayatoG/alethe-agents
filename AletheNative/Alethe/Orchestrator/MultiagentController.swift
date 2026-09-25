@@ -5,9 +5,9 @@ import Foundation
 import Observation
 
 /// Multi-agent services of the app (ORC-3; upstream `event_bus.rs`, `telemetry.rs` and the
-/// `.planning/` watchers of `planning.rs`): owns the event bus and its telemetry, and publishes
-/// `PlanningUpdated` for the projects the scheduler or autocommit follow. The scheduler (P6-20,
-/// P6-22) and autocommit (P6-21) subscribe to `bus` themselves.
+/// `.planning/` watchers and audit of `planning.rs`): owns the event bus and its telemetry, publishes
+/// `PlanningUpdated` for the projects the scheduler or autocommit follow, and runs the planning audit
+/// and its opt-in autocommit. The scheduler (P6-20, P6-22) and autocommit subscribe to `bus` themselves.
 @Observable
 @MainActor
 final class MultiagentController {
@@ -28,6 +28,15 @@ final class MultiagentController {
     /// Per watched `(project, repository root)`: its followers and the task forwarding its changes.
     @ObservationIgnored private var followed: [WatchKey: (followers: Set<PlanningFollower>, task: Task<Void, Never>)] = [:]
     private(set) var isStarted = false
+    /// Planning audit commits and history, publishing `PlanningCommitted` on `bus`.
+    @ObservationIgnored let planningAudit: PlanningAudit
+    @ObservationIgnored private var autocommit: PlanningAutocommit?
+    /// Off at every launch, like upstream; not a preference.
+    private(set) var isAutocommitEnabled = false
+
+    init() {
+        planningAudit = PlanningAudit(bus: bus)
+    }
 
     private struct WatchKey: Hashable {
         var projectID: String
@@ -40,9 +49,21 @@ final class MultiagentController {
         isStarted = true
         telemetry = Telemetry(logsDirectory: logs)
         telemetryTask = await telemetry.follow(bus)
+        let autocommit = PlanningAutocommit(bus: bus, audit: planningAudit)
+        self.autocommit = autocommit
+        await autocommit.start()
+    }
+
+    /// Turns planning autocommit on or off for this launch (upstream `set_planning_autocommit`).
+    func setAutocommit(_ enabled: Bool) async {
+        isAutocommitEnabled = enabled
+        await autocommit?.setEnabled(enabled)
     }
 
     func stop() async {
+        await autocommit?.stop()
+        autocommit = nil
+        isAutocommitEnabled = false
         for entry in followed.values { entry.task.cancel() }
         followed.removeAll()
         let watchers = watchers
