@@ -1,0 +1,269 @@
+import AletheDesign
+import AletheFiles
+import AletheGit
+import AletheModel
+import AlethePluginKit
+import AppKit
+import SwiftUI
+
+/// File explorer for the selected project's folder (P4-8): lazy tree, git badges, live refresh.
+struct FilesView: View {
+    @Environment(AppEnvironment.self) private var environment
+
+    static let tabID = "files"
+    static let tab = SidebarTabContribution(id: tabID, title: "Files", symbol: "folder", side: .right, viewID: tabID)
+
+    private var project: Project? {
+        environment.workspace.flatMap { model in
+            model.document.workspace.selectedProjectID.flatMap(model.document.project)
+        }
+    }
+
+    var body: some View {
+        if let project {
+            FileTreeList(project: project).id(project.folder)
+        } else {
+            ContentUnavailableView("docs.noProject", systemImage: "folder")
+        }
+    }
+}
+
+private struct FileTreeList: View {
+    let project: Project
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.theme) private var theme
+    @State private var tree: FileTree
+    @State private var renaming: URL?
+    @State private var draftName = ""
+    @State private var pendingDelete: URL?
+    @State private var errorMessage: String?
+    @FocusState private var renameFocused: Bool
+
+    init(project: Project) {
+        self.project = project
+        _tree = State(initialValue: FileTree(root: URL(filePath: project.folder, directoryHint: .isDirectory)))
+    }
+
+    var body: some View {
+        List {
+            ForEach(tree.visibleRows()) { row in
+                rowView(row)
+                    .contextMenu { menu(for: row.node) }
+            }
+        }
+        .listStyle(.sidebar)
+        .contextMenu { createMenu(in: tree.root) }
+        .overlay {
+            if tree.rootNodes.isEmpty { ContentUnavailableView("files.empty", systemImage: "folder") }
+        }
+        .task { await follow() }
+        .confirmationDialog("files.deletePermanently.title", isPresented: deleteBinding, presenting: pendingDelete) { url in
+            Button("files.deletePermanently", role: .destructive) { deletePermanently(url) }
+        } message: { url in
+            Text(verbatim: String(format: String(localized: "files.deletePermanently.message"), url.lastPathComponent))
+        }
+        .alert("files.error", isPresented: errorBinding) {
+            Button("files.ok") { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    // MARK: Rows
+
+    @ViewBuilder
+    private func rowView(_ row: FileTreeRow) -> some View {
+        let node = row.node
+        HStack(spacing: 4) {
+            Image(systemName: row.isExpanded ? "chevron.down" : "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(theme[.textTertiary])
+                .opacity(node.isDirectory ? 1 : 0)
+                .frame(width: 10)
+            Image(systemName: node.isDirectory && row.isExpanded ? FileIcons.openFolderSymbol : node.iconName)
+                .foregroundStyle(node.isDirectory ? theme[.accent] : theme[.textSecondary])
+                .frame(width: 16)
+            if renaming == node.url {
+                TextField("files.name", text: $draftName)
+                    .textFieldStyle(.plain)
+                    .focused($renameFocused)
+                    .onSubmit { commitRename(node.url) }
+                    .onExitCommand { renaming = nil }
+                    .onAppear { renameFocused = true }
+            } else {
+                Text(node.name)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundStyle(badgeColor(tree.badge(for: node)) ?? theme[.textPrimary])
+            }
+            Spacer(minLength: 4)
+            if let badge = tree.badge(for: node) {
+                Text(badge.letter)
+                    .font(.caption.monospaced().weight(.semibold))
+                    .foregroundStyle(badgeColor(badge) ?? theme[.textSecondary])
+            }
+        }
+        .padding(.leading, CGFloat(row.depth) * 12)
+        .contentShape(Rectangle())
+        .onTapGesture { activate(node) }
+        .help(node.url.path)
+    }
+
+    private func badgeColor(_ badge: GitBadge?) -> Color? {
+        switch badge {
+        case .conflict?, .deleted?: theme[.statusStopped]
+        case .modified?, .stagedModified?, .renamed?: theme[.statusWaiting]
+        case .added?, .untracked?: theme[.statusActive]
+        case nil: nil
+        }
+    }
+
+    // MARK: Menus
+
+    @ViewBuilder
+    private func menu(for node: FileNode) -> some View {
+        if !node.isDirectory {
+            Button("files.open") { open(node) }
+            Button("files.openWithDefaultApp") { NSWorkspace.shared.open(node.url) }
+        }
+        Button("files.revealInFinder") { NSWorkspace.shared.activateFileViewerSelecting([node.url]) }
+        Divider()
+        Button("files.rename") {
+            draftName = node.name
+            renaming = node.url
+        }
+        createMenu(in: node.isDirectory ? node.url : node.url.deletingLastPathComponent())
+        Divider()
+        Button("files.moveToTrash", role: .destructive) { trash(node.url) }
+    }
+
+    @ViewBuilder
+    private func createMenu(in directory: URL) -> some View {
+        Button("files.newFile") { create(in: directory, folder: false) }
+        Button("files.newFolder") { create(in: directory, folder: true) }
+    }
+
+    // MARK: Actions
+
+    private func activate(_ node: FileNode) {
+        if node.isDirectory {
+            attempt { try tree.toggle(node.url) }
+        } else {
+            open(node)
+        }
+    }
+
+    /// Opens a file in the pane its kind maps to; plain text goes to the default app.
+    private func open(_ node: FileNode) {
+        let path = node.url.path
+        let content: PaneContent? = switch node.paneKind {
+        case .markdown?: .markdown(path: path)
+        case .image?: .image(path: path)
+        case .video?: .video(path: path)
+        case .web?: .web(url: node.url.absoluteString, options: WebPaneOptions())
+        case .text?, nil: nil
+        }
+        if let content {
+            environment.open(content, in: project.id)
+        } else {
+            NSWorkspace.shared.open(node.url)
+        }
+    }
+
+    private func commitRename(_ url: URL) {
+        renaming = nil
+        attempt {
+            try FileOperations.rename(url, to: draftName)
+            try tree.reload()
+        }
+    }
+
+    /// Creates `untitled` (numbered when taken), then starts renaming it inline.
+    private func create(in directory: URL, folder: Bool) {
+        let base = String(localized: folder ? "files.untitledFolder" : "files.untitledFile")
+        var name = base
+        var index = 2
+        while FileManager.default.fileExists(atPath: directory.appendingPathComponent(name).path) {
+            name = "\(base) \(index)"
+            index += 1
+        }
+        attempt {
+            let created = folder
+                ? try FileOperations.createFolder(named: name, in: directory)
+                : try FileOperations.createFile(named: name, in: directory)
+            if directory.standardizedFileURL != tree.root { try tree.expand(directory) }
+            try tree.reload()
+            draftName = name
+            renaming = created.standardizedFileURL
+        }
+    }
+
+    private func trash(_ url: URL) {
+        attempt {
+            if try FileOperations.moveToTrash(url) == .trashUnavailable {
+                pendingDelete = url
+            }
+            try tree.reload()
+        }
+    }
+
+    private func deletePermanently(_ url: URL) {
+        pendingDelete = nil
+        attempt {
+            try FileOperations.deletePermanently(url)
+            try tree.reload()
+        }
+    }
+
+    private func attempt(_ work: () throws -> Void) {
+        do {
+            try work()
+        } catch let error as FileOperationError {
+            errorMessage = switch error {
+            case .invalidName: String(localized: "files.error.invalidName")
+            case .alreadyExists: String(localized: "files.error.alreadyExists")
+            case .notFound: String(localized: "files.error.notFound")
+            case .rootNotModifiable: String(localized: "files.error.root")
+            case .failed(let message): message
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: Live refresh
+
+    /// Loads the tree and git badges, then refreshes both on every watcher signal until cancelled.
+    private func follow() async {
+        try? tree.reload()
+        let repository: GitRepository? = if let root = try? await GitRepository.discover(tree.root) {
+            GitRepositories.shared.repository(at: root)
+        } else {
+            nil
+        }
+        await refreshBadges(repository)
+        let watcher = FileTreeWatcher(root: tree.root)
+        watcher.start()
+        defer { watcher.stop() }
+        for await _ in watcher.events {
+            try? tree.reload()
+            await refreshBadges(repository)
+        }
+    }
+
+    private func refreshBadges(_ repository: GitRepository?) async {
+        guard let repository, let status = try? await repository.status() else {
+            tree.gitBadges = nil
+            return
+        }
+        tree.gitBadges = GitBadgeIndex(status: status, repoRoot: repository.root)
+    }
+
+    private var deleteBinding: Binding<Bool> {
+        Binding { pendingDelete != nil } set: { if !$0 { pendingDelete = nil } }
+    }
+
+    private var errorBinding: Binding<Bool> {
+        Binding { errorMessage != nil } set: { if !$0 { errorMessage = nil } }
+    }
+}

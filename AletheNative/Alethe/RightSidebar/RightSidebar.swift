@@ -9,6 +9,7 @@ enum PluginViewRegistry {
         case TodosPlugin.viewID: "rightSidebar.todos"
         case DocsView.tabID: "rightSidebar.docs"
         case PullRequestsView.tabID: "rightSidebar.pullRequests"
+        case FilesView.tabID: "rightSidebar.files"
         default: LocalizedStringKey(tab.title)
         }
     }
@@ -19,6 +20,7 @@ enum PluginViewRegistry {
         case TodosPlugin.viewID: TodosView()
         case DocsView.tabID: DocsView()
         case PullRequestsView.tabID: PullRequestsView()
+        case FilesView.tabID: FilesView()
         default: ContentUnavailableView("rightSidebar.unavailable", systemImage: "puzzlepiece.extension")
         }
     }
@@ -29,8 +31,8 @@ struct RightSidebar: View {
     @Environment(AppEnvironment.self) private var environment
 
     private var tabs: [SidebarTabContribution] {
-        // The app's own tabs (Docs, Pull Requests) follow the plugin tabs.
-        let own = [DocsView.tab, PullRequestsView.tab]
+        // The app's own tabs (Files, Docs, Pull Requests) follow the plugin tabs.
+        let own = [FilesView.tab, DocsView.tab, PullRequestsView.tab]
         guard let plugins = environment.plugins else { return own }
         return plugins.viewPlacements.arranged(plugins.contributions.sidebarTabs).right + own
     }
