@@ -1,6 +1,7 @@
 import AletheAgents
 import AletheDesign
 import AletheFoundation
+import AletheIntegrations
 import AletheModel
 import AletheTerminal
 import AppKit
@@ -301,21 +302,29 @@ final class TerminalRegistry {
             return
         }
         // GSD Sync (P5-24): the plugin, its model chain and the `opencode.json` entry go in first, so
-        // OpenCode loads them on this start (upstream `XTermView` before `spawn_pty`).
-        if kind == .opencode, environment.features.isOn(.gsdSync), !preparing.contains(tab.id) {
+        // OpenCode loads them on this start (upstream `XTermView` before `spawn_pty`). A routed tab
+        // (P7-17) reads 9router's settings and Keychain key off the main thread first, on every
+        // start, so turning 9router off or removing the key applies at the next restart.
+        let syncsGSD = kind == .opencode && environment.features.isOn(.gsdSync)
+        let routes = Router9.wantsRouting(tab)
+        if syncsGSD || routes, !preparing.contains(tab.id) {
             preparing.insert(tab.id)
             Task { [weak self, weak environment] in
-                await environment?.gsdSync.prepareLaunch(in: cwd)
+                if syncsGSD { await environment?.gsdSync.prepareLaunch(in: cwd) }
+                let config = routes ? await environment?.router9.routingConfig() : nil
                 guard let self, let environment, self.preparing.remove(tab.id) != nil,
                       environment.workspace?.document.paneHolding(tab.id) != nil else { return }
-                self.startPrepared(tab, in: project, environment: environment, fresh: fresh)
+                self.startPrepared(tab, in: project, environment: environment, fresh: fresh,
+                                   routing: Router9.launchEnvironment(for: tab, config: config))
             }
             return
         }
         startPrepared(tab, in: project, environment: environment, fresh: fresh)
     }
 
-    private func startPrepared(_ tab: PaneTab, in project: Project, environment: AppEnvironment, fresh: Bool) {
+    /// `routing`: 9router's variables for this launch; empty when the tab is not routed.
+    private func startPrepared(_ tab: PaneTab, in project: Project, environment: AppEnvironment, fresh: Bool,
+                               routing: [String: String] = [:]) {
         let kind = AgentKind(rawValue: tab.agent)
         let cwd = tab.workingDirectory ?? project.folder
         discoveries.removeValue(forKey: tab.id)?.cancel()
@@ -330,7 +339,8 @@ final class TerminalRegistry {
             unrestricted: tab.unrestricted,
             hooks: hooks.launch(for: tab.id, kind: kind, orchestrator: environment.features.isOn(.orchestrator)),
             mcpServers: servers.servers,
-            mcpConfigPath: servers.configPath
+            mcpConfigPath: servers.configPath,
+            environment: routing
         )
         do {
             let command = try environment.agentLauncher.command(for: request)

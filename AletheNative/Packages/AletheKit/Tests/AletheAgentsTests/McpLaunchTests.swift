@@ -66,6 +66,21 @@ import Testing
         #expect(without.environment["OPENCODE_CONFIG"] == nil)
     }
 
+    /// P7-17: added variables win over a scrubbed name, stay out of the command line, and the
+    /// launcher's own (OpenCode's config file) still win over them.
+    @Test func addedEnvironmentIsMergedAfterTheScrubbedOnes() throws {
+        let command = try Self.command(AgentLaunchRequest(kind: .opencode, mcpServers: [Self.memory], mcpConfigPath: "/tmp/o.json",
+                                                          environment: ["OPENAI_API_KEY": "k1", "CLAUDECODE": "kept",
+                                                                        "OPENCODE_CONFIG": "/tmp/other.json"]))
+        #expect(command.environment["OPENAI_API_KEY"] == .some("k1"))
+        #expect(command.environment["CLAUDECODE"] == .some("kept"))
+        #expect(command.environment["OPENCODE_CONFIG"] == .some("/tmp/o.json"))
+        #expect(command.environment["CLAUDE_CODE_CHILD_SESSION"] == .some(nil))
+        #expect(command.shellCommand?.contains("k1") == false)
+        let plain = try Self.command(AgentLaunchRequest(kind: .claude))
+        #expect(plain.environment["OPENAI_API_KEY"] == nil)
+    }
+
     @Test func claudeConfigShape() throws {
         let data = McpLaunchConfig.claudeConfig([Self.graphify, Self.memory, McpLaunchServer(name: "graphify", command: "other")])
         let object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])

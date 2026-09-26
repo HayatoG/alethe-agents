@@ -16,6 +16,9 @@ public struct AgentLaunchRequest: Sendable {
     /// The per-launch file written from `mcpServers` for agents that read one (`McpLaunchConfig.needsFile`):
     /// Claude's `--mcp-config`, OpenCode's `OPENCODE_CONFIG`. Without it those agents get no servers.
     public var mcpConfigPath: String?
+    /// Variables added to this launch (9router routing, P7-17), set after the scrubbed ones so they
+    /// win over a scrubbed name. Values may be secrets: never log them.
+    public var environment: [String: String]
 
     public struct HookLaunch: Sendable {
         public var claudeSettingsPath: String?
@@ -29,7 +32,7 @@ public struct AgentLaunchRequest: Sendable {
 
     public init(kind: AgentKind, workingDirectory: String? = nil, extraArguments: [String] = [],
                 sessionID: String? = nil, unrestricted: Bool = false, hooks: HookLaunch? = nil,
-                mcpServers: [McpLaunchServer] = [], mcpConfigPath: String? = nil) {
+                mcpServers: [McpLaunchServer] = [], mcpConfigPath: String? = nil, environment: [String: String] = [:]) {
         self.kind = kind
         self.workingDirectory = workingDirectory
         self.extraArguments = extraArguments
@@ -38,6 +41,7 @@ public struct AgentLaunchRequest: Sendable {
         self.hooks = hooks
         self.mcpServers = mcpServers
         self.mcpConfigPath = mcpConfigPath
+        self.environment = environment
     }
 }
 
@@ -97,6 +101,7 @@ public struct AgentLauncher: Sendable {
         }
         var environment: [String: String?] = [:]
         for key in Self.scrubbedVariables { environment[key] = .some(nil) }
+        for (key, value) in request.environment { environment[key] = .some(value) }
 
         guard let cli = descriptor.cliCommand else {
             return AgentCommand(shellCommand: nil, workingDirectory: request.workingDirectory, environment: environment,

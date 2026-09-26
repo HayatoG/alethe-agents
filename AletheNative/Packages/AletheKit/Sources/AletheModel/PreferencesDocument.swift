@@ -123,16 +123,22 @@ public struct TerminalCreation: Codable, Hashable, Sendable {
     public var folder: String?
     public var unrestricted: Bool
     public var extraArguments: [String]
+    /// Routed through 9router (P7-17); nil is off, and older files decode without it.
+    public var useRouter9: Bool?
 
-    public init(agent: String, folder: String? = nil, unrestricted: Bool = false, extraArguments: [String] = []) {
+    public init(agent: String, folder: String? = nil, unrestricted: Bool = false, extraArguments: [String] = [],
+                useRouter9: Bool? = nil) {
         self.agent = agent
         self.folder = folder
         self.unrestricted = unrestricted
         self.extraArguments = extraArguments
+        self.useRouter9 = useRouter9
     }
 
     /// A new tab like the one this records.
     public func tab() -> PaneTab {
-        PaneTab(agent: agent, workingDirectory: folder, unrestricted: unrestricted, extraArguments: extraArguments)
+        var tab = PaneTab(agent: agent, workingDirectory: folder, unrestricted: unrestricted, extraArguments: extraArguments)
+        tab.useRouter9 = useRouter9
+        return tab
     }
 }

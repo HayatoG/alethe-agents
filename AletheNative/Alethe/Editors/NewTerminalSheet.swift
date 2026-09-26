@@ -1,6 +1,7 @@
 import AletheAgents
 import AletheDesign
 import AletheGit
+import AletheIntegrations
 import AletheModel
 import AppKit
 import SwiftUI
@@ -8,7 +9,8 @@ import SwiftUI
 /// New Terminal sheet (⌘T): agent, project, folder, unrestricted mode and an optional first prompt.
 /// Upstream: `NewTerminalModal`. With a `targetPane` it is upstream's `NewSubTabModal`: the tab joins
 /// that pane, in the folder of the pane's active tab. Orchestration mode (upstream `SessionMode`,
-/// P6-13) opens a Claude Code or Codex planner with the orchestrator board beside it.
+/// P6-13) opens a Claude Code or Codex planner with the orchestrator board beside it. "Route through
+/// 9router" (P7-17) is offered only when routing can apply to the chosen agent.
 struct NewTerminalSheet: View {
     let workspace: WorkspaceModel
     let undoManager: UndoManager?
@@ -41,6 +43,8 @@ struct NewTerminalSheet: View {
     @State private var worktreeMode: WorktreeMode = .gitWorktree
     @State private var provisioning = false
     @State private var worktreeError: String?
+    /// Launch through 9router (P7-17); starts from `defaultForNewAgents`.
+    @State private var useRouter9 = false
 
     private var registry: AgentRegistry { .builtin }
     private var agents: [AgentKind] { registry.enabledKinds(environment.preferences?.document.enabledAgents) }
@@ -51,6 +55,11 @@ struct NewTerminalSheet: View {
     private var canOrchestrate: Bool { targetPane == nil && !plannerAgents.isEmpty }
     private var orchestrating: Bool { canOrchestrate && mode == .orchestration }
     private var modeAgents: [AgentKind] { orchestrating ? plannerAgents : agents }
+    private var router9: Router9Controller { environment.router9 }
+    private var routingAvailable: Bool {
+        Router9.routingAvailable(router9.preferences, hasAPIKey: router9.hasAPIKey, hasInstall: router9.hasInstall,
+                                 agent: agent)
+    }
 
     var body: some View {
         Form {
@@ -147,6 +156,8 @@ struct NewTerminalSheet: View {
                 .accessibilityIdentifier("newTerminal.unrestricted")
             }
 
+            if routingAvailable { router9Rows }
+
             if descriptor?.isShell == false {
                 Toggle(isOn: $ownWorktree) {
                     Text("newTerminal.worktree")
@@ -205,10 +216,32 @@ struct NewTerminalSheet: View {
         }
         .navigationTitle(Text(targetPane == nil ? LocalizedStringKey("newTerminal.title") : "newSubTab.title"))
         .onAppear(perform: loadInitial)
+        // Keeps 9router's install and running state current while the sheet is open.
+        .task { if router9.preferences.enabled { await router9.watch() } }
         .onChange(of: agent) { _, _ in
             unrestricted = startsUnrestricted
             model = ""
         }
+    }
+
+    @ViewBuilder private var router9Rows: some View {
+        Toggle(isOn: $useRouter9) {
+            Text("newTerminal.router9")
+            Text("newTerminal.router9.detail").font(metrics.font(.footnote))
+        }
+        .accessibilityIdentifier("newTerminal.router9")
+        if useRouter9, !router9.isRunning {
+            Button(router9.busy ? LocalizedStringKey("newTerminal.router9.starting") : "newTerminal.router9.stopped") {
+                Task { await router9.startRouter() }
+            }
+            .disabled(router9.busy)
+            .accessibilityIdentifier("newTerminal.router9.start")
+        }
+        Toggle(isOn: Binding(get: { router9.preferences.defaultForNewAgents },
+                             set: { value in router9.update { $0.defaultForNewAgents = value } })) {
+            Text("router9.defaultForNewAgents")
+        }
+        .accessibilityIdentifier("newTerminal.router9.always")
     }
 
     private var startsUnrestricted: Bool {
@@ -236,6 +269,7 @@ struct NewTerminalSheet: View {
             folder = found.pane.activeTab?.workingDirectory ?? found.project.folder
         }
         unrestricted = startsUnrestricted
+        useRouter9 = router9.preferences.defaultForNewAgents
         loadWorktreeDefaults()
     }
 
@@ -296,7 +330,7 @@ struct NewTerminalSheet: View {
         let path = URL(filePath: expanded(folder)).standardizedFileURL.path
         let projectFolder = URL(filePath: project.folder).standardizedFileURL.path
         let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        let tab = PaneTab(
+        var tab = PaneTab(
             id: tabID,
             agent: agent.rawValue,
             workingDirectory: worktree?.path ?? (path == projectFolder ? nil : path),
@@ -306,6 +340,8 @@ struct NewTerminalSheet: View {
             worktreeAgentID: worktree?.agentId,
             worktreeBranch: worktree?.branch
         )
+        // Stored only when it can apply, like upstream; nil keeps older files unchanged.
+        tab.useRouter9 = routingAvailable && useRouter9 ? true : nil
         if let targetPane {
             workspace.update(undoManager: undoManager, actionName: String(localized: "undo.newSubTab")) {
                 $0.addTab(tab, to: targetPane)
@@ -331,7 +367,8 @@ struct NewTerminalSheet: View {
             }
             environment.preferences?.update {
                 $0.lastTerminalCreation = TerminalCreation(agent: tab.agent, folder: worktree == nil ? tab.workingDirectory : nil,
-                                                           unrestricted: tab.unrestricted, extraArguments: tab.extraArguments)
+                                                           unrestricted: tab.unrestricted, extraArguments: tab.extraArguments,
+                                                           useRouter9: tab.useRouter9)
             }
         }
         environment.preferences?.update { $0.lastAgent = agent.rawValue }
