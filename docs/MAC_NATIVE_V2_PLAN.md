@@ -3197,7 +3197,7 @@ above.
   idle clock; each accepted input emits `RemoteEvent.message`; logs only device ids and byte counts.
   `RemoteAppearance.resolved` ports upstream's appearance rules. P7-12 wires it. Tests (4 upstream
   goldens + 16 route tests over fakes) written and compiled, NOT run.
-- [ ] **P7-9 (M) Remote client bundle.** The upstream PWA (§11) as a resource of `AletheRemote`:
+- [x] **P7-9 (M) Remote client bundle.** The upstream PWA (§11) as a resource of `AletheRemote`:
   `src-tauri/remote/{index.html,app.js,app.css,locales.js,manifest.webmanifest}`, `src/styles/theme.css`,
   `@xterm/xterm` 5.5 (`xterm.js`, `xterm.css`) and `@xterm/addon-unicode11` 0.9 with their MIT licenses,
   the three agent icons and the four brand icons (`src/assets/theme-icons/`); the Caskaydia fonts are
@@ -3210,6 +3210,14 @@ above.
   (resources, `AletheDesign` dependency), the two scripts. Needs P7-2. *Tests:* G (upstream
   `selected_brand_icon_uses_embedded_png_assets`), U (every path `index.html` and `app.js` request
   resolves; checksums match the manifest). *Parity:* PER-7.
+  *Done:* (`91ffb50`) `RemoteClientBundle: RemoteAssetSource` serves the upstream phone client from
+  `AletheRemote/Resources/RemoteClient` on upstream's paths, content types and caching (no-store for
+  page, scripts, styles, manifest and brand icon; immutable for vendor files, fonts and agent icons);
+  the brand icon follows the app icon theme, fonts come from `AletheDesign`
+  (`AletheFonts.bundledFontURL(named:)`). The copy is byte-identical to upstream `2f3e5ed` (xterm 5.5.0,
+  unicode11 0.9.0, no patches); `bundle-manifest.json` records sources and checksums; `Scripts/sync-
+  remote-client.sh` recopies it (patches from `Scripts/remote-client-patches/`); `upstream-watch.py`
+  reports changes to the bundled files. Tests written and compiled, NOT run.
 - [ ] **P7-10 (M) Spotify service.** `AletheIntegrations/Spotify` (upstream `spotify.rs`): credentials
   (client ID from preferences, secret from the Keychain, `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` as
   fallback; both required); login — a random `state`, the authorize URL (scopes
