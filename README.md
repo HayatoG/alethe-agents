@@ -236,9 +236,18 @@ Use the published installers from [Releases](https://github.com/Kc1t/alethe-agen
 To recover it: **Windows Security → Virus & threat protection → Protection history → Actions →
 Restore**, then add an exclusion for `%LOCALAPPDATA%\Alethe` (and `src-tauri/target` if you build
 from source). Reports of incorrect detection go to
-[Microsoft Security Intelligence](https://www.microsoft.com/wdsi/filesubmission). macOS builds are
-not notarized yet either — right-click the app and choose **Open** to bypass Gatekeeper. Signing and
-notarization are on the [roadmap](#roadmap).
+[Microsoft Security Intelligence](https://www.microsoft.com/wdsi/filesubmission).
+
+macOS builds are not notarized yet either, so Gatekeeper may refuse to open the app or report it as
+damaged. Until notarization lands, move `Alethe.app` to `/Applications` and clear the quarantine flag:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Alethe.app
+```
+
+Prefix it with `sudo` if macOS asks for permission. Repeat it after installing each new version,
+since every fresh download is quarantined again. Only do this for a build downloaded from the
+official Releases page. Signing and notarization are on the [roadmap](#roadmap).
 
 ## Run From Source
 
