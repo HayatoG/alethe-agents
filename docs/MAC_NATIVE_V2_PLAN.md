@@ -14,6 +14,17 @@
 > racy/wrong test expectations. The package items below are now cleared; UI, performance and manual
 > items remain.
 >
+> **UI suite run 2026-09-26 (`Scripts/uitest.sh`): 124 passed, 35 failed** (smoke scripts not reached).
+> Failing groups: Settings controls off screen at some zoom levels (Agents, Appearance, Data, Discord,
+> Toolbar — the 720-wide Settings window / longer panes); app icon not restored after relaunch; menu
+> queries matching both the project context menu and the History menu (Git Control, Merge Center —
+> test-side); seeded jobs/`task.md` not loaded (Orchestrator Apply/Board/Worker actions, Multiagent,
+> GSD Sync); board zoom buttons; Graphify two Cancel buttons; MCP manager; onboarding skip not
+> remembered; Profiles create/rename/delete; 9router pill/settings with a stub install; terminal find
+> bar; Todos; Worktrees; ExtensionKit sample not discovered (dev-signed; expected). Result bundle:
+> `AletheNative/build/UITests-*.xcresult`. Owner's manual checklist lives in the Claude doc
+> "Alethe nativo — testes que falharam e checagens manuais".
+>
 > **Test debt (2026-09-25).** Written and compiled, never run:
 > - Package suite (`swift test`): new or changed tests since `b8f5ab7` in AletheIntegrationsTests (19
 >   files), AletheModelTests (13), AletheFoundationTests (5), AletheMergeTests (4), AletheAgentsTests (2),
