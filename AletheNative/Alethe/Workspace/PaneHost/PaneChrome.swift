@@ -199,6 +199,9 @@ struct PaneHeader: View {
     let isInFocusMode: Bool
     let onToggleFocus: () -> Void
     let onDisable: () -> Void
+    /// The pane is shared with remote devices (P7-18).
+    let isRemoteShared: Bool
+    let onToggleRemoteShared: () -> Void
     /// Session Cost… for the shown tab; nil when it has no session.
     let onSessionCost: (() -> Void)?
     /// Continue in the other agent (Claude Code ↔ Codex); nil for other agents.
@@ -219,6 +222,7 @@ struct PaneHeader: View {
                 .foregroundStyle(theme[isFocused ? .textPrimary : .textSecondary])
                 .lineLimit(1)
             AgentStatusGlyph(tab: tab.id)
+            if isRemoteShared { RemoteSharedGlyph() }
             if tab.unrestricted {
                 Image(systemName: "bolt.fill")
                     .font(metrics.font(.caption))
@@ -272,6 +276,8 @@ struct PaneHeader: View {
             if let onHandoff {
                 Button("menu.terminal.handoff", action: onHandoff)
             }
+            Toggle("remote.share", isOn: Binding(get: { isRemoteShared }, set: { _ in onToggleRemoteShared() }))
+                .accessibilityIdentifier("remote.share")
             Button("pane.disable", action: onDisable)
             Divider()
             Button("pane.close", action: onClose)

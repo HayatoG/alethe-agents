@@ -167,6 +167,10 @@ private struct ProjectRow: View {
         Set(project.panes.filter(\.isDisabled).flatMap { $0.tabs.map(\.id) })
     }
 
+    private var sharedTabs: Set<TabID> {
+        Set(project.panes.filter(\.isRemoteShared).flatMap { $0.tabs.map(\.id) })
+    }
+
     var body: some View {
         let tabs = project.panes.flatMap(\.tabs)
         let planning = environment.gsdSync.sessions(of: project.id)
@@ -183,6 +187,7 @@ private struct ProjectRow: View {
                                     .foregroundStyle(theme[disabled ? .textTertiary : .textPrimary])
                                     .lineLimit(1)
                                 AgentStatusGlyph(tab: tab.id)
+                                if sharedTabs.contains(tab.id) { RemoteSharedGlyph() }
                                 if let branch = tab.worktreeBranch {
                                     Image(systemName: "arrow.triangle.branch")
                                         .font(metrics.font(.footnote))
@@ -336,6 +341,10 @@ private struct TabContextMenu: View {
                 actions.setLaneVisible(!pane.isLaneVisible, for: pane.id)
             }
             .disabled(pane.tabs.count > 1)
+            if pane.content.isTerminal {
+                Divider()
+                RemoteShareToggle(pane: pane)
+            }
         }
         if let agentID = tab.worktreeAgentID {
             Divider()
@@ -346,6 +355,34 @@ private struct TabContextMenu: View {
         }
         Divider()
         Button("terminal.close") { actions.closeTab(tab.id) }
+    }
+}
+
+/// Share with Remote Devices (upstream `sidebarMenus.tsx` `remoteShared`): a terminal pane stays
+/// private to this Mac until shared; paired devices see every tab of a shared pane.
+struct RemoteShareToggle: View {
+    let pane: Pane
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        Toggle("remote.share", isOn: Binding(get: { pane.isRemoteShared },
+                                             set: { environment.remoteControl.setShared(pane.id, $0) }))
+            .accessibilityIdentifier("remote.share")
+    }
+}
+
+/// Marks a terminal shared with remote devices, in the sidebar and the pane header.
+struct RemoteSharedGlyph: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.metrics) private var metrics
+
+    var body: some View {
+        Image(systemName: "iphone.radiowaves.left.and.right")
+            .font(metrics.font(.caption))
+            .foregroundStyle(theme[.accent])
+            .help(Text("remote.shared"))
+            .accessibilityLabel(Text("remote.shared"))
+            .accessibilityIdentifier("remote.sharedGlyph")
     }
 }
 
