@@ -19,6 +19,8 @@ public enum SecretRedactor {
         // `API_KEY=abc`, `"access_token": "abc"`, `--api-key abc`, `?token=abc`
         (#"(?i)(\#(secretKey)["']?\s*[:=]\s*["']?)[^\s"',;&}]+"#, "$1\(placeholder)"),
         (#"(?i)(--\#(secretKey)\s+)[^\s"']+"#, "$1\(placeholder)"),
+        // Remote control's pairing URL (`/?pair=abc`): the query value is a pairing token.
+        (#"(?i)([?&]pair=)[^\s"'&#]+"#, "$1\(placeholder)"),
         // Known token shapes, wherever they appear.
         (#"\bsk-[A-Za-z0-9_-]{16,}"#, placeholder),
         (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, placeholder),

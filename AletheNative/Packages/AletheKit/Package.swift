@@ -107,7 +107,10 @@ let package = Package(
             dependencies: ["AletheOrchestrator", "AletheIntegrations", "AletheGit", "AletheAgents"],
             resources: [.copy("Fixtures")]
         ),
-        .testTarget(name: "AletheRemoteTests", dependencies: ["AletheRemote", "AletheDesign"]),
+        .testTarget(
+            name: "AletheRemoteTests",
+            dependencies: ["AletheRemote", "AletheDesign", "AletheFoundation", "AletheModel", "AletheIntegrations"]
+        ),
         .testTarget(name: "AletheExtensionHostTests", dependencies: ["AletheExtensionHost", "AlethePluginKit", "AletheExtensionSDK"]),
     ]
 )
