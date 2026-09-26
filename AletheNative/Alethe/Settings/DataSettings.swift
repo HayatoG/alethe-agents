@@ -5,11 +5,13 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// Settings › General › Data (P5-10, upstream `backup.rs`, `diagnostics.rs`): export and import a
-/// backup of the running profile, reset it, erase everything, open the data folder. Import, reset and
-/// erase ask once, take a safety backup and relaunch.
+/// backup of the running profile, reset it, erase everything, open the data folder, open GitHub Sync
+/// (P7-15). Import, reset and erase ask once, take a safety backup and relaunch.
 struct DataSettingsSection: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.theme) private var theme
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
     @State private var staged: StagedBackup?
     @State private var confirmImport = false
     @State private var importStarted = false
@@ -35,6 +37,13 @@ struct DataSettingsSection: View {
             } label: {
                 Text("settings.data.backup")
                 Text("settings.data.backup.help")
+            }
+            LabeledContent {
+                Button("settings.data.gistSync", action: openGistSync)
+                    .accessibilityIdentifier("settings.data.gistSync")
+            } label: {
+                Text("settings.data.gistSync.label")
+                Text("settings.data.gistSync.help")
             }
             LabeledContent {
                 Button("settings.data.reset", role: .destructive) { confirmReset = true }
@@ -126,6 +135,13 @@ struct DataSettingsSection: View {
         }
         lines.append(String(format: String(localized: "settings.data.import.message"), environment.activeProfileName))
         return lines.joined(separator: "\n\n")
+    }
+
+    /// The sheet belongs to the main window: Settings closes and the main window comes forward.
+    private func openGistSync() {
+        environment.editorRequest = .gistSync
+        openWindow(id: "main")
+        dismissWindow()
     }
 
     private func export() {

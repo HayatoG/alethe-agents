@@ -11,6 +11,8 @@ struct TauriImportSheet: View {
     let undoManager: UndoManager?
     /// Told what an import added (the onboarding's import step shows it).
     var onImported: ((TauriImport.Report) -> Void)?
+    /// A `projects.json` to import instead of the Tauri app's profiles (a pulled Tauri gist, P7-15).
+    var projectsFile: URL?
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
     @Environment(\.metrics) private var metrics
@@ -95,7 +97,9 @@ struct TauriImportSheet: View {
         }
         .navigationTitle(Text("import.title"))
         .onAppear {
-            profiles = Self.availableProfiles()
+            profiles = projectsFile.map {
+                [TauriProfile(id: "file", name: $0.lastPathComponent, projectsFile: $0, isActive: true)]
+            } ?? Self.availableProfiles()
             profileID = profiles.first?.id
             refreshPreview()
         }

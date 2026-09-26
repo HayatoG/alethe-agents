@@ -1,3 +1,4 @@
+import AletheIntegrations
 import AletheModel
 import AppKit
 import Foundation
@@ -31,6 +32,12 @@ extension AppEnvironment {
     func importStaged(_ staged: StagedBackup) async throws {
         guard let profileID else { throw ProfileError.notFound }
         try await scheduleAfterSafetyBackup(.importProfile(profileID, stagedFolder: staged.folder.path))
+    }
+
+    /// Replaces the running profile with a validated gist pull (P7-11) at the relaunch.
+    func importGistPull(_ pull: StagedGistPull) async throws {
+        guard let profileID, case .importProfile(profileID, _) = pull.operation else { throw ProfileError.notFound }
+        try await scheduleAfterSafetyBackup(pull.operation)
     }
 
     /// Empties the running profile (projects, settings, history, scrollback) at the relaunch.
