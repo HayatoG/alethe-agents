@@ -17,5 +17,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Alethe uses the local network only when you turn on Remote Control, so your paired phone can follow the terminals you share.</string>
 </dict>
 </plist>

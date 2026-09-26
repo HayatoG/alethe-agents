@@ -17,6 +17,7 @@ public final class TerminalPaneView: NSView {
     public let tap: TerminalIOTap
     private let activity = TerminalActivity()
     private let forceKill = ForceKillState()
+    private let grid: GridSizeState
     /// Find bar state (⌘F).
     public let search = TerminalSearch()
     private let history: PromptHistoryState
@@ -47,6 +48,9 @@ public final class TerminalPaneView: NSView {
     /// Time since the process last printed anything.
     public var quietFor: Duration { activity.quietFor }
     public let startedAt = Date()
+    /// The PTY's grid: the launch size until the view first lays out, then the last resize. Read
+    /// from any thread (remote control reports it with the scrollback).
+    public nonisolated var gridSize: PTYSize { grid.size }
 
     /// - Parameter forceKillNotice: line printed in the terminal when a double ⌃C kills the process.
     public init(launch: PTYLaunch, theme: Theme, fontSize: Float = TerminalAppearance.defaultFontSize,
@@ -62,6 +66,8 @@ public final class TerminalPaneView: NSView {
         self.scrollback = scrollback
         let forceKill = forceKill
         let spawner = DeferredSpawn()
+        let grid = GridSizeState(launch.size)
+        self.grid = grid
         let notice = Data("\r\n\u{1b}[33m[\(forceKillNotice)]\u{1b}[0m\r\n".utf8)
         session = InMemoryTerminalSession(
             write: { data in
@@ -81,6 +87,7 @@ public final class TerminalPaneView: NSView {
                     widthPixels: UInt16(clamping: viewport.widthPixels),
                     heightPixels: UInt16(clamping: viewport.heightPixels)
                 )
+                if size.columns > 0, size.rows > 0 { grid.size = size }
                 if spawner.spawnIfNeeded(size) { return }
                 process.resizeCoalesced(size)
             }
@@ -400,6 +407,18 @@ private final class ForceKillState: @unchecked Sendable {
     }
 
     var triggered: Bool { state.withLock { $0.triggered } }
+}
+
+/// The PTY's current grid, written by the session's resize callback (any thread).
+private final class GridSizeState: Sendable {
+    private let state: Mutex<PTYSize>
+
+    init(_ size: PTYSize) { state = Mutex(size) }
+
+    var size: PTYSize {
+        get { state.withLock { $0 } }
+        set { state.withLock { $0 = newValue } }
+    }
 }
 
 /// When the process last wrote output, and whether it is still running (read from any thread).

@@ -1,12 +1,40 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alethe uses the local network only when you turn on Remote Control, so your paired phone can follow the terminals you share."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Alethe usa a rede local só quando você liga o Controle Remoto, para que o celular pareado acompanhe os terminais que você compartilha."
+          }
+        }
+      }
+    },
     "NSMicrophoneUsageDescription" : {
       "comment" : "Privacy - Microphone Usage Description",
       "extractionState" : "manual",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Alethe uses the microphone for dictation into terminals and fields. Speech is transcribed on this Mac." } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "O Alethe usa o microfone para ditado em terminais e campos. A fala é transcrita neste Mac." } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alethe uses the microphone for dictation into terminals and fields. Speech is transcribed on this Mac."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Alethe usa o microfone para ditado em terminais e campos. A fala é transcrita neste Mac."
+          }
+        }
       }
     }
   },

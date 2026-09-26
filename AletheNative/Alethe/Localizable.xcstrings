@@ -21336,6 +21336,91 @@
         }
       }
     },
+    "remote.notify.autoDisabled.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No device connected for a while, so Alethe closed the listener automatically."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum dispositivo conectou por um bom tempo, então o Alethe fechou o listener automaticamente."
+          }
+        }
+      }
+    },
+    "remote.notify.autoDisabled.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote control turned itself off"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O controle remoto se desligou sozinho"
+          }
+        }
+      }
+    },
+    "remote.notify.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sent a message"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ enviou uma mensagem"
+          }
+        }
+      }
+    },
+    "remote.notify.startFailed.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alethe was unable to open the listener — check the selected reach mode and try again."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Alethe não conseguiu abrir o listener — confira o modo de alcance selecionado e tente de novo."
+          }
+        }
+      }
+    },
+    "remote.notify.startFailed.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote control couldn't start"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O controle remoto não conseguiu iniciar"
+          }
+        }
+      }
+    },
     "resources.agentIdle" : {
       "extractionState" : "manual",
       "localizations" : {

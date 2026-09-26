@@ -38,9 +38,10 @@ final class AgentNotifier: NSObject, UNUserNotificationCenterDelegate {
         if !NSApp.isActive { Task { await deliver(entry) } }
     }
 
-    /// Any other notification (a limit reset): the list, and macOS when Alethe is in the background.
-    func post(title: String, body: String, agent: String? = nil) {
-        let entry = AppNotification(title: title, body: body, agent: agent)
+    /// Any other notification (a limit reset, a remote device's message): the list, and macOS when
+    /// Alethe is in the background. With `tab`, clicking it jumps there.
+    func post(title: String, body: String, agent: String? = nil, tab: TabID? = nil) {
+        let entry = AppNotification(title: title, body: body, tab: tab, agent: agent)
         guard log.post(entry) else { return }
         if !NSApp.isActive { Task { await deliver(entry) } }
     }

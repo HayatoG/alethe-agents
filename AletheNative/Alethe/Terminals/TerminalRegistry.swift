@@ -56,6 +56,8 @@ final class TerminalRegistry {
     @ObservationIgnored private var discoveries: [TabID: Task<Void, Never>] = [:]
     /// Tabs whose launch waits on something first (a Cursor chat being created).
     @ObservationIgnored private var preparing: Set<TabID> = []
+    /// Every running tab's output and exits, for remote control (P7-12).
+    @ObservationIgnored let output = TerminalOutputRelay()
 
     func view(for tab: TabID) -> TerminalPaneView? { views[tab] }
 
@@ -71,7 +73,10 @@ final class TerminalRegistry {
     }
 
     private func restart(_ tab: PaneTab, in project: Project, environment: AppEnvironment, fresh: Bool) {
-        views.removeValue(forKey: tab.id)?.terminate()
+        if let view = views.removeValue(forKey: tab.id) {
+            view.terminate()
+            output.exit(tab.id, reason: "restarted")
+        }
         // A restart starts clean, like upstream's `restart_pty`.
         scrollback(for: tab.id, environment: environment)?.clear()
         environment.launchers.invalidate()
@@ -80,8 +85,9 @@ final class TerminalRegistry {
 
     /// Ends the tab's process and forgets it (the tab was closed or deleted); its saved scrollback
     /// goes too unless `keepScrollback` (quitting).
-    func close(_ tab: TabID, keepScrollback: Bool = false) {
+    func close(_ tab: TabID, keepScrollback: Bool = false, exitReason: String = "killed") {
         let view = views.removeValue(forKey: tab)
+        if view != nil, states[tab] == .running { output.exit(tab, reason: exitReason) }
         pageOffers.removeValue(forKey: tab)
         if let file = scrollbacks.removeValue(forKey: tab) {
             if keepScrollback { file.flush() } else { file.delete() }
@@ -180,7 +186,7 @@ final class TerminalRegistry {
     /// shown (upstream parking, but resumed by itself).
     func hibernate(_ tab: TabID) {
         guard states[tab] == .running else { return }
-        close(tab, keepScrollback: true)
+        close(tab, keepScrollback: true, exitReason: "suspended")
         hibernated.insert(tab)
     }
 
@@ -209,7 +215,7 @@ final class TerminalRegistry {
     /// A disabled terminal: its process ends, its saved output stays for when it is enabled again.
     func suspend(_ tab: TabID) {
         guard states[tab] != nil else { return }
-        close(tab, keepScrollback: true)
+        close(tab, keepScrollback: true, exitReason: "suspended")
     }
 
     func dismissPageOffer(for tab: TabID) {
@@ -370,7 +376,10 @@ final class TerminalRegistry {
                     return
                 }
                 self.states[tab.id] = view.wasForceKilled ? .forceKilled : .exited(code: code)
+                self.output.exit(tab.id, reason: view.wasForceKilled ? "killed" : "exited")
             }
+            let relay = output, tabID = tab.id
+            view.tap.observeOutput { data in relay.output(tabID, data) }
             views[tab.id] = view
             states[tab.id] = .running
             // Variable names only: their values may be tokens.
@@ -408,6 +417,76 @@ final class TerminalRegistry {
             AppLog.record(.error, .terminal, "\(kind.rawValue) did not start: \(error)")
         }
         generations[tab.id, default: 0] += 1
+    }
+}
+
+// MARK: - Remote control (P7-12)
+
+extension TerminalRegistry {
+    /// Types `text` into the tab's process, as if from the keyboard. False when it runs nothing.
+    func typeInput(_ text: String, into tab: TabID) -> Bool {
+        guard states[tab] == .running, let view = views[tab] else { return false }
+        view.type(text)
+        return true
+    }
+
+    /// The running tab's grid.
+    func gridSize(of tab: TabID) -> PTYSize? {
+        guard states[tab] == .running else { return nil }
+        return views[tab]?.gridSize
+    }
+
+    /// The tab's saved output file, if it has one.
+    func scrollbackFile(of tab: TabID) -> ScrollbackFile? {
+        scrollbacks[tab] ?? views[tab]?.scrollback
+    }
+
+    /// The last `maxBytes` of the tab's saved output, pending bytes included. Reads off the main
+    /// thread.
+    nonisolated static func scrollbackTail(_ file: ScrollbackFile, maxBytes: Int) async -> Data {
+        await Task.detached(priority: .utility) {
+            file.flush()
+            guard let handle = try? FileHandle(forReadingFrom: file.url) else { return Data() }
+            defer { try? handle.close() }
+            guard let end = try? handle.seekToEnd() else { return Data() }
+            try? handle.seek(toOffset: end > UInt64(maxBytes) ? end - UInt64(maxBytes) : 0)
+            return (try? handle.readToEnd()) ?? Data()
+        }.value
+    }
+}
+
+/// Fans every running tab's output out to remote control. Taps call it on the PTY queues; with no
+/// observer it only takes a lock.
+final class TerminalOutputRelay: @unchecked Sendable {
+    enum Event: Sendable {
+        case data(TabID, Data)
+        case exit(TabID, reason: String)
+    }
+
+    private let lock = NSLock()
+    private var observers: [UUID: @Sendable (Event) -> Void] = [:]
+
+    func observe(_ observer: @escaping @Sendable (Event) -> Void) -> UUID {
+        let id = UUID()
+        lock.withLock { observers[id] = observer }
+        return id
+    }
+
+    func remove(_ id: UUID) {
+        lock.withLock { _ = observers.removeValue(forKey: id) }
+    }
+
+    func output(_ tab: TabID, _ data: Data) {
+        send(.data(tab, data))
+    }
+
+    func exit(_ tab: TabID, reason: String) {
+        send(.exit(tab, reason: reason))
+    }
+
+    private func send(_ event: Event) {
+        let current = lock.withLock { Array(observers.values) }
+        for observer in current { observer(event) }
     }
 }
 
