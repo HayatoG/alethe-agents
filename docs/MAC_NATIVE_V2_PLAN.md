@@ -3294,7 +3294,7 @@ above.
   P7-7, P7-8, P7-9. *Tests:* U (sources over a seeded workspace: only shared tabs listed, input reaches the
   PTY, preference changes do not restart unless the reach mode changed), UI (seeded remote on: a stub
   device message shows in the notification list). *Parity:* PER-7.
-- [ ] **P7-13 (S) Discord Rich Presence in the app.** `DiscordPresenceController` (upstream
+- [x] **P7-13 (S) Discord Rich Presence in the app.** `DiscordPresenceController` (upstream
   `useDiscordPresence.ts`): while `discordPresence` is on, "Working with Alethe" with the current view
   (Home → "Viewing the dashboard", workspace → "Managing terminals", an orchestration board in front →
   "Orchestrating AI agents") and the app's launch time, refreshed every 30 s and on view changes;
@@ -3302,6 +3302,13 @@ above.
   `IntegrationsPage` `discord`). Files: the P7-6 stubs `DiscordPresenceController.swift`,
   `DiscordSettingsSection.swift`, `TestSeeds+Discord.swift`. Needs P7-4, P7-6. *Tests:* U (activity per
   view, cleared when off, with a fake client), UI (the toggle). *Parity:* PER-4.
+  *Done:* (`aa575e4`) `DiscordPresenceSession` (AletheIntegrations) drives the P7-4 client: while
+  `discordPresence` is on it sends "Working with Alethe" with the view (dashboard, terminals, or
+  orchestration board in front) and the launch time, on view changes and every 30 s; clears when turned
+  off and at quit (flush); no project names (upstream has no setting for them); ordered client calls.
+  `DiscordPresenceController` follows the preference and view by observation; Settings › Integrations ›
+  Discord toggle; test launches use a silent client (seed `discordPresence`). Tests (U with a fake
+  client, UI toggle) written and compiled, NOT run.
 - [ ] **P7-14 (L) Now Playing.** `NowPlayingController` (upstream `useNowPlaying.ts`): connected status,
   the current track every 8 s only while a Now Playing view is visible and the app is active (one request
   in flight), the last track kept per profile and shown paused after a relaunch, connect (P7-10 login)

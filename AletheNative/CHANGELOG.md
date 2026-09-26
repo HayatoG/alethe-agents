@@ -310,6 +310,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   its worktree in Finder.
 - Orchestration board: Apply to Branch merges a finished worker's worktree into the project's current
   branch after one confirmation that shows its files; conflicts continue in the Merge Center.
+- Discord Rich Presence (Settings › Integrations › Discord): Discord shows that you are working in
+  Alethe and which view you are on, without project names; it updates every 30 s and clears when turned
+  off or when you quit.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
