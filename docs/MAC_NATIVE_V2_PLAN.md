@@ -3173,7 +3173,7 @@ above.
   (upstream `request_headers_end_is_detected_across_chunks`, `header_lookup_is_case_insensitive`), U
   (limits, lockout → 429, origin refused, an unauthenticated socket closed at 10 s, stop with open
   connections), P (loopback round trip: pair, subscribe, 1 MB of output streamed). *Parity:* PER-7.
-- [ ] **P7-8 (M) Remote API.** `RemoteAPI: RemoteRouter` (upstream `http.rs` `handle_http`/`handle_api`,
+- [x] **P7-8 (M) Remote API.** `RemoteAPI: RemoteRouter` (upstream `http.rs` `handle_http`/`handle_api`,
   `workspace.rs`, `appearance.rs`): `POST /api/pair` (401 and a recorded failure on a bad token),
   `GET /appearance.json`, and bearer-authorized `/api/info`, `/api/state` (groups; projects with their
   shared chats only), `/api/scrollback` (403 unless shared; subscribes the session), `/api/transcript`
@@ -3188,6 +3188,15 @@ above.
   `appearance_accepts_persisted_light_preferences`, `appearance_rejects_unknown_persisted_values`), U
   (every route over stub sources: unshared 403, read-only, shell input off, rate limit, stale question,
   bad token 401). *Parity:* PER-7.
+  *Done:* (`f91df3c`) `RemoteAPI: RemoteRouter` ports upstream `http.rs`: pairing (401 + recorded
+  failure on a bad token), `/appearance.json`, and session-checked `/api/*` — info, state (up to 4 MB),
+  scrollback (403 unless shared; subscribes the device), transcript (fixed message on failure, no local
+  paths), question answer (409 when the question changed; answers mapped to arrow keys like upstream),
+  interrupt, message. Read-only, shell-input, rate-limit, lockout and 64 KB checks before parsing; tab
+  not running 409, unknown 404; ids ≤128 chars without control characters; each valid call resets the
+  idle clock; each accepted input emits `RemoteEvent.message`; logs only device ids and byte counts.
+  `RemoteAppearance.resolved` ports upstream's appearance rules. P7-12 wires it. Tests (4 upstream
+  goldens + 16 route tests over fakes) written and compiled, NOT run.
 - [ ] **P7-9 (M) Remote client bundle.** The upstream PWA (§11) as a resource of `AletheRemote`:
   `src-tauri/remote/{index.html,app.js,app.css,locales.js,manifest.webmanifest}`, `src/styles/theme.css`,
   `@xterm/xterm` 5.5 (`xterm.js`, `xterm.css`) and `@xterm/addon-unicode11` 0.9 with their MIT licenses,
