@@ -59,7 +59,7 @@ let package = Package(
         .target(name: "AletheExtensionHost", dependencies: ["AlethePluginKit", "AletheFoundation", "AletheExtensionSDK"]),
         .target(
             name: "AletheIntegrations",
-            dependencies: ["AletheFoundation", "AletheGit", "AletheAgents"],
+            dependencies: ["AletheFoundation", "AletheModel", "AletheGit", "AletheAgents"],
             resources: [.copy("Resources/OpenCodePlugins")]
         ),
         .target(
@@ -99,7 +99,7 @@ let package = Package(
         .testTarget(name: "AletheFilesTests", dependencies: ["AletheFiles", "AletheGit"]),
         .testTarget(
             name: "AletheIntegrationsTests",
-            dependencies: ["AletheIntegrations", "AletheFoundation", "AletheGit", "AletheAgents"],
+            dependencies: ["AletheIntegrations", "AletheFoundation", "AletheModel", "AletheGit", "AletheAgents"],
             resources: [.copy("Fixtures")]
         ),
         .testTarget(
