@@ -44,8 +44,8 @@ enum SampleManifest {
 /// The extension's side of the process connection: manifest and commands.
 final class SampleService: NSObject, AletheExtensionXPC {
     func manifest(reply: @escaping @Sendable (Data) -> Void) {
-        let payload = MainActor.assumeIsolated { SampleManifest.payload }
-        reply(ExtensionWire.encode(payload))
+        // XPC delivers this on a background queue; building the manifest needs no actor.
+        reply(ExtensionWire.encode(SampleManifest.payload))
     }
 
     func runCommand(_ id: String, reply: @escaping @Sendable (String?) -> Void) {

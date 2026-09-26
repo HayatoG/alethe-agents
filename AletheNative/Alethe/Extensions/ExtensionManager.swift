@@ -118,7 +118,9 @@ final class ExtensionManager {
             let connection = try process.makeXPCConnection()
             configureHostSide(of: connection, for: id)
             connection.remoteObjectInterface = .aletheExtension()
-            connection.interruptionHandler = { [weak self] in Task { @MainActor in self?.processStopped(id) } }
+            // XPC calls these on its own queue: `@Sendable` keeps them off the main actor (an inferred
+            // main-actor closure traps there, taking the app down when an extension crashes).
+            connection.interruptionHandler = { @Sendable [weak self] in Task { @MainActor in self?.processStopped(id) } }
             connection.resume()
             processes[id] = process
             connections[id] = connection
@@ -138,7 +140,7 @@ final class ExtensionManager {
     }
 
     private func proxy(_ id: String) -> (any AletheExtensionXPC)? {
-        connections[id]?.remoteObjectProxyWithErrorHandler { [weak self] _ in
+        connections[id]?.remoteObjectProxyWithErrorHandler { @Sendable [weak self] _ in
             Task { @MainActor in self?.processStopped(id) }
         } as? any AletheExtensionXPC
     }
