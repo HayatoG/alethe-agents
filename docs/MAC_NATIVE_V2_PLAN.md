@@ -3320,7 +3320,7 @@ above.
   `NowPlayingViews.swift`, `SpotifySettingsSection.swift`, `TestSeeds+Spotify.swift`. Needs P7-6, P7-10.
   *Tests:* U (polling stops when hidden, last track restored), UI (seeded track on Home and in the
   sidebar; Settings section), HT. *Parity:* PER-3, HOME-1.
-- [ ] **P7-15 (M) GitHub Sync sheet and toolbar item.** The sheet (upstream `SyncModal` GitHub card;
+- [x] **P7-15 (M) GitHub Sync sheet and toolbar item.** The sheet (upstream `SyncModal` GitHub card;
   the cloud card is SET-6, Won't port): connect with a token (secure field; a link to create one with
   the `gist` scope), connected as, gist link, Push, Pull (asks once: it replaces this profile's
   workspace and relaunches), last push and pull, Disconnect, upstream's error cases; the toolbar Sync
@@ -3328,6 +3328,14 @@ above.
   stubs `GistSyncController.swift`, `GistSyncSheet.swift`, `SyncToolbarItem.swift`,
   `TestSeeds+GistSync.swift`; `DataSettings.swift`. Needs P7-6, P7-11. *Tests:* UI (connect, push and
   pull over a stub endpoint; no pull without confirmation), HT. *Parity:* SET-5, UI-7.
+  *Done:* (`2bbb865`) GitHub Sync sheet: connect with a token in a secure field (cleared at once, never
+  shown again; link to create a `gist`-scoped token); connected: account, Open Gist, Upload (open
+  documents saved first), Download, last upload/download, Disconnect, upstream error messages. Download
+  validates the gist first and asks once before replacing the profile (showing its project and terminal
+  counts), then safety backup, schedule (`DataActions.importGistPull`) and relaunch; a Tauri gist opens
+  the Tauri import sheet (new optional `projectsFile`). Toolbar Sync item and Settings › General › Data
+  › GitHub Sync… open it. Tests (UI `GistSyncTests` against an in-app GitHub stub, HT at 120 %) written
+  and compiled, NOT run.
 - [ ] **P7-16 (M) 9router settings, install and toolbar pill.** `Router9Controller` (upstream
   `useRouter9Runtime.ts`, `useRouter9AutoStart.ts`): status refreshed while visible, start and stop,
   auto-start at launch when enabled, auto-start is on, an install exists and the port is free; Settings ›
