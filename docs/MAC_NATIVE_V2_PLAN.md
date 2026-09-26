@@ -3098,7 +3098,7 @@ above.
   doubling to 60 s) while Discord is absent; 2 s socket timeouts, SIGPIPE-safe; a refused handshake
   counts as failed. `DiscordPresenceClient` protocol + `DiscordActivity` for P7-13's fakes. Tests
   (upstream payloads + fake local socket scenarios) written and compiled, NOT run.
-- [ ] **P7-5 (M) 9router service.** `AletheIntegrations/Router9` (upstream `router9.rs`,
+- [x] **P7-5 (M) 9router service.** `AletheIntegrations/Router9` (upstream `router9.rs`,
   `lib/router9.ts`): routing rules (Claude Code → `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`; Codex and
   OpenCode → `OPENAI_BASE_URL` with `/v1` + `OPENAI_API_KEY`; nothing when off, keyless or unsupported;
   port normalized, base URL always loopback), source resolution (the preferred install, else the other);
@@ -3113,6 +3113,15 @@ above.
   dialect, custom port, nothing routed, `normalizePort`, loopback base URL, `router9ResolveSource`,
   `router9HasInstall`), U (status from a fake install folder, command quoting, a stub server started
   and stopped with no process left). *Parity:* groundwork for PER-5.
+  *Done:* (`65f8a71`) `AletheIntegrations/Router9`: `Router9Routing` (Claude Code gets `ANTHROPIC_*`,
+  Codex/OpenCode `OPENAI_*` with `/v1`; nothing when off, keyless or unsupported; port normalizing; base
+  and dashboard always on 127.0.0.1; managed vs external install; pinned 0.5.59; `Router9RoutingConfig`
+  input until P7-16/17 wire the P7-1 preferences), `Router9Service` (status, profile paths,
+  install/uninstall command lines with POSIX quoting, start via `node cli.js` + `DATA_DIR` or the user's
+  binary, `PORT`/`NEXT_PUBLIC_BASE_URL`/`HOSTNAME=127.0.0.1`, busy port refused, async or blocking
+  stop), `Router9Process` (own process group, `9router.log`, SIGTERM then SIGKILL tree, 400 ms port
+  check). API key only as a parameter, never logged. Tests (upstream `router9.test.ts` goldens + stubbed
+  units) written and compiled, NOT run.
 - [ ] **P7-6 (S) App slots for the peripherals.** The shared app files every later Phase 7 task would
   otherwise touch, wired once to stub files that exactly one later task fills (the P6-14 pattern):
   Settings › Integrations (Spotify, Discord and 9router sections, upstream `IntegrationsPage`) and
