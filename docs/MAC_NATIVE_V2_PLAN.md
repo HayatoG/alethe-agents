@@ -3142,7 +3142,7 @@ above.
   stop), `Router9Process` (own process group, `9router.log`, SIGTERM then SIGKILL tree, 400 ms port
   check). API key only as a parameter, never logged. Tests (upstream `router9.test.ts` goldens + stubbed
   units) written and compiled, NOT run.
-- [ ] **P7-6 (S) App slots for the peripherals.** The shared app files every later Phase 7 task would
+- [x] **P7-6 (S) App slots for the peripherals.** The shared app files every later Phase 7 task would
   otherwise touch, wired once to stub files that exactly one later task fills (the P6-14 pattern):
   Settings › Integrations (Spotify, Discord and 9router sections, upstream `IntegrationsPage`) and
   Settings › Remote tabs; `EditorRequest.remotePairing` and `.gistSync` presented by `MainWindow`;
@@ -3158,7 +3158,14 @@ above.
   `Alethe/Settings/{IntegrationsSettings,RemoteSettings}.swift` and `Alethe/Spike/TestSeeds+*.swift`.
   Needs P7-1. *Tests:* UI (both new Settings tabs open; the three items are offered in Customize
   Toolbar). *Parity:* groundwork for PER-3, PER-4, PER-5, PER-7, SET-5, UI-7.
-- [ ] **P7-7 (L) Remote transport.** Network.framework (ADR-1: tiny_http/tungstenite → `NWListener`;
+  *Done:* (`95c4eb8`) Settings › Integrations (Spotify, Discord, 9router sections) and › Remote tabs
+  (window 720 wide so 11 tabs fit); `EditorRequest.remotePairing`/`.gistSync` in `MainWindow`;
+  remote/router9/sync toolbar items offered (`allCases`); Now Playing slots in the sidebar footer and
+  the Home hero row (`HomeView`, not `HomeSections`); five controllers started after the terminal
+  registry, `flush` stopping remote, 9router and Discord first; `TestSeeds` routed to
+  `TestSeeds+<Feature>.swift` (document, preferences and environment hooks). Every placeholder renders
+  and does nothing. Tests (UI `PeripheralSlotsTests`) written and compiled, NOT run.
+- [x] **P7-7 (L) Remote transport.** Network.framework (ADR-1: tiny_http/tungstenite → `NWListener`;
   upstream `remote/http.rs` `run_http`/`read_request`/`respond*`, `remote/websocket.rs`): an HTTP
   listener bound to the hub's host on the first free port of 9340…9360 (`requiredLocalEndpoint`, never a
   wildcard address) and a WebSocket listener (`NWProtocolWebSocket`) on 9341…9361; requests read with
@@ -3173,6 +3180,15 @@ above.
   (upstream `request_headers_end_is_detected_across_chunks`, `header_lookup_is_case_insensitive`), U
   (limits, lockout → 429, origin refused, an unauthenticated socket closed at 10 s, stop with open
   connections), P (loopback round trip: pair, subscribe, 1 MB of output streamed). *Parity:* PER-7.
+  *Done:* (`746a062`) `RemoteTransport` on Network.framework: HTTP and WebSocket listeners bound only to
+  the hub's literal host, first free port of 9340…9360 / 9341…9361; `RemoteHTTPReader` limits (headers
+  ≤96 KB across chunks, body ≤64 KB, 20 s timeouts), lockout before parsing (429), over-limit responses
+  400, routing via `RemoteRouter`. WebSocket: Origin checked at the handshake, first frame authenticates
+  within 10 s, one session per socket, `subscribe` sends scrollback tail and size only for shared tabs
+  (upstream does not check), output streamed through the hub, expired/revoked → "expired" frame and
+  close, frames >4 KB close. Start/stop follow the hub generation; stop closes every connection; bind
+  failure → start-failed; idle check → auto-disabled. Tests (2 upstream + loopback end-to-end incl. 1 MB
+  stream) written and compiled, NOT run.
 - [x] **P7-8 (M) Remote API.** `RemoteAPI: RemoteRouter` (upstream `http.rs` `handle_http`/`handle_api`,
   `workspace.rs`, `appearance.rs`): `POST /api/pair` (401 and a recorded failure on a bad token),
   `GET /appearance.json`, and bearer-authorized `/api/info`, `/api/state` (groups; projects with their
@@ -3218,7 +3234,7 @@ above.
   unicode11 0.9.0, no patches); `bundle-manifest.json` records sources and checksums; `Scripts/sync-
   remote-client.sh` recopies it (patches from `Scripts/remote-client-patches/`); `upstream-watch.py`
   reports changes to the bundled files. Tests written and compiled, NOT run.
-- [ ] **P7-10 (M) Spotify service.** `AletheIntegrations/Spotify` (upstream `spotify.rs`): credentials
+- [x] **P7-10 (M) Spotify service.** `AletheIntegrations/Spotify` (upstream `spotify.rs`): credentials
   (client ID from preferences, secret from the Keychain, `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` as
   fallback; both required); login — a random `state`, the authorize URL (scopes
   `user-read-currently-playing user-read-playback-state user-read-recently-played`, redirect
@@ -3232,7 +3248,14 @@ above.
   `parses_recent_track_as_paused_now_playing`), U (authorize URL, callback parsing and state mismatch,
   refresh timing, the 204 fallback, over a `URLProtocol` stub; no token in logs). *Parity:* groundwork
   for PER-3.
-- [ ] **P7-11 (M) GitHub gist sync service.** `AletheIntegrations/GistSync` (upstream
+  *Done:* (`07ba1b9`) `AletheIntegrations/Spotify`: `SpotifyService` actor (credentials from
+  preferences, then Keychain, then `SPOTIFY_*` env; login through a one-shot `NWListener` on
+  127.0.0.1:8888 bound before the browser opens, `state` checked first, 5 min timeout, cancelable, busy-
+  port error; Basic-auth exchange, refresh 30 s early, a rejected refresh deletes the tokens; tokens
+  only in `spotifyTokens`; current track with the 204 → recently-played paused fallback; logs never
+  carry secrets). No PKCE (the plan asks only for `state` + Basic auth). Tests (upstream golden + units
+  over `URLProtocol`) written and compiled, NOT run.
+- [x] **P7-11 (M) GitHub gist sync service.** `AletheIntegrations/GistSync` (upstream
   `github_sync.rs`): a personal access token checked with `GET /user` (401 → invalid; the login kept) and
   stored as P7-1's `githubToken`; status from P7-1's `GistSyncState` (connected, login, gist URL, last
   push and pull); push — the profile's `workspace.json`, `preferences.json` and `activity-stats.json` to
@@ -3246,6 +3269,13 @@ above.
   token, create vs. patch, 404 → a new gist, truncated file, missing workspace refused before anything
   changes, Tauri gist detected; the token absent from `github_sync.json` and logs). *Parity:* groundwork
   for SET-5.
+  *Done:* (`507d114`) `AletheIntegrations/GistSync`: `GistSyncService` checks the token with `GET /user`
+  (Keychain only); push PATCHes this app's private gist or creates one (also on 404/422), never
+  `tauriGistID`; pull reads truncated files from `raw_url` (GitHub hosts only), decodes every file
+  before staging, and returns a staged `.importProfile` operation flagged as replacing data or a Tauri
+  `projects.json` to import; 401 is an invalid token everywhere; logout deletes the token. `AletheModel`
+  added as an `AletheIntegrations` dependency. Tests over a stubbed `URLSession` written and compiled,
+  NOT run.
 - [ ] **P7-12 (M) Remote control app service.** `RemoteControlController` (upstream
   `useRemoteControlService.ts`, `remote/commands.rs`, `pty_bridge.rs`): the app sources for the hub and
   API — shared tabs from `Pane.remoteShared` (a pane's tabs, id = tab id), the workspace snapshot, the
