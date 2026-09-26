@@ -66,14 +66,17 @@ public enum PlanningGate {
     /// main checkout, a file in a linked worktree), like `git rev-parse --show-toplevel` without
     /// spawning git. nil outside a repository.
     public static func repositoryRoot(containing path: URL) -> URL? {
-        var current = path.standardizedFileURL.resolvingSymlinksInPath()
+        // Walks path components rather than `deletingLastPathComponent()`: on a URL that went
+        // through `resolvingSymlinksInPath()`, Foundation turns `/` into `/..`, `/../..`, … and a
+        // loop waiting for the parent to equal the child never ends.
+        var components = path.standardizedFileURL.resolvingSymlinksInPath().pathComponents
         let fileManager = FileManager.default
-        while true {
+        while !components.isEmpty {
+            let current = URL(filePath: NSString.path(withComponents: components), directoryHint: .isDirectory)
             if fileManager.fileExists(atPath: current.appending(path: ".git").path) { return current }
-            let parent = current.deletingLastPathComponent()
-            if parent.path == current.path { return nil }
-            current = parent
+            components.removeLast()
         }
+        return nil
     }
 
     public static func planningFolder(of root: URL) -> URL {
