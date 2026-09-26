@@ -22475,6 +22475,57 @@
         }
       }
     },
+    "settings.discord.presence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord Rich Presence"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rich Presence do Discord"
+          }
+        }
+      }
+    },
+    "settings.discord.presence.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows that you are using Alethe without exposing project names."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra que você está usando o Alethe sem expor nomes de projetos."
+          }
+        }
+      }
+    },
+    "settings.discord.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord"
+          }
+        }
+      }
+    },
     "settings.features.help" : {
       "extractionState" : "manual",
       "localizations" : {
