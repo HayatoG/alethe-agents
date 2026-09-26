@@ -33,13 +33,15 @@ public struct GraphifyRepository: Sendable {
     /// The repository holding `directory`: the nearest folder with a `.git` entry (a folder, or the
     /// file a linked worktree has), like `git rev-parse --show-toplevel`; nil outside a repository.
     public static func repositoryRoot(containing directory: URL) -> URL? {
-        var current = directory.standardizedFileURL
-        while true {
+        // Walks path components rather than `deletingLastPathComponent()`, which turns `/` into
+        // `/..`, `/../..`, … so a loop waiting for the parent to equal the child never ends.
+        var components = directory.standardizedFileURL.pathComponents
+        while !components.isEmpty {
+            let current = URL(filePath: NSString.path(withComponents: components), directoryHint: .isDirectory)
             if FileManager.default.fileExists(atPath: current.appending(path: ".git").path) { return current }
-            let parent = current.deletingLastPathComponent()
-            if parent.path == current.path { return nil }
-            current = parent
+            components.removeLast()
         }
+        return nil
     }
 
     /// Upstream `graphify_read_graph`.
