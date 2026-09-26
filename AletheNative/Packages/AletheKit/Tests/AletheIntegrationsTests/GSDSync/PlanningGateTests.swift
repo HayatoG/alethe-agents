@@ -17,7 +17,7 @@ func writeFile(_ root: URL, _ relativePath: String, _ text: String) throws {
 }
 
 // Upstream `planning_gate.rs` tests.
-@Suite struct PlanningGateStatusTests {
+@Suite(.timeLimit(.minutes(1))) struct PlanningGateStatusTests {
     @Test func noPlanningFolderMeansNotStarted() {
         let root = makeCheckout("no-planning")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -156,7 +156,7 @@ func writeFile(_ root: URL, _ relativePath: String, _ text: String) throws {
     }
 }
 
-@Suite struct PlanningGateChildTests {
+@Suite(.timeLimit(.minutes(1))) struct PlanningGateChildTests {
     @Test func childSessionIsNilWithoutTheSentinel() throws {
         let root = makeCheckout("child-session-missing")
         defer { try? FileManager.default.removeItem(at: root) }

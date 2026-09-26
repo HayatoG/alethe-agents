@@ -74,7 +74,7 @@ private struct PlanningRepo {
     }
 }
 
-@Suite struct PlanningAuditTests {
+@Suite(.timeLimit(.minutes(1))) struct PlanningAuditTests {
     @Test func unrelatedStagedFilesStayStagedAndOutOfTheCommit() async throws {
         let repo = try await PlanningRepo()
         defer { repo.remove() }
@@ -164,7 +164,7 @@ private struct PlanningRepo {
     }
 }
 
-@Suite struct PlanningAutocommitTests {
+@Suite(.timeLimit(.minutes(1))) struct PlanningAutocommitTests {
     private actor Commits {
         var roots: [(URL, String?)] = []
         func add(_ root: URL, _ projectID: String?) { roots.append((root, projectID)) }

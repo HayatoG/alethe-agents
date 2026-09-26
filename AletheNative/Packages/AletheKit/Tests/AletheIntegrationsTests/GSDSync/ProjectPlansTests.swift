@@ -29,7 +29,7 @@ import Testing
     }
 }
 
-@Suite struct PlanningWatchersTests {
+@Suite(.timeLimit(.minutes(1))) struct PlanningWatchersTests {
     @Test func startCreatesThePlanningFolderAndReusesTheWatcher() throws {
         let root = makeCheckout("watchers")
         defer { try? FileManager.default.removeItem(at: root) }

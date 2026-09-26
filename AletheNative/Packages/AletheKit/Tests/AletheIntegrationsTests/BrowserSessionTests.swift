@@ -30,7 +30,7 @@ struct PlaywrightMcpTests {
     }
 }
 
-struct BrowserLaunchTests {
+@Suite(.timeLimit(.minutes(1))) struct BrowserLaunchTests {
     private let profile = URL(filePath: "/Users/me/Library/Application Support/Alethe/profiles/default/browser-session",
                               directoryHint: .isDirectory)
 
@@ -129,7 +129,7 @@ struct BrowserLaunchTests {
     }
 }
 
-struct ProcessTableTests {
+@Suite(.timeLimit(.minutes(1))) struct ProcessTableTests {
     @Test func procArgsAreParsedPastThePadding() {
         var bytes = withUnsafeBytes(of: Int32(3)) { Array($0) }
         bytes += Array("/Applications/Chromium.app/Contents/MacOS/Chromium".utf8) + [0, 0, 0, 0]

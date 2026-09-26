@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import AletheIntegrations
 
-@Suite struct OpenCodeExportTests {
+@Suite(.timeLimit(.minutes(1))) struct OpenCodeExportTests {
     static let sample = #"""
     Exporting session: ses_child1
     {

@@ -161,7 +161,7 @@ private let writesGraph = #"mkdir -p "$1/graphify-out" && echo '{"nodes":[{"id":
     }
 }
 
-@Suite struct GraphifyRepositoryTests {
+@Suite(.timeLimit(.minutes(1))) struct GraphifyRepositoryTests {
     @Test func snapshotListDiffRollbackAndPrune() throws {
         // Upstream `snapshot_list_diff_rollback_and_prune`.
         let root = try repositoryWithGraph()
@@ -278,7 +278,7 @@ private let writesGraph = #"mkdir -p "$1/graphify-out" && echo '{"nodes":[{"id":
     }
 }
 
-@Suite struct GraphifyServiceTests {
+@Suite(.timeLimit(.minutes(1))) struct GraphifyServiceTests {
     @Test func mcpServerArguments() {
         // Upstream `mcp_server_spec`: `<command> <root> --mcp`.
         #expect(GraphifyService.mcpArguments(root: URL(filePath: "/repo/app/")) == ["/repo/app", "--mcp"])
@@ -365,7 +365,7 @@ private let writesGraph = #"mkdir -p "$1/graphify-out" && echo '{"nodes":[{"id":
     }
 }
 
-@Suite struct ExternalCommandTests {
+@Suite(.timeLimit(.minutes(1))) struct ExternalCommandTests {
     @Test func capturesOutputAndExitCode() async throws {
         let result = try await ExternalCommand.run("/bin/sh", ["-c", "echo out; echo err >&2; exit 4"], timeout: .seconds(10))
         #expect(result == ExternalCommandResult(exitCode: 4, stdout: "out\n", stderr: "err\n"))

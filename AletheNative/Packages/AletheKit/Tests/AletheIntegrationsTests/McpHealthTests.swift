@@ -76,7 +76,7 @@ import Testing
     }
 }
 
-@Suite struct McpHealthCheckerTests {
+@Suite(.timeLimit(.minutes(1))) struct McpHealthCheckerTests {
     private final class Calls: @unchecked Sendable {
         private let lock = NSLock()
         private var items: [(String, [String], Duration)] = []

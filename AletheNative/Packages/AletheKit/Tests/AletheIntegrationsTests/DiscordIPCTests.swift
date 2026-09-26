@@ -170,7 +170,7 @@ private func json(_ frame: DiscordIPC.Frame) -> [String: Any]? {
 
 private let sample = DiscordActivity(details: "Working with Alethe", state: "Viewing the dashboard", startedAt: 1_700_000_000)
 
-@Suite(.serialized) struct DiscordIPCClientTests {
+@Suite(.serialized, .timeLimit(.minutes(1))) struct DiscordIPCClientTests {
     @Test func handshakeThenSetActivity() async throws {
         let dir = try makeSocketDirectory()
         defer { try? FileManager.default.removeItem(atPath: dir) }

@@ -181,7 +181,7 @@ final class SpotifyStubProtocol: URLProtocol, @unchecked Sendable {
 }
 
 /// U: the service over the stub, with the loopback callback stubbed too. Serialized: one responder.
-@Suite(.serialized)
+@Suite(.serialized, .timeLimit(.minutes(1)))
 struct SpotifyServiceTests {
     private let profile = "default"
     private let start = Date(timeIntervalSince1970: 1_800_000_000)

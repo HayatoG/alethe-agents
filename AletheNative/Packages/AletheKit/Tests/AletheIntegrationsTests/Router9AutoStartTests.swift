@@ -3,7 +3,7 @@ import Testing
 @testable import AletheIntegrations
 
 /// U (P7-16): when a launch starts 9router on its own (upstream `useRouter9AutoStart`).
-struct Router9AutoStartTests {
+@Suite(.timeLimit(.minutes(1))) struct Router9AutoStartTests {
     private func status(managed: Bool = true, external: Bool = false, running: Bool = false,
                         portInUse: Bool = false) -> Router9Status {
         Router9Status(

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import AletheIntegrations
 
-@Suite struct AiMemoryDetectionTests {
+@Suite(.timeLimit(.minutes(1))) struct AiMemoryDetectionTests {
     @Test func versionIsTheTrimmedOutputOfASuccessfulRun() {
         #expect(AiMemory.parseVersion(output: "ai-memory 0.9.2\n", exitCode: 0) == "ai-memory 0.9.2")
         #expect(AiMemory.parseVersion(output: "  1.2.0  \n\n", exitCode: 0) == "1.2.0")

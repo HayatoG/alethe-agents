@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import AletheIntegrations
 
-@Suite struct GSDSyncSessionsTests {
+@Suite(.timeLimit(.minutes(1))) struct GSDSyncSessionsTests {
     @Test func readsChildSessionsWithTheirPlanningStatus() async throws {
         let root = makeCheckout("sessions")
         defer { try? FileManager.default.removeItem(at: root) }

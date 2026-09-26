@@ -87,7 +87,7 @@ final class GistStub: Sendable {
 }
 
 /// Unit tests over a `URLProtocol` stub (P7-11). No upstream golden cases exist for `github_sync.rs`.
-@Suite struct GistSyncServiceTests {
+@Suite(.timeLimit(.minutes(1))) struct GistSyncServiceTests {
     static let token = "ghp_FIXTUREGISTTOKEN000000000000000000"
     static let profile = ProfileID(rawValue: "default")
 
