@@ -3,8 +3,8 @@
 > Status: **Phases 0–6 implemented** (2026-09-25). Phases 0–3 tested (last run after P3-18: package
 > 336/336, UI 67/67, smoke scripts pass). Phase 4 round 1 ran the package suite (498 green); Phase 4
 > round 2 and all of Phases 5 and 6 were compiled only (owner decision) — see **Test debt** below.
-> Next: Phase 7 (Peripherals), then 8 (Release). Before Phase 7: clear the test debt. Branch:
-> `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> Next: P7-1 (Phase 7, Peripherals, broken into tasks below), then Phase 8 (Release). Before Phase 7:
+> clear the test debt. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 >
 > **Test debt (2026-09-25).** Written and compiled, never run:
 > - Package suite (`swift test`): new or changed tests since `b8f5ab7` in AletheIntegrationsTests (19
@@ -2995,10 +2995,313 @@ process outlives its job, the app or a crash; the scheduler, telemetry and plann
 work from Settings › Multiagent; no token or secret appears in logs, exports or process arguments.
 
 ### Phase 7 — Peripherals
-PER-7 remote control: `NWListener` HTTP+WS server, pairing QR (`CIQRCodeGenerator`), read-only/shell
-input, device limits, Tailscale detection, the upstream PWA client bundled as a resource and adapted
-(3 × L; reuses the upstream PWA client); PER-3 Spotify (OAuth via loopback) (M); PER-4 Discord Rich Presence (IPC socket) (S); PER-5
-9router (M); SET-5 GitHub gist sync (M).
+Order: groundwork first — the Keychain store with the Phase 7 preference and workspace fields and their
+Tauri import, the `AletheRemote` target with its pairing hub, remote question extraction, and the
+Discord and 9router services (none needs another); then the app slots every later task fills (Settings
+tabs, sheets, toolbar items, sidebar and Home slots, controllers placed in the `AppEnvironment` start
+sequence, seed hooks) alongside the services that need the Keychain or the hub (remote transport, API
+and client bundle, Spotify, gist sync); then each peripheral's app service and UI; last the remote
+end-to-end and security checks. Remote control is the largest and riskiest piece (§10): upstream
+`src-tauri/src/remote/` is ported as a pure hub (pairing, sessions, limits), a transport and an API, so
+each is testable without a network and the transport never decides policy; the phone client is the
+upstream PWA, bundled (§11). Principles: nothing listens, polls, connects or starts on its own — remote
+control is off at every launch (upstream resets `remoteEnabled`), Discord, Spotify, 9router and gist
+sync do nothing until the user turns them on or connects them, and each surface is gated by its own
+upstream setting (upstream has no `enabledFeatures` key for them, so none is added); the remote
+listeners bind one address — the Mac's LAN address or, when chosen, its Tailscale address, failing
+closed when Tailscale is missing — never a wildcard, and turn themselves off after 4 h with no paired
+device; a device pairs only through a 120 s QR window and gets a session token bound to it that
+expires, within a device limit (1–4), rate limits and a lockout after failed attempts; read-only when
+asked; it sees only terminals shared one by one (`remoteShared`, off by default) and can be revoked;
+9router and the Spotify OAuth callback bind loopback (`127.0.0.1`) only; OAuth uses upstream's
+registered loopback redirect (`http://127.0.0.1:8888/callback`) opened in the default browser, with a
+`state` check and a timeout; secrets (Spotify client secret and tokens, the GitHub token, the 9router
+API key) live in the Keychain — never in `preferences.json`, profile files, backups or logs — and the
+plaintext copies in Tauri data move into it on import; remote pairing and session tokens live in memory
+only; every socket, request, process and file read runs off the main thread, is cancelable and has a
+timeout; logs record device ids, addresses and sizes, never tokens or message text (OSLog `.private`,
+`SecretRedactor` on exports). *Tests* list what each task must ship; they run per the test cadence
+above.
+
+- [ ] **P7-1 (M) Keychain store, Phase 7 model and Tauri import.** `AletheFoundation/Keychain` (ADR-1:
+  keyring → Security.framework): `KeychainStore` get/set/delete of generic passwords per profile (service
+  `com.kc1t.alethe.mac`, account `<profile>/<item>`, this device only, never synchronized; values never
+  logged) with the item names every later task uses (`spotifyClientSecret`, `spotifyTokens` — access,
+  refresh, expiry —, `githubToken`, `router9APIKey`), and an in-memory store for tests and UI-test
+  launches. Model (upstream `types.ts` `Preferences`, `Router9Preferences`, `Terminal.remoteShared`,
+  `SubTab.useRouter9`): `PreferencesDocument` gains `spotifyClientID`, `discordPresence`, `router9`
+  (enabled, autoStart, source managed or external, port 20128, defaultForNewAgents) and `remote`
+  (maxDevices 1…4, default 1; sessionExpirySecs 5 min…24 h, default 1 h; readOnly; allowShellInput;
+  useTailscale) — `remoteEnabled` is not stored (session-scoped upstream); `Pane.remoteShared` (old files
+  decode as not shared), `PaneTab.useRouter9`; `ToolbarItemKind` `remote`, `router9`, `sync` (the items
+  P5-13 deferred); `GistSyncState` (`<profile>/github_sync.json`: login, gist id, last push and pull —
+  never the token). Tauri import maps them (upstream migration `remoteExcluded` → `remoteShared`;
+  `topbarShowSync`, `topbarShowRouter9`) and reports `spotifyClientSecret`, `router9.apiKey`,
+  `spotify_tokens.json` and `github_sync.json`'s token as secrets that the app's import apply path writes
+  to the Keychain; `github_sync.json`'s other fields become the profile's `GistSyncState`. Files:
+  `PreferencesDocument.swift`, `WorkspaceDocument.swift`, `ToolbarLayout.swift`, `TauriImport.swift`,
+  `TauriImportSheet.swift` (the apply path shared with onboarding). No dependencies. *Tests:* U (Keychain
+  round trip in a throwaway service, decoding without the new keys, clamps, an upstream v9 fixture with
+  these fields: secrets reported and absent from every written file). *Parity:* groundwork for PER-3,
+  PER-4, PER-5, PER-7, SET-5, UI-7.
+- [ ] **P7-2 (L) `AletheRemote` target and pairing hub.** New package target (ADR-7; depends on
+  AletheFoundation) and test target, porting upstream `remote/mod.rs` (limits), `state.rs` and
+  `util.rs`: a `RemoteHub` actor — pairing window (120 s; a 32-character token regenerated on open and
+  close), `pair` → device session (40-character token, name ≤ 48 characters, address, connected and
+  expiry times; the device limit; closes the window), `info` (upstream `RemoteInfo`), revoke one or all,
+  expiry pruning, auth-failure lockout per address (10 in 60 s → 5 min), per-session message rate (20 per
+  60 s), connection cap (24), idle check (4 h with nobody paired; 0 disables), a generation counter for
+  restarts, one subscription per session and `publish` that builds a payload only when someone is
+  subscribed; constant-time token comparison, message sanitizing, query parsing with percent decoding;
+  host resolution — the LAN address (upstream `local_ip`), the Tailscale address from the `tailscale` CLI
+  (PATH or `Tailscale.app`'s bundled CLI; 3 s; off main) accepted only in 100.64.0.0/10, and an
+  unbindable empty host when Tailscale is chosen but missing; `RemotePairingQR` (`CIQRCodeGenerator`,
+  cached per pairing URL). Owns the types the other remote tasks share: `RemoteRequest`,
+  `RemoteResponse`, `RemoteRouter`, `RemoteTerminalSource` (scrollback tail, size, write, output),
+  `RemoteWorkspaceSource` (shared tabs, snapshot, appearance, transcript, questions),
+  `RemoteAssetSource` and `RemoteEvent` (message, start failed, auto-disabled). No sockets, no UI.
+  Files: `Package.swift`. No dependencies. *Tests:* G (upstream `state.rs` 15 cases,
+  `percent_encoded_query_values_are_decoded`, `tailscale_range_accepts_only_cgnat_addresses`), U (a QR
+  image decodes back to its URL, lockout expiry, a revoked device's subscription is dropped).
+  *Parity:* groundwork for PER-7.
+- [ ] **P7-3 (S) Remote questions and transcript snapshots.** In `AletheAgents/Handoff` (upstream
+  `handoff.rs` `remote_questions`, `transcript_snapshot`, `active_remote_questions`; left out of P3-12):
+  interactive questions read from Claude Code `AskUserQuestion` and Codex `request_user_input` tool calls
+  (header, question, options with descriptions, multi-select; the call id as the question set id);
+  `transcriptSnapshot(agent:folder:session:since:limit:)` (the session's transcript, else the folder's
+  newest; revision = modification time in ms, an unchanged revision skips the parse; the newest 160
+  events); `activeQuestions` from the last event. Files: `Handoff.swift` only. No dependencies.
+  *Tests:* G (upstream `parses_codex_and_claude_questions`,
+  `preserves_agent_call_ids_for_remote_questions`), U (unchanged revision, the limit keeps the newest).
+  *Parity:* groundwork for PER-7.
+- [ ] **P7-4 (S) Discord IPC client.** `AletheIntegrations/Discord` (upstream `discord_presence.rs`, over
+  the `discord-rich-presence` crate): an actor that finds Discord's socket (`$TMPDIR/discord-ipc-0…9`),
+  frames messages (opcode and length, little-endian, then JSON), handshakes (`v: 1`, application id
+  `1517303547761528942`), sets the activity (`SET_ACTIVITY` with pid and nonce: details, state, start
+  timestamp, large image `alethe`, large text "Alethe") and clears it (then closes), reconnecting once
+  when a send fails and staying silent while Discord is not running. No dependencies. *Tests:* G
+  (upstream `application_id_is_numeric`; handshake and activity payloads as the crate writes them), U
+  (framing, a fake socket server: handshake, set, clear, Discord restarted, no Discord). *Parity:*
+  groundwork for PER-4.
+- [ ] **P7-5 (M) 9router service.** `AletheIntegrations/Router9` (upstream `router9.rs`,
+  `lib/router9.ts`): routing rules (Claude Code → `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`; Codex and
+  OpenCode → `OPENAI_BASE_URL` with `/v1` + `OPENAI_API_KEY`; nothing when off, keyless or unsupported;
+  port normalized, base URL always loopback), source resolution (the preferred install, else the other);
+  status (managed install in `<profile>/tools/9router`, version from its `package.json`; external
+  `9router` through `LauncherResolver` with its version; running; port in use by a 400 ms probe; data,
+  log and dashboard paths; pinned `0.5.59`); install and uninstall command lines (`npm install --prefix
+  <dir> 9router@0.5.59`, built only here); start (managed: `node cli.js` in the install folder with
+  `DATA_DIR=<profile>/tools/9router-data`; external: the user's binary with its own data) with `PORT`,
+  `NEXT_PUBLIC_BASE_URL` and `HOSTNAME=127.0.0.1` (Next.js binds the LAN otherwise), output appended to
+  `<profile>/9router.log`, in its own process group; a busy port is refused; stop terminates the group
+  and reaps. No dependencies. *Tests:* G (upstream `router9.test.ts`: supported agents, env per
+  dialect, custom port, nothing routed, `normalizePort`, loopback base URL, `router9ResolveSource`,
+  `router9HasInstall`), U (status from a fake install folder, command quoting, a stub server started
+  and stopped with no process left). *Parity:* groundwork for PER-5.
+- [ ] **P7-6 (S) App slots for the peripherals.** The shared app files every later Phase 7 task would
+  otherwise touch, wired once to stub files that exactly one later task fills (the P6-14 pattern):
+  Settings › Integrations (Spotify, Discord and 9router sections, upstream `IntegrationsPage`) and
+  Settings › Remote tabs; `EditorRequest.remotePairing` and `.gistSync` presented by `MainWindow`;
+  toolbar items for P7-1's `remote`, `router9` and `sync` kinds; a Now Playing footer in the sidebar and
+  a Now Playing card on Home; controllers `RemoteControlController`, `DiscordPresenceController`,
+  `NowPlayingController`, `Router9Controller`, `GistSyncController` created and started in the
+  `AppEnvironment` start sequence after the terminal registry, with `flush` stopping remote control
+  (revoking every device) and a managed 9router; `TestSeeds` cases routed to per-feature
+  `TestSeeds+<Feature>.swift` files. Stubs render nothing and do nothing. Files: `SettingsView.swift`
+  (`SettingsTab.integrations`, `.remote`), `EditorRequest.swift`, `MainWindow.swift`, `MainToolbar.swift`,
+  `SidebarView.swift`, `HomeSections.swift`, `AppEnvironment.swift`, `TestSeeds.swift`; new stub files
+  in `Alethe/Remote/`, `Alethe/Integrations/{Spotify,Discord,Router9,GistSync}/`,
+  `Alethe/Settings/{IntegrationsSettings,RemoteSettings}.swift` and `Alethe/Spike/TestSeeds+*.swift`.
+  Needs P7-1. *Tests:* UI (both new Settings tabs open; the three items are offered in Customize
+  Toolbar). *Parity:* groundwork for PER-3, PER-4, PER-5, PER-7, SET-5, UI-7.
+- [ ] **P7-7 (L) Remote transport.** Network.framework (ADR-1: tiny_http/tungstenite → `NWListener`;
+  upstream `remote/http.rs` `run_http`/`read_request`/`respond*`, `remote/websocket.rs`): an HTTP
+  listener bound to the hub's host on the first free port of 9340…9360 (`requiredLocalEndpoint`, never a
+  wildcard address) and a WebSocket listener (`NWProtocolWebSocket`) on 9341…9361; requests read with
+  upstream limits (headers ≤ 96 KB found across chunks, body ≤ 64 KB, 20 s socket timeouts), the lockout
+  checked before parsing, the connection cap, responses (JSON; static with `no-store` or immutable
+  caching; ≤ 4 MB) with routing delegated to a `RemoteRouter`; WebSocket: `Origin` must be the HTTP URL
+  (or absent), the first frame must authenticate within 10 s (session token; the device name renames the
+  device), `subscribe` sends the scrollback tail (512 KB) and size, then live output through the hub; an
+  expired session gets `{"type":"error","reason":"expired"}` and is closed; frames over 4 KB close the
+  socket. Start and stop by generation (stop revokes every device and closes pairing); a bind failure
+  emits start-failed; the idle check turns everything off and emits auto-disabled. Needs P7-2. *Tests:* G
+  (upstream `request_headers_end_is_detected_across_chunks`, `header_lookup_is_case_insensitive`), U
+  (limits, lockout → 429, origin refused, an unauthenticated socket closed at 10 s, stop with open
+  connections), P (loopback round trip: pair, subscribe, 1 MB of output streamed). *Parity:* PER-7.
+- [ ] **P7-8 (M) Remote API.** `RemoteAPI: RemoteRouter` (upstream `http.rs` `handle_http`/`handle_api`,
+  `workspace.rs`, `appearance.rs`): `POST /api/pair` (401 and a recorded failure on a bad token),
+  `GET /appearance.json`, and bearer-authorized `/api/info`, `/api/state` (groups; projects with their
+  shared chats only), `/api/scrollback` (403 unless shared; subscribes the session), `/api/transcript`
+  (Claude Code and Codex through P7-3, `since`), `/api/question-answer` (the choice typed as arrow-key
+  navigation — upstream `question_answer_input`; a changed question → 409), `/api/agent-control`
+  (`interrupt` → Ctrl-C; Claude Code and Codex only) and `/api/message` (sanitized, ≤ 4 KB, Return
+  appended; shell tabs only when shell input is allowed); read-only → 403, rate limit → 429; each
+  accepted input emits `RemoteEvent.message` (device, preview ≤ 120 characters); static paths go to the
+  `RemoteAssetSource`. Appearance from native preferences with upstream's rules (a known theme else
+  `elite-indigo`, light themes, app icon, `en`/`pt-BR`, reduced motion). Needs P7-2, P7-3. *Tests:* G
+  (upstream `interactive_answers_become_terminal_navigation`, `appearance_defaults_are_safe_and_branded`,
+  `appearance_accepts_persisted_light_preferences`, `appearance_rejects_unknown_persisted_values`), U
+  (every route over stub sources: unshared 403, read-only, shell input off, rate limit, stale question,
+  bad token 401). *Parity:* PER-7.
+- [ ] **P7-9 (M) Remote client bundle.** The upstream PWA (§11) as a resource of `AletheRemote`:
+  `src-tauri/remote/{index.html,app.js,app.css,locales.js,manifest.webmanifest}`, `src/styles/theme.css`,
+  `@xterm/xterm` 5.5 (`xterm.js`, `xterm.css`) and `@xterm/addon-unicode11` 0.9 with their MIT licenses,
+  the three agent icons and the four brand icons (`src/assets/theme-icons/`); the Caskaydia fonts are
+  served from `AletheDesign`'s resources, not copied. `RemoteClientBundle: RemoteAssetSource` answers
+  upstream's paths with their content types and caching, and the brand icon of the app icon theme. The
+  copy stays byte-identical to upstream except patches the native server needs, recorded with the
+  upstream SHA and each file's checksum in a bundle manifest, so upstream's `src/remoteChat.test.ts`
+  remains the client's test; `Scripts/sync-remote-client.sh` recopies from a Tauri checkout and
+  `Scripts/upstream-watch.py` reports changes under `src-tauri/remote/`. Files: `Package.swift`
+  (resources, `AletheDesign` dependency), the two scripts. Needs P7-2. *Tests:* G (upstream
+  `selected_brand_icon_uses_embedded_png_assets`), U (every path `index.html` and `app.js` request
+  resolves; checksums match the manifest). *Parity:* PER-7.
+- [ ] **P7-10 (M) Spotify service.** `AletheIntegrations/Spotify` (upstream `spotify.rs`): credentials
+  (client ID from preferences, secret from the Keychain, `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` as
+  fallback; both required); login — a random `state`, the authorize URL (scopes
+  `user-read-currently-playing user-read-playback-state user-read-recently-played`, redirect
+  `http://127.0.0.1:8888/callback`) opened in the default browser while a one-shot `NWListener` on
+  `127.0.0.1:8888` waits for `/callback` (other paths 404; `state` checked; `error` reported; a short
+  page tells the user to return; 5 min timeout; cancelable; a busy port is a clear error); code exchange
+  and refresh with Basic auth (refreshed 30 s before expiry; a rejected refresh token disconnects);
+  tokens as P7-1's `spotifyTokens` item (not `spotify_tokens.json`); logout deletes them; the current
+  track (`204` → the most recently played as paused; track, artists, album art — the smallest image —,
+  progress, duration, Spotify URL). Needs P7-1. *Tests:* G (upstream
+  `parses_recent_track_as_paused_now_playing`), U (authorize URL, callback parsing and state mismatch,
+  refresh timing, the 204 fallback, over a `URLProtocol` stub; no token in logs). *Parity:* groundwork
+  for PER-3.
+- [ ] **P7-11 (M) GitHub gist sync service.** `AletheIntegrations/GistSync` (upstream
+  `github_sync.rs`): a personal access token checked with `GET /user` (401 → invalid; the login kept) and
+  stored as P7-1's `githubToken`; status from P7-1's `GistSyncState` (connected, login, gist URL, last
+  push and pull); push — the profile's `workspace.json`, `preferences.json` and `activity-stats.json` to
+  a private gist with its own description (a native gist, so the Tauri app's gist is never overwritten),
+  `PATCH` when a gist id is known and create on 404/422; pull — the gist's files (a truncated file read
+  from its `raw_url`, upstream `gist_file_content`), `workspace.json` required, validated by decoding
+  before anything is replaced, then applied as a pending operation at the next launch with a safety
+  backup (the P5-10 path; the app relaunches); a gist holding only upstream's `projects.json` is offered
+  as a Tauri import (P1-12 mapping) instead; logout deletes the token. GitHub API headers as upstream
+  (`X-GitHub-Api-Version: 2022-11-28`). Needs P7-1. *Tests:* U (over a `URLProtocol` stub: invalid
+  token, create vs. patch, 404 → a new gist, truncated file, missing workspace refused before anything
+  changes, Tauri gist detected; the token absent from `github_sync.json` and logs). *Parity:* groundwork
+  for SET-5.
+- [ ] **P7-12 (M) Remote control app service.** `RemoteControlController` (upstream
+  `useRemoteControlService.ts`, `remote/commands.rs`, `pty_bridge.rs`): the app sources for the hub and
+  API — shared tabs from `Pane.remoteShared` (a pane's tabs, id = tab id), the workspace snapshot, the
+  scrollback tail from the tab's scrollback file and live output from its `TerminalIOTap`, the terminal
+  size, input written to the tab's PTY as typed input (a tab that is not running → 409), transcripts and
+  questions through P7-3 with the tab's session; turning on (starts both listeners; off at every launch),
+  turning off, preferences pushed to the hub (max devices, expiry, read-only, shell input;
+  a reach-mode change rebinds only when it changed, upstream `remote_control_set_reach_mode`), open and
+  close pairing (refreshing the host), revoke; `RemoteEvent`s become notifications through
+  `AgentNotifier` (a device sent a message, start failed, auto-disabled — the last two also turn the
+  toggle off); stop and revoke at quit (P7-6's `flush` call). Links `AletheRemote` into the app. Files:
+  `Alethe/Remote/RemoteControlController.swift`, `TerminalRegistry.swift` (a read and input API by tab),
+  `TerminalPaneView.swift` (grid size), `AgentNotifier.swift`, `project.pbxproj`, `Alethe-Info.plist`
+  and `InfoPlist.xcstrings` (`NSLocalNetworkUsageDescription`, if macOS asks for it), the P7-6 stub
+  `TestSeeds+Remote.swift` (a shared terminal; remote control on; used by P7-18 to P7-20). Needs P7-6,
+  P7-7, P7-8, P7-9. *Tests:* U (sources over a seeded workspace: only shared tabs listed, input reaches the
+  PTY, preference changes do not restart unless the reach mode changed), UI (seeded remote on: a stub
+  device message shows in the notification list). *Parity:* PER-7.
+- [ ] **P7-13 (S) Discord Rich Presence in the app.** `DiscordPresenceController` (upstream
+  `useDiscordPresence.ts`): while `discordPresence` is on, "Working with Alethe" with the current view
+  (Home → "Viewing the dashboard", workspace → "Managing terminals", an orchestration board in front →
+  "Orchestrating AI agents") and the app's launch time, refreshed every 30 s and on view changes;
+  cleared when turned off and at quit; Settings › Integrations › Discord section (upstream
+  `IntegrationsPage` `discord`). Files: the P7-6 stubs `DiscordPresenceController.swift`,
+  `DiscordSettingsSection.swift`, `TestSeeds+Discord.swift`. Needs P7-4, P7-6. *Tests:* U (activity per
+  view, cleared when off, with a fake client), UI (the toggle). *Parity:* PER-4.
+- [ ] **P7-14 (L) Now Playing.** `NowPlayingController` (upstream `useNowPlaying.ts`): connected status,
+  the current track every 8 s only while a Now Playing view is visible and the app is active (one request
+  in flight), the last track kept per profile and shown paused after a relaunch, connect (P7-10 login)
+  and disconnect; the Home card (upstream `HomeView/NowPlayingWidget.tsx`: art, track, artists,
+  progress, open in Spotify, connect prompt) — closing P3-15's deviation — and the sidebar footer
+  (upstream `SidebarNowPlaying`); Settings › Integrations › Spotify (client ID, secret in a secure field,
+  the redirect URI to register with a copy button, Connect/Disconnect, errors). Art loaded off main and
+  cached; Reduce Motion respected; theme tokens only. Files: the P7-6 stubs `NowPlayingController.swift`,
+  `NowPlayingViews.swift`, `SpotifySettingsSection.swift`, `TestSeeds+Spotify.swift`. Needs P7-6, P7-10.
+  *Tests:* U (polling stops when hidden, last track restored), UI (seeded track on Home and in the
+  sidebar; Settings section), HT. *Parity:* PER-3, HOME-1.
+- [ ] **P7-15 (M) GitHub Sync sheet and toolbar item.** The sheet (upstream `SyncModal` GitHub card;
+  the cloud card is SET-6, Won't port): connect with a token (secure field; a link to create one with
+  the `gist` scope), connected as, gist link, Push, Pull (asks once: it replaces this profile's
+  workspace and relaunches), last push and pull, Disconnect, upstream's error cases; the toolbar Sync
+  item (upstream `topbarShowSync`) and Settings › General › Data › GitHub Sync… open it. Files: the P7-6
+  stubs `GistSyncController.swift`, `GistSyncSheet.swift`, `SyncToolbarItem.swift`,
+  `TestSeeds+GistSync.swift`; `DataSettings.swift`. Needs P7-6, P7-11. *Tests:* UI (connect, push and
+  pull over a stub endpoint; no pull without confirmation), HT. *Parity:* SET-5, UI-7.
+- [ ] **P7-16 (M) 9router settings, install and toolbar pill.** `Router9Controller` (upstream
+  `useRouter9Runtime.ts`, `useRouter9AutoStart.ts`): status refreshed while visible, start and stop,
+  auto-start at launch when enabled, auto-start is on, an install exists and the port is free; Settings ›
+  Integrations › 9router (upstream `Router9Settings.tsx`: enable, source, port, API key in the Keychain,
+  auto-start, default for new agents, status, Start/Stop, Open Dashboard, log, advisories and docs
+  links); the install and uninstall sheet (upstream `Router9InstallModal.tsx`, `useRouter9Install.ts`:
+  the exact command shown, run through the P3-3 installer with its log); the toolbar pill (upstream
+  `Router9PillButton`: status, start/stop). Files: the P7-6 stubs `Router9Controller.swift`,
+  `Router9SettingsSection.swift`, `Router9ToolbarItem.swift`, `TestSeeds+Router9.swift`; new
+  `Router9InstallSheet.swift`. Needs P7-5, P7-6. *Tests:* U (auto-start conditions), UI (settings and
+  pill against a stub install), HT. *Parity:* PER-5, UI-7.
+- [ ] **P7-17 (M) 9router routing for new terminals.** `AgentLaunchRequest.environment` (added
+  variables, merged after the scrubbed ones; values never logged — `spawn.log` keeps names only, P5-11);
+  a tab with `useRouter9` launches with P7-5's variables while 9router is enabled and keyed (upstream
+  `useXtermSession.ts` `router9EnvFor`); the New Terminal sheet's "Route through 9router" toggle
+  (upstream `NewTerminalModal`: shown only for supported agents when routing is available, default from
+  `defaultForNewAgents`, a Start button while 9router is stopped) stored on the tab and kept by repeat
+  last (P3-4). Files: `AgentLauncher.swift`, `TerminalRegistry.swift`, `NewTerminalSheet.swift`. Needs
+  P7-1, P7-5, P7-16. *Tests:* U (environment per agent, placement, nothing when off or keyless), UI (the
+  toggle appears only when available and the tab keeps it). *Parity:* PER-5, AG-3.
+- [ ] **P7-18 (M) Remote settings and terminal sharing.** Settings › Remote (upstream
+  `RemoteControlPage.tsx`, `RemoteControlSettingsFields.tsx`): on/off (with the startup note: off at
+  every launch), reach (LAN or Tailscale; Tailscale disabled with its hint and download link when not
+  detected), read-only, shell input, max devices, session expiry, pairing status with Pair a Device…,
+  devices (name, address hidden until revealed, online, expiry) with Revoke and Revoke All; the
+  terminal menus' Share with Remote Devices toggle (upstream `sidebarMenus.tsx` `remoteShared`) with a
+  shared glyph. Files: the P7-6 stub `RemoteSettings.swift`; `SidebarView.swift` and the pane header
+  menu. Needs P7-12. *Tests:* UI (seeded: toggles reach the
+  controller; sharing a terminal lists it in the controller's snapshot), HT. *Parity:* PER-7.
+- [ ] **P7-19 (M) Pairing sheet and remote toolbar pill.** The pairing sheet (upstream
+  `RemoteControlModal.tsx`): status, the QR (P7-2) and URL with Copy, the 120 s countdown, reopen when
+  closed, devices with Revoke, Open Settings; the toolbar pill while remote control is on (upstream
+  TitleBar remote pill: devices connected or idle) opens it. Files: the P7-6 stubs
+  `RemotePairingSheet.swift`, `RemoteToolbarItem.swift`. Needs P7-12. *Tests:* UI (open pairing shows a
+  QR and countdown; the pill appears only while on), HT. *Parity:* PER-7, UI-7.
+- [ ] **P7-20 (S) Remote end-to-end and security checks.** On the running app with remote control bound
+  to loopback through a test-only host: a `WKWebView` loads the bundled client from the pairing URL,
+  pairs, lists only the shared seeded terminal, receives its output, sends a message and interrupts;
+  read-only refuses input, revoke disconnects the page, the pairing token works once, a second device is
+  refused at the limit; plus a checklist test over the sources (no wildcard bind, Tailscale fails
+  closed, no token in logs, exports or `workspace.json`, 9router and the OAuth callback on `127.0.0.1`).
+  Files: new tests and `TestSeeds+Remote.swift`. Needs P7-18, P7-19. *Tests:* UI, U. *Parity:* PER-7
+  (the §10 security review before release).
+- [ ] **P7-21 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+
+Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
+beyond string catalogs — rebase on conflicts). Shared files and the tasks that edit them, never two in
+one wave: `PreferencesDocument`, `WorkspaceDocument`, `ToolbarLayout`, `TauriImport` P7-1 only;
+`Package.swift` P7-2, P7-9; `Handoff.swift` P7-3; `AppEnvironment`, `SettingsView` (tabs),
+`EditorRequest`, `MainWindow`, `MainToolbar`, `HomeSections`, `TestSeeds.swift` P7-6 only;
+`SidebarView` P7-6, P7-18; `TerminalRegistry` P7-12, P7-17; `AgentNotifier`, `TerminalPaneView`,
+`project.pbxproj`, `Alethe-Info.plist` P7-12 only; `AgentLauncher`, `NewTerminalSheet` P7-17 only;
+`DataSettings` P7-15 only; each P7-6 stub file by the one task named with it
+(`TestSeeds+Remote.swift`: P7-12, then P7-20). No task touches the right sidebar's tab list:
+1. P7-1, P7-2, P7-3, P7-4, P7-5 — no dependencies.
+2. P7-6, P7-7, P7-8, P7-9, P7-10, P7-11.
+3. P7-12, P7-13, P7-14, P7-15, P7-16.
+4. P7-17, P7-18, P7-19.
+5. P7-20.
+6. P7-21.
+
+**Phase 7 exit criteria:** with remote control turned on, a phone on the same network (or tailnet)
+pairs by scanning a QR within its window, sees only the terminals shared with it, follows their output
+live, reads Claude Code and Codex conversations, answers their questions, sends prompts and interrupts
+— within the device limit, rate limits and session expiry, read-only when asked, shell input only when
+allowed — and loses access when revoked, when remote control is turned off, after 4 h idle or at quit;
+the listeners never bind a wildcard address and are off at every launch; Spotify connects through the
+loopback OAuth redirect and Now Playing shows on Home and in the sidebar; Discord shows the current
+activity while enabled; 9router installs into the profile, starts on loopback and routes Claude Code,
+Codex and OpenCode tabs that ask for it; the profile's workspace pushes to and pulls from a private
+gist; the Tauri app's settings for all of them import; no token or secret appears in preferences,
+profile files, backups, logs, exports or process arguments.
 
 ### Phase 8 — Release
 Developer ID signing, `notarytool` + staple, Sparkle 2 + appcast, DMG (L); SET-8 updater UI + What's New
