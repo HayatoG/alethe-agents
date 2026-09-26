@@ -3393,12 +3393,20 @@ above.
   shared glyph. Files: the P7-6 stub `RemoteSettings.swift`; `SidebarView.swift` and the pane header
   menu. Needs P7-12. *Tests:* UI (seeded: toggles reach the
   controller; sharing a terminal lists it in the controller's snapshot), HT. *Parity:* PER-7.
-- [ ] **P7-19 (M) Pairing sheet and remote toolbar pill.** The pairing sheet (upstream
+- [x] **P7-19 (M) Pairing sheet and remote toolbar pill.** The pairing sheet (upstream
   `RemoteControlModal.tsx`): status, the QR (P7-2) and URL with Copy, the 120 s countdown, reopen when
   closed, devices with Revoke, Open Settings; the toolbar pill while remote control is on (upstream
   TitleBar remote pill: devices connected or idle) opens it. Files: the P7-6 stubs
   `RemotePairingSheet.swift`, `RemoteToolbarItem.swift`. Needs P7-12. *Tests:* UI (open pairing shows a
   QR and countdown; the pill appears only while on), HT. *Parity:* PER-7, UI-7.
+  *Done:* (`b3317e2`) `RemotePairingSheet` (upstream `RemoteControlModal`): status badge and on/off,
+  pairing QR (`RemotePairingQR`, ≥220 px) with the 120 s countdown and the URL with Copy, shown only
+  while the sheet is open (the pairing window opens with the sheet, closes on dismiss, reopens by button
+  once expired), connected devices (online/idle, expiry) with Revoke and Revoke All, LAN/Tailscale note,
+  Open Settings (› Remote). `RemoteToolbarItem`: pill only while remote control is on ("N devices
+  connected" or "Remote control on"), refreshed every 2 s, opens the sheet. Open: the controller
+  notifies observers even when unchanged (the pill redraws every 2 s). Tests (UI `RemotePairingTests`,
+  HT at 3 zooms) written and compiled, NOT run.
 - [ ] **P7-20 (S) Remote end-to-end and security checks.** On the running app with remote control bound
   to loopback through a test-only host: a `WKWebView` loads the bundled client from the pairing URL,
   pairs, lists only the shared seeded terminal, receives its output, sends a message and interrupts;
