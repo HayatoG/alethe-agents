@@ -1,20 +1,38 @@
 import Foundation
 
-/// One stdio MCP server added to a single agent launch (P5-4). Integrations (Graphify, ai-memory,
-/// Playwright) contribute these; nothing is written into the user's or the project's own config.
+/// One MCP server added to a single agent launch (P5-4). Integrations (Graphify, ai-memory,
+/// Playwright) contribute stdio servers; the orchestrator (P6-9) an HTTP one on the loopback
+/// endpoint. Nothing is written into the user's or the project's own config.
 public struct McpLaunchServer: Equatable, Sendable {
     public var name: String
     public var command: String
     public var arguments: [String]
     /// Secrets may live here: they only reach private (0600) per-launch files or the child's argv.
     public var environment: [String: String]
+    /// The HTTP form: set, the server is reached at this URL and `command`/`arguments` are unused.
+    public var url: String?
+    /// HTTP headers (a token among them): written only to the private per-launch file, never to
+    /// arguments, so agents that take servers as arguments (Codex) do not get HTTP servers.
+    public var headers: [String: String]
 
     public init(name: String, command: String, arguments: [String] = [], environment: [String: String] = [:]) {
         self.name = name
         self.command = command
         self.arguments = arguments
         self.environment = environment
+        self.url = nil
+        self.headers = [:]
     }
+
+    /// A streamable-HTTP server (Claude Code `"type": "http"`).
+    public static func http(name: String, url: String, headers: [String: String] = [:]) -> McpLaunchServer {
+        var server = McpLaunchServer(name: name, command: "")
+        server.url = url
+        server.headers = headers
+        return server
+    }
+
+    public var isHTTP: Bool { url != nil }
 
     /// First server of each name wins, in order.
     public static func deduplicated(_ servers: [McpLaunchServer]) -> [McpLaunchServer] {
@@ -47,10 +65,17 @@ public enum McpLaunchConfig {
         }
     }
 
-    /// Claude Code `--mcp-config` file: `{"mcpServers": {name: {command, args, env}}}`.
+    /// Claude Code `--mcp-config` file: `{"mcpServers": {name: {command, args, env}}}`, or
+    /// `{type: "http", url, headers}` for an HTTP server (upstream `orchestrator_mcp_config_path`).
     public static func claudeConfig(_ servers: [McpLaunchServer]) -> Data {
         var entries: [String: Any] = [:]
         for server in McpLaunchServer.deduplicated(servers) {
+            if let url = server.url {
+                var entry: [String: Any] = ["type": "http", "url": url]
+                if !server.headers.isEmpty { entry["headers"] = server.headers }
+                entries[server.name] = entry
+                continue
+            }
             var entry: [String: Any] = ["command": server.command, "args": server.arguments]
             if !server.environment.isEmpty { entry["env"] = server.environment }
             entries[server.name] = entry
@@ -59,10 +84,16 @@ public enum McpLaunchConfig {
     }
 
     /// OpenCode config layered through `OPENCODE_CONFIG`: `mcp.<name>` local servers (upstream's
-    /// `opencode.json` entry shape).
+    /// `opencode.json` entry shape), or `remote` ones for an HTTP server.
     public static func opencodeConfig(_ servers: [McpLaunchServer]) -> Data {
         var entries: [String: Any] = [:]
         for server in McpLaunchServer.deduplicated(servers) {
+            if let url = server.url {
+                var entry: [String: Any] = ["type": "remote", "url": url, "enabled": true]
+                if !server.headers.isEmpty { entry["headers"] = server.headers }
+                entries[server.name] = entry
+                continue
+            }
             var entry: [String: Any] = ["type": "local", "command": [server.command] + server.arguments, "enabled": true]
             if !server.environment.isEmpty { entry["environment"] = server.environment }
             entries[server.name] = entry
@@ -71,11 +102,12 @@ public enum McpLaunchConfig {
     }
 
     /// Codex `-c` overrides, one table per server. Codex splits the key path on dots without
-    /// honoring quotes, so a name outside `[A-Za-z0-9_-]` is made into one.
+    /// honoring quotes, so a name outside `[A-Za-z0-9_-]` is made into one. HTTP servers are left
+    /// out: their headers would land in the process's arguments.
     public static func codexArguments(_ servers: [McpLaunchServer]) -> [String] {
         var arguments: [String] = []
         var seen: Set<String> = []
-        for server in servers {
+        for server in servers where !server.isHTTP {
             let key = codexKey(server.name)
             guard seen.insert(key).inserted else { continue }
             let prefix = "mcp_servers.\(key)"

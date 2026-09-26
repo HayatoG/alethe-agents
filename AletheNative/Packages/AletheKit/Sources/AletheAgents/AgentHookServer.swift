@@ -3,9 +3,23 @@ import Network
 
 /// The hook bridge's endpoint (upstream `agent_events.rs` listener, on Network.framework instead of
 /// tiny_http): loopback only, a port the system picks, a per-launch token every request must carry.
-/// It takes `POST /hook/<agent>` with the `X-Alethe-Tab` header and hands the body over.
+/// It takes `POST /hook/<agent>` with the `X-Alethe-Tab` header and hands the body over, and — while
+/// an MCP handler is set (the orchestrator, P6-9) — `POST /mcp` with the `X-Alethe-Planner` header,
+/// answered with the handler's JSON-RPC reply (upstream `agent_events.rs` `/mcp`).
 public final class AgentHookServer: @unchecked Sendable {
     public typealias Handler = @Sendable (_ agent: String, _ tab: String, _ body: Data) -> Void
+
+    /// What a `POST /mcp` gets back.
+    public enum McpReply: Equatable, Sendable {
+        /// 200 with this JSON body.
+        case body(String)
+        /// 202, no body: a notification (upstream answers those with nothing).
+        case accepted
+        /// 404: the endpoint is not served right now (the feature is off).
+        case unavailable
+    }
+
+    public typealias McpHandler = @Sendable (_ body: Data, _ planner: String?) async -> McpReply
 
     public static let bodyLimit = 1 << 20
 
@@ -15,6 +29,7 @@ public final class AgentHookServer: @unchecked Sendable {
     private var listener: NWListener?
     private let lock = NSLock()
     private var boundPort: UInt16?
+    private var mcpHandler: McpHandler?
 
     public init(token: String = UUID().uuidString + UUID().uuidString, handler: @escaping Handler) {
         self.token = token.replacingOccurrences(of: "-", with: "")
@@ -50,6 +65,11 @@ public final class AgentHookServer: @unchecked Sendable {
         }
     }
 
+    /// Serves `POST /mcp` through `handler`; nil stops serving it (404).
+    public func setMcpHandler(_ handler: McpHandler?) {
+        lock.withLock { mcpHandler = handler }
+    }
+
     public func stop() {
         listener?.cancel()
         listener = nil
@@ -69,7 +89,18 @@ public final class AgentHookServer: @unchecked Sendable {
             case .incomplete where !complete && error == nil:
                 self.receive(connection, buffer: buffer)
             case .request(let request):
-                self.respond(connection, status: self.handle(request))
+                switch self.route(request) {
+                case .status(let status):
+                    self.respond(connection, status: status)
+                case .mcp(let handler, let body, let planner):
+                    Task {
+                        switch await handler(body, planner) {
+                        case .body(let reply): self.respond(connection, status: 200, json: reply)
+                        case .accepted: self.respond(connection, status: 202)
+                        case .unavailable: self.respond(connection, status: 404)
+                        }
+                    }
+                }
             case .tooLarge:
                 self.respond(connection, status: 413)
             default:
@@ -78,18 +109,34 @@ public final class AgentHookServer: @unchecked Sendable {
         }
     }
 
-    func handle(_ request: HTTPRequest) -> Int {
-        guard request.headers["x-alethe-token"] == token else { return 401 }
-        guard request.method == "POST", request.path.hasPrefix("/hook/"),
-              let tab = request.headers["x-alethe-tab"], !tab.isEmpty else { return 404 }
-        handler(String(request.path.dropFirst("/hook/".count)), tab, request.body)
-        return 200
+    enum Route {
+        case status(Int)
+        case mcp(McpHandler, body: Data, planner: String?)
     }
 
-    private func respond(_ connection: NWConnection, status: Int) {
-        let reason = [200: "OK", 400: "Bad Request", 401: "Unauthorized", 404: "Not Found", 413: "Payload Too Large"][status] ?? "OK"
-        let response = "HTTP/1.1 \(status) \(reason)\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-        connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in connection.cancel() })
+    /// Where a request goes. The token is checked first, for every path.
+    func route(_ request: HTTPRequest) -> Route {
+        guard request.headers["x-alethe-token"] == token else { return .status(401) }
+        let path = request.path.split(separator: "?", maxSplits: 1).first.map(String.init) ?? request.path
+        if path == "/mcp" {
+            guard request.method == "POST", let handler = lock.withLock({ mcpHandler }) else { return .status(404) }
+            let planner = request.headers["x-alethe-planner"].flatMap { $0.isEmpty ? nil : $0 }
+            return .mcp(handler, body: request.body, planner: planner)
+        }
+        guard request.method == "POST", request.path.hasPrefix("/hook/"),
+              let tab = request.headers["x-alethe-tab"], !tab.isEmpty else { return .status(404) }
+        handler(String(request.path.dropFirst("/hook/".count)), tab, request.body)
+        return .status(200)
+    }
+
+    private func respond(_ connection: NWConnection, status: Int, json: String? = nil) {
+        let reasons = [200: "OK", 202: "Accepted", 400: "Bad Request", 401: "Unauthorized", 404: "Not Found",
+                       413: "Payload Too Large"]
+        let body = Data((json ?? "").utf8)
+        var head = "HTTP/1.1 \(status) \(reasons[status] ?? "OK")\r\n"
+        if json != nil { head += "Content-Type: application/json\r\n" }
+        head += "Content-Length: \(body.count)\r\nConnection: close\r\n\r\n"
+        connection.send(content: Data(head.utf8) + body, completion: .contentProcessed { _ in connection.cancel() })
     }
 }
 

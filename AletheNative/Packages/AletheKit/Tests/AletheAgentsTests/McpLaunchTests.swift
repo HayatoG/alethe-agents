@@ -97,4 +97,43 @@ import Testing
         let kiro = try launcher.command(for: AgentLaunchRequest(kind: .kiro, mcpServers: [Self.graphify], mcpConfigPath: "/tmp/m.json"))
         #expect(kiro.shellCommand?.hasSuffix("'/bin/echo' 'chat'") == true)
     }
+
+    // MARK: HTTP servers (P6-9)
+
+    static let orchestrator = McpLaunchServer.http(name: "alethe", url: "http://127.0.0.1:4000/mcp",
+                                                   headers: ["X-Alethe-Token": "tok", "X-Alethe-Planner": "tab1"])
+
+    @Test func claudeConfigWritesTheHttpForm() throws {
+        let data = McpLaunchConfig.claudeConfig([Self.graphify, Self.orchestrator])
+        let root = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let servers = try #require(root["mcpServers"] as? [String: Any])
+        let alethe = try #require(servers["alethe"] as? [String: Any])
+        #expect(alethe["type"] as? String == "http")
+        #expect(alethe["url"] as? String == "http://127.0.0.1:4000/mcp")
+        #expect(alethe["headers"] as? [String: String] == ["X-Alethe-Token": "tok", "X-Alethe-Planner": "tab1"])
+        #expect(alethe["command"] == nil && alethe["args"] == nil)
+        #expect((servers["graphify"] as? [String: Any])?["command"] as? String == "/usr/local/bin/graphify")
+    }
+
+    @Test func opencodeConfigWritesARemoteServer() throws {
+        let data = McpLaunchConfig.opencodeConfig([Self.orchestrator])
+        let root = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let alethe = try #require((root["mcp"] as? [String: Any])?["alethe"] as? [String: Any])
+        #expect(alethe["type"] as? String == "remote")
+        #expect(alethe["url"] as? String == "http://127.0.0.1:4000/mcp")
+        #expect(alethe["enabled"] as? Bool == true)
+    }
+
+    @Test func httpServersNeverReachCodexArguments() throws {
+        #expect(McpLaunchConfig.codexArguments([Self.orchestrator]).isEmpty)
+        let command = try Self.command(AgentLaunchRequest(kind: .codex, mcpServers: [Self.orchestrator, Self.graphify]))
+        #expect(command.shellCommand?.contains("tok") == false)
+        #expect(command.shellCommand?.contains("mcp_servers.graphify.command") == true)
+    }
+
+    @Test func httpServerIsMarkedAndDeduplicatedByName() {
+        #expect(Self.orchestrator.isHTTP && !Self.graphify.isHTTP)
+        let stdio = McpLaunchServer(name: "alethe", command: "x")
+        #expect(McpLaunchServer.deduplicated([Self.orchestrator, stdio]) == [Self.orchestrator])
+    }
 }

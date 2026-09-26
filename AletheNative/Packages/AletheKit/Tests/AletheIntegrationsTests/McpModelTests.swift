@@ -137,5 +137,7 @@ func stdioServer(_ name: String) -> McpServer {
         #expect(passthrough.launchServer == nil)
         #expect(McpServer(name: "r", transport: .http(url: "https://x", headers: [:])).launchServer == nil)
         #expect(McpServer(name: "c", transport: .stdio(command: "x", arguments: [], cwd: "/tmp")).launchServer == nil)
+        let http = McpServer(launch: .http(name: "alethe", url: "http://127.0.0.1:1/mcp", headers: ["H": "v"]))
+        #expect(http.transport == .http(url: "http://127.0.0.1:1/mcp", headers: ["H": .literal("v")]))
     }
 }

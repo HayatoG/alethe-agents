@@ -126,6 +126,70 @@ import Testing
         #expect(try await post(token: "wrong") == 401)
         #expect(received.withLock { $0 } == [#"claude|tab1|{"hook_event_name":"Stop"}"#])
     }
+
+    // MARK: POST /mcp (P6-9)
+
+    private static func request(_ path: String, token: String = "secret", headers: [String: String] = [:],
+                                method: String = "POST", body: String = "{}") -> HTTPRequest {
+        var all = headers
+        all["x-alethe-token"] = token
+        return HTTPRequest(method: method, path: path, headers: all, body: Data(body.utf8))
+    }
+
+    @Test func mcpIsRoutedWithItsPlanner() {
+        let server = AgentHookServer(token: "secret") { _, _, _ in Issue.record("hook handler called for /mcp") }
+        server.setMcpHandler { _, _ in .accepted }
+        guard case .mcp(_, let body, let planner) = server.route(Self.request("/mcp", headers: ["x-alethe-planner": "tab7"], body: "hi")) else {
+            Issue.record("not routed to the MCP handler"); return
+        }
+        #expect(body == Data("hi".utf8) && planner == "tab7")
+        guard case .mcp(_, _, let none) = server.route(Self.request("/mcp?x=1", headers: ["x-alethe-planner": ""])) else {
+            Issue.record("query string not routed"); return
+        }
+        #expect(none == nil)
+    }
+
+    @Test func mcpNeedsTheTokenAHandlerAndPost() {
+        let server = AgentHookServer(token: "secret") { _, _, _ in }
+        func status(_ route: AgentHookServer.Route) -> Int? {
+            if case .status(let code) = route { return code }
+            return nil
+        }
+        #expect(status(server.route(Self.request("/mcp"))) == 404)
+        server.setMcpHandler { _, _ in .accepted }
+        #expect(status(server.route(Self.request("/mcp", token: "wrong"))) == 401)
+        #expect(status(server.route(HTTPRequest(method: "POST", path: "/mcp", headers: [:], body: Data()))) == 401)
+        #expect(status(server.route(Self.request("/mcp", method: "GET"))) == 404)
+        #expect(status(server.route(Self.request("/mcpx"))) == 404)
+        server.setMcpHandler(nil)
+        #expect(status(server.route(Self.request("/mcp"))) == 404)
+    }
+
+    /// P: an MCP body goes out and its answer comes back over loopback; a notification gets 202.
+    @Test func mcpRoundTrip() async throws {
+        let server = AgentHookServer(token: "secret") { _, _, _ in }
+        server.setMcpHandler { body, planner in
+            let text = String(decoding: body, as: UTF8.self)
+            return text.contains("notify") ? .accepted : .body(#"{"planner":"\#(planner ?? "")","echo":\#(text)}"#)
+        }
+        let endpoint = try #require(await server.start())
+        defer { server.stop() }
+        func post(_ body: String, token: String = "secret") async throws -> (Int, String, String?) {
+            var request = URLRequest(url: URL(string: "\(endpoint)/mcp")!)
+            request.httpMethod = "POST"
+            request.setValue(token, forHTTPHeaderField: "X-Alethe-Token")
+            request.setValue("tab1", forHTTPHeaderField: "X-Alethe-Planner")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = Data(body.utf8)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let http = response as? HTTPURLResponse
+            return (http?.statusCode ?? 0, String(decoding: data, as: UTF8.self), http?.value(forHTTPHeaderField: "Content-Type"))
+        }
+        let (status, body, type) = try await post(#"{"id":1}"#)
+        #expect(status == 200 && body == #"{"planner":"tab1","echo":{"id":1}}"# && type == "application/json")
+        #expect(try await post(#"{"notify":true}"#).0 == 202)
+        #expect(try await post(#"{"id":1}"#, token: "wrong").0 == 401)
+    }
 }
 
 struct ActivityMonitorControlsTests {

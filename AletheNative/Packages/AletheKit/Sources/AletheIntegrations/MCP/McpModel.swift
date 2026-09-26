@@ -343,6 +343,10 @@ extension McpServer {
 extension McpServer {
     /// A per-launch stdio server as a config entry: literal env only, enabled.
     public init(launch: McpLaunchServer) {
+        if let url = launch.url {
+            self.init(name: launch.name, transport: .http(url: url, headers: launch.headers.mapValues(McpEnvEntry.literal)))
+            return
+        }
         self.init(
             name: launch.name,
             transport: .stdio(command: launch.command, arguments: launch.arguments, cwd: nil),

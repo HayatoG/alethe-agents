@@ -5,7 +5,8 @@ import Foundation
 /// The app side of the hook bridge (P3-9): runs the loopback endpoint, prepares each launch's
 /// wiring (a Claude settings file per tab, the Codex forwarder script) and routes incoming events to
 /// the terminal registry on the main actor. With the orchestrator feature on, a planner's subagent
-/// hooks also feed `subagents` (P6-11).
+/// hooks also feed `subagents` (P6-11), and the same listener serves the orchestrator's `POST /mcp`
+/// (P6-9).
 @MainActor
 final class AgentHookHub {
     /// The planners' own subagents and teammates, for the board.
@@ -17,6 +18,20 @@ final class AgentHookHub {
     private var folder: URL { Self.folder }
     private var codexScript: URL?
     private var codexHookScript: URL?
+    private var mcpHandler: AgentHookServer.McpHandler?
+
+    /// The loopback endpoint and its token, once listening; the orchestrator's per-launch MCP config
+    /// carries both. The token is a secret: it only goes into private (0600) files.
+    var connection: (endpoint: String, token: String)? {
+        guard let endpoint, let server else { return nil }
+        return (endpoint, server.token)
+    }
+
+    /// Serves `POST /mcp` through `handler` (nil: 404), now or once the listener starts.
+    func serveMcp(_ handler: AgentHookServer.McpHandler?) {
+        mcpHandler = handler
+        server?.setMcpHandler(handler)
+    }
 
     func start(terminals: TerminalRegistry) async {
         guard server == nil else { return }
@@ -33,6 +48,7 @@ final class AgentHookHub {
             Task { @MainActor in terminals.apply(event, to: TabID(rawValue: tab)) }
         }
         self.server = server
+        server.setMcpHandler(mcpHandler)
         endpoint = await server.start()
         guard let endpoint else { return }
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true,

@@ -82,6 +82,8 @@ final class AppEnvironment {
     let gsdSync = GSDSyncController()
     /// Event bus, telemetry and `.planning/` change events for the scheduler and autocommit (P6-18).
     let multiagent = MultiagentController()
+    /// The delegation core behind the planners' `alethe_*` tools and the board (P6-9).
+    let orchestrator = OrchestratorService()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -222,6 +224,9 @@ final class AppEnvironment {
         self.plugins = plugins
         let extensions = ExtensionManager(profileDirectory: locations.profileDirectory(profile))
         self.extensions = extensions
+        // Plugin and extension events reach the bus from launch on; failures held so far go out now.
+        plugins.events.attach(multiagent.bus)
+        extensions.events.attach(multiagent.bus)
         Task { await extensions.start() }
         #if DEBUG
         if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed"), loadedWorkspace.document.projects.isEmpty {
@@ -235,6 +240,10 @@ final class AppEnvironment {
         #endif
         // The hook bridge listens before any terminal starts, so the first launches are wired too.
         terminals.hookEnvironment = self
+        orchestrator.start(profileDirectory: locations.profileDirectory(profile), launchers: launchers,
+                           overrides: { [weak self] in self?.preferences?.document.cliPaths ?? [:] },
+                           isEnabled: { [weak self] in self?.features.isOn(.orchestrator) == true })
+        OrchestratorWiring.start(environment: self)
         graphify.start(environment: self)
         playwright.start(profileDirectory: locations.browserSession(profile), wiring: terminals.mcp, environment: self)
         notifier.start(environment: self)
@@ -332,6 +341,7 @@ final class AppEnvironment {
         await plugins?.shutdown()
         await extensions?.shutdown()
         terminals.terminateAll()
+        await orchestrator.shutdown()
         terminals.hooks.stop()
         await playwright.stop()
         await multiagent.stop()
