@@ -181,7 +181,6 @@ enum TestSeeds {
             preferences.features.set(.gsdSync, on: true)
         case orchestratorWorker:
             seedOrchestratorWorker(into: &preferences)
-        case "orchestrator", "orchestratorBoard", "orchestratorLarge", "multiagent", "multiagentLive":
         case "orchestrator", "orchestratorBoard", "orchestratorLarge", "orchestratorApply", "multiagent", "multiagentLive":
             preferences.features.set(.orchestrator, on: true)
         default:
