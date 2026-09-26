@@ -2663,7 +2663,7 @@ above.
   `steering_an_unknown_job_is_refused`, `isolating_outside_a_repository_says_so`,
   `isolating_gives_each_worker_its_own_worktree`), U (inbox order, a half-made batch rolled back).
   *Parity:* ORC-2.
-- [ ] **P6-8 (M) Agent fitness and routing.** `AgentFitness` from P3-13's usage readings (upstream
+- [x] **P6-8 (M) Agent fitness and routing.** `AgentFitness` from P3-13's usage readings (upstream
   `lib/agentFitness.ts`: worst window, used %, reset, plan, rate-limited) pushed into the core
   (`setAgentFitness`); every tool response carries the fitness block with `headroom` (agents sorted, so
   a tie resolves the same way on every call); `alethe_delegate` adds `headroomHint` when the requested
@@ -2673,6 +2673,14 @@ above.
   P6-6. *Tests:* G (upstream's eight fitness cases, `every_tool_response_carries_the_current_headroom`
   through `a_rate_limited_agent_outranks_any_percentage`; `agentFitness.test.ts`). *Parity:* ORC-2,
   ORC-1 (quota warnings).
+  *Done:* (`4ec3cd1`) `AgentFitness` (upstream `agentFitness.ts`) from P3-13 `ProviderUsage`: worst
+  window (`5h`, `week`, `opus`), used %, reset, plan (Codex only), rate-limited (never for Claude, as
+  upstream). Pure `FitnessRouting`: agents sorted by name, `headroom`, most strained (≥80 % or rate-
+  limited), `routingNote`, `headroomHint` incl. `bothStrained`. Core `setAgentFitness` (by agent or from
+  a usage reading; empty readings keep the previous) in `OrchestratorCore+Fitness`; every tool response
+  carries `fitness`; `alethe_delegate` adds `headroomHint` and a chosen/ignored routing note per job.
+  Readings are fed by P6-17. Tests (9 upstream Rust goldens, 4 TS goldens, 16 units) written and
+  compiled, NOT run.
 - [ ] **P6-9 (L) App orchestrator service, MCP endpoint and Claude Code planners.**
   `OrchestratorService` (`@MainActor`, upstream `orchestrator.rs`): one core per profile, prepared on
   first use (store path, restore, launchers resolved once — a missing CLI never delays launch),
