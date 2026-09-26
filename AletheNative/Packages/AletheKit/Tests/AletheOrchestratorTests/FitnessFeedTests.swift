@@ -72,7 +72,7 @@ private func waitUntil(_ condition: @Sendable () async -> Bool) async {
     }
 }
 
-@Suite struct FitnessFeedTests {
+@Suite(.timeLimit(.minutes(1))) struct FitnessFeedTests {
     @Test func readsRightAwayPushesFitnessAndPublishesWarnings() async {
         let recorder = Recorder()
         await recorder.set([usage(.claude, 30), usage(.codex, 92),

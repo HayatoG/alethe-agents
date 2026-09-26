@@ -6,7 +6,7 @@ import AletheIntegrations
 
 /// The `alethe-orchestrator-mcp` helper (P6-10): bridge framing, the stdio loop, the standalone
 /// setup and handshake, Codex planner wiring, and the built binary against a stub endpoint.
-@Suite struct OrchestratorHelperTests {
+@Suite(.timeLimit(.minutes(1))) struct OrchestratorHelperTests {
     // MARK: Bridge
 
     private actor Posts {

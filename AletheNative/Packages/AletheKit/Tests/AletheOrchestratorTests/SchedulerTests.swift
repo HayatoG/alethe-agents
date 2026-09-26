@@ -56,7 +56,7 @@ private func next(_ iterator: inout AsyncStream<BusEvent>.AsyncIterator) async -
     await iterator.next()
 }
 
-@Suite struct SchedulerGoldenTests {
+@Suite(.timeLimit(.minutes(1))) struct SchedulerGoldenTests {
     // Upstream `derive_item_task_id_is_deterministic_and_namespaced_by_project`.
     @Test func derivedTaskIDsAreDeterministicAndNamespacedByProject() {
         let a1 = Scheduler.taskID(projectID: "proj-a", text: "Fazer login")
@@ -140,7 +140,7 @@ private func next(_ iterator: inout AsyncStream<BusEvent>.AsyncIterator) async -
     }
 }
 
-@Suite struct SchedulerTests {
+@Suite(.timeLimit(.minutes(1))) struct SchedulerTests {
     @Test func aTickStartsTheFirstReadyTaskOnALeasedWorktreeAndPublishesEachStep() async throws {
         let projectID = uniqueProjectID("start")
         let root = try await temporaryGitRepo("start")

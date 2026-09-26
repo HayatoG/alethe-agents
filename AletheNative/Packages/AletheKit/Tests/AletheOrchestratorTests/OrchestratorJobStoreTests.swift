@@ -24,7 +24,7 @@ private func delegated(_ number: UInt64, run: UInt64, spec: String, cwd: URL, la
     )
 }
 
-@Suite struct OrchestratorJobStoreTests {
+@Suite(.timeLimit(.minutes(1))) struct OrchestratorJobStoreTests {
     // Upstream `history_outlives_the_process_and_in_flight_work_is_not_reported_as_running`: the first
     // process writes the record as work is created; a new one restores it as interrupted.
     @Test func historyOutlivesTheProcessAndInFlightWorkIsNotReportedAsRunning() async throws {

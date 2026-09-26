@@ -156,7 +156,7 @@ private func alphaSession() -> CodexWorkerSession {
     }
 }
 
-@Suite struct CodexWorkerProtocolTests {
+@Suite(.timeLimit(.minutes(1))) struct CodexWorkerProtocolTests {
     @Test func startingANewJobOpensAThreadWithItsSettings() {
         var session = CodexWorkerSession(jobID: "job-01", cwd: "/tmp/w", firstTurn: "x", webSearch: true)
         let handshake = rendered(session.handshake())

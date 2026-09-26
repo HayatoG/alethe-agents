@@ -51,7 +51,10 @@ private func groupGone(_ pid: pid_t) -> Bool {
         var iterator = worker.lines.makeAsyncIterator()
         let line = try #require(await next(&iterator))
         let object = try #require(line.objectValue)
-        #expect(object["cwd"]?.stringValue == folder.resolvingSymlinksInPath().path)
+        // `pwd -P` prints the real path (`/private/var/…`); `resolvingSymlinksInPath()` strips `/private`.
+        let real = try #require(realpath(folder.path, nil))
+        defer { free(real) }
+        #expect(object["cwd"]?.stringValue == String(cString: real))
         #expect(object["group"]?.stringValue == String(worker.pid), "the worker leads its own process group")
         #expect(object["var"]?.stringValue == "yes")
         await worker.terminate()

@@ -72,10 +72,12 @@ private func temporaryDirectory() throws -> URL {
         let folder = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: folder) }
         let environment = ["PATH": "/usr/bin:/bin"]
-        // A worker from "the crashed run", recorded as it would be.
+        // A worker from "the crashed run", recorded as it would be. `/bin/bash`, not `/bin/sh`: the
+        // latter is a shim that re-execs bash, and a worker that never prints a line never gets its
+        // new image noted, so whether it matched would depend on when the spawn read its image.
         let crashed = WorkerRegistry(profileDirectory: folder)
         let leftover = try WorkerProcess.spawn(
-            Launcher(kind: "test", program: URL(filePath: "/bin/sh"), arguments: ["-c", "trap '' TERM; while :; do sleep 1; done"]),
+            Launcher(kind: "test", program: URL(filePath: "/bin/bash"), arguments: ["-c", "trap '' TERM; while :; do sleep 1; done"]),
             in: URL(filePath: "/tmp"), environment: environment, registry: crashed)
         // A process holding a recorded pid that is not the recorded one (wrong start time).
         let bystander = try WorkerProcess.spawn(

@@ -357,7 +357,7 @@ private func removeRepository(_ folder: URL) {
         let result = try await call(core, "alethe_send", ["jobId": "job-01", "message": "hello"])
         #expect(result["error"]?.stringValue?.contains("has no thread") == true, "\(result)")
         let missing = try await call(core, "alethe_send", ["jobId": "job-01"])
-        #expect(missing["error"] == "message is required", "\(missing)")
+        #expect(missing["error"] == "error: message is required", "\(missing)")
         await core.shutdown()
     }
 

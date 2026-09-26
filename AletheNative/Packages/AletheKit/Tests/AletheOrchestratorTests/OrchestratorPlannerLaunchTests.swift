@@ -6,7 +6,7 @@ import AletheIntegrations
 
 /// Planners and the loopback `/mcp` endpoint (P6-9; upstream `orchestrator_mcp_config_path` and
 /// `agent_events.rs` `/mcp`).
-@Suite struct OrchestratorPlannerLaunchTests {
+@Suite(.timeLimit(.minutes(1))) struct OrchestratorPlannerLaunchTests {
     @Test func claudeAndCodexTabsBecomePlanners() {
         #expect(OrchestratorPlannerLaunch.planner(tab: "tab1", label: " Lead ", kind: .claude)
             == Planner(id: "tab1", label: "Lead", agent: "claude"))

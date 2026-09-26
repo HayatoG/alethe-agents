@@ -69,7 +69,7 @@ private func tokens(_ job: Job, _ side: String, _ key: String) -> UInt64? {
     job.tokens?.objectValue?[side]?.objectValue?[key]?.uint64Value
 }
 
-@Suite struct ClaudeWorkerGoldenTests {
+@Suite(.timeLimit(.minutes(1))) struct ClaudeWorkerGoldenTests {
     // Upstream `a_claude_worker_reports_its_result_and_tokens`.
     @Test func aClaudeWorkerReportsItsResultAndTokens() async throws {
         var replay = ClaudeReplay(job: claudeJob())
@@ -164,7 +164,7 @@ private func tokens(_ job: Job, _ side: String, _ key: String) -> UInt64? {
     }
 }
 
-@Suite struct ClaudeWorkerProtocolTests {
+@Suite(.timeLimit(.minutes(1))) struct ClaudeWorkerProtocolTests {
     @Test func theFirstTurnIsTheTaskUnlessWorkWaited() {
         var job = claudeJob()
         #expect(ClaudeWorkerProtocol.firstTurn(&job).compactRendered()
