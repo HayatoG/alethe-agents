@@ -137,6 +137,16 @@ enum TestSeeds {
             doc.workspace.selectedProjectID = project
         case orchestratorWorker:
             seedOrchestratorWorker(into: &doc)
+        case "orchestratorApply":
+            // A done worker whose worktree holds one uncommitted file, beside its disabled planner
+            // tab (`tab-lead`): applying it merges cleanly into `main` (P6-16).
+            let folder = seedApplyRepository()
+            let project = doc.addProject(name: "applyrepo", folder: folder.path, color: .purple)
+            if let pane = doc.addPane(to: project, tab: PaneTab(id: TabID(rawValue: "tab-lead"), agent: "claude", title: "lead")) {
+                doc.setDisabled(pane, true)
+            }
+            doc.addPane(to: project, content: .orchestrator)
+            doc.workspace.selectedProjectID = project
         case "skills":
             seedSkills()
         case "gsdSync":
@@ -172,6 +182,7 @@ enum TestSeeds {
         case orchestratorWorker:
             seedOrchestratorWorker(into: &preferences)
         case "orchestrator", "orchestratorBoard", "orchestratorLarge", "multiagent", "multiagentLive":
+        case "orchestrator", "orchestratorBoard", "orchestratorLarge", "orchestratorApply", "multiagent", "multiagentLive":
             preferences.features.set(.orchestrator, on: true)
         default:
             break
@@ -231,6 +242,44 @@ enum TestSeeds {
             try? data.write(to: profile.appending(path: "orchestrator-jobs.json"))
         }
         return folder
+    }
+
+    /// `applyrepo` in the data root: `main` with one commit (local identity, no global config needed)
+    /// and job `job-01`'s worktree on `alethe/agent-job-01` holding an uncommitted `feature.txt`;
+    /// the profile's jobs file has that job done under planner `tab-lead`.
+    private static func seedApplyRepository() -> URL {
+        let root = URL(filePath: UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp")
+        let repo = root.appending(path: "applyrepo")
+        let profile = root.appending(path: "profiles/default")
+        let worktree = repo.appending(path: ".alethe/worktrees/job-01")
+        try? FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: profile, withIntermediateDirectories: true)
+        try? Data("seed\n".utf8).write(to: repo.appending(path: "README.md"))
+        for arguments in [["init", "-q", "-b", "main"], ["config", "user.name", "seed"],
+                          ["config", "user.email", "seed@local"], ["config", "commit.gpgsign", "false"],
+                          ["add", "."], ["commit", "-q", "-m", "seed"],
+                          ["worktree", "add", "-q", "-b", "alethe/agent-job-01", worktree.path, "HEAD"]] {
+            let git = Process()
+            git.executableURL = URL(filePath: "/usr/bin/git")
+            git.arguments = ["-C", repo.path] + arguments
+            try? git.run()
+            git.waitUntilExit()
+        }
+        try? Data("from the worker\n".utf8).write(to: worktree.appending(path: "feature.txt"))
+        let start: UInt64 = 1_750_000_000_000
+        let job: [String: Any] = [
+            "id": "job-01", "agent": "codex", "runId": "run-01", "runLabel": "Feature", "spec": "Add the feature",
+            "cwd": repo.path, "status": "done", "plan": [String](), "summary": "Added feature.txt.",
+            "approvalPolicy": "\"never\"", "sandbox": "workspace-write", "webSearch": false,
+            "startedAt": start, "endedAt": start + 30_000, "plannerId": "tab-lead", "worktree": worktree.path,
+        ]
+        let file: [String: Any] = [
+            "version": 2, "jobs": [job], "planners": [["id": "tab-lead", "label": "lead", "agent": "claude"]],
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: file) {
+            try? data.write(to: profile.appending(path: "orchestrator-jobs.json"))
+        }
+        return repo
     }
 
     /// `gsdrepo` in the data root: a repository whose `.planning/` has a busy child session, a
