@@ -77,36 +77,18 @@ public enum AiMemory {
     }
 }
 
-/// A short CLI call: stdout and the exit code, nil when it cannot start. Killed past `timeout`
-/// (a killed call reports the signal's non-zero status) or when the calling task is cancelled.
+/// A short CLI call: stdout and the exit code, nil when it cannot start. Killed past `timeout` or
+/// when the calling task is cancelled; a killed call reports SIGKILL's non-zero status.
 enum ShortCommand {
     static func run(_ executable: String, _ arguments: [String], timeout: Duration) async -> (output: String, exitCode: Int32)? {
-        let process = Process()
-        process.executableURL = URL(filePath: executable)
-        process.arguments = arguments
-        var environment = ProcessInfo.processInfo.environment
-        // npm-installed CLIs start with `#!/usr/bin/env node`; their own folder leads PATH.
-        let folder = (executable as NSString).deletingLastPathComponent
-        environment["PATH"] = folder + ":" + (environment["PATH"] ?? "/usr/bin:/bin")
-        process.environment = environment
-        let output = Pipe()
-        process.standardOutput = output
-        process.standardError = FileHandle.nullDevice
-        process.standardInput = FileHandle.nullDevice
-        do { try process.run() } catch { return nil }
-        let watchdog = Task.detached {
-            try? await Task.sleep(for: timeout)
-            if process.isRunning { process.terminate() }
-        }
-        return await withTaskCancellationHandler {
-            let text = await Task.detached {
-                String(decoding: output.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-            }.value
-            process.waitUntilExit()
-            watchdog.cancel()
-            return (text, process.terminationStatus)
-        } onCancel: {
-            if process.isRunning { process.terminate() }
+        do {
+            let result = try await ExternalCommand.run(URL(filePath: executable), arguments, timeout: timeout,
+                                                       discardingStderr: true)
+            return (result.stdout, result.status)
+        } catch .launchFailed {
+            return nil
+        } catch {
+            return ("", SIGKILL)
         }
     }
 }
