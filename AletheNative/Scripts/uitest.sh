@@ -7,7 +7,14 @@ cd "$(dirname "$0")/.."
 Vendor/ghostty/build.sh >/dev/null
 SIGN_IDENTITY="$(Scripts/dev-signing.sh)"
 # Each UI test launches the app against a throwaway /private/tmp/alethe-uitest-* data folder.
-trap 'rm -rf /private/tmp/alethe-uitest-*' EXIT
+# Result bundles weigh ~75 MB each, so only the newest KEEP_RESULTS survive (even when tests fail).
+KEEP_RESULTS=5
+prune_results() {
+  ls -dt build/UITests-*.xcresult 2>/dev/null | tail -n +$((KEEP_RESULTS + 1)) | while IFS= read -r bundle; do
+    rm -rf -- "$bundle"
+  done
+}
+trap 'rm -rf /private/tmp/alethe-uitest-*; prune_results' EXIT
 xcodebuild \
   -project AletheNative.xcodeproj \
   -scheme Alethe \
