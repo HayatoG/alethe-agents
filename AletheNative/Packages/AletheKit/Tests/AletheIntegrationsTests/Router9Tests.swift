@@ -96,7 +96,7 @@ struct Router9RoutingTests {
 }
 
 /// U: status, command lines and launches against fake installs; a stub server started and stopped.
-struct Router9ServiceTests {
+@Suite(.timeLimit(.minutes(1))) struct Router9ServiceTests {
     private static func temporaryProfile() throws -> URL {
         let url = FileManager.default.temporaryDirectory
             .appending(path: "alethe-router9-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -298,10 +298,10 @@ struct Router9ServiceTests {
 
         try await service.start(source: .managed)
         let log = await Self.waitForLog(service.paths, containing: "DATA_DIR=")
-        #expect(log.contains("args=\(service.paths.entryScript.path(percentEncoded: false))"))
-        #expect(log.contains("DATA_DIR=\(service.paths.dataDirectory.path(percentEncoded: false))"))
-        #expect(log.contains("PWD=\(service.paths.installDirectory.resolvingSymlinksInPath().path(percentEncoded: false))")
-            || log.contains("PWD=\(service.paths.installDirectory.path(percentEncoded: false))"))
+        // Paths are passed without a directory URL's trailing slash.
+        #expect(log.contains("args=\(service.paths.entryScript.path) "))
+        #expect(log.contains("DATA_DIR=\(service.paths.dataDirectory.path) "))
+        #expect(log.contains("PWD=\(service.paths.installDirectory.path)\n"))
         #expect(FileManager.default.fileExists(atPath: service.paths.dataDirectory.path))
 
         service.stopNow()

@@ -54,12 +54,12 @@ public struct Router9Paths: Hashable, Sendable {
 /// so the pinned version and the private prefix have a single source of truth.
 public enum Router9Commands {
     public static func install(_ paths: Router9Paths) -> String {
-        "npm install --prefix \(shellQuoted(paths.installDirectory.path(percentEncoded: false))) "
+        "npm install --prefix \(shellQuoted(paths.installDirectory.plainPath)) "
             + "\(Router9.package)@\(Router9.pinnedVersion)"
     }
 
     public static func uninstall(_ paths: Router9Paths) -> String {
-        "npm uninstall --prefix \(shellQuoted(paths.installDirectory.path(percentEncoded: false))) \(Router9.package)"
+        "npm uninstall --prefix \(shellQuoted(paths.installDirectory.plainPath)) \(Router9.package)"
     }
 
     /// POSIX single quoting: the path reaches npm as one argument whatever it contains.
@@ -85,9 +85,9 @@ public struct Router9Launch: Hashable, Sendable {
         case .managed:
             guard entryScriptExists else { throw .notInstalled }
             guard let node else { throw .nodeNotFound }
-            launch = Router9Launch(executable: node, arguments: [paths.entryScript.path(percentEncoded: false)],
-                                   directory: paths.installDirectory.path(percentEncoded: false),
-                                   environment: ["DATA_DIR": paths.dataDirectory.path(percentEncoded: false)])
+            launch = Router9Launch(executable: node, arguments: [paths.entryScript.plainPath],
+                                   directory: paths.installDirectory.plainPath,
+                                   environment: ["DATA_DIR": paths.dataDirectory.plainPath])
         case .external:
             guard let external else { throw .notInstalled }
             // No DATA_DIR: the user's own install keeps its own configuration.
@@ -178,9 +178,9 @@ public actor Router9Service {
             running: isRunning,
             portInUse: await portInUse,
             port: port,
-            installDirectory: paths.installDirectory.path(percentEncoded: false),
-            dataDirectory: paths.dataDirectory.path(percentEncoded: false),
-            logPath: paths.logFile.path(percentEncoded: false),
+            installDirectory: paths.installDirectory.plainPath,
+            dataDirectory: paths.dataDirectory.plainPath,
+            logPath: paths.logFile.plainPath,
             dashboardURL: Router9.dashboardURL(port: port)
         )
     }
@@ -213,7 +213,7 @@ public actor Router9Service {
         if isRunning { return }
 
         let paths = paths
-        let entryExists = FileManager.default.isReadableFile(atPath: paths.entryScript.path(percentEncoded: false))
+        let entryExists = FileManager.default.isReadableFile(atPath: paths.entryScript.plainPath)
         let launch = try Router9Launch.make(
             source: source, port: port, paths: paths, entryScriptExists: entryExists,
             node: source == .managed ? dependencies.resolveNode() : nil,
@@ -230,6 +230,9 @@ public actor Router9Service {
 
         var environment = ProcessInfo.processInfo.environment
         environment.merge(launch.environment) { _, added in added }
+        // The inherited PWD names Alethe's own folder; a launch that changes directory updates it, as
+        // a shell would, so `pwd` and Node's `process.env.PWD` report the install folder.
+        if let directory = launch.directory { environment["PWD"] = directory }
         // npm CLIs start with `#!/usr/bin/env node`: the executable's folder and the usual install
         // roots lead PATH.
         let executableDirectory = (launch.executable as NSString).deletingLastPathComponent
@@ -240,7 +243,7 @@ public actor Router9Service {
 
         let process = try Router9Process.spawn(launch.executable, arguments: launch.arguments,
                                                directory: launch.directory, environment: environment,
-                                               logFile: paths.logFile.path(percentEncoded: false))
+                                               logFile: paths.logFile.plainPath)
         slot.withLock { $0 = process }
     }
 
@@ -250,7 +253,13 @@ public actor Router9Service {
             defer { current = nil }
             return current
         }) else { return }
-        await Task.detached { process.terminate() }.value
+        // `terminate` blocks up to its grace period: keep it off the cooperative pool.
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async {
+                process.terminate()
+                continuation.resume()
+            }
+        }
     }
 
     /// Synchronous teardown for app exit (upstream `stop_managed`). Blocks up to the grace period.
@@ -259,5 +268,15 @@ public actor Router9Service {
             defer { current = nil }
             return current
         }?.terminate()
+    }
+}
+
+private extension URL {
+    /// The file-system path without percent-encoding and without the trailing slash a directory URL
+    /// carries (`/p/tools/9router`, not `/p/tools/9router/`): the form npm, `DATA_DIR` and the
+    /// working directory are given.
+    var plainPath: String {
+        let path = path(percentEncoded: false)
+        return path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
     }
 }
