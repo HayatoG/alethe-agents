@@ -1,11 +1,10 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phases 0–5 implemented** (2026-09-25). Phases 0–3 tested (last run after P3-18: package
+> Status: **Phases 0–6 implemented** (2026-09-25). Phases 0–3 tested (last run after P3-18: package
 > 336/336, UI 67/67, smoke scripts pass). Phase 4 round 1 ran the package suite (498 green); Phase 4
-> round 2 and all of Phase 5 were compiled only (owner decision) — see **Test debt** below.
-> Next: P6-1 (Phase 6, Orchestrator v2, is broken into P6-1…P6-23), then 7 (Peripherals) and 8
-> (Release). Before Phase 6: clear the test debt. Branch: `mac-native-v2` (created from `origin/main` @
-> `75083e2`, v1.7.0).
+> round 2 and all of Phases 5 and 6 were compiled only (owner decision) — see **Test debt** below.
+> Next: Phase 7 (Peripherals), then 8 (Release). Before Phase 7: clear the test debt. Branch:
+> `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
 >
 > **Test debt (2026-09-25).** Written and compiled, never run:
 > - Package suite (`swift test`): new or changed tests since `b8f5ab7` in AletheIntegrationsTests (19
@@ -15,11 +14,16 @@
 >   CrashNotice, DataSettings, ExtensionKit, FeatureToggles, GitControl, GraphifyView, GSDSync,
 >   McpManager, MergeCenter, Onboarding, OpenIn, Profiles, ProjectClone, ProjectSettings, SkillsBrowser,
 >   Todos, ToolbarSettings, Worktrees — plus every earlier UI test, and the three smoke scripts.
-> - Performance: GraphLayout at 3000 nodes (P5-23).
+> - Phase 6 (all compiled, never run): AletheOrchestratorTests (job model, store, workers, Codex and
+>   Claude protocols, core goldens from `tests/orchestrator.rs`, follow-ups, fitness, board, scheduler,
+>   helper), AletheFoundation event bus, AletheIntegrations planning audit, AletheMerge worktree apply,
+>   UI OrchestratorEntry/Board/WorkerActions/Apply/Quota and MultiagentSettings.
+> - Performance: GraphLayout at 3000 nodes (P5-23); board with 100 workers (P6-14); worker spawn (P6-3).
 > - Manual (cannot be automated): dictation with a real microphone (P3-17), prompt redraw after resize
 >   (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24), a real ExtensionKit extension
 >   loading and a contained crash (P4-19), profile switch / import / reset / erase relaunches (P5-9,
->   P5-10), `alethe .` cold and warm (P5-8), the owner's pass over all Phase 4 and Phase 5 UI.
+>   P5-10), `alethe .` cold and warm (P5-8), a real Claude Code and Codex orchestration run (P6), the owner's pass over
+>   all Phase 4, 5 and 6 UI.
 > - Known: a rare `AletheTerminalTests` hang (1-minute limit, root cause open); the workspace tab close
 >   button's accessibility frame is off screen.
 > This branch never merges into `main` or any release branch, and no PR targets them. The native app
@@ -2958,7 +2962,13 @@ above.
   `AletheOrchestrator`. Not ported: upstream opening an agent terminal on `AgentSpawnRequested` (running
   tasks show their worker id only). Tests (UI/HT `MultiagentSettingsTests`) written and compiled, NOT
   run.
-- [ ] **P6-23 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+- [x] **P6-23 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+  *Done (review, 2026-09-25):* all Phase 6 tasks implemented by parallel agents and integrated. Owner
+  rule: compile only — package `swift build --build-tests`, app `build.sh Debug` (the helper is embedded
+  signed in `Contents/Helpers`) and UI `build-for-testing` succeed, strings gate ok; every Phase 6 test is
+  written and compiled but NOT run; no real Claude/Codex orchestration run yet. upstream-watch: 0 upstream
+  commits. Integration fixes: duplicated `AletheOrchestrator` pbxproj link (P6-11 vs P6-22) and a
+  duplicated seed case (`89cd574`). Parity ORC-1/2/3 Done.
 
 Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
 beyond string catalogs — P6-7 and P6-8 add separate files to the core; rebase on conflicts). Shared
@@ -3074,9 +3084,9 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | EXT-5 | Graphify | P5 | Done | P5-17/23; per-launch MCP wiring (no writes to project agent configs), graph pane, snapshots |
 | EXT-6 | ai-memory wiring | P5 | Done | P5-18; per-launch MCP wiring |
 | EXT-7 | GSD Sync | P5 | Done | P5-20/24; no per-project `gsdWatcherEnabled` |
-| ORC-1 | Orchestrator board | P6 | Not started | |
-| ORC-2 | Orchestrator MCP tools + core | P6 | Not started | Swift stdio binary |
-| ORC-3 | Scheduler, telemetry, planning audit | P6 | Not started | |
+| ORC-1 | Orchestrator board | P6 | Done | P6-13/14/15/16/17; board opens beside the planner (no pane groups) |
+| ORC-2 | Orchestrator MCP tools + core | P6 | Done | P6-1…P6-10; app serves `POST /mcp`; `alethe-orchestrator-mcp` helper (bridge + standalone) |
+| ORC-3 | Scheduler, telemetry, planning audit | P6 | Done | P6-18…P6-22; no supervisor events; scheduler does not open agent terminals |
 | USE-1 | Usage pills + AI Usage + reset credit | P3 | Done | P3-13; pills opt-in per provider, in-memory cache |
 | USE-2 | Activity tracking | P3 | Done | P3-14; same file format as upstream |
 | USE-3 | RAM control, hibernation, supervisor | P2 | Done | P2-24; memory indicator + policy; hibernated terminals resume when shown; no history chart |
