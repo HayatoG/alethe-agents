@@ -3081,7 +3081,7 @@ above.
   secret redaction — upstream does not); `activeQuestions` only when the last event asked them. The
   tool-result role is written `tool-result` like upstream; unsupported agents give an empty snapshot
   (upstream errors). Tests (upstream goldens + units) written and compiled, NOT run.
-- [ ] **P7-4 (S) Discord IPC client.** `AletheIntegrations/Discord` (upstream `discord_presence.rs`, over
+- [x] **P7-4 (S) Discord IPC client.** `AletheIntegrations/Discord` (upstream `discord_presence.rs`, over
   the `discord-rich-presence` crate): an actor that finds Discord's socket (`$TMPDIR/discord-ipc-0…9`),
   frames messages (opcode and length, little-endian, then JSON), handshakes (`v: 1`, application id
   `1517303547761528942`), sets the activity (`SET_ACTIVITY` with pid and nonce: details, state, start
@@ -3090,6 +3090,14 @@ above.
   (upstream `application_id_is_numeric`; handshake and activity payloads as the crate writes them), U
   (framing, a fake socket server: handshake, set, clear, Discord restarted, no Discord). *Parity:*
   groundwork for PER-4.
+  *Done:* (`3a1c9c3`) `AletheIntegrations/Discord/DiscordIPC.swift`: `DiscordIPCClient` actor on its own
+  serial queue; finds `discord-ipc-0…9` in `$TMPDIR` and the other folders the upstream crate checks,
+  skipping stale sockets; opcode + little-endian length framing; handshake with app id
+  `1517303547761528942`; set activity (pid, nonce, details, state, start, image `alethe`); clear sends
+  an empty activity then closes; one reconnect on a failed send, quiet `false` with backoff (2 s
+  doubling to 60 s) while Discord is absent; 2 s socket timeouts, SIGPIPE-safe; a refused handshake
+  counts as failed. `DiscordPresenceClient` protocol + `DiscordActivity` for P7-13's fakes. Tests
+  (upstream payloads + fake local socket scenarios) written and compiled, NOT run.
 - [ ] **P7-5 (M) 9router service.** `AletheIntegrations/Router9` (upstream `router9.rs`,
   `lib/router9.ts`): routing rules (Claude Code → `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`; Codex and
   OpenCode → `OPENAI_BASE_URL` with `/v1` + `OPENAI_API_KEY`; nothing when off, keyless or unsupported;
