@@ -7,15 +7,78 @@ public enum Handoff {
     public static let draftCharacterLimit = 48_000
     public static let materializedByteLimit = 64 * 1024
 
-    /// One transferable event of a transcript.
-    public struct Event: Equatable, Sendable {
-        public enum Role: String, Sendable { case user, assistant, tool, toolResult }
+    /// One transferable event of a transcript. Encodes as upstream's `HandoffEvent` (the remote chat
+    /// view reads these).
+    public struct Event: Equatable, Sendable, Encodable {
+        public enum Role: String, Sendable, Encodable {
+            case user, assistant, tool, question
+            case toolResult = "tool-result"
+        }
         public var role: Role
         public var text: String
+        /// The agent's tool call id when the event asks interactive questions.
+        public var questionSetID: String?
+        public var questions: [RemoteQuestion]?
 
-        public init(_ role: Role, _ text: String) {
+        public init(_ role: Role, _ text: String, questionSetID: String? = nil, questions: [RemoteQuestion]? = nil) {
             self.role = role
             self.text = text
+            self.questionSetID = questionSetID
+            self.questions = questions
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case role, text, questions
+            case questionSetID = "questionSetId"
+        }
+    }
+
+    /// An interactive question from Claude Code `AskUserQuestion` or Codex `request_user_input`
+    /// (upstream `RemoteQuestion`).
+    public struct RemoteQuestion: Equatable, Sendable, Codable {
+        public struct Option: Equatable, Sendable, Codable {
+            public var label: String
+            public var description: String
+
+            public init(label: String, description: String) {
+                self.label = label
+                self.description = description
+            }
+        }
+        public var id: String
+        public var header: String
+        public var question: String
+        public var multiSelect: Bool
+        public var options: [Option]
+
+        public init(id: String, header: String, question: String, multiSelect: Bool, options: [Option]) {
+            self.id = id
+            self.header = header
+            self.question = question
+            self.multiSelect = multiSelect
+            self.options = options
+        }
+    }
+
+    /// The questions the agent is waiting on: its last event asked them (upstream
+    /// `ActiveRemoteQuestions`).
+    public struct ActiveQuestions: Equatable, Sendable {
+        public var id: String
+        public var questions: [RemoteQuestion]
+    }
+
+    /// A conversation for the remote chat view (upstream `TranscriptSnapshot`).
+    public struct TranscriptSnapshot: Equatable, Sendable, Encodable {
+        public var sessionID: String?
+        /// The transcript's modification time in ms; 0 when there is none.
+        public var revision: UInt64
+        /// The caller already has this revision, so nothing was parsed.
+        public var unchanged: Bool
+        public var messages: [Event]
+
+        enum CodingKeys: String, CodingKey {
+            case revision, unchanged, messages
+            case sessionID = "sessionId"
         }
     }
 
@@ -76,6 +139,54 @@ public enum Handoff {
         return clipped("\(name): \(rendered)", 1_200)
     }
 
+    /// A JSON boolean (not a number that happens to bridge to one).
+    static func jsonBool(_ value: Any?) -> Bool? {
+        guard let number = value as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() else { return nil }
+        return number.boolValue
+    }
+
+    /// Interactive questions of a tool call (upstream `remote_questions`): up to 3 questions of up to 8
+    /// options; the input may be a JSON string (Codex arguments).
+    public static func remoteQuestions(toolName name: String, input: Any?) -> [RemoteQuestion]? {
+        guard name.caseInsensitiveCompare("AskUserQuestion") == .orderedSame
+                || name.caseInsensitiveCompare("request_user_input") == .orderedSame else { return nil }
+        var input = input
+        if let text = input as? String {
+            guard let parsed = try? JSONSerialization.jsonObject(with: Data(text.utf8)) else { return nil }
+            input = parsed
+        }
+        guard let questions = (input as? [String: Any])?["questions"] as? [Any] else { return nil }
+        let result = questions.prefix(3).enumerated().compactMap { index, value -> RemoteQuestion? in
+            guard let value = value as? [String: Any], let text = value["question"] as? String,
+                  let rawOptions = value["options"] as? [Any] else { return nil }
+            let question = clipped(text, 1_000)
+            let options = rawOptions.prefix(8).compactMap { option -> RemoteQuestion.Option? in
+                guard let option = option as? [String: Any], let label = option["label"] as? String else { return nil }
+                let clippedLabel = clipped(label, 160)
+                guard !clippedLabel.isEmpty else { return nil }
+                return RemoteQuestion.Option(label: clippedLabel, description: clipped(option["description"] as? String ?? "", 500))
+            }
+            guard !question.isEmpty, !options.isEmpty else { return nil }
+            return RemoteQuestion(id: (value["id"] as? String).map { clipped($0, 80) } ?? "question-\(index + 1)",
+                                  header: clipped(value["header"] as? String ?? "Question", 80),
+                                  question: question, multiSelect: jsonBool(value["multiSelect"]) ?? false,
+                                  options: options)
+        }
+        return result.isEmpty ? nil : result
+    }
+
+    /// One line per question with its option labels (upstream `question_text`).
+    static func questionText(_ questions: [RemoteQuestion]) -> String {
+        questions.map { "\($0.header): \($0.question) (\($0.options.map(\.label).joined(separator: ", ")))" }
+            .joined(separator: "\n")
+    }
+
+    /// A tool call event, or a question event when the call asks interactive questions.
+    static func toolCallEvent(name: String, input: Any?, callID: String?, fallbackID: String) -> Event {
+        guard let questions = remoteQuestions(toolName: name, input: input) else { return Event(.tool, toolText(name, input)) }
+        return Event(.question, questionText(questions), questionSetID: clipped(callID ?? fallbackID, 160), questions: questions)
+    }
+
     /// Claude Code transcript events; side chains (subagents) are left out (upstream `claude_events`).
     public static func claudeEvents(atPath path: String) -> [Event] {
         var events: [Event] = []
@@ -90,7 +201,8 @@ public enum Handoff {
             for block in content as? [[String: Any]] ?? [] {
                 switch block["type"] as? String {
                 case "tool_use":
-                    events.append(Event(.tool, toolText(block["name"] as? String ?? "tool", block["input"])))
+                    events.append(toolCallEvent(name: block["name"] as? String ?? "tool", input: block["input"],
+                                                callID: block["id"] as? String, fallbackID: "claude-question"))
                 case "tool_result":
                     let output = contentText(block["content"])
                     if !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -120,7 +232,8 @@ public enum Handoff {
                     events.append(Event(role == "user" ? .user : .assistant, clipped(text, role == "user" ? 8_000 : 5_000)))
                 }
             case "custom_tool_call", "function_call":
-                events.append(Event(.tool, toolText(payload["name"] as? String ?? "tool", payload["input"] ?? payload["arguments"])))
+                events.append(toolCallEvent(name: payload["name"] as? String ?? "tool", input: payload["input"] ?? payload["arguments"],
+                                            callID: (payload["call_id"] ?? payload["id"]) as? String, fallbackID: "codex-question"))
             case "custom_tool_call_output", "function_call_output":
                 let output = contentText(payload["output"])
                 if !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -167,7 +280,7 @@ public enum Handoff {
             let (label, limit): (String, Int) = switch event.role {
             case .user: ("User", 3_000)
             case .assistant: ("Assistant", 2_500)
-            case .tool: ("Tool call", 800)
+            case .tool, .question: ("Tool call", 800)
             case .toolResult: ("Tool output", 800)
             }
             return "### \(label)\n\n\(clipped(event.text, limit))"
@@ -220,6 +333,63 @@ public enum Handoff {
         return (newest.id, path, true)
     }
 
+    // MARK: - Remote
+
+    static func events(_ kind: AgentKind, atPath path: String) -> [Event] {
+        kind == .claude ? claudeEvents(atPath: path) : codexEvents(atPath: path)
+    }
+
+    /// The session's transcript, else the folder's newest (upstream falls back when the session is
+    /// not found).
+    static func remoteSource(_ kind: AgentKind, folder: String, session: String?, homeDirectory: String) -> (id: String, path: String)? {
+        var isDirectory: ObjCBool = false
+        guard supports(kind), FileManager.default.fileExists(atPath: folder, isDirectory: &isDirectory),
+              isDirectory.boolValue else { return nil }
+        let file = sourceFile(kind, cwd: folder, sessionID: session, homeDirectory: homeDirectory)
+            ?? sourceFile(kind, cwd: folder, sessionID: nil, homeDirectory: homeDirectory)
+        return file.map { ($0.id, $0.path) }
+    }
+
+    /// The conversation for the remote chat view (upstream `transcript_snapshot`). `since` is the
+    /// last revision the caller saw: an unchanged transcript is not parsed, so the phone polls
+    /// cheaply. Keeps the newest `limit` events, with secrets redacted. Run it off the main thread.
+    public static func transcriptSnapshot(agent: AgentKind, folder: String, session: String?, since: UInt64?,
+                                          limit: Int = 160, homeDirectory: String = NSHomeDirectory()) -> TranscriptSnapshot {
+        guard let source = remoteSource(agent, folder: folder, session: session, homeDirectory: homeDirectory) else {
+            return TranscriptSnapshot(sessionID: nil, revision: 0, unchanged: false, messages: [])
+        }
+        let modified = (try? FileManager.default.attributesOfItem(atPath: source.path))?[.modificationDate] as? Date
+        let revision = modified.map { UInt64(max(0, ($0.timeIntervalSince1970 * 1_000).rounded(.down))) } ?? 0
+        if revision != 0, since == revision {
+            return TranscriptSnapshot(sessionID: source.id, revision: revision, unchanged: true, messages: [])
+        }
+        let messages = events(agent, atPath: source.path).suffix(max(0, limit)).map(redacted)
+        return TranscriptSnapshot(sessionID: source.id, revision: revision, unchanged: false, messages: Array(messages))
+    }
+
+    /// Redacts an event's visible text; ids and option counts stay, so answers still navigate.
+    static func redacted(_ event: Event) -> Event {
+        var event = event
+        event.text = redact(event.text).text
+        event.questions = event.questions?.map { question in
+            var question = question
+            question.header = redact(question.header).text
+            question.question = redact(question.question).text
+            question.options = question.options.map { .init(label: redact($0.label).text, description: redact($0.description).text) }
+            return question
+        }
+        return event
+    }
+
+    /// The questions the agent waits on: those its last event asked (upstream
+    /// `active_remote_questions`). Run it off the main thread.
+    public static func activeQuestions(agent: AgentKind, folder: String, session: String?,
+                                       homeDirectory: String = NSHomeDirectory()) -> ActiveQuestions? {
+        guard let source = remoteSource(agent, folder: folder, session: session, homeDirectory: homeDirectory),
+              let last = events(agent, atPath: source.path).last, let questions = last.questions else { return nil }
+        return ActiveQuestions(id: last.questionSetID ?? "", questions: questions)
+    }
+
     /// Git state of the folder for the capsule (upstream `workspace_context`).
     public static func workspaceContext(cwd: String) -> String {
         func git(_ arguments: [String]) -> String? {
@@ -255,7 +425,7 @@ public enum Handoff {
         guard let file = sourceFile(source, cwd: cwd, sessionID: sessionID, homeDirectory: homeDirectory) else {
             return .failure(.noSession)
         }
-        let events = source == .claude ? claudeEvents(atPath: file.path) : codexEvents(atPath: file.path)
+        let events = Handoff.events(source, atPath: file.path)
         guard let first = events.first(where: { $0.role == .user }) else { return .failure(.noUserMessages) }
         let rendered = capsule(source: source, target: target, sessionID: file.id, cwd: cwd, events: events,
                                workspace: workspaceContext(cwd: cwd))
