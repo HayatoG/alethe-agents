@@ -3023,7 +3023,7 @@ timeout; logs record device ids, addresses and sizes, never tokens or message te
 `SecretRedactor` on exports). *Tests* list what each task must ship; they run per the test cadence
 above.
 
-- [ ] **P7-1 (M) Keychain store, Phase 7 model and Tauri import.** `AletheFoundation/Keychain` (ADR-1:
+- [x] **P7-1 (M) Keychain store, Phase 7 model and Tauri import.** `AletheFoundation/Keychain` (ADR-1:
   keyring → Security.framework): `KeychainStore` get/set/delete of generic passwords per profile (service
   `com.kc1t.alethe.mac`, account `<profile>/<item>`, this device only, never synchronized; values never
   logged) with the item names every later task uses (`spotifyClientSecret`, `spotifyTokens` — access,
@@ -3044,6 +3044,16 @@ above.
   round trip in a throwaway service, decoding without the new keys, clamps, an upstream v9 fixture with
   these fields: secrets reported and absent from every written file). *Parity:* groundwork for PER-3,
   PER-4, PER-5, PER-7, SET-5, UI-7.
+  *Done:* (`8f531fc`) `AletheFoundation/Keychain/KeychainStore` (service `com.kc1t.alethe.mac`, account
+  `<profile>/<item>`, this device only, never synchronized; the four named items; in-memory store for
+  tests and debug launches with `-AletheDataRoot`/`-AletheNoKeychain`). `PeripheralPreferences` + pane
+  sharing / tab routing / toolbar kinds (`remote`, `router9`, `sync`, hidden via
+  `ToolbarItemKind.offered` until P7-6) with range limits; `GistSyncState` (profile `github_sync.json`;
+  the Tauri gist id kept apart in `tauriGistID` so P7-11 never pushes to it). Tauri import maps the
+  Phase 7 settings, pane sharing (upstream rule: `remoteShared` true, or unset and not `remoteExcluded`)
+  and tab routing, and moves plaintext secrets to the Keychain off main — never to a profile file. Tests
+  (Keychain round trip in a throwaway service, decoding, limits, v9 fixture with secrets absent from
+  written files) written and compiled, NOT run.
 - [x] **P7-2 (L) `AletheRemote` target and pairing hub.** New package target (ADR-7; depends on
   AletheFoundation) and test target, porting upstream `remote/mod.rs` (limits), `state.rs` and
   `util.rs`: a `RemoteHub` actor — pairing window (120 s; a 32-character token regenerated on open and
