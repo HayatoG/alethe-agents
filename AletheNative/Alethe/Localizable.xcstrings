@@ -8994,6 +8994,40 @@
         }
       }
     },
+    "import.pref.githubSync" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub sync"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sincronização com o GitHub"
+          }
+        }
+      }
+    },
+    "import.pref.integrations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify and Discord"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify e Discord"
+          }
+        }
+      }
+    },
     "import.pref.interfaceSize" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9041,6 +9075,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "escopo e introdução do MCP"
+          }
+        }
+      }
+    },
+    "import.pref.remote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "remote control"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "controle remoto"
+          }
+        }
+      }
+    },
+    "import.pref.router9" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9router"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9router"
+          }
+        }
+      }
+    },
+    "import.pref.spotify" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotify connection"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "conexão com o Spotify"
           }
         }
       }
@@ -24498,6 +24583,23 @@
         }
       }
     },
+    "settings.toolbar.remote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Control"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controle remoto"
+          }
+        }
+      }
+    },
     "settings.toolbar.restore" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -24511,6 +24613,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Restaurar padrões"
+          }
+        }
+      }
+    },
+    "settings.toolbar.router9" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9router"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9router"
+          }
+        }
+      }
+    },
+    "settings.toolbar.sync" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub Sync"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronização com GitHub"
           }
         }
       }

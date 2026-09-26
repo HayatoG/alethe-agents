@@ -80,7 +80,8 @@ import Testing
         #expect(!prefs.showsToolbarItem(.memory) && prefs.showsToolbarItem(.profile))
         #expect(prefs.toolbarItems == ["usage.codex": true, "memory": false])
         #expect(prefs.mcpDefaultScope == "project" && prefs.mcpOnboardingSeen == true)
-        #expect(report.preferences == Set(TauriImport.Preference.allCases))
+        // The Phase 7 preferences are covered by `TauriImportPeripheralsTests`.
+        #expect(report.preferences == Set(TauriImport.Preference.allCases).subtracting([.integrations, .router9, .remote]))
         #expect(report.language == "pt-BR")
     }
 

@@ -15,13 +15,13 @@ struct MainToolbar: ViewModifier {
         let shown = Set(ToolbarItemKind.allCases.filter(preferences.showsToolbarItem))
         if #available(macOS 26.1, *) {
             content.toolbar(id: Self.id) {
-                ForEach(ToolbarItemKind.allCases, id: \.self) { kind in
+                ForEach(ToolbarItemKind.offered, id: \.self) { kind in
                     Self.item(kind, shown: shown.contains(kind)).visibilityPriority(Self.priority(kind.overflowRank))
                 }
             }
         } else {
             content.toolbar(id: Self.id) {
-                ForEach(ToolbarItemKind.allCases, id: \.self) { kind in
+                ForEach(ToolbarItemKind.offered, id: \.self) { kind in
                     Self.item(kind, shown: shown.contains(kind))
                 }
             }
@@ -47,6 +47,7 @@ struct MainToolbar: ViewModifier {
         case .notifications: NotificationsButton()
         case .memory: MemoryIndicator()
         case .profile: ProfileToolbarMenu()
+        case .remote, .router9, .sync: EmptyView()
         }
     }
 
@@ -62,4 +63,9 @@ struct MainToolbar: ViewModifier {
         case .last: return .high
         }
     }
+}
+
+extension ToolbarItemKind {
+    /// Items the toolbar and Settings › Toolbar offer. The Phase 7 items wait for their views (P7-6).
+    static let offered = allCases.filter { ![ToolbarItemKind.remote, .router9, .sync].contains($0) }
 }

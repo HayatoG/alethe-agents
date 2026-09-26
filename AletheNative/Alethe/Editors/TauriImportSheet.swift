@@ -164,9 +164,21 @@ struct TauriImportSheet: View {
             case .appIcon: String(localized: "import.pref.appIcon")
             case .toolbar: String(localized: "import.pref.toolbar")
             case .mcp: String(localized: "import.pref.mcp")
+            case .integrations: String(localized: "import.pref.integrations")
+            case .router9: String(localized: "import.pref.router9")
+            case .remote: String(localized: "import.pref.remote")
             }
         }
         if report.language != nil { names.append(String(localized: "import.pref.language")) }
+        if report.secrets.contains(.spotifyClientSecret) || report.secrets.contains(.spotifyTokens) {
+            names.append(String(localized: "import.pref.spotify"))
+        }
+        if report.secrets.contains(.githubToken) || report.gistSync != nil {
+            names.append(String(localized: "import.pref.githubSync"))
+        }
+        if report.secrets.contains(.router9APIKey), !report.preferences.contains(.router9) {
+            names.append(String(localized: "import.pref.router9"))
+        }
         return names
     }
 
@@ -203,7 +215,8 @@ struct TauriImportSheet: View {
         preview = load()?.map { file in
             var doc = workspace.document
             var prefs = preferences.document
-            return languageAdjusted(TauriImport.apply(file, to: &doc, preferences: &prefs, context: context))
+            return languageAdjusted(TauriImport.apply(file, companions: companions(), to: &doc, preferences: &prefs,
+                                                      context: context))
         }
     }
 
@@ -216,12 +229,15 @@ struct TauriImportSheet: View {
         guard case .success(let file)? = load(), let preferences = environment.preferences else { return }
         var report = TauriImport.Report()
         var prefs = preferences.document
+        let companions = companions()
         workspace.update(undoManager: undoManager, actionName: String(localized: "undo.import")) { doc in
-            report = TauriImport.apply(file, to: &doc, preferences: &prefs, context: context)
+            report = TauriImport.apply(file, companions: companions, to: &doc, preferences: &prefs, context: context)
         }
         if prefs != preferences.document { preferences.update { $0 = prefs } }
         if let profile, let locations = environment.locations, let profileID = environment.profileID {
             TauriImport.copyOrchestratorJobs(from: profile.projectsFile, into: locations.profileDirectory(profileID))
+            Self.storeSecrets(TauriImport.secrets(in: file, companions: companions, context: context),
+                              gistSync: report.gistSync, profile: profileID, locations: locations)
         }
         report = languageAdjusted(report)
         if let code = report.language, let language = AppLanguage(rawValue: code) {
@@ -230,6 +246,38 @@ struct TauriImportSheet: View {
         }
         done = report
         onImported?(report)
+    }
+
+    /// The Tauri profile's token files, read at preview and import time only.
+    private func companions() -> TauriImport.Companions {
+        profile.map { TauriImport.Companions.beside($0.projectsFile) } ?? TauriImport.Companions()
+    }
+
+    /// Plaintext Tauri secrets go to the Keychain, and the gist status (never its token) to the
+    /// profile's `github_sync.json`, off the main thread. Failures record the item, never its value.
+    private static func storeSecrets(_ secrets: TauriImport.Secrets, gistSync: GistSyncState?, profile: ProfileID,
+                                     locations: DataLocations) {
+        guard !secrets.values.isEmpty || gistSync != nil else { return }
+        let store = KeychainStore.forLaunch()
+        Task.detached(priority: .utility) {
+            for (item, value) in secrets.values {
+                do {
+                    try store.set(value, for: item, profile: profile.rawValue)
+                } catch {
+                    AppLog.record(.error, .persistence, "Keychain import of \(item.rawValue) failed: \(error)")
+                }
+            }
+            guard let imported = gistSync else { return }
+            let url = locations.gistSync(profile)
+            var state = GistSyncState.load(from: url)
+            state.login = imported.login ?? state.login
+            state.tauriGistID = imported.tauriGistID ?? state.tauriGistID
+            do {
+                try state.write(to: url)
+            } catch {
+                AppLog.record(.error, .persistence, "Gist sync status import failed: \(error)")
+            }
+        }
     }
 
     /// Drops the language when it is one the app does not offer or the one already chosen.

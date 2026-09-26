@@ -9,7 +9,7 @@ struct ToolbarSettings: View {
     var body: some View {
         Form {
             Section {
-                ForEach(ToolbarItemKind.allCases, id: \.self) { item in
+                ForEach(ToolbarItemKind.offered, id: \.self) { item in
                     Toggle(item.title, isOn: Binding {
                         environment.preferences?.document.showsToolbarItem(item) ?? item.shownByDefault
                     } set: { shown in
@@ -48,6 +48,9 @@ extension ToolbarItemKind {
         case .notifications: "settings.toolbar.notifications"
         case .memory: "settings.toolbar.memory"
         case .profile: "settings.toolbar.profile"
+        case .remote: "settings.toolbar.remote"
+        case .router9: "settings.toolbar.router9"
+        case .sync: "settings.toolbar.sync"
         }
     }
 }

@@ -46,11 +46,11 @@ import Testing
         #expect(written["usagePills"] == nil)
     }
 
-    @Test func defaultsHideOnlyTheUsagePills() {
+    @Test func defaultsHideOnlyTheUsagePillsAndRouter9() {
         let preferences = PreferencesDocument()
         let hidden = ToolbarItemKind.allCases.filter { !preferences.showsToolbarItem($0) }
-        #expect(hidden == [.usageClaude, .usageCodex, .usageAntigravity])
-        #expect(ToolbarItemKind.usageProviders.compactMap(ToolbarItemKind.usagePill(for:)) == hidden)
+        #expect(hidden == [.usageClaude, .usageCodex, .usageAntigravity, .router9])
+        #expect(ToolbarItemKind.usageProviders.compactMap(ToolbarItemKind.usagePill(for:)) == hidden.filter { $0 != .router9 })
         #expect(ToolbarItemKind.memory.usageProvider == nil && ToolbarItemKind.usageCodex.usageProvider == "codex")
         #expect(ToolbarItemKind.aiUsage.usageProvider == nil)
     }

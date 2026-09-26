@@ -15,6 +15,12 @@ public enum ToolbarItemKind: String, CaseIterable, Codable, Hashable, Sendable {
     case notifications
     case memory
     case profile
+    /// Remote control's pill; it shows only while remote control is on.
+    case remote
+    /// 9router's status pill (upstream `topbarShowRouter9`, hidden by default).
+    case router9
+    /// GitHub gist sync (upstream `topbarShowSync`).
+    case sync
 
     /// Providers with a usage pill, in toolbar order.
     public static let usageProviders = ["claude", "codex", "antigravity"]
@@ -30,16 +36,17 @@ public enum ToolbarItemKind: String, CaseIterable, Codable, Hashable, Sendable {
     }
 
     /// Usage pills start hidden: reading Claude's and Antigravity's tokens can make macOS ask for
-    /// Keychain access, so nothing is fetched until the user shows one (P3-13).
-    public var shownByDefault: Bool { usageProvider == nil }
+    /// Keychain access, so nothing is fetched until the user shows one (P3-13). 9router's pill starts
+    /// hidden as upstream's does.
+    public var shownByDefault: Bool { usageProvider == nil && self != .router9 }
 
     /// When the window is too narrow, lower ranks go to the overflow menu first (ADR-7a
     /// `ToolbarItemVisibilityPriority`, macOS 26.1 and later).
     public var overflowRank: ToolbarOverflowRank {
         switch self {
         case .usageClaude, .usageCodex, .usageAntigravity: .first
-        case .memory, .aiUsage: .early
-        case .pomodoro, .notifications: .standard
+        case .memory, .aiUsage, .router9, .sync: .early
+        case .pomodoro, .notifications, .remote: .standard
         case .home, .profile: .last
         }
     }

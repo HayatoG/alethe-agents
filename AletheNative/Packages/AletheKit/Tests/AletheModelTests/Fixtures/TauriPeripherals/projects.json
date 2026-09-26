@@ -1,0 +1,66 @@
+{
+  "version": 9,
+  "groups": [],
+  "ungroupedOrder": ["p-remote"],
+  "projects": [
+    {
+      "id": "p-remote",
+      "name": "remote",
+      "color": "#6ea8ff",
+      "defaultCwd": "/Users/example/code/remote",
+      "terminals": [
+        {
+          "id": "t-shared",
+          "name": "shared",
+          "cwd": "/Users/example/code/remote",
+          "remoteShared": true,
+          "activeTabId": "tab-routed",
+          "tabs": [{ "id": "tab-routed", "type": "claude", "cwd": "/Users/example/code/remote", "useRouter9": true }]
+        },
+        {
+          "id": "t-excluded",
+          "name": "excluded",
+          "cwd": "/Users/example/code/remote",
+          "remoteExcluded": true,
+          "tabs": [{ "id": "tab-plain", "type": "codex", "cwd": "/Users/example/code/remote" }]
+        },
+        {
+          "id": "t-legacy",
+          "name": "legacy",
+          "cwd": "/Users/example/code/remote",
+          "remoteExcluded": false,
+          "tabs": [{ "id": "tab-shell", "type": "shell", "cwd": "/Users/example/code/remote" }]
+        },
+        {
+          "id": "t-private",
+          "name": "private",
+          "cwd": "/Users/example/code/remote",
+          "remoteShared": false,
+          "remoteExcluded": false,
+          "tabs": [{ "id": "tab-private", "type": "shell", "cwd": "/Users/example/code/remote" }]
+        }
+      ]
+    }
+  ],
+  "preferences": {
+    "spotifyClientId": "  fixture-spotify-client-id  ",
+    "spotifyClientSecret": "FIXTURE-SPOTIFY-SECRET-0001",
+    "discordRichPresenceEnabled": true,
+    "topbarShowSync": false,
+    "topbarShowRouter9": true,
+    "remoteEnabled": true,
+    "remoteMaxDevices": 9,
+    "remoteSessionExpirySecs": 60,
+    "remoteReadOnly": false,
+    "remoteAllowShellInput": true,
+    "remoteUseTailscale": true,
+    "router9": {
+      "enabled": true,
+      "autoStart": true,
+      "source": "external",
+      "port": 20200,
+      "apiKey": "FIXTURE-ROUTER9-KEY-0002",
+      "defaultForNewAgents": true
+    }
+  }
+}

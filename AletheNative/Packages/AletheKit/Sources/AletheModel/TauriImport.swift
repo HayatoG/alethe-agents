@@ -1,3 +1,4 @@
+import AletheFoundation
 import Foundation
 
 /// One-shot, read-only import of the Tauri app's `projects.json` (ADR-4): groups, projects, their
@@ -41,14 +42,75 @@ public enum TauriImport {
         public var preferences: Set<Preference> = []
         /// The Tauri app's interface language (`en`, `pt-BR`); app-wide, so the caller applies it.
         public var language: String?
+        /// Secrets found (names only; the values come from `secrets(in:companions:context:)`), which
+        /// the caller writes to the Keychain.
+        public var secrets: Set<KeychainItem> = []
+        /// The gist sync status from `github_sync.json`, without its token; the caller merges it into
+        /// the profile's `github_sync.json`.
+        public var gistSync: GistSyncState?
 
         public init() {}
 
-        public var isEmpty: Bool { groups == 0 && projects == 0 && preferences.isEmpty && language == nil }
+        public var isEmpty: Bool {
+            groups == 0 && projects == 0 && preferences.isEmpty && language == nil && secrets.isEmpty && gistSync == nil
+        }
     }
 
     public enum Preference: String, Hashable, Sendable, CaseIterable {
         case theme, interfaceSize, enabledAgents, alwaysUnrestricted, cliPaths, features, appIcon, toolbar, mcp
+        /// Spotify's client ID and Discord Rich Presence.
+        case integrations
+        case router9
+        case remote
+    }
+
+    /// Secret values to write to the Keychain. Never logged: `description` names the items only.
+    public struct Secrets: Sendable, CustomStringConvertible {
+        public var values: [KeychainItem: Data] = [:]
+
+        public init() {}
+
+        public var description: String { "Secrets(\(values.keys.map(\.rawValue).sorted()))" }
+    }
+
+    /// The files upstream keeps beside `projects.json` in a profile folder that the import also reads:
+    /// `spotify_tokens.json` and `github_sync.json`. Both hold plaintext tokens.
+    public struct Companions: Sendable {
+        public static let spotifyTokensFileName = "spotify_tokens.json"
+        public static let githubSyncFileName = "github_sync.json"
+
+        public var spotifyTokens: SpotifyTokens?
+        public var githubToken: String?
+        public var gistSync: GistSyncState?
+
+        public init() {}
+
+        /// Parses the files' contents; missing or unreadable ones are ignored.
+        public init(spotifyTokens: Data?, githubSync: Data?) {
+            if let data = spotifyTokens, let raw = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let access = raw["access_token"] as? String, let refresh = raw["refresh_token"] as? String,
+               !access.isEmpty || !refresh.isEmpty {
+                let expiry = (raw["expires_at"] as? Double) ?? 0
+                self.spotifyTokens = SpotifyTokens(accessToken: access, refreshToken: refresh,
+                                                   expiresAt: Date(timeIntervalSince1970: expiry))
+            }
+            if let data = githubSync, let raw = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                githubToken = (raw["token"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .nilIfEmpty
+                let login = (raw["login"] as? String)?.nilIfEmpty
+                let gist = (raw["gist_id"] as? String)?.nilIfEmpty
+                // The Tauri app's push and pull times describe its own gist, not the one this app
+                // creates, so they are not carried over.
+                if login != nil || gist != nil { gistSync = GistSyncState(login: login, tauriGistID: gist) }
+            }
+        }
+
+        /// Reads the files beside `projectsFile`. Blocking: callers run it off the main thread.
+        public static func beside(_ projectsFile: URL) -> Companions {
+            let folder = projectsFile.deletingLastPathComponent()
+            return Companions(spotifyTokens: try? Data(contentsOf: folder.appending(path: spotifyTokensFileName)),
+                              githubSync: try? Data(contentsOf: folder.appending(path: githubSyncFileName)))
+        }
     }
 
     /// What the importer needs to know about the native app, injected to keep this module free of
@@ -98,16 +160,41 @@ public enum TauriImport {
 
     /// Adds the file's groups and projects to `workspace` and its preferences to `preferences`.
     /// Pure: run it on copies for a preview, on the live documents to import.
+    /// Secrets and the gist sync status come with the preferences; their values are read separately
+    /// through `secrets(in:companions:context:)`.
     @discardableResult
-    public static func apply(_ file: File, to workspace: inout WorkspaceDocument, preferences: inout PreferencesDocument,
-                             context: Context) -> Report {
+    public static func apply(_ file: File, companions: Companions = Companions(), to workspace: inout WorkspaceDocument,
+                             preferences: inout PreferencesDocument, context: Context) -> Report {
         var report = Report()
         let groupIDs = importGroups(file, into: &workspace, report: &report)
         importProjects(file, into: &workspace, groupIDs: groupIDs, context: context, report: &report)
         if context.includePreferences {
             importPreferences(file, into: &preferences, context: context, report: &report)
+            report.secrets = Set(secrets(in: file, companions: companions, context: context).values.keys)
+            report.gistSync = companions.gistSync
         }
         return report
+    }
+
+    /// The plaintext secrets of the Tauri profile (upstream `spotifyClientSecret`, `router9.apiKey`,
+    /// `spotify_tokens.json`, `github_sync.json`'s token), for the Keychain. Empty values are skipped;
+    /// nothing when preferences are not imported.
+    public static func secrets(in file: File, companions: Companions, context: Context) -> Secrets {
+        var secrets = Secrets()
+        guard context.includePreferences else { return secrets }
+        let raw = file.preferences
+        if let value = (raw["spotifyClientSecret"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
+            secrets.values[.spotifyClientSecret] = Data(value.utf8)
+        }
+        if let value = ((raw["router9"] as? [String: Any])?["apiKey"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
+            secrets.values[.router9APIKey] = Data(value.utf8)
+        }
+        if let tokens = companions.spotifyTokens, let data = try? JSONEncoder().encode(tokens) {
+            secrets.values[.spotifyTokens] = data
+        }
+        if let token = companions.githubToken { secrets.values[.githubToken] = Data(token.utf8) }
+        return secrets
     }
 
     /// Recreates the group tree, parents first, in the file's sibling order. A group with the same
@@ -287,7 +374,7 @@ public enum TauriImport {
             }
             let cwd = (tab["cwd"] as? String) ?? (terminal["cwd"] as? String)
             let own = cwd.flatMap { isAbsolute($0) && normalizedFolder($0) != normalizedFolder(folder) ? $0 : nil }
-            let created = PaneTab(
+            var created = PaneTab(
                 agent: agent,
                 title: (tab["name"] as? String).flatMap { $0.isEmpty ? nil : $0 },
                 workingDirectory: own,
@@ -295,6 +382,7 @@ public enum TauriImport {
                 extraArguments: tab["extraArgs"] as? [String] ?? [],
                 createdAt: (tab["lastUsedAt"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) } ?? Date()
             )
+            if tab["useRouter9"] as? Bool == true { created.useRouter9 = true }
             if tab["id"] as? String == terminal["activeTabId"] as? String { activeTab = created.id }
             tabs.append(created)
         }
@@ -303,7 +391,14 @@ public enum TauriImport {
         let id = (terminal["id"] as? String).flatMap { $0.isEmpty ? nil : PaneID(rawValue: $0) } ?? .make()
         var pane = Pane(id: id, tabs: tabs, activeTabID: activeTab)
         pane.gridID = (terminal["gridId"] as? String).flatMap { $0.isEmpty || $0 == "default" ? nil : ProjectGridID(rawValue: $0) }
+        if isRemoteShared(terminal) { pane.remoteShared = true }
         return pane
+    }
+
+    /// Upstream's v8 migration, which it applies on every load: an explicit `remoteShared` wins, else
+    /// the terminal is shared unless the older opt-out `remoteExcluded` is set.
+    static func isRemoteShared(_ terminal: [String: Any]) -> Bool {
+        (terminal["remoteShared"] as? Bool) ?? (terminal["remoteExcluded"] as? Bool != true)
     }
 
     private static func importPreferences(_ file: File, into preferences: inout PreferencesDocument, context: Context,
@@ -358,11 +453,10 @@ public enum TauriImport {
             preferences.iconTheme = icon
             report.preferences.insert(.appIcon)
         }
-        // Upstream's sync and 9router items arrive with Phase 7.
         let toolbar: [(String, ToolbarItemKind)] = [
             ("topbarShowClaudeUsage", .usageClaude), ("topbarShowCodexUsage", .usageCodex),
             ("topbarShowAntigravityUsage", .usageAntigravity), ("topbarShowProfile", .profile),
-            ("topbarShowMemory", .memory),
+            ("topbarShowMemory", .memory), ("topbarShowSync", .sync), ("topbarShowRouter9", .router9),
         ]
         for (key, item) in toolbar {
             if let shown = raw[key] as? Bool, shown != preferences.showsToolbarItem(item) {
@@ -379,7 +473,46 @@ public enum TauriImport {
             preferences.mcpOnboardingSeen = true
             report.preferences.insert(.mcp)
         }
+        importPeripherals(raw, into: &preferences, report: &report)
         if let language = raw["language"] as? String, !language.isEmpty { report.language = language }
+    }
+
+    /// Spotify's client ID, Discord, 9router and remote control (upstream `normalizePreferences`).
+    /// Their secrets are left to `secrets(in:companions:context:)`; `remoteEnabled` is session-scoped
+    /// upstream and never imported.
+    private static func importPeripherals(_ raw: [String: Any], into preferences: inout PreferencesDocument,
+                                          report: inout Report) {
+        if let id = (raw["spotifyClientId"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
+           id != preferences.spotifyClientID {
+            preferences.spotifyClientID = id
+            report.preferences.insert(.integrations)
+        }
+        if let on = raw["discordRichPresenceEnabled"] as? Bool, on != preferences.showsDiscordPresence {
+            preferences.discordPresence = on
+            report.preferences.insert(.integrations)
+        }
+        if let stored = raw["router9"] as? [String: Any] {
+            var router9 = preferences.router9Settings
+            if let value = stored["enabled"] as? Bool { router9.enabled = value }
+            if let value = stored["autoStart"] as? Bool { router9.autoStart = value }
+            if let value = stored["source"] as? String { router9.source = value == "external" ? .external : .managed }
+            if let value = stored["port"] as? Int { router9.port = value }
+            if let value = stored["defaultForNewAgents"] as? Bool { router9.defaultForNewAgents = value }
+            if router9 != preferences.router9Settings {
+                preferences.router9 = router9
+                report.preferences.insert(.router9)
+            }
+        }
+        var remote = preferences.remoteSettings
+        if let value = raw["remoteMaxDevices"] as? Int { remote.maxDevices = value }
+        if let value = raw["remoteSessionExpirySecs"] as? Int { remote.sessionExpirySecs = value }
+        if let value = raw["remoteReadOnly"] as? Bool { remote.readOnly = value }
+        if let value = raw["remoteAllowShellInput"] as? Bool { remote.allowShellInput = value }
+        if let value = raw["remoteUseTailscale"] as? Bool { remote.useTailscale = value }
+        if remote != preferences.remoteSettings {
+            preferences.remote = remote
+            report.preferences.insert(.remote)
+        }
     }
 
     // MARK: - Mapping helpers
@@ -498,4 +631,8 @@ public enum TauriDataLocation {
         return found.filter(\.isActive) + found.filter { !$0.isActive }
     }
 
+}
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }

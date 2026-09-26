@@ -81,6 +81,17 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     public var mcpDefaultScope: String?
     /// The MCP intro was shown or dismissed (upstream `mcpOnboardingSeen`).
     public var mcpOnboardingSeen: Bool?
+    /// Spotify app client ID for Now Playing (upstream `spotifyClientId`); the client secret lives in
+    /// the Keychain (`KeychainItem.spotifyClientSecret`).
+    public var spotifyClientID: String?
+    /// Discord Rich Presence (upstream `discordRichPresenceEnabled`); nil is off.
+    public var discordPresence: Bool?
+    /// The local 9router proxy (upstream `router9`); read through `router9Settings`. Its API key lives
+    /// in the Keychain (`KeychainItem.router9APIKey`).
+    public var router9: Router9Preferences?
+    /// Remote control (upstream `remote*`); read through `remoteSettings`. Whether it is on is not
+    /// stored: remote control is off at every launch.
+    public var remote: RemotePreferences?
 
     public init(schemaVersion: Int = currentVersion, themeID: String = defaultThemeID, uiScale: Double = 1,
                 alwaysStartUnrestricted: Bool = false, enabledAgents: [String]? = nil, lastAgent: String? = nil,
@@ -95,6 +106,9 @@ public struct PreferencesDocument: VersionedDocument, Hashable {
     }
 
     public var resources: ResourcePolicy { resourcePolicy ?? ResourcePolicy() }
+    public var router9Settings: Router9Preferences { router9 ?? Router9Preferences() }
+    public var remoteSettings: RemotePreferences { remote ?? RemotePreferences() }
+    public var showsDiscordPresence: Bool { discordPresence ?? false }
 
     public mutating func zoom(by steps: Int) {
         let next = (uiScale + Double(steps) * Self.uiScaleStep) * 10

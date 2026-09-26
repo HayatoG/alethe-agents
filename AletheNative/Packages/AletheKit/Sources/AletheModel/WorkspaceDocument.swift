@@ -49,6 +49,8 @@ public struct PaneTab: Codable, Hashable, Sendable, Identifiable {
     public var worktreeAgentID: String?
     /// Branch of that worktree (`alethe/agent-<id>`), shown in the sidebar.
     public var worktreeBranch: String?
+    /// Launch through the local 9router proxy (upstream `useRouter9`); nil is off.
+    public var useRouter9: Bool?
 
     public init(id: TabID = .make(), agent: String, title: String? = nil, workingDirectory: String? = nil,
                 sessionID: String? = nil, unrestricted: Bool = false, extraArguments: [String] = [],
@@ -83,6 +85,9 @@ public struct Pane: Codable, Hashable, Sendable, Identifiable {
     /// Disabled: nothing runs until enabled again (upstream `terminal.disabled`, P2-23); nil is
     /// enabled.
     public var disabled: Bool?
+    /// Shown to paired remote devices (upstream `remoteShared`); nil, as in older files, is not
+    /// shared.
+    public var remoteShared: Bool?
 
     public init(id: PaneID = .make(), content: PaneContent = .terminal, tabs: [PaneTab] = [],
                 activeTabID: TabID? = nil, laneVisible: Bool? = nil) {
@@ -98,6 +103,8 @@ public struct Pane: Codable, Hashable, Sendable, Identifiable {
     }
 
     public var isLaneVisible: Bool { content.isTerminal && (tabs.count > 1 || laneVisible == true) }
+
+    public var isRemoteShared: Bool { content.isTerminal && remoteShared == true }
 }
 
 /// How a project's agent worktrees are created (upstream `worktreeMode`; raw values match upstream).
