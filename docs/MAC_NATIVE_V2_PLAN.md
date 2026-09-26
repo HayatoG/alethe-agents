@@ -2836,7 +2836,7 @@ above.
   Cancel/release go through a small extension in the actions file (service untouched). Tests (UI
   `OrchestratorWorkerActionsTests` over a stub Codex worker, HT at 3 zooms) written and compiled, NOT
   run.
-- [ ] **P6-16 (M) Apply a worker's worktree.** Upstream `applyWorktree`: commit the worktree's pending
+- [x] **P6-16 (M) Apply a worker's worktree.** Upstream `applyWorktree`: commit the worktree's pending
   changes (`GitWorktrees.commitPending`), fetch the branch for local copies, analyze it against the
   project's current branch with the Merge Center analyzer (P4-10) and, when clean, prepare and finalize
   into it (P4-11, P4-13); a conflict or failed validation opens the Merge Center on that branch instead
@@ -2845,6 +2845,14 @@ above.
   `Alethe/Orchestrator/ApplyWorktree.swift` and its button on the worker detail. Needs P6-7, P6-14.
   *Tests:* U (step order and stop points with stubs), UI (a clean apply on a seeded repository).
   *Parity:* ORC-1.
+  *Done:* (`4057c3c`) Apply to Branch on a done worker with a worktree: the first click shows source and
+  target (the branch checked out in the main repository) and pending + committed files, and asks once;
+  then off main: commit pending (`Alethe orchestrator: <job>`), fetch, analyze, prepare, finalize (no
+  validation commands, as upstream), cancelable until the merge step. Conflicts or a stopped finalize
+  open the Merge Center on the prepared environment (`resume:`); nothing to integrate discards it. The
+  worktree is kept (P6-15's diff/Finder use it). `WorktreeApply` (AletheMerge, stub-testable) + app
+  `ApplyWorktreeCenter` (session state, Diagnostics, P6-19 merge events). Tests (U with stubs, G temp
+  repos, UI `OrchestratorApplyTests`) written and compiled, NOT run.
 - [x] **P6-17 (S) Spend and quota warnings.** The board header (upstream `aggregateAgentSpend`,
   `useOrchestratorQuotaWarnings`): spend per agent for the selected planner (cost, or tokens when
   unpriced) and a warning chip per agent at 80 % or rate-limited, with its reset; while a board is open,

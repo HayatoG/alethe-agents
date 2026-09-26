@@ -308,6 +308,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Orchestration board: act on a selected worker — answer its approval request, steer it or give it its
   next turn, view its diff, cancel (asks while it runs), release (a message starts it again), and show
   its worktree in Finder.
+- Orchestration board: Apply to Branch merges a finished worker's worktree into the project's current
+  branch after one confirmation that shows its files; conflicts continue in the Merge Center.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
