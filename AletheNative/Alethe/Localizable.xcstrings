@@ -15879,6 +15879,23 @@
         }
       }
     },
+    "orchestrator.agentSpendTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@ · %@ tokens in this planner session"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@ · %@ tokens nesta sessão do planner"
+          }
+        }
+      }
+    },
     "orchestrator.agentTitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16538,6 +16555,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld na fila"
+          }
+        }
+      }
+    },
+    "orchestrator.quotaRateLimitedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is rate-limited right now. Consider sending new work to the other agent."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ está com limite de uso atingido agora. Considere mandar trabalho novo pro outro agente."
+          }
+        }
+      }
+    },
+    "orchestrator.quotaResetsNow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "now"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "agora"
+          }
+        }
+      }
+    },
+    "orchestrator.quotaWarning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ at %ld%% (resets %@)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ em %ld%% (reseta %@)"
+          }
+        }
+      }
+    },
+    "orchestrator.quotaWarningTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is at %ld%% of its usage window. Consider sending new work to the other agent."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ está em %ld%% da janela de uso. Considere mandar trabalho novo pro outro agente."
           }
         }
       }
