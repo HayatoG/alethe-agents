@@ -2798,7 +2798,7 @@ above.
   the tab exists and adds the board right after the planner, which keeps focus (no pane groups). Tauri
   import maps `orchestrator` panes (id and grid kept) and copies `orchestrator-jobs.json` into a profile
   that has none. Tests (U + UI `OrchestratorEntryTests`) written and compiled, NOT run.
-- [ ] **P6-14 (L) Board canvas.** `OrchestratorPaneView` filled in (upstream
+- [x] **P6-14 (L) Board canvas.** `OrchestratorPaneView` filled in (upstream
   `OrchestratorPane/index.tsx`): planner tabs (label, agent glyph, run count; a planner whose tab is
   gone says so), the rail (runs → workers by lane, attention first, unsettled runs open), the canvas
   (P6-12 layout drawn with SwiftUI `Canvas` plus node views: planner, run with done and blocked counts,
@@ -2809,6 +2809,16 @@ above.
   `OrchestratorPaneView.swift`, new files in `Alethe/Orchestrator/`. Needs P6-9, P6-11, P6-12, P6-13.
   *Tests:* UI (a seeded jobs file: tabs, rail, select a worker, fit), HT (three zoom levels), P (layout
   and redraw with 100 workers). *Parity:* ORC-1.
+  *Done:* (`aaa3df2`) `OrchestratorPaneView` shows the board: planner tabs (agent, name, run count,
+  attention, a closed planner struck through; "+" opens New Terminal), summary rail (finished %, lane
+  counts, slots, runs needing you first, workers by lane, finished runs folded, other planners needing
+  you), and the canvas (P6-12 layout in one SwiftUI `Canvas`: dot grid, `ConnectorStep` connectors,
+  routing notes; cards placed at zoomed size, never `scaleEffect`, culled off-screen). Pan, pinch and
+  button zoom (no scroll-wheel zoom), fit, focus; worker detail (plan, report or live reply, routing,
+  media opening image/web panes); planner node reveals its tab. Derived off main from P6-9 snapshots +
+  P6-11 subagents, filtered to the pane's project (closed planners kept when they ran in the project
+  folder). Reduce Motion respected. Stub files for P6-15/16/17. Tests (UI `OrchestratorBoardTests` with
+  seeded jobs, HT at 3 zooms, P with 100 workers) written and compiled, NOT run.
 - [ ] **P6-15 (M) Worker actions.** On the worker detail (upstream `ApprovalAsk`, the composer, the diff
   viewer): a pending ask shows what, where and why with Accept, Accept for Session, Decline and Abort —
   nothing is answered without a click, and an ask outside the worker's folder is called out (upstream

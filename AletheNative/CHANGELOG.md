@@ -299,6 +299,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   behind by a crash are ended at the next launch.
 - Codex terminals in Orchestration mode delegate through the `alethe_*` tools via the bundled `alethe-
   orchestrator-mcp` helper, which also runs on its own as a stdio MCP server.
+- Orchestration board: planner tabs, a summary rail and a zoomable canvas show every run, worker and
+  subagent live, with fit, focus, worker details (plan, report, routing, media) and a jump to the
+  planner's terminal.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
