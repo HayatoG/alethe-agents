@@ -3375,7 +3375,7 @@ above.
   plain command lines) with its log; success only if the install is on disk. Toolbar pill shows status
   and starts/stops. Tests (U auto-start rules; UI settings/pill/sheet against a stub install) written
   and compiled, NOT run.
-- [ ] **P7-17 (M) 9router routing for new terminals.** `AgentLaunchRequest.environment` (added
+- [x] **P7-17 (M) 9router routing for new terminals.** `AgentLaunchRequest.environment` (added
   variables, merged after the scrubbed ones; values never logged — `spawn.log` keeps names only, P5-11);
   a tab with `useRouter9` launches with P7-5's variables while 9router is enabled and keyed (upstream
   `useXtermSession.ts` `router9EnvFor`); the New Terminal sheet's "Route through 9router" toggle
@@ -3384,7 +3384,15 @@ above.
   last (P3-4). Files: `AgentLauncher.swift`, `TerminalRegistry.swift`, `NewTerminalSheet.swift`. Needs
   P7-1, P7-5, P7-16. *Tests:* U (environment per agent, placement, nothing when off or keyless), UI (the
   toggle appears only when available and the tab keeps it). *Parity:* PER-5, AG-3.
-- [ ] **P7-18 (M) Remote settings and terminal sharing.** Settings › Remote (upstream
+  *Done:* (`5cd24f6`) `AgentLaunchRequest.environment` applied after the scrubbed variables (the
+  launcher's own still win), never logged (`spawn.log` keeps names). `Router9Launch` rules
+  (`routingAvailable`, `launchEnvironment`, `wantsRouting`). A tab with `useRouter9` reads
+  `router9.routingConfig()` (settings + Keychain key) off main on every start/restart through the
+  existing wait-before-launch path. New Terminal › "Route through 9router" only for supported agents
+  when enabled, keyed and installed (default from `defaultForNewAgents`, Start button while stopped,
+  "Always route new agents"); stored on the tab; `TerminalCreation.useRouter9` keeps it for ⌥⌘T. Tests
+  (U + UI `Router9RoutingTests` with stub agents) written and compiled, NOT run.
+- [x] **P7-18 (M) Remote settings and terminal sharing.** Settings › Remote (upstream
   `RemoteControlPage.tsx`, `RemoteControlSettingsFields.tsx`): on/off (with the startup note: off at
   every launch), reach (LAN or Tailscale; Tailscale disabled with its hint and download link when not
   detected), read-only, shell input, max devices, session expiry, pairing status with Pair a Device…,
@@ -3393,6 +3401,14 @@ above.
   shared glyph. Files: the P7-6 stub `RemoteSettings.swift`; `SidebarView.swift` and the pane header
   menu. Needs P7-12. *Tests:* UI (seeded: toggles reach the
   controller; sharing a terminal lists it in the controller's snapshot), HT. *Parity:* PER-7.
+  *Done:* (`62d89fd`) Settings › Remote: on/off (off at every launch; turning on asks once with the LAN
+  or Tailscale warning), reach (Tailscale disabled with hint, download link and Copy when not detected;
+  fail-closed explained), read-only, shell input (disabled while read-only), device limit, session
+  lifetime, pairing status with countdown, Close Window and Pair a Device…, devices (address hidden
+  until revealed, online/idle, expiry) with Revoke / Revoke All (ask once); tokens never shown. "Share
+  with Remote Devices" in the sidebar tab menu and the pane header menu, with a shared glyph in both.
+  Debug-only `settings.remote.probe` line for UI tests. Upstream's 5-step how-to not ported. Tests (UI
+  `RemoteSettingsTests`) written and compiled, NOT run.
 - [x] **P7-19 (M) Pairing sheet and remote toolbar pill.** The pairing sheet (upstream
   `RemoteControlModal.tsx`): status, the QR (P7-2) and URL with Copy, the 120 s countdown, reopen when
   closed, devices with Revoke, Open Settings; the toolbar pill while remote control is on (upstream
