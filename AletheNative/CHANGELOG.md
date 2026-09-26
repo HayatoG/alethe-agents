@@ -321,6 +321,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Now Playing: a Home card and the sidebar footer show the current Spotify track (the last one stays,
   paused, after a relaunch); Settings › Integrations › Spotify sets the client ID and secret (in the
   Keychain) and connects or disconnects.
+- Remote control can be turned on for the session: paired devices see only the terminals you share,
+  follow their output and send input when allowed; device messages and automatic shutdowns show in the
+  notification list, and it is always off when Alethe starts.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

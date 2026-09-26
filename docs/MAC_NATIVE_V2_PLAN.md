@@ -3276,7 +3276,7 @@ above.
   `projects.json` to import; 401 is an invalid token everywhere; logout deletes the token. `AletheModel`
   added as an `AletheIntegrations` dependency. Tests over a stubbed `URLSession` written and compiled,
   NOT run.
-- [ ] **P7-12 (M) Remote control app service.** `RemoteControlController` (upstream
+- [x] **P7-12 (M) Remote control app service.** `RemoteControlController` (upstream
   `useRemoteControlService.ts`, `remote/commands.rs`, `pty_bridge.rs`): the app sources for the hub and
   API — shared tabs from `Pane.remoteShared` (a pane's tabs, id = tab id), the workspace snapshot, the
   scrollback tail from the tab's scrollback file and live output from its `TerminalIOTap`, the terminal
@@ -3294,6 +3294,16 @@ above.
   P7-7, P7-8, P7-9. *Tests:* U (sources over a seeded workspace: only shared tabs listed, input reaches the
   PTY, preference changes do not restart unless the reach mode changed), UI (seeded remote on: a stub
   device message shows in the notification list). *Parity:* PER-7.
+  *Done:* (`4a2c52e`) `RemoteControlController` wires `RemoteControlService` (AletheRemote) to the app:
+  workspace source lists only tabs of shared panes (`AletheModel/RemoteSharing`), builds the snapshot,
+  derives appearance from preferences, reads transcripts and questions through `Handoff` off main;
+  `RemoteTerminalBridge` (typed PTY input, 409 when not running; scrollback tail cut on a character
+  boundary; grid size; tap output decoded across chunk splits, only for tabs shared right now). Off at
+  every launch; settings pushed as they change (only a reach-mode change rebinds); pairing refreshes the
+  host; revoke one or all; quit stops and revokes everything. Events become `AgentNotifier`
+  notifications; start-failed/auto-disabled turn the toggle off. `AletheRemote` linked into the app,
+  `NSLocalNetworkUsageDescription` added; debug UI-test launches bind loopback only. Tests (sharing,
+  bridge, service; UI notification) written and compiled, NOT run.
 - [x] **P7-13 (S) Discord Rich Presence in the app.** `DiscordPresenceController` (upstream
   `useDiscordPresence.ts`): while `discordPresence` is on, "Working with Alethe" with the current view
   (Home → "Viewing the dashboard", workspace → "Managing terminals", an orchestration board in front →
