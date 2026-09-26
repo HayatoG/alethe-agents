@@ -3064,7 +3064,7 @@ above.
   `percent_encoded_query_values_are_decoded`, `tailscale_range_accepts_only_cgnat_addresses`), U (a QR
   image decodes back to its URL, lockout expiry, a revoked device's subscription is dropped).
   *Parity:* groundwork for PER-7.
-- [ ] **P7-3 (S) Remote questions and transcript snapshots.** In `AletheAgents/Handoff` (upstream
+- [x] **P7-3 (S) Remote questions and transcript snapshots.** In `AletheAgents/Handoff` (upstream
   `handoff.rs` `remote_questions`, `transcript_snapshot`, `active_remote_questions`; left out of P3-12):
   interactive questions read from Claude Code `AskUserQuestion` and Codex `request_user_input` tool calls
   (header, question, options with descriptions, multi-select; the call id as the question set id);
@@ -3074,6 +3074,13 @@ above.
   *Tests:* G (upstream `parses_codex_and_claude_questions`,
   `preserves_agent_call_ids_for_remote_questions`), U (unchanged revision, the limit keeps the newest).
   *Parity:* groundwork for PER-7.
+  *Done:* (`78bdf1d`) `Handoff.swift` ports upstream remote questions: Claude Code `AskUserQuestion` and
+  Codex `request_user_input` tool calls become questions keyed by the agent's call id;
+  `transcriptSnapshot(agent:folder:session:since:limit:)` (session transcript, else the folder's newest;
+  revision = mtime in ms, an unchanged revision skips parsing; newest 160 events; text passed through
+  secret redaction — upstream does not); `activeQuestions` only when the last event asked them. The
+  tool-result role is written `tool-result` like upstream; unsupported agents give an empty snapshot
+  (upstream errors). Tests (upstream goldens + units) written and compiled, NOT run.
 - [ ] **P7-4 (S) Discord IPC client.** `AletheIntegrations/Discord` (upstream `discord_presence.rs`, over
   the `discord-rich-presence` crate): an actor that finds Discord's socket (`$TMPDIR/discord-ipc-0…9`),
   frames messages (opcode and length, little-endian, then JSON), handshakes (`v: 1`, application id
