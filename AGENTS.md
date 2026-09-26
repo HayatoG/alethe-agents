@@ -44,6 +44,8 @@ path relative to the repository.
    macOS-native migration branches** (e.g. `mac-native-v2`) — `main`, release branches and every
    other branch are read-only: never modify, commit to, rebase, merge or open a PR against them.
    **NEVER push / tag / release without explicit authorization from the owner at that moment.**
+   Authorized pushes of `mac-native-v2` go to the `fork` remote (`HayatoG/alethe-agents`), never
+   to `origin` — see [`docs/FORK_WORKFLOW.md`](docs/FORK_WORKFLOW.md).
    Commit messages carry **NO co-author** (`Co-Authored-By: Claude …`) or any tool signature — he
    is the only author.
 3. **Strict design system — no gradients, nothing "vibecoded".** No generic template UI. Dashboards

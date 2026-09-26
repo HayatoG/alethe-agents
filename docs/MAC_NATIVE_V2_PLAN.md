@@ -6,6 +6,9 @@
 > Next: Phase 8 (Release). Before it: clear the test debt. Branch: `mac-native-v2` (created from
 > `origin/main` @ `75083e2`, v1.7.0).
 >
+> **Published 2026-09-26** to the fork `HayatoG/alethe-agents` (`fork/mac-native-v2`); the PR to
+> `Kc1t:main` is opened manually by the owner. Workflow and pre-push scan: [`FORK_WORKFLOW.md`](FORK_WORKFLOW.md).
+>
 > **Package suite run 2026-09-26: 1680/1680 green in one run** (17 targets). Fixes it forced: terminals
 > spawn with `posix_spawn` instead of `forkpty` (fork deadlocked the multithreaded app in atfork
 > handlers — `cae8ca9`), `PlanningGate`/`GraphifyRepository.repositoryRoot` looped forever outside a
