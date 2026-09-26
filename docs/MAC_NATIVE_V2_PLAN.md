@@ -2650,7 +2650,7 @@ above.
   new work. Tools: `alethe_delegate`, `alethe_check`, `alethe_status`, `alethe_cancel` (lists only what
   it cancelled), `alethe_release`. State is `internal` for the P6-7/P6-8 extensions. Tests (9 upstream
   goldens with fake shell workers, 2 store goldens, units) written and compiled, NOT run.
-- [ ] **P6-7 (M) Steering, follow-ups, approvals and isolation.** On the P6-6 core, in its own files:
+- [x] **P6-7 (M) Steering, follow-ups, approvals and isolation.** On the P6-6 core, in its own files:
   `alethe_steer` (interrupt the running turn and deliver the correction next, context kept),
   `alethe_send` (an inbox: a busy worker takes it as its next turn, a parked one at once, a released or
   interrupted one is started again on its thread), `alethe_answer` plus `answer(job:decision:)` for the
@@ -2663,6 +2663,15 @@ above.
   `steering_an_unknown_job_is_refused`, `isolating_outside_a_repository_says_so`,
   `isolating_gives_each_worker_its_own_worktree`), U (inbox order, a half-made batch rolled back).
   *Parity:* ORC-2.
+  *Done:* (`510d2b3`) `OrchestratorCore+FollowUps`: `alethe_steer` (Codex `turn/steer`; Claude
+  interrupts and runs the correction next), `alethe_send` (a busy or starting worker gets it in its
+  inbox, a parked one runs it now, a job with no process is revived on its thread), `alethe_answer` /
+  `answer(job:decision:)` (only while an ask is pending and the worker is alive), `alethe_diff` /
+  `jobDiff`. `OrchestratorCore+Isolation`: `isolate` makes one `GitWorktrees` worktree per job
+  (`.alethe/worktrees/<job>`, `alethe/agent-<job>`) off the actor; a half-made batch is rolled back with
+  its branches (ids of a refused batch stay used, as upstream). `delegate` is async; `askForApproval`
+  (granular policy, sandbox workspace-write) and `webSearch` reach the job. Tests (4 upstream goldens +
+  9 units, fake workers, temp repos) written and compiled, NOT run.
 - [x] **P6-8 (M) Agent fitness and routing.** `AgentFitness` from P3-13's usage readings (upstream
   `lib/agentFitness.ts`: worst window, used %, reset, plan, rate-limited) pushed into the core
   (`setAgentFitness`); every tool response carries the fitness block with `headroom` (agents sorted, so

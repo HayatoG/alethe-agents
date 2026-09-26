@@ -291,6 +291,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Settings › Multiagent (with the orchestrator feature on): run a project's `.planning/task.md` roadmap
   as a task queue, see event metrics and recent events by correlation id, and turn on planning
   autocommit with the audit history.
+- Orchestrator: steer a running worker, send follow-ups (reviving a released worker on its thread),
+  answer a worker's approval requests, read its diff, and run each delegated task in its own git
+  worktree.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
