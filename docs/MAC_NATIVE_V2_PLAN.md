@@ -2714,7 +2714,7 @@ above.
   `remote`, never in Codex arguments). Plugin and extension events attached to the bus in
   `AppEnvironment` (temporary Settings attach removed). Tests (U + P loopback round trip) written and
   compiled, NOT run.
-- [ ] **P6-10 (M) `alethe-orchestrator-mcp` stdio binary and Codex planners.** A SwiftPM executable in
+- [x] **P6-10 (M) `alethe-orchestrator-mcp` stdio binary and Codex planners.** A SwiftPM executable in
   AletheKit (ADR-7), embedded in the app under `Contents/Helpers/` and signed with it. Two modes: bridge
   (`--bridge <file>`: a private per-launch file with endpoint, token and planner; stdin lines are posted
   to the app's `/mcp` and the answers written back — replacing upstream's generated PowerShell bridge,
@@ -2726,6 +2726,17 @@ above.
   app target's copy phase, `OrchestratorWiring`. Needs P6-7, P6-8, P6-9. *Tests:* U (bridge framing, no
   line for a notification, the standalone handshake, the built helper against a stub endpoint).
   *Parity:* ORC-2.
+  *Done:* (`91570da`) SwiftPM executable `alethe-orchestrator-mcp`, built by SwiftPM in an "Embed
+  orchestrator helper" script phase (a package-product dependency would make the app's package links
+  dynamic), copied to `Contents/Helpers` and signed with hardened runtime (runs every build; SwiftPM is
+  incremental). Bridge mode (`--bridge <0600 file>` with endpoint/token/planner; a world-readable file
+  is refused, exit 66) posts each stdin line to `/mcp` with token and planner headers; notifications get
+  no line; a failed request gets JSON-RPC -32603 instead of silence. Standalone mode runs its own in-
+  memory core (`ALETHE_CODEX` or PATH, `ALETHE_MAX_WORKERS`) and reaps workers at EOF/SIGTERM.
+  `OrchestratorMCP` finds its resource bundle next to the helper before `Bundle.module`.
+  `OrchestratorWiring` makes Codex tabs planners via `-c mcp_servers.alethe.command/args` pointing at
+  the helper (token only in the bridge file). Tests (U + built helper against a stub endpoint) written
+  and compiled, NOT run; a real Codex run is owed.
 - [x] **P6-11 (M) Planner subagents.** Claude Code's own subagents and teammates reach the board
   (upstream `agent_hooks_settings_path(orchestrator: true)`, `agent_events.rs`, `agentCanvasStore`,
   `lib/orchestratorSubagents.ts`): with the feature on, P3-9's per-launch Claude settings add

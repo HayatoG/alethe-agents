@@ -297,6 +297,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Claude Code terminals in Orchestration mode delegate work through Alethe's `alethe_*` tools over a
   private, token-protected local endpoint; every worker stops when the app quits, and workers left
   behind by a crash are ended at the next launch.
+- Codex terminals in Orchestration mode delegate through the `alethe_*` tools via the bundled `alethe-
+  orchestrator-mcp` helper, which also runs on its own as a stdio MCP server.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
