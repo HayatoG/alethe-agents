@@ -3336,7 +3336,7 @@ above.
   the Tauri import sheet (new optional `projectsFile`). Toolbar Sync item and Settings › General › Data
   › GitHub Sync… open it. Tests (UI `GistSyncTests` against an in-app GitHub stub, HT at 120 %) written
   and compiled, NOT run.
-- [ ] **P7-16 (M) 9router settings, install and toolbar pill.** `Router9Controller` (upstream
+- [x] **P7-16 (M) 9router settings, install and toolbar pill.** `Router9Controller` (upstream
   `useRouter9Runtime.ts`, `useRouter9AutoStart.ts`): status refreshed while visible, start and stop,
   auto-start at launch when enabled, auto-start is on, an install exists and the port is free; Settings ›
   Integrations › 9router (upstream `Router9Settings.tsx`: enable, source, port, API key in the Keychain,
@@ -3347,6 +3347,15 @@ above.
   `Router9SettingsSection.swift`, `Router9ToolbarItem.swift`, `TestSeeds+Router9.swift`; new
   `Router9InstallSheet.swift`. Needs P7-5, P7-6. *Tests:* U (auto-start conditions), UI (settings and
   pill against a stub install), HT. *Parity:* PER-5, UI-7.
+  *Done:* (`5ef0319`) `Router9Controller`: status while visible, start/stop, auto-start once per launch
+  only when enabled with auto-start, installed and the port free (`Router9AutoStart` rule in the
+  package); stops what it started at quit and when turned off; API key only in the Keychain, never shown
+  again; `routingConfig()` for P7-17. Settings › Integrations › 9router (enable, source, port, key,
+  auto-start, default for new agents, status, Start/Stop, dashboard, log, advisories/docs).
+  Install/uninstall sheet shows the exact command and runs it through the P3-3 installer (extended to
+  plain command lines) with its log; success only if the install is on disk. Toolbar pill shows status
+  and starts/stops. Tests (U auto-start rules; UI settings/pill/sheet against a stub install) written
+  and compiled, NOT run.
 - [ ] **P7-17 (M) 9router routing for new terminals.** `AgentLaunchRequest.environment` (added
   variables, merged after the scrubbed ones; values never logged — `spawn.log` keeps names only, P5-11);
   a tab with `useRouter9` launches with P7-5's variables while 9router is enabled and keyed (upstream

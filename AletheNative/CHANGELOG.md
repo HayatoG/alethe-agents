@@ -315,6 +315,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   off or when you quit.
 - GitHub Sync: back up this profile's workspace, settings and time stats to a private Gist and restore
   them (safety backup first, then relaunch); from the toolbar's Sync item or Settings › General › Data.
+- 9router: Settings › Integrations › 9router (enable, source, port, Keychain key, start with Alethe,
+  route new agents, status, dashboard, log, advisories), an install/uninstall sheet with the exact
+  command and live log, and a toolbar pill to start or stop it.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
