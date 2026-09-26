@@ -3044,7 +3044,7 @@ above.
   round trip in a throwaway service, decoding without the new keys, clamps, an upstream v9 fixture with
   these fields: secrets reported and absent from every written file). *Parity:* groundwork for PER-3,
   PER-4, PER-5, PER-7, SET-5, UI-7.
-- [ ] **P7-2 (L) `AletheRemote` target and pairing hub.** New package target (ADR-7; depends on
+- [x] **P7-2 (L) `AletheRemote` target and pairing hub.** New package target (ADR-7; depends on
   AletheFoundation) and test target, porting upstream `remote/mod.rs` (limits), `state.rs` and
   `util.rs`: a `RemoteHub` actor — pairing window (120 s; a 32-character token regenerated on open and
   close), `pair` → device session (40-character token, name ≤ 48 characters, address, connected and
@@ -3064,6 +3064,16 @@ above.
   `percent_encoded_query_values_are_decoded`, `tailscale_range_accepts_only_cgnat_addresses`), U (a QR
   image decodes back to its URL, lockout expiry, a revoked device's subscription is dropped).
   *Parity:* groundwork for PER-7.
+  *Done:* (`c43cff7`) target `AletheRemote` (depends only on AletheFoundation): `RemoteLimits` (upstream
+  `mod.rs` limits, `remote` log category — device ids and private addresses, never tokens), `RemoteText`
+  (constant-time token compare, sanitizing, percent-decoded queries, 32/40-char tokens), `RemoteHost`
+  (LAN address; Tailscale via the CLI on PATH, Homebrew or Tailscale.app, 3 s, only 100.64.0.0/10),
+  `RemoteHub` actor (pairing and sessions with injectable clock/host resolver; start/stop;
+  revoke/expire/detach end that device's stream), `RemotePairingQR` (`CIQRCodeGenerator`, ≥220 px,
+  cached per URL), `RemoteProtocol` shared types (request/response with upstream headers and 64 KB/4 MB
+  limits, router, terminal/workspace/asset sources, events, WS frames; question/transcript types live
+  here, so P7-12 converts P7-3's). Tests (15 upstream `state.rs` cases + plan extras) written and
+  compiled, NOT run.
 - [x] **P7-3 (S) Remote questions and transcript snapshots.** In `AletheAgents/Handoff` (upstream
   `handoff.rs` `remote_questions`, `transcript_snapshot`, `active_remote_questions`; left out of P3-12):
   interactive questions read from Claude Code `AskUserQuestion` and Codex `request_user_input` tool calls
