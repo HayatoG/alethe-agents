@@ -294,6 +294,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Orchestrator: steer a running worker, send follow-ups (reviving a released worker on its thread),
   answer a worker's approval requests, read its diff, and run each delegated task in its own git
   worktree.
+- Claude Code terminals in Orchestration mode delegate work through Alethe's `alethe_*` tools over a
+  private, token-protected local endpoint; every worker stops when the app quits, and workers left
+  behind by a crash are ended at the next launch.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

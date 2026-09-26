@@ -2690,7 +2690,7 @@ above.
   carries `fitness`; `alethe_delegate` adds `headroomHint` and a chosen/ignored routing note per job.
   Readings are fed by P6-17. Tests (9 upstream Rust goldens, 4 TS goldens, 16 units) written and
   compiled, NOT run.
-- [ ] **P6-9 (L) App orchestrator service, MCP endpoint and Claude Code planners.**
+- [x] **P6-9 (L) App orchestrator service, MCP endpoint and Claude Code planners.**
   `OrchestratorService` (`@MainActor`, upstream `orchestrator.rs`): one core per profile, prepared on
   first use (store path, restore, launchers resolved once — a missing CLI never delays launch),
   snapshots republished for views, `answer`, `diff` and `message(steer:)` for the board, `shutdown()`
@@ -2703,6 +2703,17 @@ above.
   `AppEnvironment` (start and `flush`), new `Alethe/Orchestrator/`. Needs P6-6. *Tests:* U (`/mcp`
   routing, 401 without the token, the HTTP server config, planner registration), P (a tool call round
   trip over loopback). *Parity:* ORC-2.
+  *Done:* (`e4199ce`) `OrchestratorService` (one core per profile, prepared on first use: store
+  restored; codex/claude launchers resolved once via `LauncherCache` with CLI overrides;
+  `terminateLeftovers()` off main at launch when the workers file exists; snapshots republished;
+  `answer`/`message(steer:)` through the P6-7 tools; `diff`; `setConcurrencyLimit`; `shutdown()` from
+  `flush`). `AgentHookServer` serves `POST /mcp` on the P3-9 listener (token first → 401, `X-Alethe-
+  Planner` passed through, 202 for notifications, 404 while the feature is off). `OrchestratorWiring`
+  registers each Claude Code tab as a planner (tab id, display name) and adds an `alethe` HTTP server to
+  its private `--mcp-config` while the feature is on; `McpLaunchServer.http` (Claude `http`, OpenCode
+  `remote`, never in Codex arguments). Plugin and extension events attached to the bus in
+  `AppEnvironment` (temporary Settings attach removed). Tests (U + P loopback round trip) written and
+  compiled, NOT run.
 - [ ] **P6-10 (M) `alethe-orchestrator-mcp` stdio binary and Codex planners.** A SwiftPM executable in
   AletheKit (ADR-7), embedded in the app under `Contents/Helpers/` and signed with it. Two modes: bridge
   (`--bridge <file>`: a private per-launch file with endpoint, token and planner; stdin lines are posted
