@@ -25,6 +25,7 @@ let package = Package(
         .library(name: "AletheExtensionSDK", targets: ["AletheExtensionSDK"]),
         .library(name: "AletheIntegrations", targets: ["AletheIntegrations"]),
         .library(name: "AletheOrchestrator", targets: ["AletheOrchestrator"]),
+        .library(name: "AletheRemote", targets: ["AletheRemote"]),
         // The orchestrator's stdio MCP server (P6-10), embedded in the app under Contents/Helpers.
         .executable(name: "alethe-orchestrator-mcp", targets: ["alethe-orchestrator-mcp"]),
     ],
@@ -67,6 +68,8 @@ let package = Package(
             resources: [.copy("Resources/orchestrator-tools.json")]
         ),
         .executableTarget(name: "alethe-orchestrator-mcp", dependencies: ["AletheOrchestrator"]),
+        // Remote control's hub, protocol types and (from P7-7) transport; no UI.
+        .target(name: "AletheRemote", dependencies: ["AletheFoundation"]),
         .target(name: "CAlethePTY"),
         .target(
             name: "AletheTerminal",
@@ -99,6 +102,7 @@ let package = Package(
             dependencies: ["AletheOrchestrator", "AletheIntegrations", "AletheGit", "AletheAgents"],
             resources: [.copy("Fixtures")]
         ),
+        .testTarget(name: "AletheRemoteTests", dependencies: ["AletheRemote"]),
         .testTarget(name: "AletheExtensionHostTests", dependencies: ["AletheExtensionHost", "AlethePluginKit", "AletheExtensionSDK"]),
     ]
 )
