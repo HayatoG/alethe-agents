@@ -2819,7 +2819,7 @@ above.
   P6-11 subagents, filtered to the pane's project (closed planners kept when they ran in the project
   folder). Reduce Motion respected. Stub files for P6-15/16/17. Tests (UI `OrchestratorBoardTests` with
   seeded jobs, HT at 3 zooms, P with 100 workers) written and compiled, NOT run.
-- [ ] **P6-15 (M) Worker actions.** On the worker detail (upstream `ApprovalAsk`, the composer, the diff
+- [x] **P6-15 (M) Worker actions.** On the worker detail (upstream `ApprovalAsk`, the composer, the diff
   viewer): a pending ask shows what, where and why with Accept, Accept for Session, Decline and Abort —
   nothing is answered without a click, and an ask outside the worker's folder is called out (upstream
   `askIn`); a message field that steers a running worker and sends to an idle one (upstream
@@ -2827,6 +2827,15 @@ above.
   (asks once while running) and Release; Show in Finder for a worktree. Failures are recorded in
   Diagnostics (P5-11). Files: new files in `Alethe/Orchestrator/`. Needs P6-7, P6-14. *Tests:* UI (a
   stub worker blocked on an approval is answered from the board; steer vs. send), HT. *Parity:* ORC-1.
+  *Done:* (`e8eeca6`) `OrchestratorWorkerActions` on the worker detail: pending ask (what, command, why;
+  an ask outside the worker's folder called out) with Accept / Accept for Session / Decline / Abort,
+  only on a click; a message field that steers a running worker, sends the next turn to an idle one and
+  resumes an interrupted or released one (so Release is reversible, as `alethe_send` allows); diff from
+  the service parsed off main in the Diff pane's styling; Cancel (asks once while running or blocked; a
+  queued one just leaves), Release, Show in Finder for a worktree; failures inline and in Diagnostics.
+  Cancel/release go through a small extension in the actions file (service untouched). Tests (UI
+  `OrchestratorWorkerActionsTests` over a stub Codex worker, HT at 3 zooms) written and compiled, NOT
+  run.
 - [ ] **P6-16 (M) Apply a worker's worktree.** Upstream `applyWorktree`: commit the worktree's pending
   changes (`GitWorktrees.commitPending`), fetch the branch for local copies, analyze it against the
   project's current branch with the Merge Center analyzer (P4-10) and, when clean, prepare and finalize
