@@ -68,8 +68,13 @@ let package = Package(
             resources: [.copy("Resources/orchestrator-tools.json")]
         ),
         .executableTarget(name: "alethe-orchestrator-mcp", dependencies: ["AletheOrchestrator"]),
-        // Remote control's hub, protocol types and (from P7-7) transport; no UI.
-        .target(name: "AletheRemote", dependencies: ["AletheFoundation"]),
+        // Remote control's hub, protocol types, (from P7-7) transport and the bundled upstream phone
+        // client (P7-9; fonts come from AletheDesign). No UI.
+        .target(
+            name: "AletheRemote",
+            dependencies: ["AletheFoundation", "AletheDesign"],
+            resources: [.copy("Resources/RemoteClient")]
+        ),
         .target(name: "CAlethePTY"),
         .target(
             name: "AletheTerminal",
@@ -102,7 +107,7 @@ let package = Package(
             dependencies: ["AletheOrchestrator", "AletheIntegrations", "AletheGit", "AletheAgents"],
             resources: [.copy("Fixtures")]
         ),
-        .testTarget(name: "AletheRemoteTests", dependencies: ["AletheRemote"]),
+        .testTarget(name: "AletheRemoteTests", dependencies: ["AletheRemote", "AletheDesign"]),
         .testTarget(name: "AletheExtensionHostTests", dependencies: ["AletheExtensionHost", "AlethePluginKit", "AletheExtensionSDK"]),
     ]
 )

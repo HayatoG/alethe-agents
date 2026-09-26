@@ -10,6 +10,9 @@ changes, not merging them. This script lists, for <baseline>..<target>:
   - new top-level directories under src/components/
   - lines added/removed in the persisted-shape types (src/lib/types.ts)
   - projects.json schema version bumps (src/stores/projectsStore.migrations.ts)
+  - changes to the bundled remote client: src-tauri/remote/ and every other upstream file in
+    AletheRemote's bundle-manifest.json, diffed from the manifest's upstream SHA (plus @xterm
+    version changes in package-lock.json) — resync with Scripts/sync-remote-client.sh
 
 and writes AletheNative/upstream-reports/<date>-<target>.md. Triage then moves each item into the
 plan's parity matrix (§8) and advances UPSTREAM_BASELINE in its own commit.
@@ -18,6 +21,7 @@ plan's parity matrix (§8) and advances UPSTREAM_BASELINE in its own commit.
 """
 import argparse
 import datetime
+import json
 import re
 import subprocess
 import sys
@@ -25,6 +29,7 @@ from pathlib import Path
 
 NATIVE = Path(__file__).resolve().parent.parent
 REPO = NATIVE.parent
+REMOTE_MANIFEST = NATIVE / "Packages/AletheKit/Sources/AletheRemote/Resources/RemoteClient/bundle-manifest.json"
 
 
 def git(*args: str) -> str:
@@ -79,6 +84,33 @@ def type_changes(baseline: str, target: str) -> tuple[list[str], list[str]]:
     return keep(added), keep(removed)
 
 
+def xterm_versions(rev: str) -> dict[str, str]:
+    try:
+        packages = json.loads(show(rev, "package-lock.json") or "{}").get("packages", {})
+    except json.JSONDecodeError:
+        return {}
+    return {name: packages.get(f"node_modules/{name}", {}).get("version", "?")
+            for name in ("@xterm/xterm", "@xterm/addon-unicode11")}
+
+
+def remote_client_changes(baseline: str, target: str) -> tuple[str, list[str], list[str]]:
+    """(since, changed files, npm version changes) for the bundled phone client."""
+    sources = {"src-tauri/remote/"}
+    since = baseline
+    if REMOTE_MANIFEST.exists():
+        manifest = json.loads(REMOTE_MANIFEST.read_text())
+        sources |= {f["source"] for f in manifest.get("files", []) if not f["source"].startswith("node_modules/")}
+        try:
+            since = git("rev-parse", manifest["upstreamSHA"]).strip()
+        except (KeyError, subprocess.CalledProcessError):
+            pass
+    diff = git("diff", "--name-status", f"{since}..{target}", "--", *sorted(sources))
+    changed = [" ".join(line.split()) for line in diff.splitlines() if line.strip()]
+    old, new = xterm_versions(since), xterm_versions(target)
+    npm = [f"{name} {old.get(name)} → {new[name]}" for name in new if old.get(name) != new[name]]
+    return since, changed, npm
+
+
 def bullets(items, empty="none") -> str:
     items = sorted(items) if isinstance(items, set) else list(items)
     return "\n".join(f"- `{i}`" for i in items) if items else f"_{empty}_"
@@ -104,6 +136,7 @@ def main() -> int:
     new_dirs = component_dirs(target) - component_dirs(baseline)
     added_types, removed_types = type_changes(baseline, target)
     old_schema, new_schema = schema_version(baseline), schema_version(target)
+    remote_since, remote_changed, remote_npm = remote_client_changes(baseline, target)
 
     added_keys = new_keys - old_keys
     key_groups: dict[str, int] = {}
@@ -145,6 +178,15 @@ Removed lines ({len(removed_types)}):
 ## projects.json schema
 {"Unchanged (v" + str(new_schema) + ")" if old_schema == new_schema else f"**Bumped v{old_schema} → v{new_schema}** — extend TauriImporter and add a fixture."}
 
+## Remote client (src-tauri/remote/ and the bundled upstream files)
+Since `{remote_since[:7]}` (the bundle manifest's upstream SHA):
+{bullets(remote_changed)}
+
+npm versions:
+{bullets(remote_npm)}
+
+{"Resync with `Scripts/sync-remote-client.sh` and re-apply or drop native patches." if remote_changed or remote_npm else "Bundle current."}
+
 ## Commits
 {chr(10).join("- " + line for line in log) or "_none_"}
 
@@ -157,7 +199,8 @@ then set UPSTREAM_BASELINE to `{target}` in the same commit.
     out = out_dir / f"{today}-{target[:7]}.md"
     out.write_text(report)
     print(f"upstream-watch: {len(log)} commit(s), {len(new_cmds - old_cmds)} new command(s), "
-          f"{len(added_keys)} new key(s), {len(new_dirs)} new component dir(s) → {out.relative_to(REPO)}")
+          f"{len(added_keys)} new key(s), {len(new_dirs)} new component dir(s), "
+          f"{len(remote_changed)} remote client file(s) → {out.relative_to(REPO)}")
     return 0
 
 

@@ -1,0 +1,134 @@
+{
+  "upstreamSHA": "2f3e5ed9702c4cfbaeb619f7b1b1f17030e7c6dd",
+  "xterm": "5.5.0",
+  "addonUnicode11": "0.9.0",
+  "patches": [],
+  "files": [
+    {
+      "path": "index.html",
+      "source": "src-tauri/remote/index.html",
+      "upstreamSHA256": "13b15e82c453ce1d1434002fdd12014f68eb92e95788fe5ae4276c3ca8895eca",
+      "sha256": "13b15e82c453ce1d1434002fdd12014f68eb92e95788fe5ae4276c3ca8895eca",
+      "patched": false
+    },
+    {
+      "path": "app.js",
+      "source": "src-tauri/remote/app.js",
+      "upstreamSHA256": "ff69d9a5ac9e563830cc03c7864aeca9ef8e29f439e3bf436f8a7a79250e850b",
+      "sha256": "ff69d9a5ac9e563830cc03c7864aeca9ef8e29f439e3bf436f8a7a79250e850b",
+      "patched": false
+    },
+    {
+      "path": "app.css",
+      "source": "src-tauri/remote/app.css",
+      "upstreamSHA256": "275b18801f589b9af1dbe6ad2cfc6563fe06b4e0f9e88b5298910e8e5627354c",
+      "sha256": "275b18801f589b9af1dbe6ad2cfc6563fe06b4e0f9e88b5298910e8e5627354c",
+      "patched": false
+    },
+    {
+      "path": "locales.js",
+      "source": "src-tauri/remote/locales.js",
+      "upstreamSHA256": "069e4b2921a08323b115f5215cf4b6705d5ce3efac9412d8a14c236a5258affa",
+      "sha256": "069e4b2921a08323b115f5215cf4b6705d5ce3efac9412d8a14c236a5258affa",
+      "patched": false
+    },
+    {
+      "path": "manifest.webmanifest",
+      "source": "src-tauri/remote/manifest.webmanifest",
+      "upstreamSHA256": "8c3a7597aa7be594bc02c2134a548df7c0d35ac9aba7aed24aba2c26fb47e16f",
+      "sha256": "8c3a7597aa7be594bc02c2134a548df7c0d35ac9aba7aed24aba2c26fb47e16f",
+      "patched": false
+    },
+    {
+      "path": "theme.css",
+      "source": "src/styles/theme.css",
+      "upstreamSHA256": "58c4e451e0433e55ad75084721ef23f464569437a6df17df7431ecb647530333",
+      "sha256": "58c4e451e0433e55ad75084721ef23f464569437a6df17df7431ecb647530333",
+      "patched": false
+    },
+    {
+      "path": "vendor/xterm.js",
+      "source": "node_modules/@xterm/xterm/lib/xterm.js@5.5.0",
+      "upstreamSHA256": "1f991ac3b4b283ebf96e60ae23a00a52765dd3a2e46fa6fdda9f1aab032f7495",
+      "sha256": "1f991ac3b4b283ebf96e60ae23a00a52765dd3a2e46fa6fdda9f1aab032f7495",
+      "patched": false
+    },
+    {
+      "path": "vendor/xterm.css",
+      "source": "node_modules/@xterm/xterm/css/xterm.css@5.5.0",
+      "upstreamSHA256": "ba8e6985669488981ccf40c0cefe3aba80722cb6c92de7ad628b0bd717faf2b6",
+      "sha256": "ba8e6985669488981ccf40c0cefe3aba80722cb6c92de7ad628b0bd717faf2b6",
+      "patched": false
+    },
+    {
+      "path": "vendor/LICENSE-xterm.txt",
+      "source": "node_modules/@xterm/xterm/LICENSE@5.5.0",
+      "upstreamSHA256": "b569f629d00f2626a8100df2a1798210535621e42164dfd426a6fe5aac7b0ccd",
+      "sha256": "b569f629d00f2626a8100df2a1798210535621e42164dfd426a6fe5aac7b0ccd",
+      "patched": false
+    },
+    {
+      "path": "vendor/addon-unicode11.js",
+      "source": "node_modules/@xterm/addon-unicode11/lib/addon-unicode11.js@0.9.0",
+      "upstreamSHA256": "72353b5178e1a7382716df1cfedf8ab070eea655d38995bb9f4f284fe56e2f2b",
+      "sha256": "72353b5178e1a7382716df1cfedf8ab070eea655d38995bb9f4f284fe56e2f2b",
+      "patched": false
+    },
+    {
+      "path": "vendor/LICENSE-addon-unicode11.txt",
+      "source": "node_modules/@xterm/addon-unicode11/LICENSE@0.9.0",
+      "upstreamSHA256": "e256f01188af527e4d06d21d06fbf785ae9c50d4b328bf03cbe0ba7f0aa4228f",
+      "sha256": "e256f01188af527e4d06d21d06fbf785ae9c50d4b328bf03cbe0ba7f0aa4228f",
+      "patched": false
+    },
+    {
+      "path": "assets/agents/claude.png",
+      "source": "src/assets/claude-code.png",
+      "upstreamSHA256": "ca96b41c53e5397da067cbeb49d9f7658c57343801c90f42b08140d8fff0a461",
+      "sha256": "ca96b41c53e5397da067cbeb49d9f7658c57343801c90f42b08140d8fff0a461",
+      "patched": false
+    },
+    {
+      "path": "assets/agents/codex.png",
+      "source": "src/assets/codex.png",
+      "upstreamSHA256": "55dcc99f3155cf73cb96afaa07f1249abcdcf5e7fce60b3812e04204aadcbeb6",
+      "sha256": "55dcc99f3155cf73cb96afaa07f1249abcdcf5e7fce60b3812e04204aadcbeb6",
+      "patched": false
+    },
+    {
+      "path": "assets/agents/opencode.png",
+      "source": "src/assets/open-white.png",
+      "upstreamSHA256": "f1d9f33de2a6db8ae82455759cf937defc50e2499e920a70b6780d8678f12403",
+      "sha256": "f1d9f33de2a6db8ae82455759cf937defc50e2499e920a70b6780d8678f12403",
+      "patched": false
+    },
+    {
+      "path": "brand-icons/elite-original.png",
+      "source": "src/assets/theme-icons/elite-original.png",
+      "upstreamSHA256": "45d15ad2172bf6efc4aa8fe4c99578182cabcab7183f75dad92b579c95600000",
+      "sha256": "45d15ad2172bf6efc4aa8fe4c99578182cabcab7183f75dad92b579c95600000",
+      "patched": false
+    },
+    {
+      "path": "brand-icons/elite-pure-black.png",
+      "source": "src/assets/theme-icons/elite-pure-black.png",
+      "upstreamSHA256": "d71e28abd9e008210eadbbd632e90818f73ada5f1f4b56b4da710c2a4b6c5635",
+      "sha256": "d71e28abd9e008210eadbbd632e90818f73ada5f1f4b56b4da710c2a4b6c5635",
+      "patched": false
+    },
+    {
+      "path": "brand-icons/elite-indigo.png",
+      "source": "src/assets/theme-icons/elite-indigo.png",
+      "upstreamSHA256": "1bd84b2c44bc51ec40f54215db4b9273a87df564f8ca2c91a9ce1330059fef1c",
+      "sha256": "1bd84b2c44bc51ec40f54215db4b9273a87df564f8ca2c91a9ce1330059fef1c",
+      "patched": false
+    },
+    {
+      "path": "brand-icons/elite-blush.png",
+      "source": "src/assets/theme-icons/elite-blush.png",
+      "upstreamSHA256": "d6cf6f1bde4b805a4f7ac10330be57e8359771c08232fbcce2bbc02d4b3a3dc0",
+      "sha256": "d6cf6f1bde4b805a4f7ac10330be57e8359771c08232fbcce2bbc02d4b3a3dc0",
+      "patched": false
+    }
+  ]
+}

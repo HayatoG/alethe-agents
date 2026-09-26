@@ -87,6 +87,12 @@ public enum AletheFonts {
         return ok
     }()
 
+    /// A bundled font file by name (`CaskaydiaCoveNerdFontMono-Regular.ttf`); the remote client
+    /// serves these instead of keeping its own copy.
+    public static func bundledFontURL(named fileName: String) -> URL? {
+        Bundle.module.url(forResource: fileName, withExtension: nil, subdirectory: "Fonts")
+    }
+
     /// Registers the bundled fonts for this process. Idempotent.
     @discardableResult
     public static func registerBundledFonts() -> Bool { registration }
