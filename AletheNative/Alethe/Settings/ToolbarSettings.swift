@@ -9,7 +9,7 @@ struct ToolbarSettings: View {
     var body: some View {
         Form {
             Section {
-                ForEach(ToolbarItemKind.offered, id: \.self) { item in
+                ForEach(ToolbarItemKind.allCases, id: \.self) { item in
                     Toggle(item.title, isOn: Binding {
                         environment.preferences?.document.showsToolbarItem(item) ?? item.shownByDefault
                     } set: { shown in

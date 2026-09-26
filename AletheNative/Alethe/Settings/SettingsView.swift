@@ -30,6 +30,15 @@ struct SettingsView: View {
             Tab("settings.plugins.tab", systemImage: "puzzlepiece.extension", value: SettingsTab.plugins) {
                 PluginSettings()
             }
+            // Grouped: the builder takes ten children at most.
+            Group {
+                Tab("settings.integrations.tab", systemImage: "link", value: SettingsTab.integrations) {
+                    IntegrationsSettings()
+                }
+                Tab("settings.remote.tab", systemImage: "iphone.radiowaves.left.and.right", value: SettingsTab.remote) {
+                    RemoteSettings()
+                }
+            }
             if environment.features.isOn(.orchestrator) {
                 Tab("settings.multiagent.tab", systemImage: "point.3.connected.trianglepath.dotted", value: SettingsTab.multiagent) {
                     MultiagentSettings()
@@ -39,7 +48,8 @@ struct SettingsView: View {
                 ProfileSettings()
             }
         }
-        .frame(width: 560)
+        // Wide enough for every tab in the toolbar, none in its overflow menu.
+        .frame(width: 720)
         .scenePadding()
         .onChange(of: environment.features.isOn(.orchestrator)) { _, isOn in
             if !isOn, environment.settingsTab == .multiagent { environment.settingsTab = .general }
@@ -49,7 +59,7 @@ struct SettingsView: View {
 
 /// The Settings pane shown; Home's setup steps open a given one.
 enum SettingsTab: Hashable {
-    case general, appearance, toolbar, agents, resources, features, plugins, multiagent, profiles
+    case general, appearance, toolbar, agents, resources, features, plugins, integrations, remote, multiagent, profiles
 }
 
 private struct GeneralSettings: View {

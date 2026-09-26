@@ -111,6 +111,10 @@ struct MainWindow: View {
             McpManagerSheet(route: route)
         case .mcpIntro:
             McpIntroSheet()
+        case .remotePairing:
+            RemotePairingSheet()
+        case .gistSync:
+            GistSyncSheet()
         }
     }
 

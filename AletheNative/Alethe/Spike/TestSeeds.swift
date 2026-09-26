@@ -170,7 +170,11 @@ enum TestSeeds {
             let project = doc.addProject(name: "prompted", folder: folder, color: .purple)
             doc.addPane(to: project, tab: PaneTab(agent: "claude", initialPrompt: "/help"))
         default:
-            break
+            seedRemote(name, into: &doc)
+            seedDiscord(name, into: &doc)
+            seedSpotify(name, into: &doc)
+            seedGistSync(name, into: &doc)
+            seedRouter9(name, into: &doc)
         }
     }
 
@@ -184,8 +188,24 @@ enum TestSeeds {
         case "orchestrator", "orchestratorBoard", "orchestratorLarge", "orchestratorApply", "multiagent", "multiagentLive":
             preferences.features.set(.orchestrator, on: true)
         default:
-            break
+            seedRemote(name, into: &preferences)
+            seedDiscord(name, into: &preferences)
+            seedSpotify(name, into: &preferences)
+            seedGistSync(name, into: &preferences)
+            seedRouter9(name, into: &preferences)
         }
+    }
+
+    /// What a seed sets up in the running app once the peripheral controllers started (Phase 7).
+    /// Unlike the document seeds it runs on every launch with the seed, since Keychain items of a
+    /// test launch live in memory only.
+    @MainActor
+    static func apply(_ name: String, to environment: AppEnvironment) {
+        seedRemote(name, environment: environment)
+        seedDiscord(name, environment: environment)
+        seedSpotify(name, environment: environment)
+        seedGistSync(name, environment: environment)
+        seedRouter9(name, environment: environment)
     }
 
     /// `boardrepo` in the data root and `profiles/default/orchestrator-jobs.json` (upstream's v2

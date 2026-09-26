@@ -84,6 +84,16 @@ final class AppEnvironment {
     let multiagent = MultiagentController()
     /// The delegation core behind the planners' `alethe_*` tools and the board (P6-9).
     let orchestrator = OrchestratorService()
+    /// Remote control (P7-12); off at every launch.
+    let remoteControl = RemoteControlController()
+    /// Discord Rich Presence (P7-13).
+    let discordPresence = DiscordPresenceController()
+    /// Spotify's Now Playing (P7-14).
+    let nowPlaying = NowPlayingController()
+    /// GitHub gist sync (P7-15).
+    let gistSync = GistSyncController()
+    /// 9router's runtime (P7-16).
+    let router9 = Router9Controller()
     /// Models of open Markdown (and later other file) panes.
     let contentPanes = ContentPaneRegistry()
     /// The interface language this process launched with; Settings offers a relaunch when it changes.
@@ -261,6 +271,15 @@ final class AppEnvironment {
         usage.start(environment: self)
         activity.start(environment: self, file: locations.activityStats(profile))
         dictation.start(environment: self)
+        // Peripherals (Phase 7): each does nothing until the user turns it on or connects it.
+        remoteControl.start(environment: self)
+        discordPresence.start(environment: self)
+        nowPlaying.start(environment: self)
+        gistSync.start(environment: self)
+        router9.start(environment: self)
+        #if DEBUG
+        if let seed = UserDefaults.standard.string(forKey: "AletheUITestSeed") { TestSeeds.apply(seed, to: self) }
+        #endif
         let requested = pendingFolders
         pendingFolders = []
         requested.forEach(openFolder)
@@ -338,6 +357,10 @@ final class AppEnvironment {
     /// Writes every pending change; called before the app quits.
     func flush() async {
         await activity.finish()
+        // Remote devices are revoked before the terminals they watch end.
+        await remoteControl.stop()
+        await router9.stop()
+        await discordPresence.stop()
         await plugins?.shutdown()
         await extensions?.shutdown()
         terminals.terminateAll()

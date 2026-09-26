@@ -56,6 +56,10 @@ enum EditorRequest: Identifiable, Hashable {
     case mcpManager(McpManagerRoute)
     /// The one-time MCP intro (upstream `McpIntroModal`).
     case mcpIntro
+    /// Pairing a device for remote control (P7-19; upstream `RemoteControlModal`).
+    case remotePairing
+    /// GitHub gist sync (P7-15; upstream `SyncModal`).
+    case gistSync
 
     var id: String {
         switch self {
@@ -87,6 +91,8 @@ enum EditorRequest: Identifiable, Hashable {
         case .welcome: "welcome"
         case .mcpManager: "mcpManager"
         case .mcpIntro: "mcpIntro"
+        case .remotePairing: "remotePairing"
+        case .gistSync: "gistSync"
         }
     }
 }

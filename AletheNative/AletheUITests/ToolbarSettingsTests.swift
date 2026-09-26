@@ -75,7 +75,7 @@ final class ToolbarSettingsTests: XCTestCase {
     /// Hit targets at three zoom levels: every toggle flips where it is drawn.
     func testToolbarTogglesReceiveClicksAtThreeZoomLevels() {
         let items = ["home", "pomodoro", "usage.claude", "usage.codex", "usage.antigravity", "usage",
-                     "notifications", "memory", "profile"]
+                     "notifications", "memory", "profile", "remote", "router9", "sync"]
         for (steps, label) in [(-1, "90%"), (0, "100%"), (2, "120%")] {
             let (app, _) = launchAlethe()
             XCTAssertTrue(element(app, "workspace.empty").waitForExistence(timeout: 5))

@@ -17,7 +17,11 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: metrics.space(.huge)) {
                 VStack(alignment: .leading, spacing: metrics.space(.xxl)) {
-                    HomeHero()
+                    HStack(alignment: .top, spacing: metrics.space(.xxl)) {
+                        HomeHero()
+                        Spacer(minLength: 0)
+                        NowPlayingCard()
+                    }
                     QuickLaunch(workspace: workspace)
                     SetupWalkthroughView(workspace: workspace)
                 }

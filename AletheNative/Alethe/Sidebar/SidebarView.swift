@@ -56,16 +56,19 @@ struct SidebarView: View {
             Button("menu.file.newGroup") { environment.editorRequest = .newGroup(parent: nil) }
         }
         .safeAreaInset(edge: .bottom) {
-            HStack {
-                Button { actions.chooseFolders() } label: {
-                    Label("sidebar.addProject", systemImage: "plus")
+            VStack(spacing: 0) {
+                SidebarNowPlaying()
+                HStack {
+                    Button { actions.chooseFolders() } label: {
+                        Label("sidebar.addProject", systemImage: "plus")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityIdentifier("sidebar.addProject")
+                    Spacer()
                 }
-                .buttonStyle(.borderless)
-                .accessibilityIdentifier("sidebar.addProject")
-                Spacer()
+                .padding(.horizontal, metrics.space(.l))
+                .padding(.vertical, metrics.space(.m))
             }
-            .padding(.horizontal, metrics.space(.l))
-            .padding(.vertical, metrics.space(.m))
         }
     }
 
