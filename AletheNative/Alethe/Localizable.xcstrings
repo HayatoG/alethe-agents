@@ -15913,6 +15913,261 @@
         }
       }
     },
+    "orchestrator.answerAbort" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abort"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abortar"
+          }
+        }
+      }
+    },
+    "orchestrator.answerAbortTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ends this worker turn instead of answering the question"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerra o turno deste worker em vez de responder à pergunta"
+          }
+        }
+      }
+    },
+    "orchestrator.answerAccept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approve once"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprovar uma vez"
+          }
+        }
+      }
+    },
+    "orchestrator.answerAcceptTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lets it do this one thing, and it asks again next time"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libera só isto; na próxima ele pergunta de novo"
+          }
+        }
+      }
+    },
+    "orchestrator.answerDecline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recusar"
+          }
+        }
+      }
+    },
+    "orchestrator.answerDeclineTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refuses this one thing; the worker carries on another way"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nega só isto; o worker segue por outro caminho"
+          }
+        }
+      }
+    },
+    "orchestrator.answerFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The worker did not take the answer"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O worker não aceitou a resposta"
+          }
+        }
+      }
+    },
+    "orchestrator.answerSession" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approve for the session"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprovar pela sessão"
+          }
+        }
+      }
+    },
+    "orchestrator.answerSessionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stops this worker asking again for the rest of its session"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faz este worker parar de perguntar pelo resto da sessão dele"
+          }
+        }
+      }
+    },
+    "orchestrator.askCommand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It wants to run a command."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ele quer rodar um comando."
+          }
+        }
+      }
+    },
+    "orchestrator.askFileChange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It wants to change files."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ele quer alterar arquivos."
+          }
+        }
+      }
+    },
+    "orchestrator.askHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Declining lets it carry on down another path. Aborting ends its turn here."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recusar deixa ele seguir por outro caminho. Abortar encerra o turno dele."
+          }
+        }
+      }
+    },
+    "orchestrator.askIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "in %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "em %@"
+          }
+        }
+      }
+    },
+    "orchestrator.askLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "waiting on you"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "esperando você"
+          }
+        }
+      }
+    },
+    "orchestrator.askOutside" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This runs outside the worker's own folder"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isto roda fora da pasta do próprio worker"
+          }
+        }
+      }
+    },
     "orchestrator.attentionLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15943,6 +16198,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ele parou para perguntar antes de agir, e segura a vaga sem fazer nada até você responder."
+          }
+        }
+      }
+    },
+    "orchestrator.cancelAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cancel"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cancelar"
+          }
+        }
+      }
+    },
+    "orchestrator.cancelConfirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Worker"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar Worker"
+          }
+        }
+      }
+    },
+    "orchestrator.cancelConfirmMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its running turn stops and the worker ends. What it reported so far is kept."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O turno em andamento para e o worker termina. O que ele reportou até agora é mantido."
+          }
+        }
+      }
+    },
+    "orchestrator.cancelConfirmTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel worker %@?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar o worker %@?"
+          }
+        }
+      }
+    },
+    "orchestrator.cancelFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not cancel the worker"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível cancelar o worker"
+          }
+        }
+      }
+    },
+    "orchestrator.cancelKeep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Running"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar Rodando"
+          }
+        }
+      }
+    },
+    "orchestrator.cancelTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stops this worker: its turn is interrupted and it ends as cancelled"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para este worker: o turno é interrompido e ele termina como cancelado"
           }
         }
       }
@@ -16028,6 +16402,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Custo da sessão informado por este worker"
+          }
+        }
+      }
+    },
+    "orchestrator.diffFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not load the diff"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível carregar o diff"
+          }
+        }
+      }
+    },
+    "orchestrator.diffLoading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading diff…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carregando diff…"
+          }
+        }
+      }
+    },
+    "orchestrator.dismissError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dispensar"
           }
         }
       }
@@ -16164,6 +16589,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "diff"
+          }
+        }
+      }
+    },
+    "orchestrator.hideDiff" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hide diff"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ocultar diff"
           }
         }
       }
@@ -16334,6 +16776,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "resposta ao vivo"
+          }
+        }
+      }
+    },
+    "orchestrator.messageLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message this worker"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensagem para este worker"
+          }
+        }
+      }
+    },
+    "orchestrator.modeNext" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "next turn"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "próximo turno"
+          }
+        }
+      }
+    },
+    "orchestrator.modeResume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "resume"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "retomar"
+          }
+        }
+      }
+    },
+    "orchestrator.modeSteer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steer"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "corrigir"
           }
         }
       }
@@ -16661,6 +17171,108 @@
         }
       }
     },
+    "orchestrator.releaseAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "release"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "liberar"
+          }
+        }
+      }
+    },
+    "orchestrator.releaseFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not release the worker"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível liberar o worker"
+          }
+        }
+      }
+    },
+    "orchestrator.releaseTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ends its process; its record and thread stay, and a message starts it again"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerra o processo dele; o registro e a thread ficam, e uma mensagem sobe ele de novo"
+          }
+        }
+      }
+    },
+    "orchestrator.resumeHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts this worker again and resumes its thread with the message"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sobe este worker de novo e retoma a thread dele com a mensagem"
+          }
+        }
+      }
+    },
+    "orchestrator.resumeNote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sending starts it again, context intact"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "enviar sobe ele de novo, com o contexto intacto"
+          }
+        }
+      }
+    },
+    "orchestrator.resumePlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start it again with…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retomar com…"
+          }
+        }
+      }
+    },
     "orchestrator.routingChosen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16882,6 +17494,74 @@
         }
       }
     },
+    "orchestrator.sendFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The worker did not take the message"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O worker não aceitou a mensagem"
+          }
+        }
+      }
+    },
+    "orchestrator.sendHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runs as its next turn, on everything it already knows"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vira o próximo turno dele, com tudo que ele já sabe"
+          }
+        }
+      }
+    },
+    "orchestrator.sendPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Give it more work…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dar mais trabalho a ele…"
+          }
+        }
+      }
+    },
+    "orchestrator.showInFinder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show in Finder"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar no Finder"
+          }
+        }
+      }
+    },
     "orchestrator.slots" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17035,6 +17715,40 @@
         }
       }
     },
+    "orchestrator.steerHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lands on the turn it is running now"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entra no turno que ele está rodando agora"
+          }
+        }
+      }
+    },
+    "orchestrator.steerPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct this worker…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corrigir este worker…"
+          }
+        }
+      }
+    },
     "orchestrator.summary" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17150,6 +17864,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ativar orquestração"
+          }
+        }
+      }
+    },
+    "orchestrator.unknownWorker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Worker %@ is no longer known."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O worker %@ não é mais conhecido."
+          }
+        }
+      }
+    },
+    "orchestrator.viewDiff" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "view diff"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ver diff"
           }
         }
       }

@@ -135,6 +135,8 @@ enum TestSeeds {
             }
             doc.addPane(to: project, content: .orchestrator)
             doc.workspace.selectedProjectID = project
+        case orchestratorWorker:
+            seedOrchestratorWorker(into: &doc)
         case "skills":
             seedSkills()
         case "gsdSync":
@@ -167,6 +169,8 @@ enum TestSeeds {
         switch name {
         case "gsdSync":
             preferences.features.set(.gsdSync, on: true)
+        case orchestratorWorker:
+            seedOrchestratorWorker(into: &preferences)
         case "orchestrator", "orchestratorBoard", "orchestratorLarge", "multiagent", "multiagentLive":
             preferences.features.set(.orchestrator, on: true)
         default:
