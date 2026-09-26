@@ -3423,7 +3423,7 @@ above.
   connected" or "Remote control on"), refreshed every 2 s, opens the sheet. Open: the controller
   notifies observers even when unchanged (the pill redraws every 2 s). Tests (UI `RemotePairingTests`,
   HT at 3 zooms) written and compiled, NOT run.
-- [ ] **P7-20 (S) Remote end-to-end and security checks.** On the running app with remote control bound
+- [x] **P7-20 (S) Remote end-to-end and security checks.** On the running app with remote control bound
   to loopback through a test-only host: a `WKWebView` loads the bundled client from the pairing URL,
   pairs, lists only the shared seeded terminal, receives its output, sends a message and interrupts;
   read-only refuses input, revoke disconnects the page, the pairing token works once, a second device is
@@ -3431,6 +3431,15 @@ above.
   closed, no token in logs, exports or `workspace.json`, 9router and the OAuth callback on `127.0.0.1`).
   Files: new tests and `TestSeeds+Remote.swift`. Needs P7-18, P7-19. *Tests:* UI, U. *Parity:* PER-7
   (the §10 security review before release).
+  *Done:* (`3b0cf7d`) `RemoteEndToEndTests` loads the bundled phone client in runner-side `WKWebView`s
+  from the loopback pairing URL (`remoteE2E` seed: shared stub Claude Code tab + private shell, one
+  device max): pairs, lists only the shared terminal, receives output, sends a message and interrupts;
+  read-only refuses input; a second device refused at the limit; a used pairing token refused; revoke
+  ends the page and its token gets 401; no token anywhere under the data root.
+  `RemoteSecurityChecklistTests`: no wildcard binds, Tailscale fails closed (no LAN fallback), remote
+  logs never carry tokens or message text, exports redact remote credentials, saved documents hold no
+  token keys, 9router and the Spotify callback stay on 127.0.0.1. Fix: `SecretRedactor` now redacts
+  `pair=` tokens. Written and compiled, NOT run.
 - [ ] **P7-21 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
 
 Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files

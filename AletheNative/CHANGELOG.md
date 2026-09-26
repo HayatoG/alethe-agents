@@ -331,6 +331,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Settings › Remote: turn remote control on (with a network warning; always off at launch), choose Local
   Network or Tailscale, set read-only, shell input, device limit and session lifetime, and review or
   revoke devices; terminals get a Share with Remote Devices toggle and a shared icon.
+- Fixed: exported logs and diagnostics also redact remote-control pairing links.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
