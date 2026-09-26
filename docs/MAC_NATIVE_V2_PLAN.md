@@ -1,10 +1,10 @@
 # Alethe for macOS — native rewrite plan (v2)
 
-> Status: **Phases 0–6 implemented** (2026-09-25). Phases 0–3 tested (last run after P3-18: package
+> Status: **Phases 0–7 implemented** (2026-09-26). Phases 0–3 tested (last run after P3-18: package
 > 336/336, UI 67/67, smoke scripts pass). Phase 4 round 1 ran the package suite (498 green); Phase 4
-> round 2 and all of Phases 5 and 6 were compiled only (owner decision) — see **Test debt** below.
-> Next: P7-1 (Phase 7, Peripherals, broken into tasks below), then Phase 8 (Release). Before Phase 7:
-> clear the test debt. Branch: `mac-native-v2` (created from `origin/main` @ `75083e2`, v1.7.0).
+> round 2 and all of Phases 5, 6 and 7 were compiled only (owner decision) — see **Test debt** below.
+> Next: Phase 8 (Release). Before it: clear the test debt. Branch: `mac-native-v2` (created from
+> `origin/main` @ `75083e2`, v1.7.0).
 >
 > **Test debt (2026-09-25).** Written and compiled, never run:
 > - Package suite (`swift test`): new or changed tests since `b8f5ab7` in AletheIntegrationsTests (19
@@ -18,11 +18,16 @@
 >   Claude protocols, core goldens from `tests/orchestrator.rs`, follow-ups, fitness, board, scheduler,
 >   helper), AletheFoundation event bus, AletheIntegrations planning audit, AletheMerge worktree apply,
 >   UI OrchestratorEntry/Board/WorkerActions/Apply/Quota and MultiagentSettings.
+> - Phase 7 (all compiled, never run): AletheRemoteTests (hub, transport, API, client bundle, sharing,
+>   bridge, service, security checklist), Keychain/peripheral model, Discord IPC, 9router, Spotify, gist
+>   sync, Now Playing; UI PeripheralSlots, Discord, NowPlaying, GistSync, Router9/Router9Routing,
+>   RemoteControl, RemoteSettings, RemotePairing, RemoteEndToEnd.
 > - Performance: GraphLayout at 3000 nodes (P5-23); board with 100 workers (P6-14); worker spawn (P6-3).
 > - Manual (cannot be automated): dictation with a real microphone (P3-17), prompt redraw after resize
 >   (P2-3), image paste and drops (P2-5), hibernation and resume (P2-24), a real ExtensionKit extension
 >   loading and a contained crash (P4-19), profile switch / import / reset / erase relaunches (P5-9,
->   P5-10), `alethe .` cold and warm (P5-8), a real Claude Code and Codex orchestration run (P6), the owner's pass over
+>   P5-10), `alethe .` cold and warm (P5-8), a real Claude Code and Codex orchestration run (P6), real Spotify/Discord/9router/GitHub
+>   sync and a phone paired over LAN and Tailscale (P7), the owner's pass over
 >   all Phase 4, 5 and 6 UI.
 > - Known: a rare `AletheTerminalTests` hang (1-minute limit, root cause open); the workspace tab close
 >   button's accessibility frame is off screen.
@@ -3440,7 +3445,13 @@ above.
   logs never carry tokens or message text, exports redact remote credentials, saved documents hold no
   token keys, 9router and the Spotify callback stay on 127.0.0.1. Fix: `SecretRedactor` now redacts
   `pair=` tokens. Written and compiled, NOT run.
-- [ ] **P7-21 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+- [x] **P7-21 (S) Changelog + phase review.** Parity matrix statuses; run upstream-watch; full test run.
+  *Done (review, 2026-09-26):* all Phase 7 tasks implemented by parallel agents and integrated. Owner
+  rule: compile only — package `swift build --build-tests`, app `build.sh Debug` and UI
+  `build-for-testing` succeed, strings gate ok; every Phase 7 test (incl. the remote end-to-end and
+  security checklist) is written and compiled but NOT run; no real Spotify, Discord, 9router, GitHub or
+  phone pairing run yet. upstream-watch: 0 upstream commits, 0 remote client changes. Parity SET-5,
+  PER-3/4/5/7 Done.
 
 Parallel waves (a task starts when everything it needs is committed; tasks in a wave share no files
 beyond string catalogs — rebase on conflicts). Shared files and the tasks that edit them, never two in
@@ -3573,7 +3584,7 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SET-2 | Feature toggles | P5 | Done | P5-3 |
 | SET-3 | Profiles | P1 (base), P5 | Done | P1-3 base; P5-9 Settings › Profiles + toolbar menu |
 | SET-4 | Backup/import/reset/logs | P5 | Done | P5-10 backup/import/reset/erase; P5-11 logs and diagnostics |
-| SET-5 | GitHub gist sync | P7 | Not started | |
+| SET-5 | GitHub gist sync | P7 | Done | P7-11/15; own private gist (never overwrites the Tauri gist); pull applies at next launch after a safety backup |
 | SET-6 | Cloud sync | — | Won't port | Upstream server not shipped (localhost default); revisit if it ships |
 | SET-7 | Onboarding + welcome | P5 | Done | P5-26; onboarding + welcome back (after an update or 7 days away) |
 | SET-8 | Updater + What's New | P8 | Not started | Sparkle |
@@ -3584,11 +3595,11 @@ user outcome), **Won't port** (with reason). All rows start at the baseline `750
 | SET-13 | Keyboard shortcuts | P1, ongoing | Partial | ⌘N, ⇧⌘N, ⌘O, ⌘T, ⌘,, zoom, undo (P1-1…P1-9); §6.3 |
 | PER-1 | Todos | P4 | Done | P4-16; built-in plugin, right sidebar, JSONC template |
 | PER-2 | Pomodoro | P4 | Done | P4-17; toolbar pill, phase notifications |
-| PER-3 | Spotify | P7 | Not started | |
-| PER-4 | Discord Rich Presence | P7 | Not started | |
-| PER-5 | 9router | P7 | Not started | |
+| PER-3 | Spotify | P7 | Done | P7-10/14; loopback OAuth on 127.0.0.1:8888, secrets in the Keychain |
+| PER-4 | Discord Rich Presence | P7 | Done | P7-4/13; no project names |
+| PER-5 | 9router | P7 | Done | P7-5/16/17; key in the Keychain, loopback only |
 | PER-6 | Dictation | P3 | Done | P3-17; Apple SpeechAnalyzer, ⌥⌘E toggle/hold, no Fn-Fn |
-| PER-7 | Remote control | P7 | Not started | |
+| PER-7 | Remote control | P7 | Done | P7-2/3/7/8/9/12/18/19/20; upstream phone client bundled byte-identical; off at every launch |
 | EXP-1 | Agent Canvas POC + TokenHud | — | Won't port | Experimental upstream; revisit after v1 |
 | EXP-2 | Agent Sandbox | — | Won't port | Disabled upstream |
 | EXP-3 | Ghostty backend in Tauri | — | Replaced | Native terminal is the default |
