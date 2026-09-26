@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// Lays children out at their natural size in rows that wrap, each row centered (chips).
+/// Lays children out at their natural size in rows that wrap, each row centered (chips), or
+/// flush left with `leading`.
 struct FlowLayout: Layout {
     var spacing: CGFloat
     var lineSpacing: CGFloat
+    var leading = false
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = rows(for: subviews, width: proposal.width ?? .infinity)
@@ -15,7 +17,7 @@ struct FlowLayout: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var y = bounds.minY
         for row in rows(for: subviews, width: bounds.width) {
-            var x = bounds.minX + (bounds.width - row.width) / 2
+            var x = bounds.minX + (leading ? 0 : (bounds.width - row.width) / 2)
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.unspecified)
                 subviews[index].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2), proposal: ProposedViewSize(size))

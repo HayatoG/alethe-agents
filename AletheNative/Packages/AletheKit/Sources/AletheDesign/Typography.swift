@@ -44,6 +44,12 @@ extension Metrics {
         .system(size: style.size * scale, weight: style.weight)
     }
 
+    /// A text style on a zoomable surface (the orchestrator board): the UI scale times the surface's
+    /// own zoom, which may go below the UI scale's minimum.
+    public func font(_ style: TextStyle, zoom: CGFloat) -> Font {
+        .system(size: style.size * scale * zoom, weight: style.weight)
+    }
+
     public func lineSpacing(_ style: TextStyle) -> CGFloat {
         style.size * scale * style.leading
     }

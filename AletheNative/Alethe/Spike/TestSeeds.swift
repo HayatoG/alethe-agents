@@ -125,6 +125,16 @@ enum TestSeeds {
         case "orchestrator":
             // One project, no panes; the orchestrator feature is turned on below (P6-13).
             doc.addProject(name: "scratch", folder: "/private/tmp", color: .pink)
+        case "orchestratorBoard", "orchestratorLarge":
+            // A board beside a disabled Claude Code planner tab (`tab-lead`), over a jobs file in the
+            // profile: the core restores it on first use (P6-14).
+            let folder = seedOrchestratorJobs(large: name == "orchestratorLarge")
+            let project = doc.addProject(name: "board", folder: folder.path, color: .purple)
+            if let pane = doc.addPane(to: project, tab: PaneTab(id: TabID(rawValue: "tab-lead"), agent: "claude", title: "lead")) {
+                doc.setDisabled(pane, true)
+            }
+            doc.addPane(to: project, content: .orchestrator)
+            doc.workspace.selectedProjectID = project
         case "skills":
             seedSkills()
         case "gsdSync":
@@ -157,11 +167,66 @@ enum TestSeeds {
         switch name {
         case "gsdSync":
             preferences.features.set(.gsdSync, on: true)
-        case "orchestrator", "multiagent", "multiagentLive":
+        case "orchestrator", "orchestratorBoard", "orchestratorLarge", "multiagent", "multiagentLive":
             preferences.features.set(.orchestrator, on: true)
         default:
             break
         }
+    }
+
+    /// `boardrepo` in the data root and `profiles/default/orchestrator-jobs.json` (upstream's v2
+    /// shape). The small board: planner `tab-lead` with run-01 (done, failed, interrupted workers)
+    /// and run-02 (one done worker in a worktree), plus run-03 delegated from outside a terminal.
+    /// The large one: 100 workers in five runs under `tab-lead`.
+    private static func seedOrchestratorJobs(large: Bool) -> URL {
+        let root = URL(filePath: UserDefaults.standard.string(forKey: "AletheDataRoot") ?? "/private/tmp")
+        let folder = root.appending(path: "boardrepo")
+        let profile = root.appending(path: "profiles/default")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: profile, withIntermediateDirectories: true)
+        let start: UInt64 = 1_750_000_000_000
+        func job(_ id: Int, run: Int, label: String, planner: String?, agent: String = "codex", status: String,
+                 summary: String = "", extra: [String: Any] = [:]) -> [String: Any] {
+            var record: [String: Any] = [
+                "id": String(format: "job-%02d", id), "agent": agent, "runId": String(format: "run-%02d", run),
+                "runLabel": label, "spec": "Task \(id)", "cwd": folder.path, "status": status,
+                "plan": [String](), "summary": summary, "approvalPolicy": "\"never\"", "sandbox": "workspace-write",
+                "webSearch": false, "startedAt": start, "endedAt": start + UInt64(40_000 + id * 1000),
+            ]
+            if let planner { record["plannerId"] = planner }
+            return record.merging(extra) { _, new in new }
+        }
+        var jobs: [[String: Any]] = []
+        if large {
+            for id in 1...100 {
+                let run = (id - 1) / 20 + 1
+                jobs.append(job(id, run: run, label: "Batch \(run)", planner: "tab-lead",
+                                status: id % 7 == 0 ? "failed" : "done", summary: "Worker \(id) finished.\nAll good."))
+            }
+        } else {
+            jobs = [
+                job(1, run: 1, label: "Refactor parser", planner: "tab-lead", status: "done",
+                    summary: "Split the parser into modules.\nAll tests pass.",
+                    extra: ["plan": ["Read the parser", "Split it"],
+                            "tokens": ["total": ["totalTokens": 12_345], "modelContextWindow": 200_000]]),
+                job(2, run: 1, label: "Refactor parser", planner: "tab-lead", agent: "claude", status: "failed",
+                    extra: ["outcome": "the worker exited with status 1"]),
+                job(3, run: 1, label: "Refactor parser", planner: "tab-lead", status: "running",
+                    extra: ["threadId": "thread-3"]),
+                job(4, run: 2, label: "Docs", planner: "tab-lead", agent: "claude", status: "done",
+                    summary: "Docs updated.", extra: ["worktree": folder.appending(path: ".alethe/worktrees/job-04").path]),
+                job(5, run: 3, label: "Outside", planner: nil, status: "done", summary: "Done from outside."),
+            ]
+        }
+        let file: [String: Any] = [
+            "version": 2,
+            "jobs": jobs,
+            "planners": [["id": "tab-lead", "label": "lead", "agent": "claude"]],
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: file) {
+            try? data.write(to: profile.appending(path: "orchestrator-jobs.json"))
+        }
+        return folder
     }
 
     /// `gsdrepo` in the data root: a repository whose `.planning/` has a busy child session, a

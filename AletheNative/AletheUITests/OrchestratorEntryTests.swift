@@ -30,7 +30,10 @@ final class OrchestratorEntryTests: XCTestCase {
 
         XCTAssertTrue(element(app, "pane.header.claude").waitForExistence(timeout: 10), "the planner opens")
         XCTAssertTrue(element(app, "orchestrator.pane").waitForExistence(timeout: 5), "the board opens beside it")
-        XCTAssertTrue(element(app, "orchestrator.empty").exists, "the feature is on: the board, not the notice")
+        // The planner registers itself (P6-9), so the board shows its tab or, before that, the empty state.
+        XCTAssertTrue(eventually { self.element(app, "orchestrator.empty").exists || self.element(app, "orchestrator.tabs").exists },
+                      "the feature is on: the board, not the notice")
+        XCTAssertFalse(element(app, "orchestrator.featureOff").exists)
         app.terminate()
     }
 
