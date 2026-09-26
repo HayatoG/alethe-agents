@@ -71,6 +71,8 @@ public final class NowPlayingModel {
     @ObservationIgnored private var visibleViews = 0
     @ObservationIgnored private var appActive = true
     @ObservationIgnored private var pollTask: Task<Void, Never>?
+    /// The last poll loop stopped; its request in flight may still land.
+    @ObservationIgnored private var stoppedPollTask: Task<Void, Never>?
     @ObservationIgnored private var inFlight = false
     @ObservationIgnored private var statusChecked = false
     /// Bumped by disconnect and a source change so a reply that was in flight is dropped.
@@ -150,8 +152,15 @@ public final class NowPlayingModel {
     }
 
     private func stopPolling() {
-        pollTask?.cancel()
-        pollTask = nil
+        guard let pollTask else { return }
+        pollTask.cancel()
+        stoppedPollTask = pollTask
+        self.pollTask = nil
+    }
+
+    /// Waits until the last stopped poll loop ended, the request it had in flight included.
+    func pollingStopped() async {
+        await stoppedPollTask?.value
     }
 
     // MARK: - Actions

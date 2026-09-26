@@ -25,7 +25,7 @@ private final class FakeDiscordClient: DiscordPresenceClient {
 }
 
 @MainActor
-@Suite struct DiscordPresenceSessionTests {
+@Suite(.timeLimit(.minutes(1))) struct DiscordPresenceSessionTests {
     private let launch = Date(timeIntervalSince1970: 1_700_000_000)
 
     @Test func eachViewHasItsUpstreamLabel() {
@@ -99,7 +99,11 @@ private final class FakeDiscordClient: DiscordPresenceClient {
         let client = FakeDiscordClient()
         let session = DiscordPresenceSession(client: client, startedAt: launch, refreshInterval: .milliseconds(20))
         session.update(enabled: true, view: .terminals)
-        try await Task.sleep(for: .milliseconds(200))
+        // Waits for two refreshes after the first send rather than assuming how many fit in a fixed sleep.
+        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
+        while client.sets.count < 3, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
         await session.settle()
         #expect(client.sets.count >= 3)
         #expect(Set(client.sets) == [session.activity(for: .terminals)])

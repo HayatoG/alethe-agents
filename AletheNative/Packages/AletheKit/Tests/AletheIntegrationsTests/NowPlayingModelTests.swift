@@ -65,7 +65,7 @@ private func eventually(timeout: Duration = .seconds(2), _ condition: @MainActor
 }
 
 @MainActor
-struct NowPlayingModelTests {
+@Suite(.timeLimit(.minutes(1))) struct NowPlayingModelTests {
     @Test func pollsOnlyWhileAViewIsVisible() async {
         let source = StubSource(connected: true, track: track("one"))
         let model = NowPlayingModel(source: source, lastTrack: nil, interval: .milliseconds(10))
@@ -77,7 +77,8 @@ struct NowPlayingModelTests {
 
         model.viewDisappeared()
         #expect(!model.isPolling)
-        try? await Task.sleep(for: .milliseconds(30))
+        // Once the loop ended (its last request included), several intervals pass without a request.
+        await model.pollingStopped()
         let stopped = await source.currentCalls
         try? await Task.sleep(for: .milliseconds(60))
         #expect(await source.currentCalls == stopped)
@@ -90,7 +91,7 @@ struct NowPlayingModelTests {
         #expect(await eventually { model.isPolling })
         model.setAppActive(false)
         #expect(!model.isPolling)
-        try? await Task.sleep(for: .milliseconds(30))
+        await model.pollingStopped()
         let stopped = await source.currentCalls
         try? await Task.sleep(for: .milliseconds(60))
         #expect(await source.currentCalls == stopped)
