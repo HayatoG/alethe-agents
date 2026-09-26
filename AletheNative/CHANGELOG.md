@@ -318,6 +318,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 9router: Settings › Integrations › 9router (enable, source, port, Keychain key, start with Alethe,
   route new agents, status, dashboard, log, advisories), an install/uninstall sheet with the exact
   command and live log, and a toolbar pill to start or stop it.
+- Now Playing: a Home card and the sidebar footer show the current Spotify track (the last one stays,
+  paused, after a relaunch); Settings › Integrations › Spotify sets the client ID and secret (in the
+  Keychain) and connects or disconnects.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves

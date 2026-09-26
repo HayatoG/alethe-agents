@@ -3309,7 +3309,7 @@ above.
   `DiscordPresenceController` follows the preference and view by observation; Settings › Integrations ›
   Discord toggle; test launches use a silent client (seed `discordPresence`). Tests (U with a fake
   client, UI toggle) written and compiled, NOT run.
-- [ ] **P7-14 (L) Now Playing.** `NowPlayingController` (upstream `useNowPlaying.ts`): connected status,
+- [x] **P7-14 (L) Now Playing.** `NowPlayingController` (upstream `useNowPlaying.ts`): connected status,
   the current track every 8 s only while a Now Playing view is visible and the app is active (one request
   in flight), the last track kept per profile and shown paused after a relaunch, connect (P7-10 login)
   and disconnect; the Home card (upstream `HomeView/NowPlayingWidget.tsx`: art, track, artists,
@@ -3320,6 +3320,15 @@ above.
   `NowPlayingViews.swift`, `SpotifySettingsSection.swift`, `TestSeeds+Spotify.swift`. Needs P7-6, P7-10.
   *Tests:* U (polling stops when hidden, last track restored), UI (seeded track on Home and in the
   sidebar; Settings section), HT. *Parity:* PER-3, HOME-1.
+  *Done:* (`d29b839`) `AletheIntegrations/Spotify/NowPlayingModel` (upstream `useNowPlaying`):
+  connection checked when a view first appears; track fetched every 8 s only while a view is visible,
+  the app active and Spotify connected, one request at a time; last track kept per profile (`spotify-
+  last-track.json`, saved on song change) and restored paused; a rejected refresh disconnects;
+  Disconnect also deletes the saved track. `NowPlayingController` connects it to the profile, Keychain
+  and app activation with localized callback pages. Home card, sidebar footer, Settings › Integrations ›
+  Spotify (client ID, Keychain secret, redirect URI with Copy, Connect/Disconnect); cover art off main
+  and cached; Reduce Motion stops the equalizer; theme tokens only. Seeds `spotify`/`spotifyOff` never
+  reach Spotify. Tests (U 12, UI 4 incl. HT at 3 zooms) written and compiled, NOT run.
 - [x] **P7-15 (M) GitHub Sync sheet and toolbar item.** The sheet (upstream `SyncModal` GitHub card;
   the cloud card is SET-6, Won't port): connect with a token (secure field; a link to create one with
   the `gist` scope), connected as, gist link, Push, Pull (asks once: it replaces this profile's
