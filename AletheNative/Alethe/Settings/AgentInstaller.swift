@@ -12,6 +12,8 @@ final class AgentInstaller {
     enum Status: Equatable { case idle, running, succeeded, failed }
 
     private(set) var agent: AgentKind?
+    /// The non-agent tool this run is for (`router9`, P7-16); nil for agent runs.
+    private(set) var tool: String?
     private(set) var method: InstallMethod?
     private(set) var status: Status = .idle
     private(set) var log = ""
@@ -32,6 +34,7 @@ final class AgentInstaller {
         guard !isBusy else { return }
         self.agent = agent
         self.method = method
+        tool = nil
         status = .running
         raw = ""
         log = ""
@@ -39,13 +42,49 @@ final class AgentInstaller {
         var before: String?
         if !method.verifyAbsent, let found = launchers.resolve(command) { before = await CLIVersion.probe(found) }
 
+        let exit = await execute(AgentInstallCatalog.shellArguments(for: method), command: method.command)
+
+        launchers.invalidate()
+        let found = launchers.resolve(command)
+        let worked: Bool
+        if method.verifyAbsent {
+            worked = found == nil
+        } else if let found {
+            // An update counts only once the version at that path moves.
+            let after = await CLIVersion.probe(found)
+            worked = before == nil || (after != nil && after != before)
+        } else {
+            worked = false
+        }
+        if exit != 0, !worked { append("\n[exit \(exit)]\n") }
+        status = worked ? .succeeded : .failed
+    }
+
+    /// Runs a fixed command line (9router's install or uninstall, built by `Router9Commands`) with the
+    /// same shell, lock and log as an agent install; `verify` decides whether it worked.
+    func run(command: String, tool: String, verify: @MainActor () async -> Bool) async {
+        guard !isBusy else { return }
+        agent = nil
+        method = nil
+        self.tool = tool
+        status = .running
+        raw = ""
+        log = ""
+        let exit = await execute(["-l", "-c", command], command: command)
+        let worked = await verify()
+        if exit != 0, !worked { append("\n[exit \(exit)]\n") }
+        status = worked ? .succeeded : .failed
+    }
+
+    /// The login shell with `arguments`, its output appended to the log; returns the exit status.
+    private func execute(_ arguments: [String], command: String) async -> Int32 {
         let process = Process()
         process.executableURL = URL(filePath: ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh")
-        process.arguments = AgentInstallCatalog.shellArguments(for: method)
+        process.arguments = arguments
         #if DEBUG
         // UI tests: print the command instead of running it.
         if UserDefaults.standard.bool(forKey: "AletheInstallDryRun") {
-            process.arguments = ["-c", "echo \"dry run: $0\"", method.command]
+            process.arguments = ["-c", "echo \"dry run: $0\"", command]
         }
         #endif
         process.currentDirectoryURL = URL(filePath: NSHomeDirectory())
@@ -73,21 +112,7 @@ final class AgentInstaller {
         }
         pipe.fileHandleForReading.readabilityHandler = nil
         self.process = nil
-
-        launchers.invalidate()
-        let found = launchers.resolve(command)
-        let worked: Bool
-        if method.verifyAbsent {
-            worked = found == nil
-        } else if let found {
-            // An update counts only once the version at that path moves.
-            let after = await CLIVersion.probe(found)
-            worked = before == nil || (after != nil && after != before)
-        } else {
-            worked = false
-        }
-        if exit != 0, !worked { append("\n[exit \(exit)]\n") }
-        status = worked ? .succeeded : .failed
+        return exit
     }
 
     func cancel() {
@@ -100,6 +125,7 @@ final class AgentInstaller {
         status = .idle
         agent = nil
         method = nil
+        tool = nil
         log = ""
     }
 
