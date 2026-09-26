@@ -27,7 +27,7 @@ public enum OrchestratorMCP {
 
     /// The nine tool schemas, verbatim from upstream (`Resources/orchestrator-tools.json`).
     public static let tools: OrderedJSON = {
-        guard let url = Bundle.module.url(forResource: "orchestrator-tools", withExtension: "json"),
+        guard let url = resourceBundle.url(forResource: "orchestrator-tools", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let tools = try? OrderedJSON.parse(data)
         else {
@@ -36,6 +36,19 @@ public enum OrchestratorMCP {
         }
         return tools
     }()
+
+    /// The target's resources. The stdio helper runs from the app's `Contents/Helpers/`, where
+    /// `Bundle.module` (which traps when it finds nothing) would not look: the app keeps the
+    /// resource bundle in `Contents/Resources/`, so that is tried first.
+    static var resourceBundle: Bundle {
+        let name = "AletheKit_AletheOrchestrator.bundle"
+        if let executable = Bundle.main.executableURL?.resolvingSymlinksInPath().deletingLastPathComponent() {
+            for folder in [executable.appending(path: "../Resources"), executable] {
+                if let bundle = Bundle(url: folder.appending(path: name).standardizedFileURL) { return bundle }
+            }
+        }
+        return Bundle.module
+    }
 
     /// Answers one JSON-RPC message. Returns nil when there is nothing to send back: a
     /// notification (no id) or a body that is not JSON.

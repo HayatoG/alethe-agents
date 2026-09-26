@@ -186,6 +186,7 @@
 				A1E700000000000000000301 /* Sources */,
 				A1E7000000000000000000F1 /* Frameworks */,
 				A1E700000000000000000302 /* Resources */,
+				A1E70000000000000000003D2 /* Embed orchestrator helper */,
 			);
 			buildRules = (
 			);
@@ -385,6 +386,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/usr/bin/python3 \"$SRCROOT/Scripts/check-strings.py\" \"$SRCROOT\"\n";
+			showEnvVarsInLog = 0;
+		};
+		A1E70000000000000000003D2 /* Embed orchestrator helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed orchestrator helper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\n# The helper is built by SwiftPM, not as an Xcode package product: depending on an executable\n# product makes Xcode link the shared package targets into the app as dynamic frameworks.\nhelper=alethe-orchestrator-mcp\nscratch=\"$PROJECT_TEMP_DIR/OrchestratorHelper\"\ncase \"$CONFIGURATION\" in Release) config=release ;; *) config=debug ;; esac\narchs=\"\"\nfor arch in $ARCHS; do archs=\"$archs --arch $arch\"; done\n# A clean environment: Xcode's build settings would otherwise steer SwiftPM's compiler and SDK.\nenv -i HOME=\"$HOME\" PATH=/usr/bin:/bin:/usr/sbin:/sbin DEVELOPER_DIR=\"$DEVELOPER_DIR\" \\\n  xcrun swift build --package-path \"$SRCROOT/Packages/AletheKit\" --scratch-path \"$scratch\" \\\n  -c \"$config\" $archs --product \"$helper\"\nbuilt=\"$(env -i HOME=\"$HOME\" PATH=/usr/bin:/bin:/usr/sbin:/sbin DEVELOPER_DIR=\"$DEVELOPER_DIR\" \\\n  xcrun swift build --package-path \"$SRCROOT/Packages/AletheKit\" --scratch-path \"$scratch\" \\\n  -c \"$config\" $archs --show-bin-path)\"\ndest=\"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Helpers\"\nmkdir -p \"$dest\"\nditto \"$built/$helper\" \"$dest/$helper\"\n# Signed like the app (hardened runtime) before the app itself is signed around it.\ncodesign --force --options runtime --timestamp=none --identifier \"$PRODUCT_BUNDLE_IDENTIFIER.orchestrator-mcp\" \\\n  --sign \"${EXPANDED_CODE_SIGN_IDENTITY:--}\" \"$dest/$helper\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

@@ -7,12 +7,14 @@ import AletheIntegrations
 /// Planners and the loopback `/mcp` endpoint (P6-9; upstream `orchestrator_mcp_config_path` and
 /// `agent_events.rs` `/mcp`).
 @Suite struct OrchestratorPlannerLaunchTests {
-    @Test func onlyClaudeTabsBecomePlannersHere() {
+    @Test func claudeAndCodexTabsBecomePlanners() {
         #expect(OrchestratorPlannerLaunch.planner(tab: "tab1", label: " Lead ", kind: .claude)
             == Planner(id: "tab1", label: "Lead", agent: "claude"))
         #expect(OrchestratorPlannerLaunch.planner(tab: "tab1", label: "  ", kind: .claude)?.label == "tab1")
-        #expect(OrchestratorPlannerLaunch.planner(tab: "tab1", label: "Lead", kind: .codex) == nil)
+        #expect(OrchestratorPlannerLaunch.planner(tab: "tab1", label: "Lead", kind: .codex)
+            == Planner(id: "tab1", label: "Lead", agent: "codex"))
         #expect(OrchestratorPlannerLaunch.planner(tab: "tab1", label: "Lead", kind: .shell) == nil)
+        #expect(OrchestratorPlannerLaunch.usesBridge(.codex) && !OrchestratorPlannerLaunch.usesBridge(.claude))
     }
 
     @Test func theServerCarriesTheTokenAndPlannerAsHeaders() {
