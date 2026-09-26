@@ -74,8 +74,9 @@ import Testing
         process.killTree()
         #expect(!process.isRunning)
         let output = String(decoding: printed + process.output.readDataToEndOfFile(), as: UTF8.self)
-        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == dir.resolvingSymlinksInPath().path
-                || output.trimmingCharacters(in: .whitespacesAndNewlines) == dir.path)
+        // `pwd` prints the real path (`/private/var/…`); compare both sides resolved.
+        let printedPath = URL(fileURLWithPath: output.trimmingCharacters(in: .whitespacesAndNewlines))
+        #expect(printedPath.resolvingSymlinksInPath().path == dir.resolvingSymlinksInPath().path, "pwd printed \(output)")
     }
 
     @Test func descendantsWalkParentsBeforeChildren() {
