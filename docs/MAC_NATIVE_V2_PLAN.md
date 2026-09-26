@@ -2836,13 +2836,21 @@ above.
   `Alethe/Orchestrator/ApplyWorktree.swift` and its button on the worker detail. Needs P6-7, P6-14.
   *Tests:* U (step order and stop points with stubs), UI (a clean apply on a seeded repository).
   *Parity:* ORC-1.
-- [ ] **P6-17 (S) Spend and quota warnings.** The board header (upstream `aggregateAgentSpend`,
+- [x] **P6-17 (S) Spend and quota warnings.** The board header (upstream `aggregateAgentSpend`,
   `useOrchestratorQuotaWarnings`): spend per agent for the selected planner (cost, or tokens when
   unpriced) and a warning chip per agent at 80 % or rate-limited, with its reset; while a board is open,
   Claude and Codex usage (P3-13 readers) is read every 60 s and pushed into the core as fitness (P6-8),
   so the planner and the person read the same numbers (`FitnessFeed`). Files: new files in
   `Alethe/Orchestrator/`. Needs P6-8, P6-14. *Tests:* U (threshold, the feed stops when the last board
   closes), UI (seeded usage shows the chip). *Parity:* ORC-1.
+  *Done:* (`d64f52b`) pure `QuotaWarning` (≥80 % or rate-limited, same threshold as `headroomHint`;
+  upstream `formatReset` countdown) and a `FitnessFeed` actor: reads every 60 s while a board is open
+  (immediately on open), keeps the last good reading, pushes `setAgentFitness`, stops when the last
+  board closes. App `OrchestratorQuotaFeed.shared` reads through P3-13's `UsageMonitor` (Codex every
+  tick; Claude only while its pill is on — no new Keychain prompts). `OrchestratorSpendHeader` shows
+  `AgentSpend.aggregate` chips (cost or "no price") and warning chips with their reset, theme tokens
+  only. Debug `-AletheUITestUsage` fakes readings. Tests (7 U, 1 UI `OrchestratorQuotaTests`) written
+  and compiled, NOT run.
 - [x] **P6-18 (M) Event bus and telemetry.** `AletheFoundation/Events` (upstream `event_bus.rs`,
   `telemetry.rs`): an `EventBus` actor (type, time, correlation id, task, agent, JSON data; each
   subscriber gets an `AsyncStream` that drops its oldest events rather than blocking the publisher),

@@ -302,6 +302,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Orchestration board: planner tabs, a summary rail and a zoomable canvas show every run, worker and
   subagent live, with fit, focus, worker details (plan, report, routing, media) and a jump to the
   planner's terminal.
+- Orchestrator board header: each agent's spend for the selected planner and a warning chip when Claude
+  or Codex reaches 80 % of a usage window or is rate-limited, with its reset; usage is re-read every
+  minute while a board is open.
 - Fixed: after a relaunch, an agent terminal (Claude Code, Codex…) no longer shows the previous run's
   screen stacked above the new one; only shell terminals bring their saved output back.
 - Fixed: a terminal now starts at its pane's real size, so an agent's first screen no longer leaves
