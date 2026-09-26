@@ -69,10 +69,13 @@ import Testing
                                              directory: dir, environment: ProcessInfo.processInfo.environment)
         #expect(getpgid(process.pid) == process.pid)
         #expect(getpgid(process.pid) != getpgrp())
+        // Read before killing: `pwd` must have run, or the kill can land before the shell prints.
+        let printed = process.output.availableData
         process.killTree()
         #expect(!process.isRunning)
-        let output = String(decoding: process.output.readDataToEndOfFile(), as: UTF8.self)
-        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == dir.path)
+        let output = String(decoding: printed + process.output.readDataToEndOfFile(), as: UTF8.self)
+        #expect(output.trimmingCharacters(in: .whitespacesAndNewlines) == dir.resolvingSymlinksInPath().path
+                || output.trimmingCharacters(in: .whitespacesAndNewlines) == dir.path)
     }
 
     @Test func descendantsWalkParentsBeforeChildren() {

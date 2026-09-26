@@ -61,8 +61,8 @@ import Testing
     @Test func codexSubagentHooksAreOneLaunchOverride() {
         let arguments = AgentHookWiring.codexSubagentArguments(script: "/tmp/it's.sh", tab: "t1")
         #expect(arguments == [
-            "-c", #"hooks.SubagentStart=[{matcher=".*",hooks=[{type="command",command="/bin/sh '/tmp/it'\''s.sh' 't1'",timeout=5}]}]"#,
-            "-c", #"hooks.SubagentStop=[{matcher=".*",hooks=[{type="command",command="/bin/sh '/tmp/it'\''s.sh' 't1'",timeout=5}]}]"#,
+            "-c", #"hooks.SubagentStart=[{matcher=".*",hooks=[{type="command",command="/bin/sh '/tmp/it'\\''s.sh' 't1'",timeout=5}]}]"#,
+            "-c", #"hooks.SubagentStop=[{matcher=".*",hooks=[{type="command",command="/bin/sh '/tmp/it'\\''s.sh' 't1'",timeout=5}]}]"#,
         ])
         let script = AgentHookWiring.codexHookForwarder(endpoint: "http://127.0.0.1:5000", token: "tok")
         #expect(script.contains("--data-binary @- \"http://127.0.0.1:5000/hook/codex-subagents\""))
