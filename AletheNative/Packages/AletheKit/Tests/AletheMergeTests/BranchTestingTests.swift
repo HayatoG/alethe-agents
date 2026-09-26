@@ -70,13 +70,20 @@ import Testing
         #expect(getpgid(process.pid) == process.pid)
         #expect(getpgid(process.pid) != getpgrp())
         // Read before killing: `pwd` must have run, or the kill can land before the shell prints.
-        let printed = process.output.availableData
+        let printed = Self.read(process.output, within: 10)
         process.killTree()
         #expect(!process.isRunning)
-        let output = String(decoding: printed + process.output.readDataToEndOfFile(), as: UTF8.self)
+        let output = String(decoding: printed, as: UTF8.self)
         // `pwd` prints the real path (`/private/var/…`); compare both sides resolved.
         let printedPath = URL(fileURLWithPath: output.trimmingCharacters(in: .whitespacesAndNewlines))
         #expect(printedPath.resolvingSymlinksInPath().path == dir.resolvingSymlinksInPath().path, "pwd printed \(output)")
+    }
+
+    /// Waits up to `seconds` for the first output instead of blocking a test thread forever.
+    private static func read(_ handle: FileHandle, within seconds: Double) -> Data {
+        var descriptor = pollfd(fd: handle.fileDescriptor, events: Int16(POLLIN), revents: 0)
+        guard poll(&descriptor, 1, Int32(seconds * 1000)) > 0 else { return Data() }
+        return handle.availableData
     }
 
     @Test func descendantsWalkParentsBeforeChildren() {

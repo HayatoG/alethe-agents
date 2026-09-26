@@ -22,6 +22,10 @@ final class GroupProcess: @unchecked Sendable {
         var fds: [Int32] = [0, 0]
         guard pipe(&fds) == 0 else { throw HealthProbeError.spawnFailed("pipe") }
         let (readEnd, writeEnd) = (fds[0], fds[1])
+        // Close-on-exec at once: a process spawned elsewhere meanwhile must not inherit the write end,
+        // or reading this pipe to its end would wait for that unrelated process.
+        _ = fcntl(readEnd, F_SETFD, FD_CLOEXEC)
+        _ = fcntl(writeEnd, F_SETFD, FD_CLOEXEC)
 
         var actions: posix_spawn_file_actions_t?
         posix_spawn_file_actions_init(&actions)
