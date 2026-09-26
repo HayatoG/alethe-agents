@@ -169,7 +169,8 @@ import Testing
         #expect(!result.output.contains("-1"))
     }
 
-    @Test func spawnFailureIsReportedThroughExitCode127() async throws {
+    @Test func aMissingExecutableFailsTheSpawnWithItsErrno() {
+        // posix_spawn reports a missing binary synchronously (TerminalPaneView shows it and ends with 127).
         let launch = PTYLaunch(
             executable: "/nonexistent/binary",
             arguments: ["x"],
@@ -177,8 +178,7 @@ import Testing
             workingDirectory: nil,
             size: PTYSize(columns: 80, rows: 24)
         )
-        let result = try await run(launch)
-        #expect(result.code == 127)
+        #expect(throws: PTYError.spawnFailed(errno: ENOENT)) { try PTYProcess(launch) }
     }
 }
 
