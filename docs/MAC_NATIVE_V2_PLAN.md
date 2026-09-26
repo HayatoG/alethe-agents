@@ -6,6 +6,14 @@
 > Next: Phase 8 (Release). Before it: clear the test debt. Branch: `mac-native-v2` (created from
 > `origin/main` @ `75083e2`, v1.7.0).
 >
+> **Package suite run 2026-09-26: 1680/1680 green in one run** (17 targets). Fixes it forced: terminals
+> spawn with `posix_spawn` instead of `forkpty` (fork deadlocked the multithreaded app in atfork
+> handlers — `cae8ca9`), `PlanningGate`/`GraphifyRepository.repositoryRoot` looped forever outside a
+> repository (`6834e1c`, `75b5bf8`), `ExternalCommand` no longer blocks the cooperative pool
+> (`3a50cb3`), 9router plain paths/PWD (`365d2dc`), health-probe pipe close-on-exec (`6a23199`), and
+> racy/wrong test expectations. The package items below are now cleared; UI, performance and manual
+> items remain.
+>
 > **Test debt (2026-09-25).** Written and compiled, never run:
 > - Package suite (`swift test`): new or changed tests since `b8f5ab7` in AletheIntegrationsTests (19
 >   files), AletheModelTests (13), AletheFoundationTests (5), AletheMergeTests (4), AletheAgentsTests (2),
