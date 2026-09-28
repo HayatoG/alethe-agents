@@ -39,8 +39,11 @@ let package = Package(
         .target(name: "AletheFoundation"),
         .target(
             name: "AletheDesign",
+            dependencies: ["CAletheGlyphGuard"],
             resources: [.copy("Resources/Themes"), .copy("Resources/Fonts")]
         ),
+        // Objective-C shim so a zero-size SF Symbol draws nothing instead of crashing (macOS 27).
+        .target(name: "CAletheGlyphGuard"),
         .target(name: "AletheModel", dependencies: ["AletheFoundation"]),
         .target(name: "AletheAgents"),
         .target(name: "AletheDocuments", dependencies: [.product(name: "Markdown", package: "swift-markdown")]),

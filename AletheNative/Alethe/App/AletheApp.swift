@@ -12,6 +12,7 @@ struct AletheApp: App {
     @State private var environment = AppEnvironment()
 
     init() {
+        SymbolRenderingGuard.install()
         AletheFonts.registerBundledFonts()
     }
 

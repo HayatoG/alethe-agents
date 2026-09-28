@@ -344,3 +344,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The app now has its icon in Finder, Launchpad and the DMG, not only in the Dock while running.
 - The app icon now follows the macOS icon grid, so it is the same size as other apps in the Dock, Finder and the app switcher.
 - Clicking Home in the toolbar no longer crashes the app on macOS 27 right after launch, and its icon no longer disappears while Home is shown; the icon now turns the accent color on Home.
+- Expanding a project in the sidebar (or any other animated view) no longer crashes the app on macOS 27 when the system asks to draw an icon at zero size.
