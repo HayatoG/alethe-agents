@@ -12,9 +12,33 @@ enum AppIcon {
     }
 
     static func apply(_ theme: AppIconTheme) {
-        guard theme != applied, let image = image(for: theme) else { return }
-        NSApp.applicationIconImage = image
+        guard theme != applied else { return }
+        if theme == .default {
+            // nil restores the bundle's AppIcon, already on Apple's grid and in every resolution.
+            NSApp.applicationIconImage = nil
+        } else {
+            guard let image = image(for: theme) else { return }
+            NSApp.applicationIconImage = dockImage(image)
+        }
         applied = theme
+    }
+
+    /// The theme artwork fills its whole canvas; Apple's icon grid draws the rounded square at
+    /// 824/1024 of the canvas with a drop shadow in the margin, so the Dock shows it the same size
+    /// as other apps (Scripts/make-app-icon.py does the same for the bundle icon).
+    private static func dockImage(_ art: NSImage) -> NSImage {
+        let canvas = NSSize(width: 1024, height: 1024)
+        return NSImage(size: canvas, flipped: false) { rect in
+            let side = rect.width * 824 / 1024
+            let frame = NSRect(x: rect.midX - side / 2, y: rect.midY - side / 2, width: side, height: side)
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+            shadow.shadowOffset = NSSize(width: 0, height: -rect.height * 10 / 1024)
+            shadow.shadowBlurRadius = rect.width * 24 / 1024
+            shadow.set()
+            art.draw(in: frame)
+            return true
+        }
     }
 }
 
