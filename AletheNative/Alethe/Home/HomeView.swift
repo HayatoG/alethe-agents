@@ -350,19 +350,47 @@ private struct HomeFooter: View {
 /// Toolbar: Home ↔ workspace.
 struct HomeButton: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.theme) private var theme
 
     var body: some View {
         Button { environment.showingHome.toggle() } label: {
-            // One glyph with a variant plus a minimum frame: swapping symbols let the macOS 27
-            // toolbar propose 0×0 to the new glyph mid-relayout (seen while screen recording),
-            // and CoreUI throws when asked to rasterize a symbol at that size.
-            Image(systemName: "house")
-                .symbolVariant(environment.showingHome ? .fill : .none)
-                .frame(minWidth: 16, minHeight: 16)
+            // The label's content never changes; only its tint marks Home as shown (see `icon`).
+            Image(nsImage: Self.icon)
+                .foregroundStyle(environment.showingHome ? theme[.accent] : theme[.textSecondary])
         }
         .help(Text(environment.showingHome ? "menu.view.showWorkspace" : "menu.view.showHome"))
         .accessibilityLabel(Text("menu.view.showHome"))
         .accessibilityValue(Text(environment.showingHome ? "home.shown" : "home.hidden"))
         .accessibilityIdentifier("home.button")
+    }
+
+    // On macOS 27 the toolbar can hold this label in a 0×0 host (e.g. while its toolbar is hidden).
+    // Swapping the glyph there made CoreUI rasterize `house.fill` at 0×0 and throw, crashing the
+    // app; a swapped bitmap instead got laid out at 0×0 and vanished. So the label keeps one
+    // pre-rendered bitmap for good: no content change to re-measure, no vector rasterization.
+    private static let icon = templateBitmap("house")
+
+    private static func templateBitmap(_ symbol: String) -> NSImage {
+        let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+        guard let glyph = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+            .withSymbolConfiguration(configuration) else { return NSImage() }
+        let size = glyph.size
+        let scale: CGFloat = 2
+        guard size.width > 0, size.height > 0,
+              let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil,
+                                            pixelsWide: Int((size.width * scale).rounded(.up)),
+                                            pixelsHigh: Int((size.height * scale).rounded(.up)),
+                                            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
+        else { return NSImage() }
+        bitmap.size = size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+        glyph.draw(in: NSRect(origin: .zero, size: size))
+        NSGraphicsContext.restoreGraphicsState()
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmap)
+        image.isTemplate = true
+        return image
     }
 }
