@@ -338,6 +338,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   fragments behind when it redraws, and a starting program no longer echoes `^[[I` / `^[[O` when the
   window gains or loses focus.
 - Data is stored per profile in `~/Library/Application Support/com.kc1t.alethe.mac`.
+- The DMG opens a branded install window: drag Alethe onto the Applications shortcut to install.
 
 ### Fixed
 - The app now has its icon in Finder, Launchpad and the DMG, not only in the Dock while running.
