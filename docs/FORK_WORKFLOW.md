@@ -63,6 +63,23 @@ git fetch origin                # bring in new work from the original
 git merge origin/main           # on mac-native-v2, when the owner asks for a sync
 ```
 
+## Publishing a preview build (after authorization)
+
+The native app's preview DMG is attached to a GitHub release on the fork (currently
+`mac-native-v2-preview.1`), never on `origin`. The app is signed with the local identity only and is
+not notarized, so the release notes carry the quarantine workaround from the README.
+
+```bash
+AletheNative/Scripts/make-dmg.sh              # Release build + branded DMG (add --skip-build to reuse)
+git push fork mac-native-v2                   # after the pre-push scan above
+git tag -f mac-native-v2-preview.1 <commit> && git push -f fork refs/tags/mac-native-v2-preview.1
+gh release upload mac-native-v2-preview.1 -R HayatoG/alethe-agents \
+  AletheNative/build/Alethe-macOS-universal.dmg --clobber
+```
+
+Then update the SHA-256 and the source commit in the release notes. Moving the tag can reset the
+release's pre-release flag; check it afterwards and keep whatever the owner chose.
+
 ## Opening the pull request (manual)
 
 On GitHub, compare `Kc1t/alethe-agents:main` ← `HayatoG/alethe-agents:mac-native-v2`

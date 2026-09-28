@@ -109,6 +109,14 @@ streaming through the Tauri events `pty://data/{id}` and `pty://exit/{id}`.
   - Ghostty's keybinds are cleared (`keybind = clear`); app shortcuts live in the menus (ADR-10).
   - Signing: never pass `CODE_SIGN_IDENTITY` to `xcodebuild`; the app reads `ALETHE_SIGN_IDENTITY`
     (a self-signed identity also forbids separately signed dylibs: `ENABLE_DEBUG_DYLIB = NO`).
+  - macOS 27 can ask CoreUI for an SF Symbol at 0×0 mid-animation (hidden toolbar hosts, sidebar rows
+    expanding from zero height); CoreUI asserts and the app crashes. `SymbolRenderingGuard.install()`
+    (`CAletheGlyphGuard`) must stay the first call in `AletheApp.init`. Keep toolbar labels' content
+    fixed (one image; state via tint), since a swapped label can be laid out at 0×0 and vanish.
+  - Packaging: `Scripts/make-dmg.sh [--skip-build]` builds `build/Alethe-macOS-universal.dmg` with the
+    branded install window (`Scripts/dmg/`, dmgbuild in `build/dmg-venv`). The app icon comes from
+    `Scripts/make-app-icon.py` on Apple's 824/1024 grid; the runtime Dock icon (`AppIcon.swift`)
+    follows the same grid. Publishing a preview: `docs/FORK_WORKFLOW.md`.
 
 ## 7. Going deeper
 

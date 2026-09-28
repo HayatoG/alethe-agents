@@ -3510,6 +3510,10 @@ hibernated terminal) (M); accessibility audit (VoiceOver, keyboard-only, Reduce 
 Increase Contrast) (M); extraction to the new repository with `git filter-repo --subdirectory-filter
 AletheNative` (S).
 
+Groundwork done ahead of Phase 8 (2026-09-28): `Scripts/make-dmg.sh` builds a branded DMG (dmgbuild,
+`Scripts/dmg/`), the bundle icon sits on Apple's icon grid (`Scripts/make-app-icon.py`), and a
+non-notarized preview is published on the fork as `mac-native-v2-preview.1` (docs/FORK_WORKFLOW.md).
+
 ## 8. Parity matrix
 
 Status values: **Not started**, **In progress**, **Done**, **Replaced** (different native mechanism, same
