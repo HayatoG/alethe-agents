@@ -342,3 +342,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 - The app now has its icon in Finder, Launchpad and the DMG, not only in the Dock while running.
+- Clicking Home in the toolbar no longer crashes the app on macOS 27 (seen while recording the screen).

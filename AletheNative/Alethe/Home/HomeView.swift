@@ -353,7 +353,12 @@ struct HomeButton: View {
 
     var body: some View {
         Button { environment.showingHome.toggle() } label: {
-            Image(systemName: environment.showingHome ? "house.fill" : "house")
+            // One glyph with a variant plus a minimum frame: swapping symbols let the macOS 27
+            // toolbar propose 0×0 to the new glyph mid-relayout (seen while screen recording),
+            // and CoreUI throws when asked to rasterize a symbol at that size.
+            Image(systemName: "house")
+                .symbolVariant(environment.showingHome ? .fill : .none)
+                .frame(minWidth: 16, minHeight: 16)
         }
         .help(Text(environment.showingHome ? "menu.view.showWorkspace" : "menu.view.showHome"))
         .accessibilityLabel(Text("menu.view.showHome"))
